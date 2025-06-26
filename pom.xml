@@ -13,8 +13,8 @@
 
     <modules>
         <module>portal-dal</module>
-        <module>portal-dashboard</module>
-        <module>portal-sites</module>
+        <module>portal-server</module>
+        <module>portal-bootstrap</module>
     </modules>
 
     <properties>
@@ -23,6 +23,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <spring-boot.version>2.7.18</spring-boot.version>
         <mybatis.version>2.3.1</mybatis.version>
+        <mysql.version>8.0.33</mysql.version>
+        <hutool.version>5.8.23</hutool.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
@@ -39,11 +41,18 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- MyBatis -->
+            <!-- MySQL Driver -->
             <dependency>
-                <groupId>org.mybatis.spring.boot</groupId>
-                <artifactId>mybatis-spring-boot-starter</artifactId>
-                <version>${mybatis.version}</version>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <!-- Hutool -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
