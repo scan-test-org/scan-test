@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:mysql://rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com:3306/api_open_platform?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: YourDBName
+    password: YourDBPassword
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
