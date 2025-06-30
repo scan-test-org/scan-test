@@ -4,6 +4,8 @@ import com.alibaba.apiopenplatform.support.OidcConfig;
 import com.alibaba.apiopenplatform.support.converter.OidcConfigConverter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
 
@@ -18,12 +20,11 @@ import javax.persistence.*;
         })
 @Data
 public class PortalSetting extends BaseEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "portal_id", length = 32, nullable = false)
+    @Column(name = "portal_id", length = 32)
     private String portalId;
 
     @Column(name = "builtin_auth_enabled")

@@ -59,4 +59,13 @@ public interface InputConverter<D> {
 
         return null;
     }
+
+    /**
+     * 将当前对象更新到目标领域对象中
+     *
+     * @param domain
+     */
+    default void update(D domain) {
+        BeanUtil.copyProperties(this, domain);
+    }
 }

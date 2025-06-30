@@ -1,4 +1,4 @@
-package com.alibaba.apiopenplatform.dto.params;
+package com.alibaba.apiopenplatform.dto.params.portal;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
 import com.alibaba.apiopenplatform.entity.Portal;
@@ -12,7 +12,7 @@ import javax.validation.constraints.Size;
  * @author zh
  */
 @Data
-public class PortalParam implements InputConverter<Portal> {
+public class CreatePortalParam implements InputConverter<Portal> {
 
     @NotBlank(message = "门户名称不能为空")
     @Size(max = 50, message = "门户名称长度不能超过50个字符")
@@ -21,5 +21,5 @@ public class PortalParam implements InputConverter<Portal> {
     private String description;
 
     @NotBlank(message = "管理员ID不能为空")
-    private String adminId;
+    private String ownerId;
 }

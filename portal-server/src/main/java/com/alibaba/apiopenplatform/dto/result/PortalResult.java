@@ -21,4 +21,12 @@ public class PortalResult implements OutputConverter<PortalResult, Portal> {
     private PortalSettingConfig portalSettingConfig;
 
     private PortalUiConfig portalUiConfig;
+
+    @Override
+    public PortalResult convertFrom(Portal source) {
+        OutputConverter.super.convertFrom(source);
+        portalSettingConfig = new PortalSettingConfig().convertFrom(source.getPortalSetting());
+        portalUiConfig = new PortalUiConfig().convertFrom(source.getPortalUi());
+        return this;
+    }
 }

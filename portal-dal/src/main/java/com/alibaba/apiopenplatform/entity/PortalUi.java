@@ -20,7 +20,7 @@ public class PortalUi extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "portal_id", length = 32, nullable = false)
+    @Column(name = "portal_id", length = 32)
     private String portalId;
 
     @Column(name = "logo", length = 256)
