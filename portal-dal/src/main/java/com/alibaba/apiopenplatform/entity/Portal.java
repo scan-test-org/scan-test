@@ -13,8 +13,15 @@ import javax.persistence.*;
 @Table(name = "t_apim_portal",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"portal_id"}, name = "uk_portal_id"),
-                @UniqueConstraint(columnNames = {"name", "admin_id"}, name = "uk_name_admin_id")
+                @UniqueConstraint(columnNames = {"name", "owner_id"}, name = "uk_name_owner_id")
         })
+@NamedEntityGraph(
+        name = "portal.properties",
+        attributeNodes = {
+                @NamedAttributeNode("portalSetting"),
+                @NamedAttributeNode("portalUi")
+        }
+)
 @Data
 public class Portal extends BaseEntity {
     @Id
@@ -30,6 +37,14 @@ public class Portal extends BaseEntity {
     @Column(name = "description", length = 256)
     private String description;
 
-    @Column(name = "admin_id", length = 32)
-    private String adminId;
+    @Column(name = "owner_id", length = 32)
+    private String ownerId;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @PrimaryKeyJoinColumn
+    private PortalSetting portalSetting;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @PrimaryKeyJoinColumn
+    private PortalUi portalUi;
 }
