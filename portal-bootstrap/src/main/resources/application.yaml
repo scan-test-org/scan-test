@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${db.host}:${db.port}/${db.name}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: ${db.username}
+    password: ${db.password}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+db:
+#  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
+  host: localhost
+  port: 3306
+  name: api_open_platform
+#  username: portal_test
+#  password: portal-Go
+  username: root
+  password: 12345678
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /portal/v3/api-docs
+  swagger-ui:
+    path: /portal/swagger-ui.html
+    disable-swagger-default-url: true
+  packages-to-scan: com.alibaba.apiopenplatform.controller

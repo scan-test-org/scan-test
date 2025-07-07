@@ -25,6 +25,7 @@
         <mybatis.version>2.3.1</mybatis.version>
         <mysql.version>8.0.33</mysql.version>
         <hutool.version>5.8.23</hutool.version>
+        <springdoc.version>1.7.0</springdoc.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
@@ -54,6 +55,13 @@
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

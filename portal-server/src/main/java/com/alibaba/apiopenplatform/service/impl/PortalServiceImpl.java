@@ -34,7 +34,7 @@ public class PortalServiceImpl implements PortalService {
     }
 
     public PortalResult createPortal(CreatePortalParam param) {
-        if (portalRepository.findByNameAndOwnerId(param.getName(), param.getOwnerId()).isPresent()) {
+        if (portalRepository.findByNameAndAdminId(param.getName(), param.getAdminId()).isPresent()) {
             throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, param.getName());
         }
 
@@ -63,7 +63,7 @@ public class PortalServiceImpl implements PortalService {
 
     @Override
     public PageResult<PortalResult> listPortals(int pageNumber, int pageSize) {
-        Page<Portal> portals = portalRepository.findByOwnerId(
+        Page<Portal> portals = portalRepository.findByAdminId(
                 "admin",
                 PageRequest.of(pageNumber, pageSize,
                         Sort.by(Sort.Order.desc("gmtCreate")))
@@ -134,7 +134,7 @@ public class PortalServiceImpl implements PortalService {
 
     private Portal findPortal(String portalId) {
         return portalRepository.
-                findByPortalIdAndOwnerId(portalId,"admin")
+                findByPortalIdAndAdminId(portalId,"admin")
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
     }
 }
