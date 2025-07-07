@@ -23,6 +23,13 @@ public enum ErrorCode {
     // 服务端错误 (500-599)
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR", "服务器内部错误，请稍后重试"),
 
+    ADMIN_ALREADY_INITIALIZED(HttpStatus.CONFLICT, "ADMIN_ALREADY_INITIALIZED", "该portal已初始化管理员，禁止重复初始化"),
+    ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN_NOT_FOUND", "管理员[%s]不存在"),
+    ADMIN_PASSWORD_INCORRECT(HttpStatus.UNAUTHORIZED, "ADMIN_PASSWORD_INCORRECT", "原密码错误"),
+    ADMIN_USERNAME_EXISTS(HttpStatus.CONFLICT, "ADMIN_USERNAME_EXISTS", "用户名[%s]已存在"),
+    ADMIN_INIT_REQUIRED(HttpStatus.FORBIDDEN, "ADMIN_INIT_REQUIRED", "请先初始化管理员账户"),
+
+    EXTERNAL_IDENTITY_BOUND(HttpStatus.CONFLICT, "EXTERNAL_IDENTITY_BOUND", "该外部账号已被其他用户绑定"),
 
     ;
 

@@ -59,4 +59,12 @@ public class ExceptionAdvice {
                         message
                 ));
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Response<Void>> handleRuntimeException(RuntimeException e) {
+        log.warn("[RuntimeException] {}", e.getMessage(), e);
+        return ResponseEntity
+                .status(400)
+                .body(Response.fail("FAIL", e.getMessage()));
+    }
 }
