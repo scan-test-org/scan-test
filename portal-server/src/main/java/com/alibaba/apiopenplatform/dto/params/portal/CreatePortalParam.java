@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.dto.params.portal;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
 import com.alibaba.apiopenplatform.entity.Portal;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
@@ -11,6 +12,7 @@ import javax.validation.constraints.Size;
 /**
  * @author zh
  */
+@Schema(description = "创建门户参数")
 @Data
 public class CreatePortalParam implements InputConverter<Portal> {
 
@@ -21,5 +23,5 @@ public class CreatePortalParam implements InputConverter<Portal> {
     private String description;
 
     @NotBlank(message = "管理员ID不能为空")
-    private String ownerId;
+    private String adminId;
 }

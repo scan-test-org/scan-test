@@ -17,11 +17,11 @@ import java.util.Optional;
 public interface PortalRepository extends JpaRepository<Portal, Long>, JpaSpecificationExecutor<Portal> {
 
     @EntityGraph("portal.properties")
-    Optional<Portal> findByPortalIdAndOwnerId(String portalId, String ownerId);
+    Optional<Portal> findByPortalIdAndAdminId(String portalId, String adminId);
 
     @EntityGraph("portal.properties")
-    Optional<Portal> findByNameAndOwnerId(String name, String adminId);
+    Optional<Portal> findByNameAndAdminId(String name, String adminId);
 
     @EntityGraph("portal.properties")
-    Page<Portal> findByOwnerId(String ownerId, Pageable pageable);
+    Page<Portal> findByAdminId(String adminId, Pageable pageable);
 }
