@@ -60,9 +60,6 @@ public class DeveloperServiceImpl implements DeveloperService {
         developer.setPasswordHash(PasswordHasher.hash(createDto.getPassword()));
         developer.setStatus("ACTIVE");
         developer.setAuthType("LOCAL");
-        Date now = new Date();
-        developer.setCreateTime(now);
-        developer.setUpdateTime(now);
         return developerRepository.save(developer);
     }
 
@@ -113,7 +110,6 @@ public class DeveloperServiceImpl implements DeveloperService {
             DeveloperExternalIdentity ext = extOpt.get();
             developer = ext.getDeveloper();
             log.info("[handleExternalLogin] 已绑定外部身份，developerId={}, username={}", developer.getDeveloperId(), developer.getUsername());
-            developer.setUpdateTime(new java.util.Date());
             developerRepository.save(developer);
         } else {
             // 自动注册
@@ -125,9 +121,6 @@ public class DeveloperServiceImpl implements DeveloperService {
             developer.setStatus("APPROVED");
             developer.setAuthType("OIDC");
             developer.setPortalId("default");
-            java.util.Date now = new java.util.Date();
-            developer.setCreateTime(now);
-            developer.setUpdateTime(now);
             developer = developerRepository.save(developer);
             log.info("[handleExternalLogin] 新注册开发者，developerId={}, username={}", developer.getDeveloperId(), developer.getUsername());
             // 绑定外部身份

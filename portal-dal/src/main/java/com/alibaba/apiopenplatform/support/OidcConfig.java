@@ -15,4 +15,12 @@ public class OidcConfig {
     private String clientSecret;
 
     private String scopes;
+
+    private String authorizationEndpoint;
+
+    private String tokenEndpoint;
+
+    private String userInfoEndpoint;
+
+    private String jwkSetUri;
 }

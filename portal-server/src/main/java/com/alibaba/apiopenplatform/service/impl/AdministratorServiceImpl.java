@@ -51,9 +51,6 @@ public class AdministratorServiceImpl implements AdministratorService {
         admin.setAdminId(generateAdminId());
         admin.setPasswordHash(PasswordHasher.hash(createDto.getPassword()));
         admin.setPortalId(createDto.getPortalId());
-        Date now = new Date();
-        admin.setCreateTime(now);
-        admin.setUpdateTime(now);
         return administratorRepository.save(admin);
     }
 
@@ -102,9 +99,6 @@ public class AdministratorServiceImpl implements AdministratorService {
         admin.setUsername(username);
         admin.setPasswordHash(PasswordHasher.hash(password));
         admin.setPortalId(portalId);
-        Date now = new Date();
-        admin.setCreateTime(now);
-        admin.setUpdateTime(now);
         return administratorRepository.save(admin);
     }
 
@@ -120,8 +114,6 @@ public class AdministratorServiceImpl implements AdministratorService {
             throw new BusinessException(ErrorCode.AUTH_INVALID);
         }
         admin.setPasswordHash(PasswordHasher.hash(newPassword));
-        admin.setUpdateTime(new Date());
-        administratorRepository.save(admin);
         return true;
     }
 
