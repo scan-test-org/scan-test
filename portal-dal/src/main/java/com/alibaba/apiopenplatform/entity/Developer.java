@@ -53,13 +53,4 @@ public class Developer extends BaseEntity implements Serializable {
     @Column(nullable = false, length = 16)
     private String authType; // BUILT, OIDC
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false, updatable = false)
-    private Date createTime;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false)
-    private Date updateTime;
-
-
 } 
