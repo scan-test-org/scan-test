@@ -90,4 +90,73 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Markdown styling */
+.prose pre {
+  @apply bg-gray-50 border border-gray-200 rounded-lg overflow-x-auto;
+}
+
+.prose code {
+  @apply text-sm font-mono;
+}
+
+.prose pre code {
+  @apply text-sm leading-6 bg-transparent border-0 p-0;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  @apply scroll-m-20 font-semibold tracking-tight;
+}
+
+.prose h1 {
+  @apply text-4xl lg:text-5xl mb-6;
+}
+
+.prose h2 {
+  @apply text-3xl mb-4 border-b border-gray-200 pb-2;
+}
+
+.prose h3 {
+  @apply text-2xl mb-3;
+}
+
+.prose h4 {
+  @apply text-xl mb-2;
+}
+
+.prose p {
+  @apply leading-7 mb-4;
+}
+
+.prose ul, .prose ol {
+  @apply my-6 ml-6;
+}
+
+.prose li {
+  @apply mt-2;
+}
+
+.prose blockquote {
+  @apply mt-6 border-l-2 border-gray-300 pl-6 italic text-gray-700;
+}
+
+.prose table {
+  @apply w-full border-collapse border border-gray-300;
+}
+
+.prose th, .prose td {
+  @apply border border-gray-300 px-4 py-2 text-left;
+}
+
+.prose th {
+  @apply bg-gray-50 font-semibold;
+}
+
+.prose img {
+  @apply max-w-full h-auto rounded-lg;
+}
+
+.prose hr {
+  @apply my-8 border-gray-200;
 } 

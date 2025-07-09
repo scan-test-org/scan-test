@@ -74,15 +74,13 @@ export function CreateConsoleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>创建新 Console</DialogTitle>
-          <DialogDescription>
-            填写以下信息来创建一个新的控制台实例
-          </DialogDescription>
+          <DialogTitle>导入网关实例</DialogTitle>
+          
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Console 名称 *</Label>
+              <Label htmlFor="name">网关名称 *</Label>
               <Input
                 id="name"
                 placeholder="输入Console名称"
@@ -125,64 +123,11 @@ export function CreateConsoleDialog({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">类型</Label>
-              <Select 
-                value={formData.type} 
-                onValueChange={(value) => handleInputChange("type", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="web">Web</SelectItem>
-                  <SelectItem value="mobile">Mobile</SelectItem>
-                  <SelectItem value="desktop">Desktop</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">状态</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(value) => handleInputChange("status", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">活跃</SelectItem>
-                  <SelectItem value="inactive">非活跃</SelectItem>
-                  <SelectItem value="maintenance">维护中</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="environment">环境</Label>
-              <Select 
-                value={formData.environment} 
-                onValueChange={(value) => handleInputChange("environment", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="development">Development</SelectItem>
-                  <SelectItem value="staging">Staging</SelectItem>
-                  <SelectItem value="production">Production</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               取消
             </Button>
-            <Button type="submit">创建 Console</Button>
+            <Button type="submit">导入</Button>
           </DialogFooter>
         </form>
       </DialogContent>

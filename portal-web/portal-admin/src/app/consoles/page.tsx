@@ -21,64 +21,83 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { CreateConsoleDialog } from "@/components/create-console-dialog"
 
-interface Console {
+interface Gateway {
   id: string
   name: string
   description: string
-  type: "web" | "mobile" | "desktop"
-  status: "active" | "inactive" | "maintenance"
+  type: "kong" | "nginx" | "envoy" | "traefik"
+  status: "running" | "stopped" | "error"
   endpoint: string
   version: string
   lastUpdated: string
   environment: "production" | "staging" | "development"
+  services: number
+  plugins: number
 }
 
-const mockConsoles: Console[] = [
+const mockGateways: Gateway[] = [
   {
     id: "1",
-    name: "Admin Console",
-    description: "主管理控制台",
-    type: "web",
-    status: "active",
-    endpoint: "https://admin.example.com",
-    version: "1.0.0",
+    name: "Production Gateway",
+    description: "生产环境网关实例",
+    type: "kong",
+    status: "running",
+    endpoint: "https://api.example.com",
+    version: "3.5.0",
     lastUpdated: "2025-01-08T10:30:00Z",
-    environment: "production"
+    environment: "production",
+    services: 12,
+    plugins: 8
   },
   {
     id: "2",
-    name: "Developer Portal",
-    description: "开发者门户控制台",
-    type: "web",
-    status: "active",
-    endpoint: "https://dev.example.com",
-    version: "2.1.0",
+    name: "Staging Gateway",
+    description: "测试环境网关实例",
+    type: "kong",
+    status: "running",
+    endpoint: "https://staging-api.example.com",
+    version: "3.5.0",
     lastUpdated: "2025-01-07T15:45:00Z",
-    environment: "staging"
+    environment: "staging",
+    services: 8,
+    plugins: 5
+  },
+  {
+    id: "3",
+    name: "Dev Gateway",
+    description: "开发环境网关实例",
+    type: "kong",
+    status: "stopped",
+    endpoint: "https://dev-api.example.com",
+    version: "3.4.0",
+    lastUpdated: "2025-01-06T09:20:00Z",
+    environment: "development",
+    services: 3,
+    plugins: 2
   }
 ]
 
 export default function ConsolesPage() {
-  const [consoles, setConsoles] = useState<Console[]>(mockConsoles)
+  const [gateways, setGateways] = useState<Gateway[]>(mockGateways)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
 
-  const handleCreateConsole = (newConsole: Omit<Console, "id" | "lastUpdated">) => {
-    const console: Console = {
-      ...newConsole,
+  const handleCreateGateway = (newGateway: Omit<Gateway, "id" | "lastUpdated">) => {
+    const gateway: Gateway = {
+      ...newGateway,
       id: Date.now().toString(),
       lastUpdated: new Date().toISOString()
     }
-    setConsoles([...consoles, console])
+    setGateways([...gateways, gateway])
     setShowCreateDialog(false)
   }
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "active":
+      case "running":
         return "default"
-      case "inactive":
+      case "stopped":
         return "secondary"
-      case "maintenance":
+      case "error":
         return "destructive"
       default:
         return "secondary"
@@ -87,12 +106,12 @@ export default function ConsolesPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "active":
-        return "活跃"
-      case "inactive":
-        return "非活跃"
-      case "maintenance":
-        return "维护中"
+      case "running":
+        return "运行中"
+      case "stopped":
+        return "已停止"
+      case "error":
+        return "错误"
       default:
         return status
     }
@@ -125,14 +144,14 @@ export default function ConsolesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Console</h1>
+          <h1 className="text-3xl font-bold tracking-tight">网关实例</h1>
           <p className="text-muted-foreground mt-2">
-            管理和配置您的Console实例
+            管理和配置您的网关实例
           </p>
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          创建 Console
+          导入网关实例
         </Button>
       </div>
 
@@ -141,23 +160,45 @@ export default function ConsolesPage() {
           <TableHeader>
             <TableRow>
               <TableHead>名称</TableHead>
+              <TableHead>状态</TableHead>
+              <TableHead>环境</TableHead>
+              <TableHead>服务数</TableHead>
               <TableHead>最后更新</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {consoles.map((console) => (
-              <TableRow key={console.id}>
+            {gateways.map((gateway) => (
+              <TableRow key={gateway.id}>
                 <TableCell>
                   <div>
-                    <div className="font-medium">{console.name}</div>
+                    <div className="font-medium">{gateway.name}</div>
                     <div className="text-sm text-muted-foreground">
-                      {console.description}
+                      {gateway.description}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {gateway.endpoint}
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
-                  {formatDate(console.lastUpdated)}
+                  <Badge variant={getStatusBadgeVariant(gateway.status)}>
+                    {getStatusText(gateway.status)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getEnvironmentBadgeVariant(gateway.environment)}>
+                    {gateway.environment}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    <div>{gateway.services} 个服务</div>
+                    <div className="text-muted-foreground">{gateway.plugins} 个插件</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {formatDate(gateway.lastUpdated)}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -186,7 +227,7 @@ export default function ConsolesPage() {
       <CreateConsoleDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
-        onSubmit={handleCreateConsole}
+        onSubmit={handleCreateGateway}
       />
     </div>
   )

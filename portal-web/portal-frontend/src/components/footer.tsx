@@ -26,8 +26,8 @@ export function Footer() {
               <Link href="/apis" className="block text-gray-600 hover:text-gray-900 text-sm">
                 APIs
               </Link>
-              <Link href="/consumers" className="block text-gray-600 hover:text-gray-900 text-sm">
-                Consumers
+              <Link href="/mcp" className="block text-gray-600 hover:text-gray-900 text-sm">
+                MCP Servers
               </Link>
             </div>
           </div>

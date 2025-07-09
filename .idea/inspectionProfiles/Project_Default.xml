@@ -3,6 +3,7 @@
     <option name="myName" value="Project Default" />
     <inspection_tool class="AklessInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="AuthTagInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="JavaPlaintextAkInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="JavadocDeclaration" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ADDITIONAL_TAGS" value="Author" />

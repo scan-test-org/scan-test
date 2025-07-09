@@ -214,4 +214,155 @@
   .higress-glow:hover {
     box-shadow: 0 0 30px oklch(0.4 0.15 240 / 0.5);
   }
+
+  /* Markdown 样式增强 */
+  .prose {
+    color: var(--foreground);
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    color: var(--foreground);
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose h1 {
+    font-size: 1.5em;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.3em;
+  }
+
+  .prose h2 {
+    font-size: 1.3em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3em;
+  }
+
+  .prose h3 {
+    font-size: 1.1em;
+  }
+
+  .prose pre {
+    background-color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .prose pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+  }
+
+  .prose code {
+    background-color: var(--muted);
+    color: var(--foreground);
+    padding: 0.125rem 0.25rem;
+    border-radius: calc(var(--radius) - 2px);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .prose blockquote {
+    border-left: 4px solid var(--primary);
+    background-color: var(--muted);
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    font-style: italic;
+  }
+
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+
+  .prose table th,
+  .prose table td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  .prose table th {
+    background-color: var(--muted);
+    font-weight: 600;
+  }
+
+  .prose table tr:nth-child(even) {
+    background-color: var(--muted);
+  }
+
+  .prose ul, .prose ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .prose li {
+    margin: 0.25rem 0;
+  }
+
+  .prose p {
+    margin: 1rem 0;
+    line-height: 1.6;
+  }
+
+  .prose a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-decoration-color: var(--primary);
+    text-underline-offset: 2px;
+  }
+
+  .prose a:hover {
+    color: var(--primary);
+    text-decoration-thickness: 2px;
+  }
+
+  .prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    margin: 1rem 0;
+  }
+
+  .prose hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+
+  /* 代码语法高亮增强 */
+  .prose .hljs {
+    background-color: var(--muted) !important;
+    color: var(--foreground) !important;
+  }
+
+  .prose .hljs-keyword,
+  .prose .hljs-selector-tag,
+  .prose .hljs-built_in {
+    color: var(--primary) !important;
+  }
+
+  .prose .hljs-string,
+  .prose .hljs-title,
+  .prose .hljs-section {
+    color: #22c55e !important;
+  }
+
+  .prose .hljs-number,
+  .prose .hljs-literal {
+    color: #f59e0b !important;
+  }
+
+  .prose .hljs-comment {
+    color: var(--muted-foreground) !important;
+    font-style: italic;
+  }
 }

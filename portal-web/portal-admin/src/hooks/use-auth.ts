@@ -7,7 +7,6 @@ interface UserInfo {
   email: string
   avatar?: string
   role: string
-  provider?: string
 }
 
 export function useAuth() {
@@ -37,20 +36,35 @@ export function useAuth() {
     }))
   }, [isLoggedIn, userInfo])
 
-  const loginWithOAuth = async (provider: 'github' | 'aliyun', userData: UserInfo) => {
+  const loginWithPassword = async (username: string, password: string) => {
     setIsLoading(true)
     
     try {
-      // 模拟OAuth验证和用户信息获取
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // 模拟密码验证
+      await new Promise(resolve => setTimeout(resolve, 800))
       
-      setUserInfo({
-        ...userData,
-        provider
-      })
-      setIsLoggedIn(true)
+      // 简单的模拟验证逻辑
+      if (username === 'admin' && password === 'admin123') {
+        setUserInfo({
+          name: '管理员',
+          email: 'admin@portal.com',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+          role: '管理员'
+        })
+        setIsLoggedIn(true)
+      } else if (username === 'user' && password === 'user123') {
+        setUserInfo({
+          name: '用户',
+          email: 'user@portal.com',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
+          role: '普通用户'
+        })
+        setIsLoggedIn(true)
+      } else {
+        throw new Error('用户名或密码错误')
+      }
     } catch (error) {
-      console.error('OAuth login failed:', error)
+      console.error('Login failed:', error)
       throw error
     } finally {
       setIsLoading(false)
@@ -68,7 +82,7 @@ export function useAuth() {
     isLoggedIn,
     userInfo,
     isLoading,
-    loginWithOAuth,
+    loginWithPassword,
     logout
   }
 } 

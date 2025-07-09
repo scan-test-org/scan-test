@@ -34,8 +34,8 @@ export function Navigation() {
             <Link href="/apis" className="text-gray-700 hover:text-gray-900">
               APIs
             </Link>
-            <Link href="/consumers" className="text-gray-700 hover:text-gray-900">
-              Consumers
+            <Link href="/mcp" className="text-gray-700 hover:text-gray-900">
+              MCP
             </Link>
           </div>
           
