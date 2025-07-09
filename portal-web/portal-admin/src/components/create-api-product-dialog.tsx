@@ -23,10 +23,26 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
 
+// 预定义的分类选项
+const CATEGORIES = [
+  "Testing",
+  "Finance", 
+  "Authentication",
+  "Communication",
+  "Analytics",
+  "E-commerce",
+  "Social",
+  "Utility",
+  "Healthcare",
+  "Education",
+  "Other"
+]
+
 interface ApiProduct {
   name: string
   description: string
   type: "restApi" | "mcpServer"
+  category: string
   labels: string[]
 }
 
@@ -45,21 +61,28 @@ export function CreateApiProductDialog({
     name: "",
     description: "",
     type: "restApi" as "restApi" | "mcpServer",
+    category: "",
     labels: [] as string[]
   })
   const [newLabel, setNewLabel] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.name.trim() || !formData.category) {
+      return
+    }
     onSubmit(formData)
     setFormData({
       name: "",
       description: "",
       type: "restApi",
+      category: "",
       labels: []
     })
     setNewLabel("")
   }
+
+  const isFormValid = formData.name.trim() && formData.category
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -128,6 +151,25 @@ export function CreateApiProductDialog({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="category">分类 *</Label>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value) => handleInputChange("category", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="选择分类" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description">描述</Label>
             <Textarea
               id="description"
@@ -171,7 +213,9 @@ export function CreateApiProductDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               取消
             </Button>
-            <Button type="submit">创建 API Product</Button>
+            <Button type="submit" disabled={!isFormValid}>
+              创建 API Product
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

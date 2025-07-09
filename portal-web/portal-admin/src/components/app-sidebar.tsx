@@ -24,7 +24,7 @@ const items = [
     icon: Database,
   },
   {
-    title: "Console",
+    title: "网关实例",
     url: "/consoles",
     icon: LayoutDashboard,
   },

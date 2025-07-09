@@ -10,31 +10,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User, Settings, LogOut, Shield, Github, Cloud } from "lucide-react"
+import { User, Settings, LogOut, Shield } from "lucide-react"
 import { LoginDialog } from "@/components/login-dialog"
 import { useAuth } from "@/hooks/use-auth"
 
 export function UserMenu() {
   const [showLoginDialog, setShowLoginDialog] = useState(false)
-  const { isLoggedIn, userInfo, loginWithOAuth, logout } = useAuth()
+  const { isLoggedIn, userInfo, loginWithPassword, logout } = useAuth()
 
-  const handleOAuthLogin = async (provider: 'github' | 'aliyun', userData: any) => {
+  const handlePasswordLogin = async (username: string, password: string) => {
     try {
-      await loginWithOAuth(provider, userData)
+      await loginWithPassword(username, password)
       setShowLoginDialog(false)
     } catch (error) {
-      console.error('OAuth login failed:', error)
-    }
-  }
-
-  const getProviderIcon = (provider?: string) => {
-    switch (provider) {
-      case 'github':
-        return <Github className="h-3 w-3" />
-      case 'aliyun':
-        return <Cloud className="h-3 w-3 text-blue-600" />
-      default:
-        return <Shield className="h-3 w-3" />
+      console.error('Login failed:', error)
+      throw error // 让LoginDialog处理错误显示
     }
   }
 
@@ -48,7 +38,7 @@ export function UserMenu() {
         <LoginDialog
           open={showLoginDialog}
           onOpenChange={setShowLoginDialog}
-          onLogin={handleOAuthLogin}
+          onLogin={handlePasswordLogin}
         />
       </>
     )
@@ -77,14 +67,6 @@ export function UserMenu() {
               <Shield className="h-3 w-3 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">{userInfo?.role}</span>
             </div>
-            {userInfo?.provider && (
-              <div className="flex items-center gap-1">
-                {getProviderIcon(userInfo.provider)}
-                <span className="text-xs text-muted-foreground">
-                  {userInfo.provider === 'github' ? 'GitHub' : '阿里云'}
-                </span>
-              </div>
-            )}
           </div>
         </div>
         <DropdownMenuSeparator />
