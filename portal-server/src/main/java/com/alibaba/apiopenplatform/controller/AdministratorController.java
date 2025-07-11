@@ -11,12 +11,19 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * 管理员控制器，提供注册和登录等API接口
  *
  * @author zxd
  */
+@Tag(name = "管理员管理", description = "管理员初始化、登录、修改密码等相关接口")
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -25,39 +32,28 @@ public class AdministratorController {
     private final AdministratorService administratorService;
     private final TokenBlacklistService tokenBlacklistService;
 
-    /**
-     * 管理员注册（需传递portalId）
-     */
-    @PostMapping("/register")
-    public Response<String> register(@Valid @RequestBody AdminCreateDto dto) {
-        administratorService.createAdministrator(dto);
-        return Response.ok("注册成功");
-    }
 
-    /**
-     * 管理员登录（需传递portalId）
-     */
+
+    @Operation(summary = "管理员登录", description = "管理员登录，只需用户名和密码。前端只需传username和password，后端自动校验，无需portalId。")
     @PostMapping("/login")
-    public Response<AuthResponseDto> login(@Valid @RequestBody AdminLoginDto dto) {
-        return administratorService.loginWithPassword(dto.getPortalId(), dto.getUsername(), dto.getPassword())
+    public Response<AuthResponseDto> login(
+        @RequestBody(description = "管理员登录参数")
+        @Valid @org.springframework.web.bind.annotation.RequestBody AdminLoginDto dto) {
+        return administratorService.loginWithPassword(dto.getUsername(), dto.getPassword())
                 .map(Response::ok)
                 .orElseGet(() -> Response.fail("AUTH_FAILED", "用户名或密码错误"));
     }
 
-    /**
-     * 管理员受保护接口，仅测试用
-     */
-    @GetMapping("/profile")
-    public Response<String> profile() {
-        return Response.ok("管理员受保护信息");
-    }
+    // @Operation(summary = "管理员受保护接口", description = "仅测试用，返回管理员受保护信息")
+    // @GetMapping("/profile")
+    // public Response<String> profile() {
+    //     return Response.ok("管理员受保护信息");
+    // }
 
-    /**
-     * 管理员登出，将token加入黑名单，支持portalId参数
-     */
+    @Operation(summary = "管理员登出", description = "将 token 加入黑名单，前端自动传递Authorization请求头，无需用户手动输入。")
     @PostMapping("/logout")
-    public Response<Void> logout(@RequestParam("portalId") String portalId,
-                                 @RequestHeader("Authorization") String authHeader) {
+    public Response<Void> logout(
+        @Parameter(description = "认证Token，前端自动传递Authorization请求头") @RequestHeader("Authorization") String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             long expireAt = System.currentTimeMillis() + 3600_000L;
@@ -66,32 +62,33 @@ public class AdministratorController {
         return Response.ok(null);
     }
 
-    /**
-     * 检查指定portalId下是否需要初始化管理员
-     */
+    @Operation(summary = "检查是否需要初始化管理员", description = "检查系统是否需要初始化管理员（全表无记录时返回true），前端无需传递portalId。")
     @GetMapping("/need-init")
-    public Response<Boolean> needInit(@RequestParam("portalId") String portalId) {
-        return Response.ok(administratorService.needInit(portalId));
+    public Response<Boolean> needInit() {
+        return Response.ok(administratorService.needInit(null));
     }
 
-    /**
-     * 初始化管理员，仅允许首次调用
-     */
+    @Operation(summary = "初始化管理员", description = "仅允许首次调用（全表无记录时），前端只需传username和password，无需portalId。")
     @PostMapping("/init")
-    public Response<String> initAdmin(@RequestBody AdminCreateDto dto) {
-        administratorService.initAdmin(dto.getPortalId(), dto.getUsername(), dto.getPassword());
+    public Response<String> initAdmin(
+        @RequestBody(description = "初始化管理员参数")
+        @org.springframework.web.bind.annotation.RequestBody AdminCreateDto dto) {
+        administratorService.initAdmin(null, dto.getUsername(), dto.getPassword());
         return Response.ok("初始化成功");
     }
 
-    /**
-     * 管理员修改密码（需传递portalId、adminId、oldPassword、newPassword）
-     */
+    @Operation(summary = "管理员修改密码", description = "需传递adminId、oldPassword、newPassword，前端自动传递token，后端校验当前登录管理员和adminId是否一致，防止越权。")
     @PostMapping("/change-password")
-    public Response<String> changePassword(@RequestParam("portalId") String portalId,
-                                           @RequestParam("adminId") String adminId,
-                                           @RequestParam("oldPassword") String oldPassword,
-                                           @RequestParam("newPassword") String newPassword) {
-        administratorService.changePassword(portalId, adminId, oldPassword, newPassword);
+    public Response<String> changePassword(
+        @Parameter(description = "管理员ID") @RequestParam("adminId") String adminId,
+        @Parameter(description = "旧密码") @RequestParam("oldPassword") String oldPassword,
+        @Parameter(description = "新密码") @RequestParam("newPassword") String newPassword) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = authentication != null ? authentication.getName() : null;
+        if (currentUserId == null || !currentUserId.equals(adminId)) {
+            return Response.fail("UNAUTHORIZED", "无权修改他人密码");
+        }
+        administratorService.changePassword(adminId, oldPassword, newPassword);
         return Response.ok("修改密码成功");
     }
 } 

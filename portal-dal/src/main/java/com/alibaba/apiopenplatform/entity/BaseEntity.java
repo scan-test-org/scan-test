@@ -18,10 +18,10 @@ import java.time.LocalDateTime;
 public class BaseEntity implements Serializable {
 
     @CreatedDate
-    @Column(updatable = false,columnDefinition = "datetime(3)")
+    @Column(name = "gmt_create", updatable = false, columnDefinition = "datetime(3)")
     private LocalDateTime gmtCreate;
 
     @LastModifiedDate
-    @Column(columnDefinition = "datetime(3)")
+    @Column(name = "gmt_modified", columnDefinition = "datetime(3)")
     private LocalDateTime gmtModified;
 }

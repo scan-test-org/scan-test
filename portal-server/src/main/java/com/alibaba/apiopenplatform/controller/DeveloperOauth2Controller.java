@@ -32,6 +32,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import com.alibaba.apiopenplatform.auth.JwtService;
+import com.alibaba.apiopenplatform.entity.Portal;
+import com.alibaba.apiopenplatform.entity.PortalSetting;
+import com.alibaba.apiopenplatform.repository.PortalRepository;
+import com.alibaba.apiopenplatform.repository.PortalSettingRepository;
+import com.alibaba.apiopenplatform.support.OidcConfig;
+import java.net.URLDecoder;
 
 /**
  * 开发者 OAuth2 统一回调与外部身份绑定控制器
@@ -40,6 +50,7 @@ import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
  * @author zxd
  */
 @Slf4j
+@Tag(name = "开发者OAuth2登录管理", description = "开发者OAuth2统一回调与外部身份绑定相关接口")
 @RestController
 @RequestMapping("/oauth2")
 @RequiredArgsConstructor
@@ -47,275 +58,167 @@ public class DeveloperOauth2Controller {
     private final DeveloperRepository developerRepository;
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     private final DeveloperService developerService;
+    private final PortalRepository portalRepository;
+    private final PortalSettingRepository portalSettingRepository;
     private final RestTemplate restTemplate = new RestTemplate();
-
-    @Value("${spring.security.oauth2.client.registration.github.client-id}")
-    private String githubClientId;
-    @Value("${spring.security.oauth2.client.registration.github.client-secret}")
-    private String githubClientSecret;
-    @Value("${spring.security.oauth2.client.registration.github.redirect-uri}")
-    private String githubRedirectUri;
-    @Value("${spring.security.oauth2.client.provider.github.token-uri}")
-    private String githubTokenUri;
-    @Value("${spring.security.oauth2.client.provider.github.user-info-uri}")
-    private String githubUserInfoUri;
-
-    @Value("${spring.security.oauth2.client.registration.google.client-id}")
-    private String googleClientId;
-    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
-    private String googleClientSecret;
-    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private String googleRedirectUri;
-    @Value("${spring.security.oauth2.client.provider.google.token-uri}")
-    private String googleTokenUri;
-    @Value("${spring.security.oauth2.client.provider.google.user-info-uri}")
-    private String googleUserInfoUri;
-
-    @Value("${spring.security.oauth2.client.registration.aliyun.client-id}")
-    private String aliyunClientId;
-    @Value("${spring.security.oauth2.client.registration.aliyun.client-secret}")
-    private String aliyunClientSecret;
-    @Value("${spring.security.oauth2.client.registration.aliyun.redirect-uri}")
-    private String aliyunRedirectUri;
-    @Value("${spring.security.oauth2.client.provider.aliyun.token-uri}")
-    private String aliyunTokenUri;
-    @Value("${spring.security.oauth2.client.provider.aliyun.user-info-uri}")
-    private String aliyunUserInfoUri;
+    private final JwtService jwtService;
 
     /**
-     * OAuth2统一回调接口，支持登录和绑定分流
-     * @param code 授权码
-     * @param state 区分用途
+     * OIDC授权入口，支持多配置
+     * @param portalId 门户唯一标识
+     * @param provider OIDC provider 名（如 github、google、aliyun、自定义）
+     * @param state 前端生成的state参数
      */
+    @Operation(summary = "OIDC授权入口", description = "前端需拼接state参数，格式为：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。")
+    @GetMapping("/api/oauth/authorize")
+    public void universalAuthorize(
+        @Parameter(description = "门户唯一标识") @RequestParam("portalId") String portalId,
+        @Parameter(description = "OIDC provider 名") @RequestParam("provider") String provider,
+        @Parameter(description = "state参数") @RequestParam("state") String state,
+        HttpServletResponse response) throws IOException {
+        PortalSetting setting = portalSettingRepository.findByPortalIdAndProvider(portalId, provider)
+                .orElseThrow(() -> new IllegalArgumentException("未找到对应配置: " + portalId + ", " + provider));
+        OidcConfig config = setting.getOidcConfig();
+        if (config == null || !config.isEnabled()) {
+            throw new IllegalArgumentException("OIDC配置未启用");
+        }
+        String url = config.getAuthorizationEndpoint()
+                + "?client_id=" + config.getClientId()
+                + "&redirect_uri=" + URLEncoder.encode(config.getRedirectUri(), "UTF-8")
+                + "&scope=" + URLEncoder.encode(config.getScopes(), "UTF-8")
+                + "&response_type=code"
+                + "&state=" + URLEncoder.encode(state, "UTF-8");
+        response.sendRedirect(url);
+    }
+
+    /**
+     * OIDC统一回调接口，支持登录和绑定分流
+     * state 推荐格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}
+     * <br>前端示例：
+     *   const stateRaw = `BINDING|${Math.random().toString(36).slice(2)}|${portalId}|${provider}|${token}`;
+     *   const state = encodeURIComponent(stateRaw);
+     *   // 跳转参数 ...&state=${state}
+     * 后端解析：
+     *   String decodedState = URLDecoder.decode(state, "UTF-8");
+     *   String[] arr = decodedState.split("\\|");
+     *   String portalId = arr[2];
+     *   String provider = arr[3];
+     *   String token = arr.length > 4 ? arr[4] : null;
+     */
+    @Operation(summary = "OIDC统一回调", description = "state 推荐格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。详见接口注释和前端示例。")
     @GetMapping("/callback")
-    public void oauth2Callback(@RequestParam("code") String code,
-                               @RequestParam("state") String state,
-                               HttpServletRequest request,
-                               HttpServletResponse response) throws IOException {
-        log.info("[OAuth2Callback] code={}, state={}", code, state);
-        if (state != null && (state.startsWith("BINDING_") || state.startsWith("BIND_"))) {
-            // 绑定流程：只做绑定，不切换登录态
-            String[] arr = state.replaceFirst("BINDING_", "").replaceFirst("BIND_", "").split("_");
-            if (arr.length < 2) {
-                response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("state参数错误", "UTF-8"));
-                return;
+    public void oidcCallback(
+        @Parameter(description = "授权码") @RequestParam("code") String code,
+        @Parameter(description = "state参数，整体需encodeURIComponent编码，格式见接口注释") @RequestParam("state") String state,
+        HttpServletRequest request,
+        HttpServletResponse response) throws IOException {
+        log.info("[OIDCCallback] code={}, state={}", code, state);
+        // 先 URL 解码
+        String decodedState = URLDecoder.decode(state, "UTF-8");
+        String portalId = null;
+        String provider = null;
+        String token = null;
+        String mode = null;
+        if (decodedState != null && decodedState.startsWith("BINDING|")) {
+            // BINDING|随机串|portalId|provider|token
+            String[] arr = decodedState.split("\\|");
+            if (arr.length >= 5) {
+                final String parsedPortalId = arr[2];
+                final String parsedProvider = arr[3];
+                portalId = parsedPortalId;
+                provider = parsedProvider;
+                token = arr[4];
+                mode = "BINDING";
             }
-            String userId = arr[0];
-            String provider = arr[1];
-            // --- 真实三方用户信息获取 ---
-            String providerSubject = null;
-            String displayName = null;
-            String rawInfoJson = null;
-            try {
-                Map<String, Object> userInfoMap = null;
-                if ("github".equals(provider)) {
-                    userInfoMap = fetchGithubUserInfoMap(code);
-                } else if ("google".equals(provider)) {
-                    userInfoMap = fetchGoogleUserInfoMap(code);
-                } else if ("aliyun".equals(provider) || "aliyun-oidc".equals(provider)) {
-                    userInfoMap = fetchAliyunUserInfoMap(code);
-                } else {
-                    response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("不支持的provider", "UTF-8"));
-                    return;
-                }
-                Object idObj = userInfoMap.get("id");
-                if (idObj == null) idObj = userInfoMap.get("sub"); // 兼容 Google OIDC
-                providerSubject = idObj != null ? String.valueOf(idObj) : null;
-                Object nameObj = userInfoMap.get("username");
-                if (nameObj == null) nameObj = userInfoMap.get("name");
-                if (nameObj == null) nameObj = userInfoMap.get("login");
-                displayName = nameObj != null ? String.valueOf(nameObj) : null;
-                rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
-            } catch (Exception e) {
-                response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("获取三方用户信息失败:" + e.getMessage(), "UTF-8"));
-                return;
+        } else if (decodedState != null && decodedState.startsWith("LOGIN|")) {
+            // LOGIN|portalId|provider
+            String[] arr = decodedState.split("\\|");
+            if (arr.length >= 3) {
+                final String parsedPortalId = arr[1];
+                final String parsedProvider = arr[2];
+                portalId = parsedPortalId;
+                provider = parsedProvider;
+                mode = "LOGIN";
             }
-            // 检查外部身份是否已被绑定
+        }
+        if (portalId == null || provider == null) {
+            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("state参数错误，未包含portalId/provider", "UTF-8"));
+            return;
+        }
+        final String finalPortalId = portalId;
+        final String finalProvider = provider;
+        PortalSetting setting = portalSettingRepository.findByPortalIdAndProvider(finalPortalId, finalProvider)
+                .orElseThrow(() -> new IllegalArgumentException("未找到对应配置: " + finalPortalId + ", " + finalProvider));
+        OidcConfig config = setting.getOidcConfig();
+        if (config == null || !config.isEnabled()) {
+            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("OIDC配置未启用", "UTF-8"));
+            return;
+        }
+        // --- 获取三方用户信息 ---
+        String providerSubject = null;
+        String displayName = null;
+        String rawInfoJson = null;
+        try {
+            Map<String, Object> userInfoMap = fetchUserInfoMap(code, config);
+            Object idObj = userInfoMap.get("sub");
+            if (idObj == null) idObj = userInfoMap.get("id");
+            providerSubject = idObj != null ? String.valueOf(idObj) : null;
+            Object nameObj = userInfoMap.get("name");
+            if (nameObj == null) nameObj = userInfoMap.get("username");
+            if (nameObj == null) nameObj = userInfoMap.get("login");
+            displayName = nameObj != null ? String.valueOf(nameObj) : null;
+            rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
+        } catch (Exception e) {
+            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("获取三方用户信息失败:" + e.getMessage(), "UTF-8"));
+            return;
+        }
+        if ("BINDING".equals(mode)) {
+            // 绑定流程
             Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);
             if (extOpt.isPresent()) {
                 response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("该外部账号已被其他用户绑定", "UTF-8"));
                 return;
             }
-            // 绑定到当前用户
+            // 通过 token 识别当前用户
+            String userId = null;
+            if (token != null) {
+                try {
+                    Map<String, Object> claims = jwtService.parseAndValidateClaims(token);
+                    userId = (String) claims.get("userId");
+                } catch (Exception e) {
+                    response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("token无效或已过期", "UTF-8"));
+                    return;
+                }
+            }
+            if (userId == null || userId.isEmpty()) {
+                response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("未登录，无法绑定", "UTF-8"));
+                return;
+            }
             Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
             if (!devOpt.isPresent()) {
                 response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("用户不存在", "UTF-8"));
                 return;
             }
-            developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson);
+            developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, finalPortalId);
             response.sendRedirect("/bind-callback?result=success");
-        } else if (state != null && state.startsWith("LOGIN_")) {
-            // 登录流程，完成三方登录/注册，生成token，重定向到前端
-            String[] arr = state.split("_");
-            if (arr.length < 2) {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("state参数错误", "UTF-8"));
-                return;
-            }
-            String provider = arr[1];
-            // --- 获取三方用户信息 ---
-            String providerSubject = null;
-            String displayName = null;
-            String rawInfoJson = null;
-            try {
-                Map<String, Object> userInfoMap = null;
-                if ("github".equals(provider)) {
-                    userInfoMap = fetchGithubUserInfoMap(code);
-                } else if ("google".equals(provider)) {
-                    userInfoMap = fetchGoogleUserInfoMap(code);
-                } else if ("aliyun".equals(provider) || "aliyun-oidc".equals(provider)) {
-                    userInfoMap = fetchAliyunUserInfoMap(code);
-                } else {
-                    response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("不支持的provider", "UTF-8"));
-                    return;
-                }
-                Object idObj = userInfoMap.get("id");
-                if (idObj == null) idObj = userInfoMap.get("sub"); // 兼容 Google OIDC
-                providerSubject = idObj != null ? String.valueOf(idObj) : null;
-                Object nameObj = userInfoMap.get("username");
-                if (nameObj == null) nameObj = userInfoMap.get("name");
-                if (nameObj == null) nameObj = userInfoMap.get("login");
-                displayName = nameObj != null ? String.valueOf(nameObj) : null;
-                rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
-            } catch (Exception e) {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("获取三方用户信息失败:" + e.getMessage(), "UTF-8"));
-                return;
-            }
-            // 统一用 handleExternalLogin 处理三方登录/注册
+        } else if ("LOGIN".equals(mode)) {
+            // 登录流程
             Optional<AuthResponseDto> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
-                String token = loginResult.get().getToken();
-                response.sendRedirect("http://localhost:5173/?token=" + token);
+                String jwt = loginResult.get().getToken();
+                response.sendRedirect("http://localhost:5173/?token=" + jwt);
             } else {
                 response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("三方登录失败", "UTF-8"));
             }
         } else {
-            // 兜底跳首页
             response.sendRedirect("/");
         }
-    }
-
-    // --- 三方用户信息结构体 ---
-    private static class ThirdPartyUserInfo {
-        public String id;
-        public String email;
-        public String username;
-        public ThirdPartyUserInfo(String id, String email, String username) {
-            this.id = id;
-            this.email = email;
-            this.username = username;
-        }
-    }
-
-    // --- GitHub ---
-    private Map<String, Object> fetchGithubUserInfoMap(String code) {
-        // 1. 用 code 换 access_token
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("client_id", githubClientId);
-        params.add("client_secret", githubClientSecret);
-        params.add("code", code);
-        params.add("redirect_uri", githubRedirectUri);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
-        ResponseEntity<Map> tokenResp = restTemplate.postForEntity(githubTokenUri, entity, Map.class);
-        String accessToken = (String) tokenResp.getBody().get("access_token");
-        // 2. 用 access_token 获取用户信息
-        HttpHeaders userHeaders = new HttpHeaders();
-        userHeaders.setBearerAuth(accessToken);
-        HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
-        ResponseEntity<Map> userResp = restTemplate.exchange(githubUserInfoUri, HttpMethod.GET, userEntity, Map.class);
-        Map userMap = userResp.getBody();
-        return userMap;
-    }
-
-    // --- Google ---
-    private Map<String, Object> fetchGoogleUserInfoMap(String code) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("client_id", googleClientId);
-        params.add("client_secret", googleClientSecret);
-        params.add("code", code);
-        params.add("redirect_uri", googleRedirectUri);
-        params.add("grant_type", "authorization_code");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
-        ResponseEntity<Map> tokenResp = restTemplate.postForEntity(googleTokenUri, entity, Map.class);
-        String accessToken = (String) tokenResp.getBody().get("access_token");
-        // 获取用户信息
-        HttpHeaders userHeaders = new HttpHeaders();
-        userHeaders.setBearerAuth(accessToken);
-        HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
-        ResponseEntity<Map> userResp = restTemplate.exchange(googleUserInfoUri, HttpMethod.GET, userEntity, Map.class);
-        Map userMap = userResp.getBody();
-        return userMap;
-    }
-
-    // --- Aliyun ---
-    private Map<String, Object> fetchAliyunUserInfoMap(String code) {
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", "authorization_code");
-        params.add("code", code);
-        params.add("client_id", aliyunClientId);
-        params.add("client_secret", aliyunClientSecret);
-        params.add("redirect_uri", aliyunRedirectUri);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
-        ResponseEntity<Map> tokenResp = restTemplate.postForEntity(aliyunTokenUri, entity, Map.class);
-        String accessToken = (String) tokenResp.getBody().get("access_token");
-        // 获取用户信息
-        HttpHeaders userHeaders = new HttpHeaders();
-        userHeaders.setBearerAuth(accessToken);
-        HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
-        ResponseEntity<Map> userResp = restTemplate.exchange(aliyunUserInfoUri, HttpMethod.GET, userEntity, Map.class);
-        Map userMap = userResp.getBody();
-        return userMap;
-    }
-
-    /**
-     * 解绑外部身份接口
-     * @param body 需要解绑的 provider 和 subject
-     */
-    @PostMapping("/unbind-identity")
-    public ResponseEntity<?> unbindIdentity(@RequestBody Map<String, String> body) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userId = (String) authentication.getPrincipal();
-        Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
-        if (!devOpt.isPresent()) {
-            Map<String, String> resp = new java.util.HashMap<>();
-            resp.put("code", "UNAUTHORIZED");
-            resp.put("message", "用户未登录");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(resp);
-        }
-        Developer developer = devOpt.get();
-        // 查询当前用户所有绑定
-        List<DeveloperExternalIdentity> identities = developerExternalIdentityRepository.findByDeveloper_DeveloperId(developer.getDeveloperId());
-        if (identities.size() <= 1) {
-            Map<String, String> resp = new java.util.HashMap<>();
-            resp.put("code", "AT_LEAST_ONE");
-            resp.put("message", "至少保留一个绑定账号，不能全部解绑");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resp);
-        }
-        String provider = body.get("provider");
-        String subject = body.get("subject");
-        Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, subject);
-        if (!extOpt.isPresent() || !extOpt.get().getDeveloper().getDeveloperId().equals(developer.getDeveloperId())) {
-            Map<String, String> resp = new java.util.HashMap<>();
-            resp.put("code", "NOT_FOUND");
-            resp.put("message", "未找到该绑定关系");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resp);
-        }
-        developerExternalIdentityRepository.delete(extOpt.get());
-        Map<String, String> resp = new java.util.HashMap<>();
-        resp.put("code", "SUCCESS");
-        resp.put("message", "解绑成功");
-        return ResponseEntity.ok(resp);
     }
 
     /**
      * 查询当前用户所有外部身份绑定（只返回provider、subject、displayName、rawInfoJson）
      */
+    @Operation(summary = "查询当前用户所有外部身份绑定", description = "只返回provider、subject、displayName、rawInfoJson")
     @GetMapping("/list-identities")
     public ResponseEntity<?> listIdentities() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -338,47 +241,44 @@ public class DeveloperOauth2Controller {
     }
 
     /**
-     * 统一三方/oidc授权入口，支持github、google、aliyun、oidc等，便于扩展
+     * 查询指定门户下所有已启用的 OIDC provider
      */
-    @GetMapping("/api/oauth/authorize")
-    public void universalAuthorize(@RequestParam("provider") String provider,
-                                   @RequestParam("state") String state,
-                                   HttpServletResponse response) throws IOException {
-        String clientId, redirectUri, scope, authUrl;
-        switch (provider) {
-            case "github":
-                clientId = githubClientId;
-                redirectUri = URLEncoder.encode(githubRedirectUri, "UTF-8");
-                scope = "user:email";
-                authUrl = "https://github.com/login/oauth/authorize";
-                break;
-            case "google":
-                clientId = googleClientId;
-                redirectUri = URLEncoder.encode(googleRedirectUri, "UTF-8");
-                scope = "openid profile email";
-                authUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-                break;
-            case "aliyun":
-                clientId = aliyunClientId;
-                redirectUri = URLEncoder.encode(aliyunRedirectUri, "UTF-8");
-                scope = "openid profile";
-                authUrl = "https://signin.aliyun.com/oauth2/v1/auth";
-                break;
-            case "oidc":
-                // 假设通用OIDC参数由配置或前端传递，示例写死
-                clientId = "your-oidc-client-id";
-                redirectUri = URLEncoder.encode("http://localhost:8080/oauth2/callback", "UTF-8");
-                scope = "openid profile email";
-                authUrl = "https://your-oidc-provider.com/authorize";
-                break;
-            default:
-                throw new IllegalArgumentException("不支持的provider: " + provider);
+    @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮")
+    @GetMapping("/api/oauth/providers")
+    public ResponseEntity<?> listOidcProviders(@RequestParam("portalId") String portalId) {
+        List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (PortalSetting setting : settings) {
+            OidcConfig config = setting.getOidcConfig();
+            if (config != null && config.isEnabled()) {
+                Map<String, Object> map = new java.util.HashMap<>();
+                map.put("provider", setting.getProvider());
+                map.put("displayName", config.getName());
+                map.put("icon", config.getLogoUrl());
+                map.put("enabled", config.isEnabled());
+                result.add(map);
+            }
         }
-        String url = authUrl + "?client_id=" + clientId
-                + "&redirect_uri=" + redirectUri
-                + "&scope=" + URLEncoder.encode(scope, "UTF-8")
-                + "&response_type=code"
-                + "&state=" + URLEncoder.encode(state, "UTF-8");
-        response.sendRedirect(url);
+        return ResponseEntity.ok(result);
+    }
+
+    // --- 通用三方用户信息获取 ---
+    private Map<String, Object> fetchUserInfoMap(String code, OidcConfig config) {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_id", config.getClientId());
+        params.add("client_secret", config.getClientSecret());
+        params.add("code", code);
+        params.add("redirect_uri", config.getRedirectUri());
+        params.add("grant_type", "authorization_code");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
+        ResponseEntity<Map> tokenResp = restTemplate.postForEntity(config.getTokenEndpoint(), entity, Map.class);
+        String accessToken = (String) tokenResp.getBody().get("access_token");
+        HttpHeaders userHeaders = new HttpHeaders();
+        userHeaders.setBearerAuth(accessToken);
+        HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
+        ResponseEntity<Map> userResp = restTemplate.exchange(config.getUserInfoEndpoint(), HttpMethod.GET, userEntity, Map.class);
+        return userResp.getBody();
     }
 } 

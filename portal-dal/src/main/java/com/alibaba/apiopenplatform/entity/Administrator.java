@@ -21,7 +21,7 @@ import lombok.Builder;
         @UniqueConstraint(columnNames = {"adminId"}),
         @UniqueConstraint(columnNames = {"username"})
 })
-public class Administrator {
+public class Administrator extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,14 +37,5 @@ public class Administrator {
 
     @Column(nullable = false, length = 64)
     private String portalId;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false, updatable = false)
-    private Date createTime;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false)
-    private Date updateTime;
-
 
 } 

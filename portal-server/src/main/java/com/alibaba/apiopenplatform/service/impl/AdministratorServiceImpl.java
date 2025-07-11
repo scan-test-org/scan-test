@@ -47,16 +47,16 @@ public class AdministratorServiceImpl implements AdministratorService {
         if (administratorRepository.findByUsername(createDto.getUsername()).isPresent()) {
             throw new BusinessException(ErrorCode.RESOURCE_EXIST, "username", createDto.getUsername());
         }
-        Administrator admin = createDto.convertTo();
+        Administrator admin = new Administrator();
         admin.setAdminId(generateAdminId());
+        admin.setUsername(createDto.getUsername());
         admin.setPasswordHash(PasswordHasher.hash(createDto.getPassword()));
-        admin.setPortalId(createDto.getPortalId());
         return administratorRepository.save(admin);
     }
 
     @Override
-    public Optional<AuthResponseDto> loginWithPassword(String portalId, String username, String password) {
-        Optional<Administrator> adminOpt = administratorRepository.findByPortalIdAndUsername(portalId, username);
+    public Optional<AuthResponseDto> loginWithPassword(String username, String password) {
+        Optional<Administrator> adminOpt = administratorRepository.findByUsername(username);
         if (!adminOpt.isPresent()) {
             return Optional.empty();
         }
@@ -83,29 +83,28 @@ public class AdministratorServiceImpl implements AdministratorService {
 
     @Override
     public boolean needInit(String portalId) {
-        // 检查该portalId下是否已有管理员
-        return !administratorRepository.findByPortalId(portalId).isPresent();
+        // 只要管理员表无任何记录就允许初始化
+        return administratorRepository.count() == 0;
     }
 
     @Override
     @Transactional
     public Administrator initAdmin(String portalId, String username, String password) {
-        // 只允许首次初始化
-        if (!needInit(portalId)) {
+        // 只允许首次初始化（全表无记录）
+        if (!needInit(null)) {
             throw new BusinessException(ErrorCode.RESOURCE_EXIST, "admin", portalId);
         }
         Administrator admin = new Administrator();
         admin.setAdminId(generateAdminId());
         admin.setUsername(username);
         admin.setPasswordHash(PasswordHasher.hash(password));
-        admin.setPortalId(portalId);
         return administratorRepository.save(admin);
     }
 
     @Override
     @Transactional
-    public boolean changePassword(String portalId, String adminId, String oldPassword, String newPassword) {
-        Optional<Administrator> adminOpt = administratorRepository.findByPortalIdAndAdminId(portalId, adminId);
+    public boolean changePassword(String adminId, String oldPassword, String newPassword) {
+        Optional<Administrator> adminOpt = administratorRepository.findByAdminId(adminId);
         if (!adminOpt.isPresent()) {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "admin", adminId);
         }

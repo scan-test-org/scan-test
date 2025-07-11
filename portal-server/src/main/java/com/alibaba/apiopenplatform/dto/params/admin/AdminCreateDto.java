@@ -13,16 +13,9 @@ import javax.validation.constraints.Size;
  * @author zxd
  */
 @Data
-@NoArgsConstructor
-public class AdminCreateDto implements InputConverter<Administrator> {
+public class AdminCreateDto {
     @NotBlank(message = "用户名不能为空")
-    @Size(max = 64, message = "用户名长度不能超过64个字符")
     private String username;
-
     @NotBlank(message = "密码不能为空")
-    @Size(min = 6, max = 32, message = "密码长度应为6-32位")
     private String password;
-
-    @Size(max = 64, message = "portalId长度不能超过64个字符")
-    private String portalId;
 } 
