@@ -27,7 +27,6 @@ public class AdministratorAuthIntegrationTest {
     @Test
     void testAdminRegister() {
         AdminCreateDto createDto = new AdminCreateDto();
-        createDto.setPortalId("default");
         createDto.setUsername("admintest001");
         createDto.setPassword("admin123456");
         ResponseEntity<Response> registerResp = restTemplate.postForEntity(
@@ -40,7 +39,6 @@ public class AdministratorAuthIntegrationTest {
     @Test
     void testAdminLogin() {
         AdminLoginDto loginDto = new AdminLoginDto();
-        loginDto.setPortalId("default");
         loginDto.setUsername("admintest001");
         loginDto.setPassword("admin123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
@@ -54,7 +52,6 @@ public class AdministratorAuthIntegrationTest {
     void testAdminProtectedApiWithValidToken() {
         // 登录获取token
         AdminLoginDto loginDto = new AdminLoginDto();
-        loginDto.setPortalId("default");
         loginDto.setUsername("admintest001");
         loginDto.setPassword("admin123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
@@ -88,7 +85,6 @@ public class AdministratorAuthIntegrationTest {
     void testAdminTokenBlacklist() {
         // 登录获取token
         AdminLoginDto loginDto = new AdminLoginDto();
-        loginDto.setPortalId("default");
         loginDto.setUsername("admintest001");
         loginDto.setPassword("admin123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
@@ -127,7 +123,6 @@ public class AdministratorAuthIntegrationTest {
 
         // 初始化
         AdminCreateDto createDto = new AdminCreateDto();
-        createDto.setPortalId("default");
         createDto.setUsername("admintest002");
         createDto.setPassword("admin123456");
         ResponseEntity<Response> initResp = restTemplate.postForEntity(
@@ -158,12 +153,10 @@ public class AdministratorAuthIntegrationTest {
     void testChangePasswordSuccessAndFail() {
         // 初始化并登录
         AdminCreateDto createDto = new AdminCreateDto();
-        createDto.setPortalId("default");
         createDto.setUsername("admintest004");
         createDto.setPassword("admin123456");
         restTemplate.postForEntity("/api/admin/init", createDto, Response.class);
         AdminLoginDto loginDto = new AdminLoginDto();
-        loginDto.setPortalId("default");
         loginDto.setUsername("admintest004");
         loginDto.setPassword("admin123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(

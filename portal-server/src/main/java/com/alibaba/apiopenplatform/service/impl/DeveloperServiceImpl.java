@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.repository.PortalSettingRepository;
+import com.alibaba.apiopenplatform.entity.PortalSetting;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -36,6 +38,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     private final DeveloperRepository developerRepository;
     private final JwtService jwtService;
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
+    private final PortalSettingRepository portalSettingRepository;
     private static final Logger log = LoggerFactory.getLogger(DeveloperServiceImpl.class);
 
     @Override
@@ -56,7 +59,8 @@ public class DeveloperServiceImpl implements DeveloperService {
         }
         Developer developer = createDto.convertTo();
         developer.setDeveloperId(generateDeveloperId());
-        developer.setPortalId("default");
+        developer.setPortalId(createDto.getPortalId());
+        developer.setAvatarUrl(createDto.getAvatarUrl());
         developer.setPasswordHash(PasswordHasher.hash(createDto.getPassword()));
         developer.setStatus("ACTIVE");
         developer.setAuthType("LOCAL");
@@ -160,8 +164,14 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     @Transactional
-    public void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson) {
-        log.info("[bindExternalIdentity] userId={}, providerName={}, providerSubject={}", userId, providerName, providerSubject);
+    public void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson, String portalId) {
+        // 查库校验 providerName 是否为有效 provider，需传递 portalId
+        PortalSetting setting = portalSettingRepository.findByPortalIdAndProvider(portalId, providerName)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "portal_setting", portalId + "," + providerName));
+        if (setting.getOidcConfig() == null || !setting.getOidcConfig().isEnabled()) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID, "OIDC配置未启用");
+        }
+        log.info("[bindExternalIdentity] userId={}, portalId={}, providerName={}, providerSubject={}", userId, portalId, providerName, providerSubject);
         Optional<Developer> devOpt = findByDeveloperId(userId);
         log.info("[bindExternalIdentity] findByDeveloperId({}) result: {}", userId, devOpt.isPresent() ? devOpt.get().getUsername() : "not found");
         if (!devOpt.isPresent()) {
@@ -189,7 +199,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         ext.setRawInfoJson(rawInfoJson);
         ext.setDeveloper(developer);
         developerExternalIdentityRepository.save(ext);
-        log.info("[bindExternalIdentity] 绑定成功，userId={}, providerName={}, providerSubject={}", userId, providerName, providerSubject);
+        log.info("[bindExternalIdentity] 绑定成功，userId={}, portalId={}, providerName={}, providerSubject={}", userId, portalId, providerName, providerSubject);
     }
 
     /**
@@ -197,9 +207,13 @@ public class DeveloperServiceImpl implements DeveloperService {
      * @param userId 当前开发者ID
      * @param providerName 第三方类型
      * @param providerSubject 第三方唯一标识
+     * @param portalId 门户唯一标识（建议前端传递）
      */
     @Transactional
-    public void unbindExternalIdentity(String userId, String providerName, String providerSubject) {
+    public void unbindExternalIdentity(String userId, String providerName, String providerSubject, String portalId) {
+        // 新增：查库校验 providerName 是否为有效 provider
+        portalSettingRepository.findByPortalIdAndProvider(portalId, providerName)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "portal_setting", portalId + "," + providerName));
         // 查找该用户所有外部身份
         java.util.List<DeveloperExternalIdentity> identities = developerExternalIdentityRepository.findByDeveloper_DeveloperId(userId);
         // 查找开发者
@@ -213,6 +227,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         }
         // 删除外部身份
         developerExternalIdentityRepository.deleteByProviderAndSubjectAndDeveloper_DeveloperId(providerName, providerSubject, userId);
+        log.info("[unbindExternalIdentity] 解绑成功，userId={}, portalId={}, providerName={}, providerSubject={}", userId, portalId, providerName, providerSubject);
     }
 
     /**

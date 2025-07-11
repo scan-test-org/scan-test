@@ -27,9 +27,9 @@ public interface AdministratorService {
     Administrator createAdministrator(AdminCreateDto createDto);
 
     /**
-     * 多租户下校验用户名和密码，返回认证结果DTO
+     * 校验用户名和密码，返回认证结果DTO
      */
-    Optional<AuthResponseDto> loginWithPassword(String portalId, String username, String password);
+    Optional<AuthResponseDto> loginWithPassword(String username, String password);
 
     /**
      * 检查指定portalId下是否需要初始化管理员
@@ -44,5 +44,5 @@ public interface AdministratorService {
     /**
      * 管理员修改密码
      */
-    boolean changePassword(String portalId, String adminId, String oldPassword, String newPassword);
+    boolean changePassword(String adminId, String oldPassword, String newPassword);
 } 
