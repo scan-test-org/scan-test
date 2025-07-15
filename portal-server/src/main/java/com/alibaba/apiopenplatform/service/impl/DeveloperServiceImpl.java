@@ -1,7 +1,11 @@
 package com.alibaba.apiopenplatform.service.impl;
 
+import cn.hutool.core.util.EnumUtil;
+import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateDto;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
+import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
 import com.alibaba.apiopenplatform.service.DeveloperService;
@@ -10,19 +14,21 @@ import com.alibaba.apiopenplatform.auth.JwtService;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepository;
 import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
+import com.alibaba.apiopenplatform.service.PortalService;
+import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
-import com.alibaba.apiopenplatform.repository.PortalSettingRepository;
+import com.alibaba.apiopenplatform.repository.portal.PortalSettingRepository;
 import com.alibaba.apiopenplatform.entity.PortalSetting;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -34,12 +40,14 @@ import java.util.Optional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DeveloperServiceImpl implements DeveloperService {
     private final DeveloperRepository developerRepository;
     private final JwtService jwtService;
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     private final PortalSettingRepository portalSettingRepository;
-    private static final Logger log = LoggerFactory.getLogger(DeveloperServiceImpl.class);
+
+    private PortalService portalService;
 
     @Override
     public Optional<Developer> findByUsername(String username) {
@@ -62,7 +70,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         developer.setPortalId(createDto.getPortalId());
         developer.setAvatarUrl(createDto.getAvatarUrl());
         developer.setPasswordHash(PasswordHasher.hash(createDto.getPassword()));
-        developer.setStatus("ACTIVE");
+        developer.setStatus(DeveloperStatus.APPROVED);
         developer.setAuthType("LOCAL");
         return developerRepository.save(developer);
     }
@@ -97,7 +105,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         dto.setToken(token);
         dto.setUserId(developer.getDeveloperId());
         dto.setUsername(developer.getUsername());
-        dto.setStatus(developer.getStatus());
+//        dto.setStatus(developer.getStatus());
         dto.setUserType("developer");
         return Optional.of(dto);
     }
@@ -122,7 +130,7 @@ public class DeveloperServiceImpl implements DeveloperService {
             developer.setUsername(displayName != null ? displayName : providerName + "_" + providerSubject);
             developer.setPasswordHash(null);
             developer.setEmail(email);
-            developer.setStatus("APPROVED");
+            developer.setStatus(DeveloperStatus.APPROVED);
             developer.setAuthType("OIDC");
             developer.setPortalId("default");
             developer = developerRepository.save(developer);
@@ -144,9 +152,9 @@ public class DeveloperServiceImpl implements DeveloperService {
         String token = null;
         try {
             token = jwtService.generateToken(
-                "developer",
-                developer.getDeveloperId(),
-                claims
+                    "developer",
+                    developer.getDeveloperId(),
+                    claims
             );
         } catch (Exception e) {
             log.error("[handleExternalLogin] 生成JWT异常: {}", e.getMessage(), e);
@@ -156,7 +164,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         dto.setToken(token);
         dto.setUserId(developer.getDeveloperId());
         dto.setUsername(developer.getUsername());
-        dto.setStatus(developer.getStatus());
+//        dto.setStatus(developer.getStatus());
         dto.setUserType("developer");
         log.info("[handleExternalLogin] 返回JWT，developerId={}, token={}...", developer.getDeveloperId(), token != null ? token.substring(0, Math.min(16, token.length())) : null);
         return Optional.of(dto);
@@ -204,8 +212,9 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     /**
      * 解绑外部身份（第三方登录）
-     * @param userId 当前开发者ID
-     * @param providerName 第三方类型
+     *
+     * @param userId          当前开发者ID
+     * @param providerName    第三方类型
      * @param providerSubject 第三方唯一标识
      * @param portalId 门户唯一标识（建议前端传递）
      */
@@ -220,8 +229,8 @@ public class DeveloperServiceImpl implements DeveloperService {
         Developer developer = developerRepository.findByDeveloperId(userId).orElseThrow(() -> new RuntimeException("用户不存在"));
         boolean hasBuiltin = developer.getPasswordHash() != null;
         long otherCount = identities.stream()
-            .filter(id -> !(id.getProvider().equals(providerName) && id.getSubject().equals(providerSubject)))
-            .count();
+                .filter(id -> !(id.getProvider().equals(providerName) && id.getSubject().equals(providerSubject)))
+                .count();
         if (!hasBuiltin && otherCount == 0) {
             throw new RuntimeException("解绑失败，账号至少保留一种登录方式");
         }
@@ -232,6 +241,7 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     /**
      * 注销开发者账号（删除账号及所有外部身份）
+     *
      * @param userId 当前开发者ID
      */
     @Transactional
@@ -243,7 +253,31 @@ public class DeveloperServiceImpl implements DeveloperService {
         // TODO: 删除其他相关数据（如token、个人信息、日志等，视业务而定）
     }
 
+    @Override
+    public PageResult<DeveloperResult> listDevelopers(String portalId, Pageable pageable) {
+        portalService.hasPortal(portalId);
+        Page<Developer> developers = developerRepository.findByPortalId(portalId, pageable);
+
+        Page<DeveloperResult> pages = developers.map(developer -> new DeveloperResult().convertFrom(developer));
+        return new PageResult<DeveloperResult>().convertFrom(pages);
+    }
+
+    @Override
+    public void setDeveloperStatus(String portalId, String developerId, String status) {
+        portalService.hasPortal(portalId);
+        Developer developer = findDeveloper(developerId);
+
+        DeveloperStatus developerStatus = EnumUtil.fromString(DeveloperStatus.class, status);
+        developer.setStatus(developerStatus);
+        developerRepository.save(developer);
+    }
+
     private String generateDeveloperId() {
         return IdGenerator.genDeveloperId();
+    }
+
+    private Developer findDeveloper(String developerId) {
+        return developerRepository.findByDeveloperId(developerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.DEVELOPER, developerId));
     }
 } 

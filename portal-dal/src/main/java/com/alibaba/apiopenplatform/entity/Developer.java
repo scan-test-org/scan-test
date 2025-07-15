@@ -2,6 +2,8 @@ package com.alibaba.apiopenplatform.entity;
 
 import javax.persistence.*;
 import java.util.Date;
+
+import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -48,7 +50,8 @@ public class Developer extends BaseEntity implements Serializable {
     private String avatarUrl; // 头像url
 
     @Column(nullable = false, length = 16)
-    private String status; // PENDING, APPROVED
+    @Enumerated(EnumType.STRING)
+    private DeveloperStatus status; // PENDING, APPROVED
 
     @Column(nullable = false, length = 16)
     private String authType; // BUILT, OIDC

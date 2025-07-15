@@ -10,10 +10,14 @@ import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 /**
  * @author zh
@@ -45,9 +49,8 @@ public class PortalController {
 
     @Operation(summary = "获取门户列表")
     @GetMapping("/list")
-    public PageResult<PortalResult> listPortals(@RequestParam(defaultValue = "1") int pageNumber,
-                                                @RequestParam(defaultValue = "10") int pageSize) {
-        return portalService.listPortals(pageNumber - 1, pageSize);
+    public PageResult<PortalResult> listPortals(@PageableDefault(sort = "gmt_create", direction = DESC) Pageable pageable) {
+        return portalService.listPortals(pageable);
     }
 
     @Operation(summary = "更新门户的基础信息")
