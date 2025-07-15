@@ -5,6 +5,7 @@ import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
 import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepository;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
 import com.alibaba.apiopenplatform.service.DeveloperService;
+import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,6 @@ import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.repository.PortalSettingRepository;
-import com.alibaba.apiopenplatform.support.OidcConfig;
 import java.net.URLDecoder;
 
 /**
