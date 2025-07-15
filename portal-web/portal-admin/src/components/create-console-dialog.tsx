@@ -34,13 +34,11 @@ interface Console {
 interface CreateConsoleDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (console: Omit<Console, "id" | "lastUpdated">) => void
 }
 
 export function CreateConsoleDialog({
   open,
   onOpenChange,
-  onSubmit,
 }: CreateConsoleDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -54,7 +52,6 @@ export function CreateConsoleDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
     setFormData({
       name: "",
       description: "",
@@ -77,7 +74,7 @@ export function CreateConsoleDialog({
           <DialogTitle>导入网关实例</DialogTitle>
           
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">网关名称 *</Label>

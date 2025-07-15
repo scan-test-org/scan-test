@@ -231,7 +231,6 @@ export default function PortalDetailPage() {
               <item.icon className="h-4 w-4" />
               <div>
                 <div className="font-medium">{item.label}</div>
-                <div className="text-xs opacity-70">{item.description}</div>
               </div>
             </button>
           ))}

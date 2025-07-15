@@ -227,7 +227,6 @@ export default function ConsolesPage() {
       <CreateConsoleDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
-        onSubmit={handleCreateGateway}
       />
     </div>
   )
