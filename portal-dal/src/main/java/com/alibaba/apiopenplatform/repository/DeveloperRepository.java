@@ -1,6 +1,8 @@
 package com.alibaba.apiopenplatform.repository;
 
 import com.alibaba.apiopenplatform.entity.Developer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 import java.util.List;
@@ -17,4 +19,6 @@ public interface DeveloperRepository extends JpaRepository<Developer, Long> {
     List<Developer> findByPortalId(String portalId);
     Optional<Developer> findByPortalIdAndUsername(String portalId, String username);
     Optional<Developer> findByPortalIdAndEmail(String portalId, String email);
+
+    Page<Developer> findByPortalId(String adminId, Pageable pageable);
 } 
