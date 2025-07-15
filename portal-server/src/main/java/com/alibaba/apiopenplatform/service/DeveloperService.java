@@ -48,7 +48,6 @@ public interface DeveloperService {
      * @param rawInfoJson     第三方原始信息JSON
      */
     void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson, String portalId);
-    void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson);
 
     /**
      * 解绑外部身份（第三方登录）
@@ -58,8 +57,6 @@ public interface DeveloperService {
      * @param providerSubject 第三方唯一标识
      * @param portalId 门户唯一标识
      */
-    void unbindExternalIdentity(String userId, String providerName, String providerSubject);
-
     void unbindExternalIdentity(String userId, String providerName, String providerSubject, String portalId);
     /**
      * 注销开发者账号（删除账号及所有外部身份）

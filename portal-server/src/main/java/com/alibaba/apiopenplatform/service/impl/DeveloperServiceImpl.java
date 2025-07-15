@@ -8,6 +8,7 @@ import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
+import com.alibaba.apiopenplatform.repository.PortalSettingRepository;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.core.utils.PasswordHasher;
 import com.alibaba.apiopenplatform.auth.JwtService;
@@ -19,14 +20,11 @@ import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
-import com.alibaba.apiopenplatform.repository.portal.PortalSettingRepository;
 import com.alibaba.apiopenplatform.entity.PortalSetting;
 
 import java.util.HashMap;
@@ -216,7 +214,7 @@ public class DeveloperServiceImpl implements DeveloperService {
      * @param userId          当前开发者ID
      * @param providerName    第三方类型
      * @param providerSubject 第三方唯一标识
-     * @param portalId 门户唯一标识（建议前端传递）
+     * @param portalId        门户唯一标识（建议前端传递）
      */
     @Transactional
     public void unbindExternalIdentity(String userId, String providerName, String providerSubject, String portalId) {
