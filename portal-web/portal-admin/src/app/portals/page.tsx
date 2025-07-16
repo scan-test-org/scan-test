@@ -165,7 +165,7 @@ export default function PortalsPage() {
   }, [portals])
 
   const handlePortalClick = useCallback((portalId: string) => {
-    router.push(`/portals/${portalId}`)
+    router.push(`/portals/detail?id=${portalId}`)
   }, [router])
 
   return (

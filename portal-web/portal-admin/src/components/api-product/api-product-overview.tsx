@@ -25,23 +25,12 @@ interface ApiProduct {
   policies: number
 }
 
-const mockApiProduct: ApiProduct = {
-  id: "api-001",
-  name: "Payment API",
-  description: "支付处理API，提供完整的支付解决方案",
-  version: "v1.2.0",
-  status: "published",
-  visibility: "public",
-  createdAt: "2025-01-01T10:00:00Z",
-  updatedAt: "2025-01-08T15:30:00Z",
-  portals: 3,
-  linkedServices: 5,
-  policies: 8
+interface ApiProductOverviewProps {
+  apiProduct: ApiProduct
 }
 
-export default function ApiProductOverviewPage() {
+export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
   const [copied, setCopied] = useState(false)
-  const apiProduct = mockApiProduct // 实际项目中从API获取
   
   const handleCopyId = async () => {
     await navigator.clipboard.writeText(apiProduct.id)
@@ -62,11 +51,12 @@ export default function ApiProductOverviewPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-          <h1 className="text-2xl font-bold">Overview</h1>
-          <p className="text-muted-foreground mt-1">
-            概览
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Overview</h1>
+        <p className="text-muted-foreground mt-1">
+          概览
+        </p>
+      </div>
+      
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
