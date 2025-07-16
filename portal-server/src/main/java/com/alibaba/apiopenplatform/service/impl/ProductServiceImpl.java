@@ -7,9 +7,12 @@ import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
+import com.alibaba.apiopenplatform.dto.result.APIRefResult;
 import com.alibaba.apiopenplatform.entity.Product;
 import com.alibaba.apiopenplatform.entity.ProductSetting;
+import com.alibaba.apiopenplatform.entity.APIRef;
 import com.alibaba.apiopenplatform.repository.ProductRepository;
+import com.alibaba.apiopenplatform.repository.APIRefRepository;
 import com.alibaba.apiopenplatform.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,6 +21,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Product Service Implementation
@@ -28,9 +33,11 @@ import java.util.Optional;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final APIRefRepository apiRefRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, APIRefRepository apiRefRepository) {
         this.productRepository = productRepository;
+        this.apiRefRepository = apiRefRepository;
     }
 
     @Override
@@ -196,5 +203,63 @@ public class ProductServiceImpl implements ProductService {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId);
         }
         return product;
+    }
+
+    @Override
+    public APIRefResult addAPIRef(APIRefParam param) {
+        // 检查产品是否存在
+        findProduct(param.getProductId());
+        
+        // 检查是否已存在相同的API引用
+        if (apiRefRepository.findByProductIdAndApiId(param.getProductId(), param.getApiId()) != null) {
+            throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.API_REF, param.getApiId());
+        }
+
+        APIRef apiRef = param.convertTo();
+        apiRef = apiRefRepository.save(apiRef);
+        
+        return new APIRefResult().convertFrom(apiRef);
+    }
+
+    @Override
+    public List<APIRefResult> getAPIRefsByProductId(String productId) {
+        // 检查产品是否存在
+        findProduct(productId);
+        
+        List<APIRef> apiRefs = apiRefRepository.findByProductId(productId);
+        return apiRefs.stream()
+                .map(apiRef -> new APIRefResult().convertFrom(apiRef))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteAPIRef(String productId, String apiId) {
+        // 检查产品是否存在
+        findProduct(productId);
+        
+        APIRef apiRef = apiRefRepository.findByProductIdAndApiId(productId, apiId);
+        if (apiRef == null) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.API_REF, apiId);
+        }
+        apiRefRepository.delete(apiRef);
+    }
+
+    @Override
+    public List<APIRefResult> batchAddAPIRefs(String productId, List<APIRefParam> apiRefParams) {
+        // 检查产品是否存在
+        findProduct(productId);
+        
+        List<APIRef> apiRefs = apiRefParams.stream()
+                .map(param -> {
+                    param.setProductId(productId);
+                    return param.convertTo();
+                })
+                .collect(Collectors.toList());
+
+        List<APIRef> savedApiRefs = apiRefRepository.saveAll(apiRefs);
+        
+        return savedApiRefs.stream()
+                .map(apiRef -> new APIRefResult().convertFrom(apiRef))
+                .collect(Collectors.toList());
     }
 }

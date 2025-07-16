@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
+import java.util.List;
 
 /**
  * Product Entity
@@ -19,7 +20,8 @@ import javax.persistence.*;
 @NamedEntityGraph(
         name = "product.properties",
         attributeNodes = {
-                @NamedAttributeNode("productSetting")
+                @NamedAttributeNode("productSetting"),
+                @NamedAttributeNode("apiRefs")
         }
 )
 @Data
@@ -67,4 +69,7 @@ public class Product extends BaseEntity {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @PrimaryKeyJoinColumn
     private ProductSetting productSetting;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<APIRef> apiRefs;
 }
