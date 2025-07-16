@@ -10,4 +10,8 @@ public class Resources {
     public static final String PORTAL_SETTING = "PortalSetting";
 
     public static final String PORTAL_UI = "PortalUI";
+
+    public static final String PRODUCT = "Product";
+
+    public static final String PRODUCT_SETTING = "ProductSetting";
 }
