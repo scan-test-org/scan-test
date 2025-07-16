@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter, usePathname } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
@@ -22,6 +22,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useSidebar } from "@/components/ui/sidebar"
+import { ApiProductOverview } from "@/components/api-product/api-product-overview"
+import { ApiProductLinkApi } from "@/components/api-product/api-product-link-api"
+import { ApiProductApiDocs } from "@/components/api-product/api-product-api-docs"
+import { ApiProductUsageGuide } from "@/components/api-product/api-product-usage-guide"
+import { ApiProductPortal } from "@/components/api-product/api-product-portal"
+import { ApiProductPolicy } from "@/components/api-product/api-product-policy"
 
 interface ApiProduct {
   id: string
@@ -56,67 +62,47 @@ const menuItems = [
     key: "overview",
     label: "Overview",
     icon: LayoutDashboard,
-    description: "基本信息和统计",
-    href: ""
+    description: "基本信息和统计"
   },
   {
     key: "link-api",
     label: "Link API",
     icon: Link,
-    description: "关联的网关服务",
-    href: "/link-api"
+    description: "关联的网关服务"
   },
   {
     key: "api-docs",
     label: "API Docs",
     icon: FileText,
-    description: "API文档编辑",
-    href: "/api-docs"
+    description: "API文档编辑"
   },
   {
     key: "usage-guide",
     label: "Usage Guide",
     icon: BookOpen,
-    description: "使用指南编辑",
-    href: "/usage-guide"
+    description: "使用指南编辑"
   },
   {
     key: "portal",
     label: "Portal",
     icon: Globe,
-    description: "发布的门户",
-    href: "/portal"
+    description: "发布的门户"
   },
   {
     key: "policy",
     label: "Policy",
     icon: Shield,
-    description: "策略管理",
-    href: "/policy"
+    description: "策略管理"
   }
 ]
 
-export default function ApiProductLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function ApiProductDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const pathname = usePathname()
   const { open, setOpen } = useSidebar()
+  const [activeTab, setActiveTab] = useState("overview")
   const [isInitialized, setIsInitialized] = useState(false)
   const apiProduct = mockApiProduct // 实际项目中从API获取
-
-  // 获取当前激活的标签
-  const getCurrentTab = () => {
-    const basePath = `/api-products/${params.id}`
-    if (pathname === basePath) return "overview"
-    
-    const subPath = pathname.replace(basePath, "")
-    const menuItem = menuItems.find(item => item.href === subPath)
-    return menuItem?.key || "overview"
-  }
 
   // 页面进入时收起主侧边栏，离开时自动恢复
   useEffect(() => {
@@ -170,18 +156,29 @@ export default function ApiProductLayout({
     }, 100)
   }
 
-  const handleNavigation = (item: typeof menuItems[0]) => {
-    const basePath = `/api-products/${params.id}`
-    const targetPath = item.href === "" ? basePath : `${basePath}${item.href}`
-    router.push(targetPath)
+  const renderContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return <ApiProductOverview apiProduct={apiProduct} />
+      case "link-api":
+        return <ApiProductLinkApi apiProduct={apiProduct} />
+      case "api-docs":
+        return <ApiProductApiDocs apiProduct={apiProduct} />
+      case "usage-guide":
+        return <ApiProductUsageGuide apiProduct={apiProduct} />
+      case "portal":
+        return <ApiProductPortal apiProduct={apiProduct} />
+      case "policy":
+        return <ApiProductPolicy apiProduct={apiProduct} />
+      default:
+        return <ApiProductOverview apiProduct={apiProduct} />
+    }
   }
 
   // 等待初始化完成再渲染
   if (!isInitialized) {
     return <div className="flex h-full items-center justify-center">Loading...</div>
   }
-
-  const activeTab = getCurrentTab()
 
   return (
     <div className="flex h-full">
@@ -236,7 +233,7 @@ export default function ApiProductLayout({
           {menuItems.map((item) => (
             <button
               key={item.key}
-              onClick={() => handleNavigation(item)}
+              onClick={() => setActiveTab(item.key)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
                 activeTab === item.key
                   ? "bg-primary text-primary-foreground"
@@ -255,7 +252,7 @@ export default function ApiProductLayout({
 
       {/* 主内容区域 */}
       <div className="flex-1 overflow-auto">
-        {children}
+        {renderContent()}
       </div>
     </div>
   )

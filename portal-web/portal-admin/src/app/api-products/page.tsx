@@ -242,7 +242,7 @@ export default function ApiProductsPage() {
 
   // 优化的导航处理函数
   const handleNavigateToProduct = useCallback((productId: string) => {
-    router.push(`/api-products/${productId}`)
+    router.push(`/api-products/detail?id=${productId}`)
   }, [router])
 
   const handleCreateApiProduct = useCallback((newProduct: Omit<ApiProduct, "id" | "status" | "requests" | "errorRate" | "avgLatency" | "createdAt">) => {
