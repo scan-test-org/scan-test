@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.dto.params.portal;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
-import com.alibaba.apiopenplatform.support.OidcConfig;
+import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
