@@ -6,7 +6,7 @@ import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalSettingParam;
 import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalUiParam;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * @author zh
@@ -30,13 +30,20 @@ public interface PortalService {
     PortalResult getPortal(String portalId);
 
     /**
-     * 查询门户列表
+     * 检查门户是否存在
      *
-     * @param pageNumber
-     * @param pageSize
+     * @param portalId
      * @return
      */
-    PageResult<PortalResult> listPortals(int pageNumber, int pageSize);
+    boolean hasPortal(String portalId);
+
+    /**
+     * 查询门户列表
+     *
+     * @param pageable
+     * @return
+     */
+    PageResult<PortalResult> listPortals(Pageable pageable);
 
     /**
      * 更新门户

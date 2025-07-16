@@ -35,6 +35,13 @@ public class ResponseAdvice implements ResponseBodyAdvice<Object> {
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+        // 排除Swagger相关路径
+        Class<?> declaringClass = returnType.getDeclaringClass();
+        if (declaringClass.getName().contains("org.springdoc") ||
+                declaringClass.getName().contains("springfox.documentation")) {
+            return false;
+        }
+
         return !returnType.getParameterType().equals(ResponseEntity.class)
                 && !returnType.getParameterType().equals(Response.class);
     }
