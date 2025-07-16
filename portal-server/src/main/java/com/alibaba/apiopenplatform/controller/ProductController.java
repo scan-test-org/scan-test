@@ -2,6 +2,8 @@ package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.core.response.Response;
 import com.alibaba.apiopenplatform.dto.params.product.*;
+import com.alibaba.apiopenplatform.dto.params.product.APIRefParam;
+import com.alibaba.apiopenplatform.dto.result.APIRefResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
 import com.alibaba.apiopenplatform.service.ProductService;
@@ -9,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * Product Controller
@@ -140,7 +143,50 @@ public class ProductController {
         return Response.ok(null);
     }
 
+    /**
+     * 为产品添加API引用
+     * POST /products/{id}/api-refs
+     */
+    @PostMapping("/{id}/api-refs")
+    public Response<APIRefResult> addAPIRef(
+            @PathVariable String id,
+            @Valid @RequestBody APIRefParam param) {
+        param.setProductId(id);
+        APIRefResult result = productService.addAPIRef(param);
+        return Response.ok(result);
+    }
 
+    /**
+     * 获取产品的API引用列表
+     * GET /products/{id}/api-refs
+     */
+    @GetMapping("/{id}/api-refs")
+    public Response<List<APIRefResult>> getAPIRefs(@PathVariable String id) {
+        List<APIRefResult> result = productService.getAPIRefsByProductId(id);
+        return Response.ok(result);
+    }
 
+    /**
+     * 删除产品的API引用
+     * DELETE /products/{id}/api-refs/{apiId}
+     */
+    @DeleteMapping("/{id}/api-refs/{apiId}")
+    public Response<Void> deleteAPIRef(
+            @PathVariable String id,
+            @PathVariable String apiId) {
+        productService.deleteAPIRef(id, apiId);
+        return Response.ok(null);
+    }
 
+    /**
+     * 批量添加API引用
+     * POST /products/{id}/api-refs/batch
+     */
+    @PostMapping("/{id}/api-refs/batch")
+    public Response<List<APIRefResult>> batchAddAPIRefs(
+            @PathVariable String id,
+            @Valid @RequestBody List<APIRefParam> apiRefParams) {
+        List<APIRefResult> result = productService.batchAddAPIRefs(id, apiRefParams);
+        return Response.ok(result);
+    }
 }

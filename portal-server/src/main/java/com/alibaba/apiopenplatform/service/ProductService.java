@@ -3,10 +3,13 @@ package com.alibaba.apiopenplatform.service;
 import com.alibaba.apiopenplatform.dto.params.product.CreateProductParam;
 import com.alibaba.apiopenplatform.dto.params.product.UpdateProductParam;
 import com.alibaba.apiopenplatform.dto.params.product.UpdateProductSettingParam;
+import com.alibaba.apiopenplatform.dto.params.product.APIRefParam;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
-import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
+import com.alibaba.apiopenplatform.dto.result.APIRefResult;
 import org.springframework.data.domain.Page;
+
+import java.util.List;
 
 /**
  * @author zh
@@ -107,4 +110,37 @@ public interface ProductService {
      * @param productId
      */
     void deleteProduct(String productId);
+
+    /**
+     * 为产品添加API引用
+     *
+     * @param param
+     * @return
+     */
+    APIRefResult addAPIRef(APIRefParam param);
+
+    /**
+     * 获取产品的API引用列表
+     *
+     * @param productId
+     * @return
+     */
+    List<APIRefResult> getAPIRefsByProductId(String productId);
+
+    /**
+     * 删除产品的API引用
+     *
+     * @param productId
+     * @param apiId
+     */
+    void deleteAPIRef(String productId, String apiId);
+
+    /**
+     * 批量添加API引用
+     *
+     * @param productId
+     * @param apiRefParams
+     * @return
+     */
+    List<APIRefResult> batchAddAPIRefs(String productId, List<APIRefParam> apiRefParams);
 }
