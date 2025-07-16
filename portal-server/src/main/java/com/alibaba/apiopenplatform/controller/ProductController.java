@@ -4,16 +4,11 @@ import com.alibaba.apiopenplatform.core.response.Response;
 import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
-import com.alibaba.apiopenplatform.dto.result.ProductVersionResult;
-import com.alibaba.apiopenplatform.dto.result.ProductConfigResult;
 import com.alibaba.apiopenplatform.service.ProductService;
-import com.alibaba.apiopenplatform.service.ProductVersionService;
-import com.alibaba.apiopenplatform.service.ProductConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 /**
  * Product Controller
@@ -25,15 +20,9 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    private final ProductVersionService productVersionService;
-    private final ProductConfigService productConfigService;
 
-    public ProductController(ProductService productService, 
-                           ProductVersionService productVersionService,
-                           ProductConfigService productConfigService) {
+    public ProductController(ProductService productService) {
         this.productService = productService;
-        this.productVersionService = productVersionService;
-        this.productConfigService = productConfigService;
     }
 
     /**
@@ -151,76 +140,7 @@ public class ProductController {
         return Response.ok(null);
     }
 
-    /**
-     * 创建新的Product版本
-     * POST /products/{id}/versions
-     */
-    @PostMapping("/{id}/versions")
-    public Response<ProductVersionResult> createProductVersion(
-            @PathVariable String id,
-            @Valid @RequestBody CreateProductVersionParam param) {
-        param.setProductId(id);
-        ProductVersionResult result = productVersionService.createVersion(param);
-        return Response.ok(result);
-    }
 
-    /**
-     * 获取Product的版本列表
-     * GET /products/{id}/versions
-     */
-    @GetMapping("/{id}/versions")
-    public Response<List<ProductVersionResult>> listProductVersions(@PathVariable String id) {
-        List<ProductVersionResult> result = productVersionService.listVersions(id);
-        return Response.ok(result);
-    }
 
-    /**
-     * 更新Product版本
-     * PUT /products/{id}/versions/{version_id}
-     */
-    @PutMapping("/{id}/versions/{versionId}")
-    public Response<ProductVersionResult> updateProductVersion(
-            @PathVariable String id,
-            @PathVariable String versionId,
-            @Valid @RequestBody UpdateProductVersionParam param) {
-        param.setProductId(id);
-        param.setVersionId(versionId);
-        ProductVersionResult result = productVersionService.updateVersion(param);
-        return Response.ok(result);
-    }
 
-    /**
-     * 添加或更新Product配置
-     * POST /products/{id}/configs
-     */
-    @PostMapping("/{id}/configs")
-    public Response<ProductConfigResult> addOrUpdateProductConfig(
-            @PathVariable String id,
-            @Valid @RequestBody ProductConfigParam param) {
-        param.setProductId(id);
-        ProductConfigResult result = productConfigService.addOrUpdateConfig(param);
-        return Response.ok(result);
-    }
-
-    /**
-     * 获取Product的配置列表
-     * GET /products/{id}/configs
-     */
-    @GetMapping("/{id}/configs")
-    public Response<List<ProductConfigResult>> listProductConfigs(@PathVariable String id) {
-        List<ProductConfigResult> result = productConfigService.listConfigs(id);
-        return Response.ok(result);
-    }
-
-    /**
-     * 删除Product配置
-     * DELETE /products/{id}/configs/{config_key}
-     */
-    @DeleteMapping("/{id}/configs/{configKey}")
-    public Response<Void> deleteProductConfig(
-            @PathVariable String id,
-            @PathVariable String configKey) {
-        productConfigService.deleteConfig(id, configKey);
-        return Response.ok(null);
-    }
 }
