@@ -53,15 +53,11 @@ spring:
   #           jwk-set-uri: https://oauth.aliyun.com/v1/keys
 
 db:
-#  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
-  host: localhost
+  host: rm-bp1070fq88467lp8tao.mysql.rds.aliyuncs.com
   port: 3306
-  name: api_open_platform
-#  username: portal_test
-#  password: portal-Go
-  username: root
-#  password: zhangxiaodan
-  password: 12345678
+  name: portal
+  username: portal
+  password: portal@123
 
 springdoc:
   api-docs:

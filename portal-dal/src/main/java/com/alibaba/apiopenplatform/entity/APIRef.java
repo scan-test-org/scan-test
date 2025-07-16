@@ -30,8 +30,4 @@ public class APIRef extends BaseEntity {
 
     @Column(name = "product_id", length = 32, nullable = false)
     private String productId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
 }
