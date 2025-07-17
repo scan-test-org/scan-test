@@ -80,6 +80,9 @@ public class SecurityConfig {
             .and()
             .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // ========== 开发调试阶段临时放开 MCP Market 接口，后期务必加回权限 ==========
+                .antMatchers("/api/mcpmarket/**").permitAll()
+                // ========== ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
                 // 管理员初始化、检测、登录接口全部放行
                 .antMatchers("/api/admin/init", "/api/admin/need-init", "/api/admin/login", "/api/admin/change-password").permitAll()
                 .antMatchers("/api/developer/register", "/api/developer/login").permitAll()
@@ -89,7 +92,7 @@ public class SecurityConfig {
                 .antMatchers("/api/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/developer/**").hasRole("DEVELOPER")
                 .antMatchers("/portal/swagger-ui.html", "/portal/swagger-ui/**", "/portal/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             .and()
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .authenticationProvider(developerAuthenticationProvider);

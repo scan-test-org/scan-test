@@ -10,49 +10,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: Ov23li7sAjjTpWD5cQUH
-            client-secret: 4ac43a4cd418af08cffb507916eb9ae6a326f456
-            redirect-uri: http://localhost:8080/oauth2/callback
-            scope: user:email
-            authorization-grant-type: authorization_code
-          google:
-            client-id: 44492276604-k538b151shlunifkb8lkcopd4i5avo30.apps.googleusercontent.com
-            client-secret: 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
-            redirect-uri: http://localhost:8080/oauth2/callback
-            scope: openid,profile,email
-            authorization-grant-type: authorization_code
-          aliyun:
-            client-id: 4025745551437297960
-            client-secret: GHzema8XV3MHt23mstuRTUeHWNGfEBDoLbJZV1UUk0EmhIPPrItYQ40GV7xBQPt2
-            provider: aliyun
-            redirect-uri: http://localhost:8080/oauth2/callback
-            scope: openid,profile
-            authorization-grant-type: authorization_code
-        provider:
-          github:
-            authorization-uri: https://github.com/login/oauth/authorize
-            token-uri: https://github.com/login/oauth/access_token
-            user-info-uri: https://api.github.com/user
-            user-name-attribute: id
-          google:
-            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
-            token-uri: https://oauth2.googleapis.com/token
-            user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
-            user-name-attribute: sub
-            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
-            
-          aliyun:
-            authorization-uri: https://signin.aliyun.com/oauth2/v1/auth
-            token-uri: https://oauth.aliyun.com/v1/token
-            user-info-uri: https://oauth.aliyun.com/v1/userinfo
-            user-name-attribute: sub
-            jwk-set-uri: https://oauth.aliyun.com/v1/keys
-            
+
 
 
 db:
@@ -72,3 +30,15 @@ logging:
     # org.springframework.web: DEBUG
     # org.springframework.boot: DEBUG
     # org.springframework: INFO
+
+#nacos:
+#  console:
+#    api:
+#      base-url: "http://118.178.188.80:30080" # 替换为实际地址
+#      access-token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTc1MjU4Mzg4NX0.v9cubow7kmMBFYmA9MhLjfSg4bAqXXm720Fiqkg1DFI" # 替换为实际Token
+
+nacos:
+  maintainer:
+    server-addr: "http://118.178.188.80:30080"
+    username: "nacos"
+    password: "zhangxiaodan"
