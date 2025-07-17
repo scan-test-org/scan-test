@@ -1,6 +1,4 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+// 迁移自 portal-web/portal-frontend/src/lib/utils.ts
+export function fetcher(url: string) {
+  return fetch(url).then((res) => res.json());
 } 

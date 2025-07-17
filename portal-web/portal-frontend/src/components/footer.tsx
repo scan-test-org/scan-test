@@ -1,72 +1,77 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
+import { Typography, Row, Col, Divider } from "antd";
+
+const { Title, Paragraph } = Typography;
 
 export function Footer() {
   return (
-    <footer className="bg-gray-50 border-t">
+    <footer className="bg-white border-t mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
+        <Row gutter={[32, 32]}>
+          <Col xs={24} md={6}>
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">C</span>
+                <span className="text-white font-bold text-sm">C</span>
               </div>
-              <span className="text-xl font-bold">Company</span>
+              <Title level={4} className="mb-0 text-gray-900">Company</Title>
             </div>
-            <p className="text-gray-600 text-sm">
+            <Paragraph className="text-gray-600 text-sm leading-relaxed">
               Build powerful applications with our comprehensive API platform.
-            </p>
-          </div>
+            </Paragraph>
+          </Col>
           
-          <div>
-            <h3 className="font-semibold mb-4">Products</h3>
-            <div className="space-y-2">
-              <Link href="#" className="block text-gray-600 hover:text-gray-900 text-sm">
+          <Col xs={24} md={6}>
+            <Title level={5} className="mb-4 text-gray-900">Products</Title>
+            <div className="space-y-3">
+              <Link to="#" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 Pricing
               </Link>
-              <Link href="/apis" className="block text-gray-600 hover:text-gray-900 text-sm">
+              <Link to="/apis" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 APIs
               </Link>
-              <Link href="/mcp" className="block text-gray-600 hover:text-gray-900 text-sm">
+              <Link to="/mcp" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 MCP Servers
               </Link>
             </div>
-          </div>
+          </Col>
           
-          <div>
-            <h3 className="font-semibold mb-4">Company</h3>
-            <div className="space-y-2">
-              <Link href="#" className="block text-gray-600 hover:text-gray-900 text-sm">
+          <Col xs={24} md={6}>
+            <Title level={5} className="mb-4 text-gray-900">Company</Title>
+            <div className="space-y-3">
+              <Link to="#" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 About
               </Link>
-              <Link href="#" className="block text-gray-600 hover:text-gray-900 text-sm">
+              <Link to="#" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 Careers
               </Link>
-              <Link href="#" className="block text-gray-600 hover:text-gray-900 text-sm">
+              <Link to="#" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 Press
               </Link>
             </div>
-          </div>
+          </Col>
           
-          <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
-            <div className="space-y-2">
-              <Link href="#" className="block text-gray-600 hover:text-gray-900 text-sm">
+          <Col xs={24} md={6}>
+            <Title level={5} className="mb-4 text-gray-900">Legal</Title>
+            <div className="space-y-3">
+              <Link to="#" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 Terms and conditions
               </Link>
-              <Link href="#" className="block text-gray-600 hover:text-gray-900 text-sm">
+              <Link to="#" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 Data privacy
               </Link>
-              <Link href="#" className="block text-gray-600 hover:text-gray-900 text-sm">
+              <Link to="#" className="block text-gray-600 hover:text-gray-900 text-sm transition-colors">
                 Trust and compliance
               </Link>
             </div>
-          </div>
-        </div>
+          </Col>
+        </Row>
         
-        <div className="border-t border-gray-200 mt-8 pt-8 text-center">
-          <p className="text-gray-600 text-sm">
+        <Divider className="my-8" />
+        
+        <div className="text-center">
+          <Paragraph className="text-gray-500 text-sm mb-0">
             © 2024 Company. All rights reserved.
-          </p>
+          </Paragraph>
         </div>
       </div>
     </footer>

@@ -1,17 +1,6 @@
-"use client";
-
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { User, LogOut, Settings, Users } from "lucide-react";
-import Link from "next/link";
+import { Avatar, Button, Dropdown, Menu } from "antd";
+import { UserOutlined, LogoutOutlined, TeamOutlined } from "@ant-design/icons";
 
 interface UserInfo {
   username: string;
@@ -24,7 +13,6 @@ export function UserMenu() {
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
     const userInfo = localStorage.getItem("user");
-
     if (isLoggedIn === "true" && userInfo) {
       setUser(JSON.parse(userInfo));
     }
@@ -37,42 +25,40 @@ export function UserMenu() {
     window.location.reload();
   };
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
+
+  const menu = (
+    <Menu className="min-w-48">
+      <Menu.Item key="profile" disabled>
+        <div className="flex flex-col space-y-1 p-2">
+          <span className="text-sm font-medium leading-none text-gray-900">{user.name}</span>
+          <span className="text-xs leading-none text-gray-500">@{user.username}</span>
+        </div>
+      </Menu.Item>
+      <Menu.Divider />
+      <Menu.Item key="consumers" icon={<TeamOutlined />}>
+        <a href="/consumers" className="text-gray-700">Consumer Management</a>
+      </Menu.Item>
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
+        <span className="text-gray-700">Logout</span>
+      </Menu.Item>
+    </Menu>
+  );
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="/placeholder-avatar.jpg" alt={user.name} />
-            <AvatarFallback className="bg-purple-500 text-white">
-              {user.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <div className="flex flex-col space-y-1 p-2">
-          <p className="text-sm font-medium leading-none">{user.name}</p>
-          <p className="text-xs leading-none text-muted-foreground">
-            @{user.username}
-          </p>
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/consumers">
-            <Users className="mr-2 h-4 w-4" />
-            <span>Consumer Management</span>
-          </Link>
-        </DropdownMenuItem>
-       
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Logout</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Dropdown overlay={menu} placement="bottomRight" trigger={["click"]}>
+      <Button 
+        type="text" 
+        className="relative h-8 w-8 p-0 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+      >
+        <Avatar
+          className="h-8 w-8"
+          icon={<UserOutlined />}
+          style={{ backgroundColor: "#722ed1", color: "#fff" }}
+        >
+          {user.name.charAt(0).toUpperCase()}
+        </Avatar>
+      </Button>
+    </Dropdown>
   );
 } 
