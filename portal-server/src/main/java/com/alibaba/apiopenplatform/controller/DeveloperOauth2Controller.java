@@ -110,8 +110,8 @@ public class DeveloperOauth2Controller {
     public void oidcCallback(
         @Parameter(description = "授权码") @RequestParam("code") String code,
         @Parameter(description = "state参数，整体需encodeURIComponent编码，格式见接口注释") @RequestParam("state") String state,
-        HttpServletRequest request,
-        HttpServletResponse response) throws IOException {
+                               HttpServletRequest request,
+                               HttpServletResponse response) throws IOException {
         log.info("[OIDCCallback] code={}, state={}", code, state);
         // 先 URL 解码
         String decodedState = URLDecoder.decode(state, "UTF-8");
@@ -143,8 +143,8 @@ public class DeveloperOauth2Controller {
         }
         if (portalId == null || provider == null) {
             response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("state参数错误，未包含portalId/provider", "UTF-8"));
-            return;
-        }
+                return;
+            }
         final String finalPortalId = portalId;
         final String finalProvider = provider;
         PortalSetting setting = portalSettingRepository.findByPortalIdAndProvider(finalPortalId, finalProvider)
@@ -155,23 +155,23 @@ public class DeveloperOauth2Controller {
             return;
         }
         // --- 获取三方用户信息 ---
-        String providerSubject = null;
-        String displayName = null;
-        String rawInfoJson = null;
-        try {
+            String providerSubject = null;
+            String displayName = null;
+            String rawInfoJson = null;
+            try {
             Map<String, Object> userInfoMap = fetchUserInfoMap(code, config);
             Object idObj = userInfoMap.get("sub");
             if (idObj == null) idObj = userInfoMap.get("id");
-            providerSubject = idObj != null ? String.valueOf(idObj) : null;
+                providerSubject = idObj != null ? String.valueOf(idObj) : null;
             Object nameObj = userInfoMap.get("name");
             if (nameObj == null) nameObj = userInfoMap.get("username");
-            if (nameObj == null) nameObj = userInfoMap.get("login");
-            displayName = nameObj != null ? String.valueOf(nameObj) : null;
-            rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
-        } catch (Exception e) {
+                if (nameObj == null) nameObj = userInfoMap.get("login");
+                displayName = nameObj != null ? String.valueOf(nameObj) : null;
+                rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
+            } catch (Exception e) {
             response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("获取三方用户信息失败:" + e.getMessage(), "UTF-8"));
-            return;
-        }
+                return;
+            }
         if ("BINDING".equals(mode)) {
             // 绑定流程
             Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);

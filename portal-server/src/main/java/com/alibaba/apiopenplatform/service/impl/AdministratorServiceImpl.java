@@ -82,17 +82,17 @@ public class AdministratorServiceImpl implements AdministratorService {
     }
 
     @Override
-    public boolean needInit(String portalId) {
+    public boolean needInit() {
         // 只要管理员表无任何记录就允许初始化
         return administratorRepository.count() == 0;
     }
 
     @Override
     @Transactional
-    public Administrator initAdmin(String portalId, String username, String password) {
+    public Administrator initAdmin(String username, String password) {
         // 只允许首次初始化（全表无记录）
-        if (!needInit(null)) {
-            throw new BusinessException(ErrorCode.RESOURCE_EXIST, "admin", portalId);
+        if (!needInit()) {
+            throw new BusinessException(ErrorCode.RESOURCE_EXIST, "admin", null);
         }
         Administrator admin = new Administrator();
         admin.setAdminId(generateAdminId());
