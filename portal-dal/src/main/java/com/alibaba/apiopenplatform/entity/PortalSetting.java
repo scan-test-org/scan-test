@@ -1,6 +1,6 @@
 package com.alibaba.apiopenplatform.entity;
 
-import com.alibaba.apiopenplatform.support.OidcConfig;
+import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import com.alibaba.apiopenplatform.support.converter.OidcConfigConverter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

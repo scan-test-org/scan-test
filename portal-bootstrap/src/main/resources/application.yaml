@@ -26,7 +26,17 @@ db:
 #   name: portal_db
 #   username: portal_test
 #   password: portal-Go
-  
+
+#  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
+#  host: localhost
+#  port: 3306
+#  name: api_open_platform
+##  username: portal_test
+##  password: portal-Go
+#  username: root
+##  password: zhangxiaodan
+#  password: 12345678
+
 springdoc:
   api-docs:
     enabled: true

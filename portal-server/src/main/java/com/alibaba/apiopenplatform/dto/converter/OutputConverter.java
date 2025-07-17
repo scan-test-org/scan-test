@@ -16,7 +16,6 @@ public interface OutputConverter<Target extends OutputConverter<Target, Source>,
      * @return
      */
     @SuppressWarnings("unchecked")
-    @NonNull
     default Target convertFrom(Source source) {
         BeanUtil.copyProperties(source, this, configOptions());
         return (Target) this;

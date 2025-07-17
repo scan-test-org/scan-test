@@ -20,8 +20,9 @@ public class CreatePortalParam implements InputConverter<Portal> {
     @Size(max = 50, message = "门户名称长度不能超过50个字符")
     private String name;
 
-    private String description;
+    @NotBlank(message = "门户标题不能为空")
+    @Size(max = 50, message = "门户标题长度不能超过50个字符")
+    private String title;
 
-    @NotBlank(message = "管理员ID不能为空")
-    private String adminId;
+    private String description;
 }
