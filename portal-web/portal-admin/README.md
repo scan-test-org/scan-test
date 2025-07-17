@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portal Admin
 
-## Getting Started
+基于 Vite + React + Redux + React Router 的门户管理系统前端。
 
-First, run the development server:
+## 技术栈
 
+- **构建工具**: Vite
+- **前端框架**: React 19
+- **状态管理**: Redux Toolkit
+- **路由**: React Router DOM
+- **UI组件**: Radix UI + Tailwind CSS
+- **HTTP客户端**: Axios
+- **表单处理**: React Hook Form + Zod
+
+## 开发环境设置
+
+1. 安装依赖：
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. 配置环境变量：
+```bash
+cp env.example .env
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. 启动开发服务器：
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. 构建生产版本：
+```bash
+npm run build
+```
 
-## Learn More
+## 项目结构
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── components/     # 可复用组件
+├── pages/         # 页面组件
+├── store/         # Redux store配置
+│   └── slices/    # Redux slices
+├── routes/        # 路由配置
+├── lib/           # 工具函数和API配置
+└── hooks/         # 自定义hooks
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 环境变量
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `VITE_API_BASE_URL`: API基础URL
+- `VITE_APP_TITLE`: 应用标题
 
-## Deploy on Vercel
+## 开发指南
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 使用 `@/` 路径别名指向 `src/` 目录
+- 组件使用 Tailwind CSS 进行样式设计
+- 状态管理使用 Redux Toolkit
+- API调用使用配置好的 axios 实例
