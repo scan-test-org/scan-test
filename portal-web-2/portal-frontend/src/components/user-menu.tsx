@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, Button, Dropdown, Menu } from "antd";
-import { UserOutlined, LogoutOutlined, SettingOutlined, TeamOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined, TeamOutlined } from "@ant-design/icons";
 
 interface UserInfo {
   username: string;
@@ -28,26 +28,29 @@ export function UserMenu() {
   if (!user) return null;
 
   const menu = (
-    <Menu>
+    <Menu className="min-w-48">
       <Menu.Item key="profile" disabled>
         <div className="flex flex-col space-y-1 p-2">
-          <span className="text-sm font-medium leading-none">{user.name}</span>
-          <span className="text-xs leading-none text-gray-400">@{user.username}</span>
+          <span className="text-sm font-medium leading-none text-gray-900">{user.name}</span>
+          <span className="text-xs leading-none text-gray-500">@{user.username}</span>
         </div>
       </Menu.Item>
       <Menu.Divider />
       <Menu.Item key="consumers" icon={<TeamOutlined />}>
-        <a href="/consumers">Consumer Management</a>
+        <a href="/consumers" className="text-gray-700">Consumer Management</a>
       </Menu.Item>
       <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
-        Logout
+        <span className="text-gray-700">Logout</span>
       </Menu.Item>
     </Menu>
   );
 
   return (
     <Dropdown overlay={menu} placement="bottomRight" trigger={["click"]}>
-      <Button type="text" className="relative h-8 w-8 p-0 flex items-center justify-center rounded-full">
+      <Button 
+        type="text" 
+        className="relative h-8 w-8 p-0 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+      >
         <Avatar
           className="h-8 w-8"
           icon={<UserOutlined />}

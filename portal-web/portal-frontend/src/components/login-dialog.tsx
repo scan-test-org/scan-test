@@ -1,102 +1,73 @@
-"use client";
-
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { User } from "lucide-react";
+import { Modal, Button, Form, Input } from "antd";
+import { UserOutlined } from "@ant-design/icons";
 
 export function LoginDialog() {
   const [isOpen, setIsOpen] = useState(false);
-  const [credentials, setCredentials] = useState({
-    username: "",
-    password: ""
-  });
+  const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (values: { username: string; password: string }) => {
     setIsLoading(true);
-
     // 模拟登录API调用
     await new Promise(resolve => setTimeout(resolve, 1000));
-
     // 这里可以添加实际的登录逻辑
-    console.log("Login attempt:", credentials);
-
-    // 模拟成功登录
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("user", JSON.stringify({
-      username: credentials.username,
-      name: credentials.username
+      username: values.username,
+      name: values.username
     }));
-
     setIsLoading(false);
     setIsOpen(false);
-    setCredentials({ username: "", password: "" });
-    
-    // 刷新页面以更新导航状态
+    form.resetFields();
     window.location.reload();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <User className="h-4 w-4 mr-2" />
-          Login
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Login to Your Account</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              type="text"
-              placeholder="Enter your username"
-              value={credentials.username}
-              onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={credentials.password}
-              onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-              required
-            />
-          </div>
+    <>
+      <Button icon={<UserOutlined />} onClick={() => setIsOpen(true)} type="default" size="small">
+        登录
+      </Button>
+      <Modal
+        open={isOpen}
+        onCancel={() => setIsOpen(false)}
+        footer={null}
+        title="登录到您的账户"
+        className="sm:max-w-md"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleLogin}
+          className="space-y-4"
+        >
+          <Form.Item
+            label="用户名"
+            name="username"
+            rules={[{ required: true, message: "请输入用户名" }]}
+          >
+            <Input placeholder="请输入用户名" />
+          </Form.Item>
+          <Form.Item
+            label="密码"
+            name="password"
+            rules={[{ required: true, message: "请输入密码" }]}
+          >
+            <Input.Password placeholder="请输入密码" />
+          </Form.Item>
           <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              disabled={isLoading}
-            >
-              Cancel
+            <Button onClick={() => setIsOpen(false)} disabled={isLoading} style={{ marginRight: 8 }}>
+              取消
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isLoading ? "Logging in..." : "Login"}
+            <Button type="primary" htmlType="submit" loading={isLoading}>
+              登录
             </Button>
           </div>
-        </form>
+        </Form>
         <div className="text-center text-sm text-gray-500 mt-4">
-          <p>Demo credentials: admin / password</p>
+          <p>演示账号：admin / password</p>
         </div>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 } 
