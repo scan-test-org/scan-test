@@ -65,7 +65,7 @@ public class AdministratorController {
     @Operation(summary = "检查是否需要初始化管理员", description = "检查系统是否需要初始化管理员（全表无记录时返回true），前端无需传递portalId。")
     @GetMapping("/need-init")
     public Response<Boolean> needInit() {
-        return Response.ok(administratorService.needInit(null));
+        return Response.ok(administratorService.needInit());
     }
 
     @Operation(summary = "初始化管理员", description = "仅允许首次调用（全表无记录时），前端只需传username和password，无需portalId。")
@@ -73,7 +73,7 @@ public class AdministratorController {
     public Response<String> initAdmin(
         @RequestBody(description = "初始化管理员参数")
         @org.springframework.web.bind.annotation.RequestBody AdminCreateDto dto) {
-        administratorService.initAdmin(null, dto.getUsername(), dto.getPassword());
+        administratorService.initAdmin(dto.getUsername(), dto.getPassword());
         return Response.ok("初始化成功");
     }
 

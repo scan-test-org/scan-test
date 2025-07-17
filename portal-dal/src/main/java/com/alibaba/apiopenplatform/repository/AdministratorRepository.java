@@ -12,7 +12,4 @@ import java.util.Optional;
 public interface AdministratorRepository extends JpaRepository<Administrator, Long> {
     Optional<Administrator> findByAdminId(String adminId);
     Optional<Administrator> findByUsername(String username);
-    Optional<Administrator> findByPortalIdAndUsername(String portalId, String username);
-    Optional<Administrator> findByPortalId(String portalId);
-    Optional<Administrator> findByPortalIdAndAdminId(String portalId, String adminId);
 } 

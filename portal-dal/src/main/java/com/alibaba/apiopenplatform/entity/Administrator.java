@@ -35,7 +35,4 @@ public class Administrator extends BaseEntity {
     @Column(nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false, length = 64)
-    private String portalId;
-
 } 
