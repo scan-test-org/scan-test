@@ -18,7 +18,7 @@ import javax.persistence.*;
     uniqueConstraints = {
         @UniqueConstraint(name = "uk_portal_provider", columnNames = {"portal_id", "provider"})
     },
-    indexes = {
+        indexes = {
         @Index(name = "idx_portal_id", columnList = "portal_id"),
         @Index(name = "idx_provider", columnList = "provider")
     }

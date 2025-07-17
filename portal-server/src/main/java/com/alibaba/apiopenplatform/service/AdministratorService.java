@@ -34,12 +34,12 @@ public interface AdministratorService {
     /**
      * 检查指定portalId下是否需要初始化管理员
      */
-    boolean needInit(String portalId);
+    boolean needInit();
 
     /**
      * 初始化管理员，仅允许首次调用
      */
-    Administrator initAdmin(String portalId, String username, String password);
+    Administrator initAdmin(String username, String password);
 
     /**
      * 管理员修改密码
