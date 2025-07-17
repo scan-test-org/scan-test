@@ -12,9 +12,11 @@ import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.entity.PortalUi;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -25,16 +27,13 @@ import java.util.Optional;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class PortalServiceImpl implements PortalService {
 
     private final PortalRepository portalRepository;
 
-    public PortalServiceImpl(PortalRepository portalRepository) {
-        this.portalRepository = portalRepository;
-    }
-
     public PortalResult createPortal(CreatePortalParam param) {
-        if (portalRepository.findByNameAndAdminId(param.getName(), param.getAdminId()).isPresent()) {
+        if (portalRepository.findByNameAndAdminId(param.getName(), "admin").isPresent()) {
             throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, param.getName());
         }
 
@@ -62,12 +61,13 @@ public class PortalServiceImpl implements PortalService {
     }
 
     @Override
-    public PageResult<PortalResult> listPortals(int pageNumber, int pageSize) {
-        Page<Portal> portals = portalRepository.findByAdminId(
-                "admin",
-                PageRequest.of(pageNumber, pageSize,
-                        Sort.by(Sort.Order.desc("gmtCreate")))
-        );
+    public boolean hasPortal(String portalId) {
+        return findPortal(portalId) != null;
+    }
+
+    @Override
+    public PageResult<PortalResult> listPortals(Pageable pageable) {
+        Page<Portal> portals = portalRepository.findByAdminId("admin", pageable);
 
         Page<PortalResult> pages = portals.map(portal -> new PortalResult().convertFrom(portal));
         return new PageResult<PortalResult>().convertFrom(pages);
@@ -97,7 +97,7 @@ public class PortalServiceImpl implements PortalService {
         // OIDC
         if (Boolean.TRUE.equals(param.getOidcAuthEnabled())) {
             Optional.ofNullable(param.getOidcConfigParam())
-                    .map(OidcConfigParam :: convertTo)
+                    .map(OidcConfigParam::convertTo)
                     .ifPresent(portalSetting::setOidcConfig);
         }
 
@@ -134,7 +134,7 @@ public class PortalServiceImpl implements PortalService {
 
     private Portal findPortal(String portalId) {
         return portalRepository.
-                findByPortalIdAndAdminId(portalId,"admin")
+                findByPortalIdAndAdminId(portalId, "admin")
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
     }
 }

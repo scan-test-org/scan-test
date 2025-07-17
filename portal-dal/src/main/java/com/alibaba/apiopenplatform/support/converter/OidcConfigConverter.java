@@ -1,6 +1,6 @@
 package com.alibaba.apiopenplatform.support.converter;
 
-import com.alibaba.apiopenplatform.support.OidcConfig;
+import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 
 import javax.persistence.Converter;
 

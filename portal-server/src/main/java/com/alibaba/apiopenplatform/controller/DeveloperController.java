@@ -4,9 +4,15 @@ import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateDto;
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperLoginDto;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
 import com.alibaba.apiopenplatform.core.response.Response;
+import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
+import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
@@ -18,12 +24,14 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import javax.validation.Valid;
 
+import static org.springframework.data.domain.Sort.Direction.DESC;
+
 /**
  * 开发者账号相关接口
  *
  * @author zxd
  */
-@Tag(name = "开发者管理", description = "开发者账号注册、登录、第三方绑定等接口")
+@Tag(name = "开发者管理", description = "提供开发者认证、管理等功能")
 @RestController
 @RequestMapping("/api/developer")
 @RequiredArgsConstructor
@@ -95,4 +103,19 @@ public class DeveloperController {
         developerService.deleteDeveloperAccount(userId);
         return Response.ok(null);
     }
-} 
+
+    @Operation(summary = "获取门户的开发者列表")
+    @GetMapping("/list")
+    public PageResult<DeveloperResult> listDevelopers(@RequestParam String portalId,
+                                                      @PageableDefault(sort = "gmt_create", direction = DESC) Pageable pageable) {
+        return developerService.listDevelopers(portalId, pageable);
+    }
+
+    @Operation(summary = "设置开发者状态")
+    @PostMapping("/status")
+    public void setDeveloperStatus(@RequestParam String portalId,
+                                   @RequestParam String developerId,
+                                   @RequestParam String status) {
+        developerService.setDeveloperStatus(portalId, developerId, status);
+    }
+}

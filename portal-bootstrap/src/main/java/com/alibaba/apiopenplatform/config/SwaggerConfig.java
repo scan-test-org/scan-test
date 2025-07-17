@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
  * @author zh
  */
 @Configuration
-public class OpenAPIConfig {
+public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
