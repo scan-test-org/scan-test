@@ -51,7 +51,7 @@ public class McpMarketServiceImpl implements McpMarketService {
             properties.setProperty("username", username);
             properties.setProperty("password", password);
             // 强制指定 contextPath 为 /，防止 SDK 自动加 /nacos
-            properties.setProperty("contextPath", "/");
+            properties.setProperty("contextPath", "nacos");
             mcpMaintainerService = (McpMaintainerService) AiMaintainerFactory.createAiMaintainerService(properties);
         } catch (Exception e) {
             log.error("Failed to init McpMaintainerService", e);
