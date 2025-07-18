@@ -14,11 +14,11 @@ spring:
 
 
 db:
-  host: localhost
+  host: 
   port: 3306
   name: Portal_DB
-  username: root
-  password: zhangxiaodan
+  username: YourDBName
+  password: YourDBPassword
 
 jwt:
   secret: 4GsGNFwqzqMk3CFZqcq9IjJWrTtv+fYNbB4Baexg67A=
