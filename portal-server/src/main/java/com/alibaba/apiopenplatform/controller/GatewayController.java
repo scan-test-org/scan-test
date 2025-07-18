@@ -26,11 +26,17 @@ public class GatewayController {
     private final GatewayService gatewayService;
 
     @Operation(summary = "获取Gateway列表")
-    @GetMapping("/gateway/list")
-    public PageResult<GatewayResult> listGateways(@RequestParam String accessKey,
+    @GetMapping("/gateway/fetch")
+    public PageResult<GatewayResult> fetchGateways(@RequestParam String accessKey,
                                                   @RequestParam String secretKey,
                                                   @RequestParam String region,
                                                   Pageable pageable) {
+        return null;
+    }
+
+    @Operation(summary = "获取导入的Gateway列表")
+    @GetMapping("/gateway/list")
+    public PageResult<GatewayResult> listGateways(Pageable pageable) {
         return null;
     }
 
