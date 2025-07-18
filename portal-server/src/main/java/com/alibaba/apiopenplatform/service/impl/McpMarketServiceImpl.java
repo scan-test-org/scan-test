@@ -45,32 +45,14 @@ public class McpMarketServiceImpl implements McpMarketService {
     @PostConstruct
     public void init() {
         try {
-            // 第一步：用 contextPath=/ 初始化登录
-            Properties loginProps = new Properties();
-            loginProps.setProperty("serverAddr", serverAddr);
-            loginProps.setProperty("username", username);
-            loginProps.setProperty("password", password);
-            loginProps.setProperty("contextPath", "/");
-            Object loginService = AiMaintainerFactory.createAiMaintainerService(loginProps);
-
-            // 尝试用反射获取 accessToken
-            String accessToken = null;
-            try {
-                java.lang.reflect.Field field = loginService.getClass().getDeclaredField("accessToken");
-                field.setAccessible(true);
-                accessToken = (String) field.get(loginService);
-            } catch (Exception e) {
-                log.error("无法通过反射获取 accessToken，后续业务接口可能会失败", e);
-            }
-
-            // 第二步：用 contextPath=/nacos 和 accessToken 初始化业务用的 mcpMaintainerService
-            Properties apiProps = new Properties();
-            apiProps.setProperty("serverAddr", serverAddr);
-            apiProps.setProperty("contextPath", "/nacos");
-            if (accessToken != null) {
-                apiProps.setProperty("accessToken", accessToken);
-            }
-            mcpMaintainerService = (McpMaintainerService) AiMaintainerFactory.createAiMaintainerService(apiProps);
+            Properties properties = new Properties();
+            // serverAddr 只写主机和端口，不带 /nacos 前缀
+            properties.setProperty("serverAddr", serverAddr);
+            properties.setProperty("username", username);
+            properties.setProperty("password", password);
+            // 强制指定 contextPath 为 /，防止 SDK 自动加 /nacos
+            properties.setProperty("contextPath", "nacos");
+            mcpMaintainerService = (McpMaintainerService) AiMaintainerFactory.createAiMaintainerService(properties);
         } catch (Exception e) {
             log.error("Failed to init McpMaintainerService", e);
         }
