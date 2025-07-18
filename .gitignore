@@ -36,3 +36,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/front-auth-app
+/portal-web-2
+/portal-web
