@@ -28,4 +28,5 @@ public class McpMarketCardDto {
     private Object localServerConfig; // 本地服务配置信息
     private boolean enabled; // 是否启用
     private java.util.List<?> capabilities; // 能力类型
+    private String mcpName; // MCP服务名（与Nacos注册时的服务名一致）
 } 

@@ -39,6 +39,6 @@ logging:
 
 nacos:
   maintainer:
-    server-addr: "http://118.178.188.80:30080"
+    server-addr: "http://localhost:8848"
     username: "nacos"
     password: "zhangxiaodan"

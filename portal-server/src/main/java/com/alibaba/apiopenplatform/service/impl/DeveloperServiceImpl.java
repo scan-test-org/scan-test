@@ -44,8 +44,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     private final JwtService jwtService;
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     private final PortalSettingRepository portalSettingRepository;
-
-    private PortalService portalService;
+    private final PortalService portalService;
 
     @Override
     public Optional<Developer> findByUsername(String username) {
@@ -68,7 +67,11 @@ public class DeveloperServiceImpl implements DeveloperService {
         developer.setPortalId(createDto.getPortalId());
         developer.setAvatarUrl(createDto.getAvatarUrl());
         developer.setPasswordHash(PasswordHasher.hash(createDto.getPassword()));
-        developer.setStatus(DeveloperStatus.APPROVED);
+        // 根据门户配置决定是否自动审批
+        PortalSetting setting = portalSettingRepository.findByPortalId(createDto.getPortalId())
+            .stream().findFirst().orElse(null);
+        boolean autoApprove = setting != null && Boolean.TRUE.equals(setting.getAutoApproveDevelopers());
+        developer.setStatus(autoApprove ? DeveloperStatus.APPROVED : DeveloperStatus.PENDING);
         developer.setAuthType("LOCAL");
         return developerRepository.save(developer);
     }
@@ -80,7 +83,7 @@ public class DeveloperServiceImpl implements DeveloperService {
             return Optional.empty();
         }
         Developer developer = devOpt.get();
-        if (!"ACTIVE".equals(developer.getStatus())) {
+        if (!DeveloperStatus.APPROVED.equals(developer.getStatus())) {
             return Optional.empty();
         }
         if ("EXTERNAL".equals(developer.getAuthType()) || developer.getPasswordHash() == null) {
@@ -265,7 +268,12 @@ public class DeveloperServiceImpl implements DeveloperService {
         portalService.hasPortal(portalId);
         Developer developer = findDeveloper(developerId);
 
-        DeveloperStatus developerStatus = EnumUtil.fromString(DeveloperStatus.class, status);
+        DeveloperStatus developerStatus;
+        if ("APPROVED".equalsIgnoreCase(status)) {
+            developerStatus = DeveloperStatus.APPROVED;
+        } else {
+            developerStatus = DeveloperStatus.PENDING;
+        }
         developer.setStatus(developerStatus);
         developerRepository.save(developer);
     }

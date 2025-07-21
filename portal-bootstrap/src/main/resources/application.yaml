@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://${db.host}:${db.port}/${db.name}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://${db.host}:${db.port}/${db.name}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
     username: ${db.username}
     password: ${db.password}
   jpa:
@@ -13,13 +13,13 @@ spring:
 
 db:
  #  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
-#   host: localhost
-#   port: 3306
-#   name: Portal_DB
+   host: localhost
+   port: 3306
+   name: Portal_DB
 # #  username: portal_test
 # #  password: portal-Go
-#   username: root
-#   password: zhangxiaodan
+   username: root
+   password: zhangxiaodan
 # db:
 #   host: rm-uf6pc9n1jzi2478l4.mysql.rds.aliyuncs.com
 #   port: 3306
@@ -38,11 +38,11 @@ db:
 #  password: 12345678
 #  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
 #  host: localhost
-  host: rm-uf6pc9n1jzi2478l4.mysql.rds.aliyuncs.com
-  port: 3306
-  name: api_open_platform
-  username: portal_test
-  password: portal-Go
+#  host: rm-uf6pc9n1jzi2478l4.mysql.rds.aliyuncs.com
+#  port: 3306
+#  name: api_open_platform
+#  username: portal_test
+#  password: portal-Go
 #  username: root
 #  password: zhangxiaodan
 #  password: 12345678
@@ -69,6 +69,6 @@ logging:
 
 nacos:
   maintainer:
-    server-addr: "http://118.178.188.80:30080"
+    server-addr: "http://localhost:8848"
     username: "nacos"
     password: "zhangxiaodan"

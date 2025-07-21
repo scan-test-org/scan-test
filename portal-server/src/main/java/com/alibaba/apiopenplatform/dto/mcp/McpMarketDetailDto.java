@@ -33,6 +33,7 @@ public class McpMarketDetailDto {
     private Object toolSpec; // 详情特有
     private java.util.List<?> allVersions; // 详情特有
     private String namespaceId; // 详情特有
+    private String mcpName; // MCP服务名（与Nacos注册时的服务名一致）
 
     @Data
     @NoArgsConstructor
