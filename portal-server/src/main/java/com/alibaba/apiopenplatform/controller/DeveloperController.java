@@ -107,15 +107,16 @@ public class DeveloperController {
     @Operation(summary = "获取门户的开发者列表")
     @GetMapping("/list")
     public PageResult<DeveloperResult> listDevelopers(@RequestParam String portalId,
-                                                      @PageableDefault(sort = "gmt_create", direction = DESC) Pageable pageable) {
+                                                      @PageableDefault(sort = "gmtCreate", direction = DESC) Pageable pageable) {
         return developerService.listDevelopers(portalId, pageable);
     }
 
-    @Operation(summary = "设置开发者状态")
+    @Operation(summary = "设置开发者状态", description = "管理员审核开发者账号，status可为ACTIVE/APPROVED/REJECTED等")
     @PostMapping("/status")
-    public void setDeveloperStatus(@RequestParam String portalId,
-                                   @RequestParam String developerId,
-                                   @RequestParam String status) {
+    public Response<String> setDeveloperStatus(@RequestParam String portalId,
+                                               @RequestParam String developerId,
+                                               @RequestParam String status) {
         developerService.setDeveloperStatus(portalId, developerId, status);
+        return Response.ok("开发者状态已更新为：" + status);
     }
 }

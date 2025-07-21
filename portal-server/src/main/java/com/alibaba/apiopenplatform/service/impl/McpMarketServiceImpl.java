@@ -75,6 +75,7 @@ public class McpMarketServiceImpl implements McpMarketService {
             return page.getPageItems().stream().map(item ->
                 McpMarketCardDto.builder()
                     .id(item.getId())
+                    .mcpName(item.getName()) // 新增字段
                     .name(item.getName())
                     .protocol(item.getProtocol())
                     .frontProtocol(item.getFrontProtocol())
@@ -96,18 +97,30 @@ public class McpMarketServiceImpl implements McpMarketService {
 
     /**
      * 获取MCP能力服务详情
-     * @param mcpId 服务唯一ID
+     * @param mcpName 服务名（不是id）
      * @return 能力市场详情DTO
      */
     @Override
-    public McpMarketDetailDto detail(String mcpId) {
+    public McpMarketDetailDto detail(String mcpName) {
+        log.info("开始获取MCP Server详情，mcpName: {}", mcpName);
         try {
-            McpServerDetailInfo detail = mcpMaintainerService.getMcpServerDetail(mcpId);
-            if (detail == null) {
+            if (mcpMaintainerService == null) {
+                log.error("mcpMaintainerService 未初始化");
                 return null;
             }
+
+            log.info("调用 getMcpServerDetail，mcpName: {}", mcpName);
+            McpServerDetailInfo detail = mcpMaintainerService.getMcpServerDetail(mcpName);
+
+            if (detail == null) {
+                log.warn("getMcpServerDetail 返回 null，mcpName: {}", mcpName);
+                return null;
+            }
+
+            log.info("成功获取到详情数据，id: {}, name: {}", detail.getId(), detail.getName());
             return McpMarketDetailDto.builder()
                 .id(detail.getId())
+                .mcpName(detail.getName()) // 新增字段
                 .name(detail.getName())
                 .protocol(detail.getProtocol())
                 .frontProtocol(detail.getFrontProtocol())
@@ -125,7 +138,7 @@ public class McpMarketServiceImpl implements McpMarketService {
                 .namespaceId(detail.getNamespaceId())
                 .build();
         } catch (Exception e) {
-            log.error("Error fetching mcp market detail", e);
+            log.error("获取MCP Server详情时发生异常，mcpName: {}", mcpName, e);
             return null;
         }
     }

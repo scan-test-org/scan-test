@@ -76,7 +76,7 @@ public class SecurityConfig {
                 .antMatchers("/login/oauth2/**", "/oauth2/**").permitAll()
                 .antMatchers("/bind-callback").permitAll()
                 .antMatchers("/api/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/developer/**").hasRole("DEVELOPER")
+                .antMatchers("/api/developer/**").permitAll()
                 .antMatchers("/portal/swagger-ui.html", "/portal/swagger-ui/**", "/portal/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                 .anyRequest().permitAll()
             .and()
