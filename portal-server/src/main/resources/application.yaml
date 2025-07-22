@@ -14,11 +14,11 @@ spring:
 
 
 db:
-  host: rm-bp1070fq88467lp8tao.mysql.rds.aliyuncs.com
+  host: 
   port: 3306
-  name: portal
-  username: portal
-  password: portal@123
+  name: Portal_DB
+  username: YourDBName
+  password: YourDBPassword
 
 jwt:
   secret: 4GsGNFwqzqMk3CFZqcq9IjJWrTtv+fYNbB4Baexg67A=
