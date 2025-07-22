@@ -12,17 +12,28 @@ spring:
         format_sql: true
 
 db:
-  host: rm-uf6pc9n1jzi2478l4eo.mysql.rds.aliyuncs.com
-  port: 3306
-  name: Portal_DB
-  username: portal_test
-  password: portal-Go
+ #  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
+#   host: localhost
+#   port: 3306
+#   name: Portal_DB
+## #  username: portal_test
+## #  password: portal-Go
+#   username: root
+#   password: zhangxiaodan
 # db:
 #   host: rm-uf6pc9n1jzi2478l4.mysql.rds.aliyuncs.com
 #   port: 3306
 #   name: portal_db
 #   username: portal_test
 #   password: portal-Go
+#   username: root
+#   password: zhangxiaodan
+# db:
+   host: rm-uf6pc9n1jzi2478l4eo.mysql.rds.aliyuncs.com
+   port: 3306
+   name: portal_db
+   username: portal_test
+   password: portal-Go
 
 #  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
 #  host: localhost
@@ -35,11 +46,11 @@ db:
 #  password: 12345678
 #  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
 #  host: localhost
-  # host: rm-uf6pc9n1jzi2478l4.mysql.rds.aliyuncs.com
-  # port: 3306
-  # name: api_open_platform
-  # username: portal_test
-  # password: portal-Go
+#  host: rm-uf6pc9n1jzi2478l4.mysql.rds.aliyuncs.com
+#  port: 3306
+#  name: api_open_platform
+#  username: portal_test
+#  password: portal-Go
 #  username: root
 #  password: zhangxiaodan
 #  password: 12345678
@@ -68,4 +79,4 @@ nacos:
   maintainer:
     server-addr: "http://localhost:8848"
     username: "nacos"
-    password: "uhn5FD0Itp"
+    password: "zhangxiaodan"

@@ -73,10 +73,11 @@
         <dependency>
             <groupId>io.higress.api</groupId>
             <artifactId>higress-admin-sdk</artifactId>
+            <version>0.0.2</version>
             <exclusions>
                 <exclusion>
-                    <artifactId>bcprov-jdk18on</artifactId>
                     <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk16</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -101,6 +102,23 @@
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-maintainer-client</artifactId>
             <version>3.0.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15to18</artifactId>
+            <version>1.70</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.23</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk16</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
