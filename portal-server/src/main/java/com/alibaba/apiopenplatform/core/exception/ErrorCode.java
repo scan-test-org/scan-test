@@ -39,7 +39,12 @@ public enum ErrorCode {
     private final String messagePattern;
 
     public String getMessage(Object... args) {
-        return String.format(messagePattern, args);
+        try {
+            return String.format(messagePattern, args);
+        } catch (Exception e) {
+            // 参数不匹配时，直接返回原始 messagePattern，避免抛出异常
+            return messagePattern;
+        }
     }
 }
 
