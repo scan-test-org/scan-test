@@ -7,6 +7,7 @@ import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
+import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.entity.PortalUi;
@@ -132,6 +133,15 @@ public class PortalServiceImpl implements PortalService {
     public void deletePortal(String portalId) {
         Portal portal = findPortal(portalId);
         portalRepository.delete(portal);
+    }
+
+    @Override
+    public PortalSettingConfig getPortalSetting(String portalId) {
+        Portal portal = findPortal(portalId);
+        if (portal.getPortalSetting() == null) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId + ": setting not found");
+        }
+        return new PortalSettingConfig().convertFrom(portal.getPortalSetting());
     }
 
     private Portal findPortal(String portalId) {

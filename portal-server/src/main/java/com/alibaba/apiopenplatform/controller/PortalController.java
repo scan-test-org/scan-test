@@ -6,6 +6,7 @@ import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalSettingParam;
 import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalUiParam;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
+import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,8 +50,14 @@ public class PortalController {
 
     @Operation(summary = "获取门户列表")
     @GetMapping("/list")
-    public PageResult<PortalResult> listPortals(@PageableDefault(sort = "gmt_create", direction = DESC) Pageable pageable) {
+    public PageResult<PortalResult> listPortals(@PageableDefault(sort = "gmtCreate", direction = DESC) Pageable pageable) {
         return portalService.listPortals(pageable);
+    }
+
+    @Operation(summary = "获取门户配置信息")
+    @GetMapping("/setting/{portalId}")
+    public PortalSettingConfig getPortalSetting(@PathVariable String portalId) {
+        return portalService.getPortalSetting(portalId);
     }
 
     @Operation(summary = "更新门户的基础信息")

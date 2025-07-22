@@ -6,6 +6,7 @@ import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalSettingParam;
 import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalUiParam;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
+import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -75,4 +76,11 @@ public interface PortalService {
      * @param portalId
      */
     void deletePortal(String portalId);
+
+    /**
+     * 获取门户配置信息（PortalSetting）
+     * @param portalId
+     * @return
+     */
+    PortalSettingConfig getPortalSetting(String portalId);
 }
