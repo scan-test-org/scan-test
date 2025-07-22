@@ -177,7 +177,16 @@ public class DeveloperServiceImpl implements DeveloperService {
         // 查库校验 providerName 是否为有效 provider，需传递 portalId
         PortalSetting setting = portalSettingRepository.findByPortalIdAndProvider(portalId, providerName)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "portal_setting", portalId + "," + providerName));
-        if (setting.getOidcConfig() == null || !setting.getOidcConfig().isEnabled()) {
+        boolean valid = false;
+        if (setting.getOidcConfigs() != null) {
+            for (com.alibaba.apiopenplatform.support.portal.OidcConfig c : setting.getOidcConfigs()) {
+                if (providerName.equals(c.getProvider()) && c.isEnabled()) {
+                    valid = true;
+                    break;
+                }
+            }
+        }
+        if (!valid) {
             throw new BusinessException(ErrorCode.AUTH_INVALID, "OIDC配置未启用");
         }
         log.info("[bindExternalIdentity] userId={}, portalId={}, providerName={}, providerSubject={}", userId, portalId, providerName, providerSubject);

@@ -2,12 +2,14 @@ package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import com.alibaba.apiopenplatform.support.converter.OidcConfigConverter;
+import com.alibaba.apiopenplatform.support.converter.OidcConfigListConverter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
+import java.util.List;
 
 /**
  * @author zh
@@ -43,13 +45,16 @@ public class PortalSetting extends BaseEntity {
     @Column(name = "oidc_auth_enabled")
     private Boolean oidcAuthEnabled = false;
 
-    @Convert(converter = OidcConfigConverter.class)
-    @Column(name = "oidc_config", columnDefinition = "text")
-    private OidcConfig oidcConfig;
+    @Convert(converter = OidcConfigListConverter.class)
+    @Column(name = "oidc_configs", columnDefinition = "text")
+    private List<OidcConfig> oidcConfigs;
 
     @Column(name = "auto_approve_developers")
     private Boolean autoApproveDevelopers = false;
 
     @Column(name = "auto_approve_subscriptions")
     private Boolean autoApproveSubscriptions = false;
+
+    @Column(name = "frontend_redirect_url", length = 256)
+    private String frontendRedirectUrl;
 }
