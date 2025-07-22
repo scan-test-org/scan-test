@@ -12,6 +12,7 @@ import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.entity.PortalUi;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
+import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -86,27 +88,27 @@ public class PortalServiceImpl implements PortalService {
     @Override
     public PortalResult updatePortalSetting(UpdatePortalSettingParam param) {
         Portal portal = findPortal(param.getPortalId());
-
         PortalSetting portalSetting = portal.getPortalSetting();
         Optional.ofNullable(param.getBuiltinAuthEnabled())
                 .ifPresent(portalSetting::setBuiltinAuthEnabled);
-
         Optional.ofNullable(param.getOidcAuthEnabled())
                 .ifPresent(portalSetting::setOidcAuthEnabled);
-
-        // OIDC
-        if (Boolean.TRUE.equals(param.getOidcAuthEnabled())) {
-            Optional.ofNullable(param.getOidcConfigParam())
-                    .map(OidcConfigParam::convertTo)
-                    .ifPresent(portalSetting::setOidcConfig);
-        }
-
         Optional.ofNullable(param.getAutoApproveDevelopers())
                 .ifPresent(portalSetting::setAutoApproveDevelopers);
-
         Optional.ofNullable(param.getAutoApproveSubscriptions())
                 .ifPresent(portalSetting::setAutoApproveSubscriptions);
-
+        Optional.ofNullable(param.getFrontendRedirectUrl())
+                .ifPresent(portalSetting::setFrontendRedirectUrl);
+        // 批量配置OIDC provider
+        if (param.getOidcConfigParams() != null) {
+            List<OidcConfig> configs = new java.util.ArrayList<>();
+            for (OidcConfigParam p : param.getOidcConfigParams()) {
+                OidcConfig config = p.convertTo();
+                config.setProvider(p.getProvider());
+                configs.add(config);
+            }
+            portalSetting.setOidcConfigs(configs);
+        }
         portalRepository.saveAndFlush(portal);
         return getPortal(portal.getPortalId());
     }

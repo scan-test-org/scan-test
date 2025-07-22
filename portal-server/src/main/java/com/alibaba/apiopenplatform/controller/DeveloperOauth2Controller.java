@@ -76,9 +76,19 @@ public class DeveloperOauth2Controller {
         @Parameter(description = "OIDC provider 名") @RequestParam("provider") String provider,
         @Parameter(description = "state参数") @RequestParam("state") String state,
         HttpServletResponse response) throws IOException {
-        PortalSetting setting = portalSettingRepository.findByPortalIdAndProvider(portalId, provider)
-                .orElseThrow(() -> new IllegalArgumentException("未找到对应配置: " + portalId + ", " + provider));
-        OidcConfig config = setting.getOidcConfig();
+        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
+        OidcConfig config = null;
+        for (PortalSetting setting : settings) {
+            if (setting.getOidcConfigs() != null) {
+                for (OidcConfig c : setting.getOidcConfigs()) {
+                    if (provider.equals(c.getProvider())) {
+                        config = c;
+                        break;
+                    }
+                }
+            }
+            if (config != null) break;
+        }
         if (config == null || !config.isEnabled()) {
             throw new IllegalArgumentException("OIDC配置未启用");
         }
@@ -145,11 +155,19 @@ public class DeveloperOauth2Controller {
             response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("state参数错误，未包含portalId/provider", "UTF-8"));
                 return;
             }
-        final String finalPortalId = portalId;
-        final String finalProvider = provider;
-        PortalSetting setting = portalSettingRepository.findByPortalIdAndProvider(finalPortalId, finalProvider)
-                .orElseThrow(() -> new IllegalArgumentException("未找到对应配置: " + finalPortalId + ", " + finalProvider));
-        OidcConfig config = setting.getOidcConfig();
+        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
+        OidcConfig config = null;
+        for (PortalSetting setting : settings) {
+            if (setting.getOidcConfigs() != null) {
+                for (OidcConfig c : setting.getOidcConfigs()) {
+                    if (provider.equals(c.getProvider())) {
+                        config = c;
+                        break;
+                    }
+                }
+            }
+            if (config != null) break;
+        }
         if (config == null || !config.isEnabled()) {
             response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("OIDC配置未启用", "UTF-8"));
             return;
@@ -199,19 +217,29 @@ public class DeveloperOauth2Controller {
                 response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("用户不存在", "UTF-8"));
                 return;
             }
-            developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, finalPortalId);
+            developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, portalId);
             response.sendRedirect("/bind-callback?result=success");
-        } else if ("LOGIN".equals(mode)) {
+        } else {
             // 登录流程
             Optional<AuthResponseDto> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
                 String jwt = loginResult.get().getToken();
-                response.sendRedirect("http://localhost:5173/?token=" + jwt);
+                // 动态读取前端回调地址
+                String redirectUrl = null;
+                for (PortalSetting s : settings) {
+                    if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
+                        redirectUrl = s.getFrontendRedirectUrl();
+                        break;
+                    }
+                }
+                if (redirectUrl == null || redirectUrl.isEmpty()) {
+                    redirectUrl = "http://localhost:5173/";
+                }
+                if (!redirectUrl.endsWith("/")) redirectUrl += "/";
+                response.sendRedirect(redirectUrl + "?token=" + jwt);
             } else {
                 response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("三方登录失败", "UTF-8"));
             }
-        } else {
-            response.sendRedirect("/");
         }
     }
 
@@ -249,14 +277,17 @@ public class DeveloperOauth2Controller {
         List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (PortalSetting setting : settings) {
-            OidcConfig config = setting.getOidcConfig();
-            if (config != null && config.isEnabled()) {
-                Map<String, Object> map = new java.util.HashMap<>();
-                map.put("provider", setting.getProvider());
-                map.put("displayName", config.getName());
-                map.put("icon", config.getLogoUrl());
-                map.put("enabled", config.isEnabled());
-                result.add(map);
+            if (setting.getOidcConfigs() != null) {
+                for (OidcConfig config : setting.getOidcConfigs()) {
+                    if (config.isEnabled()) {
+                        Map<String, Object> map = new java.util.HashMap<>();
+                        map.put("provider", config.getProvider());
+                        map.put("displayName", config.getName());
+                        map.put("icon", config.getLogoUrl());
+                        map.put("enabled", config.isEnabled());
+                        result.add(map);
+                    }
+                }
             }
         }
         return ResponseEntity.ok(result);

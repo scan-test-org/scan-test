@@ -5,6 +5,7 @@ import lombok.Data;
 import javax.validation.Valid;
 import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 /**
  * @author zh
@@ -19,15 +20,18 @@ public class UpdatePortalSettingParam {
 
     private Boolean oidcAuthEnabled;
 
-    @Valid
-    private OidcConfigParam oidcConfigParam;
+    private String frontendRedirectUrl;
+
+    // 移除单个oidcConfigParam字段及相关校验
 
     private Boolean autoApproveDevelopers;
 
     private Boolean autoApproveSubscriptions;
 
+    private List<OidcConfigParam> oidcConfigParams;
+
     @AssertTrue(message = "OIDC 鉴权配置不能为空")
     private boolean isOidcConfigValid() {
-        return !Boolean.TRUE.equals(oidcAuthEnabled) || oidcConfigParam != null;
+        return !Boolean.TRUE.equals(oidcAuthEnabled) || oidcConfigParams != null && !oidcConfigParams.isEmpty();
     }
 }
