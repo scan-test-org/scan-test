@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { HomeOutlined, GlobalOutlined, AppstoreOutlined, DesktopOutlined, UserOutlined, MenuOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 
@@ -12,6 +12,7 @@ interface NavigationItem {
 
 const Layout: React.FC = () => {
   const location = useLocation()
+  const navigate = useNavigate()
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
 
   useEffect(() => {
@@ -48,7 +49,7 @@ const Layout: React.FC = () => {
             </div>
           <span className="text-2xl font-bold">API Portal</span>
         </div>
-        <button className="flex items-center px-4 py-2 rounded bg-black text-white hover:bg-gray-800">
+        <button onClick={() => navigate('/login')} className="flex items-center px-4 py-2 rounded bg-black text-white hover:bg-gray-800">
           <UserOutlined className="mr-2" /> 登录
         </button>
       </header>

@@ -6,8 +6,13 @@ import ApiProducts from '@/pages/ApiProducts'
 import Consoles from '@/pages/Consoles'
 import PortalDetail from '@/pages/PortalDetail'
 import ApiProductDetail from '@/pages/ApiProductDetail'
+import Login from '@/pages/Login'
 
 export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <Login />,
+  },
   {
     path: '/',
     element: <Layout />,
