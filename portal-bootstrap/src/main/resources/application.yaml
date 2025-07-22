@@ -35,11 +35,11 @@ db:
 #  password: 12345678
 #  host: rm-bp1kp86mbm7009g7heo.mysql.rds.aliyuncs.com
 #  host: localhost
-  host: rm-uf6pc9n1jzi2478l4.mysql.rds.aliyuncs.com
-  port: 3306
-  name: api_open_platform
-  username: portal_test
-  password: portal-Go
+  # host: rm-uf6pc9n1jzi2478l4.mysql.rds.aliyuncs.com
+  # port: 3306
+  # name: api_open_platform
+  # username: portal_test
+  # password: portal-Go
 #  username: root
 #  password: zhangxiaodan
 #  password: 12345678
