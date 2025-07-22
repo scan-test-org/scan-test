@@ -21,7 +21,7 @@ const Login: React.FC = () => {
   const handleOidcLogin = (provider: string) => {
     const stateRaw = `LOGIN|${portalId}|${provider}`
     const state = encodeURIComponent(stateRaw)
-    window.location.href = `${api.defaults.baseURL}/oauth2/api/oauth/authorize?portalId=${portalId}&provider=${provider}&state=${state}`
+    window.location.href = `${api.defaults.baseURL}/oauth2/api/oauth/authorize?portalId=${portalId}&provider=${provider}&state=${state}&frontendRedirectUrl=${window.location.href}`
   }
 
   return (
