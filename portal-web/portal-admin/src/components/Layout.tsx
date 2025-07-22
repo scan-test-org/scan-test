@@ -49,9 +49,23 @@ const Layout: React.FC = () => {
             </div>
           <span className="text-2xl font-bold">API Portal</span>
         </div>
-        <button onClick={() => navigate('/login')} className="flex items-center px-4 py-2 rounded bg-black text-white hover:bg-gray-800">
-          <UserOutlined className="mr-2" /> 登录
-        </button>
+        {/* 顶部右侧用户信息或登录按钮 */}
+        {true ? ( // mock: true 表示已登录，false 表示未登录
+          <div className="flex items-center space-x-2">
+            <UserOutlined className="mr-2 text-lg" />
+            <span>admin</span>
+            <button
+              onClick={() => alert('已退出登录（mock）')}
+              className="ml-2 px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
+            >
+              退出
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => navigate('/login')} className="flex items-center px-4 py-2 rounded bg-black text-white hover:bg-gray-800">
+            <UserOutlined className="mr-2" /> 登录
+          </button>
+        )}
       </header>
       <div className="flex">
         {/* 侧边栏 */}

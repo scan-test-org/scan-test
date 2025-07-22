@@ -5,6 +5,7 @@ import ApiDetail from "./pages/ApiDetail";
 import Consumers from "./pages/Consumers";
 import GettingStarted from "./pages/GettingStarted";
 import Mcp from "./pages/Mcp";
+import Login from "./pages/Login";
 
 export function Router() {
   return (
@@ -15,6 +16,7 @@ export function Router() {
       <Route path="/apis/:id" element={<ApiDetail />} />
       <Route path="/consumers" element={<Consumers />} />
       <Route path="/mcp" element={<Mcp />} />
+      <Route path="/login" element={<Login />} />
       {/* 其他页面可继续添加 */}
     </Routes>
   );
