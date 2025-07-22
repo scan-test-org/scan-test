@@ -1,8 +1,9 @@
-import { useState, useCallback, memo } from 'react'
+import { useState, useCallback, memo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Card, Badge, Avatar, Dropdown, Space } from 'antd'
 import { PlusOutlined, MoreOutlined, LinkOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
+import api from '../lib/api'
 
 interface Portal {
   id: string
@@ -139,6 +140,36 @@ PortalCard.displayName = 'PortalCard'
 export default function Portals() {
   const navigate = useNavigate()
   const [portals, setPortals] = useState<Portal[]>(mockPortals)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    api.get('/portal/list')
+      .then((res: any) => {
+        // 兼容后端返回结构
+        const list = res?.data?.content || []
+        const portals: Portal[] = list.map((item: any) => ({
+          id: item.portalId,
+          name: item.name,
+          description: item.description,
+          title: item.name,
+          url: '', // 如有url字段可补充
+          userAuth: item.portalSettingConfig?.builtinAuthEnabled ? '内置认证' : (item.portalSettingConfig?.oidcAuthEnabled ? 'OIDC' : '未知'),
+          rbac: item.portalSettingConfig?.rbacEnabled ? 'Enabled' : 'Disabled',
+          authStrategy: item.portalSettingConfig?.authStrategy || '-',
+          apiVisibility: item.portalSettingConfig?.apiVisibility || '-',
+          pageVisibility: item.portalSettingConfig?.pageVisibility || '-',
+          logo: item.portalUiConfig?.logo || undefined,
+        }))
+        setPortals(portals)
+      })
+      .catch((err: any) => {
+        setError(err?.message || '加载失败')
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
   const handleCreatePortal = useCallback((newPortal: Omit<Portal, "id">) => {
     const portal: Portal = {
@@ -165,7 +196,8 @@ export default function Portals() {
           创建 Portal
         </Button>
       </div>
-
+      {loading && <div>加载中...</div>}
+      {error && <div className="text-red-500">{error}</div>}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {portals.map((portal) => (
           <PortalCard

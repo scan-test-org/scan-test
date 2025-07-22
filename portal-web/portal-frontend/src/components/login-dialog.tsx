@@ -22,10 +22,18 @@ export function LoginDialog() {
     form.resetFields();
     window.location.reload();
   };
+  const portalId = "test_portal";
 
   return (
     <>
-      <Button icon={<UserOutlined />} onClick={() => setIsOpen(true)} type="default" size="small">
+      <Button
+        icon={<UserOutlined />}
+        onClick={() => {
+          window.location.href = `/login?portalId=${portalId}`;
+        }}
+        type="default"
+        size="small"
+      >
         登录
       </Button>
       <Modal
