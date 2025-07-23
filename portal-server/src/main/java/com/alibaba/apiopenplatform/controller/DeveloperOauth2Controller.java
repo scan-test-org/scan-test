@@ -232,7 +232,25 @@ public class DeveloperOauth2Controller {
                 return;
             }
             developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, portalId);
-            response.sendRedirect("/bind-callback?result=success");
+            // --- 新增：动态回调地址 ---
+            String redirectUrl = frontendRedirectUrl;
+            if (redirectUrl == null || redirectUrl.isEmpty()) {
+                for (PortalSetting s : settings) {
+                    if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
+                        redirectUrl = s.getFrontendRedirectUrl();
+                        break;
+                    }
+                }
+            }
+            if (redirectUrl == null || redirectUrl.isEmpty()) {
+                redirectUrl = "http://localhost:5173/bind-callback";
+            }
+            if (!redirectUrl.contains("?")) {
+                redirectUrl += "?result=success";
+            } else {
+                redirectUrl += "&result=success";
+            }
+            response.sendRedirect(redirectUrl);
         } else {
             // 登录流程
             Optional<AuthResponseDto> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
