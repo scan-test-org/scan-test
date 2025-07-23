@@ -59,16 +59,16 @@ public class McpMarketServiceImpl implements McpMarketService {
     }
 
     /**
-     * 获取MCP能力市场卡片列表
+     * 获取MCP能力市场卡片列表，支持namespaceId
      * @param pageNo 页码
      * @param pageSize 每页数量
-     * @param keyword 关键字
+     * @param mcpName 关键字
+     * @param namespaceId 命名空间ID
      * @return 能力市场卡片DTO列表
      */
-    @Override
-    public List<McpMarketCardDto> list(int pageNo, int pageSize, String keyword) {
+    public List<McpMarketCardDto> list(int pageNo, int pageSize, String mcpName, String namespaceId) {
         try {
-            Page<McpServerBasicInfo> page = mcpMaintainerService.listMcpServer(keyword, pageNo, pageSize);
+            Page<McpServerBasicInfo> page = mcpMaintainerService.listMcpServer(namespaceId, mcpName, pageNo, pageSize);
             if (page == null || page.getPageItems() == null) {
                 return Collections.emptyList();
             }
@@ -98,29 +98,27 @@ public class McpMarketServiceImpl implements McpMarketService {
     /**
      * 获取MCP能力服务详情
      * @param mcpName 服务名（不是id）
+     * @param namespaceId 命名空间ID
+     * @param version 版本
      * @return 能力市场详情DTO
      */
     @Override
-    public McpMarketDetailDto detail(String mcpName) {
-        log.info("开始获取MCP Server详情，mcpName: {}", mcpName);
+    public McpMarketDetailDto detail(String mcpName, String namespaceId, String version) {
+        log.info("开始获取MCP Server详情，namespaceId: {}, mcpName: {}, version: {}", namespaceId, mcpName, version);
         try {
             if (mcpMaintainerService == null) {
                 log.error("mcpMaintainerService 未初始化");
                 return null;
             }
-
-            log.info("调用 getMcpServerDetail，mcpName: {}", mcpName);
-            McpServerDetailInfo detail = mcpMaintainerService.getMcpServerDetail(mcpName);
-
+            McpServerDetailInfo detail = mcpMaintainerService.getMcpServerDetail(namespaceId, mcpName, version);
             if (detail == null) {
-                log.warn("getMcpServerDetail 返回 null，mcpName: {}", mcpName);
+                log.warn("getMcpServerDetail 返回 null，namespaceId: {}, mcpName: {}, version: {}", namespaceId, mcpName, version);
                 return null;
             }
-
             log.info("成功获取到详情数据，id: {}, name: {}", detail.getId(), detail.getName());
             return McpMarketDetailDto.builder()
                 .id(detail.getId())
-                .mcpName(detail.getName()) // 新增字段
+                .mcpName(detail.getName())
                 .name(detail.getName())
                 .protocol(detail.getProtocol())
                 .frontProtocol(detail.getFrontProtocol())
@@ -138,7 +136,7 @@ public class McpMarketServiceImpl implements McpMarketService {
                 .namespaceId(detail.getNamespaceId())
                 .build();
         } catch (Exception e) {
-            log.error("获取MCP Server详情时发生异常，mcpName: {}", mcpName, e);
+            log.error("获取MCP Server详情时发生异常，namespaceId: {}, mcpName: {}, version: {}", namespaceId, mcpName, version, e);
             return null;
         }
     }
