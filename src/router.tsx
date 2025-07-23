@@ -6,6 +6,8 @@ import Consumers from "./pages/Consumers";
 import GettingStarted from "./pages/GettingStarted";
 import Mcp from "./pages/Mcp";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from './pages/Profile'
 
 export function Router() {
   return (
@@ -17,6 +19,8 @@ export function Router() {
       <Route path="/consumers" element={<Consumers />} />
       <Route path="/mcp" element={<Mcp />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/profile" element={<Profile />} />
       {/* 其他页面可继续添加 */}
     </Routes>
   );
