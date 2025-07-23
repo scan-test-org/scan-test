@@ -75,7 +75,13 @@ public class DeveloperOauth2Controller {
         @Parameter(description = "门户唯一标识") @RequestParam("portalId") String portalId,
         @Parameter(description = "OIDC provider 名") @RequestParam("provider") String provider,
         @Parameter(description = "state参数") @RequestParam("state") String state,
+        @Parameter(description = "前端回调地址，可选") @RequestParam(value = "frontendRedirectUrl", required = false) String frontendRedirectUrl,
         HttpServletResponse response) throws IOException {
+        // 将frontendRedirectUrl拼进state，分隔符自定义
+        String newState = state;
+        if (frontendRedirectUrl != null && !frontendRedirectUrl.isEmpty()) {
+            newState = state + "|FRONTENDURL=" + java.net.URLEncoder.encode(frontendRedirectUrl, "UTF-8");
+        }
         java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
         OidcConfig config = null;
         for (PortalSetting setting : settings) {
@@ -97,7 +103,7 @@ public class DeveloperOauth2Controller {
                 + "&redirect_uri=" + URLEncoder.encode(config.getRedirectUri(), "UTF-8")
                 + "&scope=" + URLEncoder.encode(config.getScopes(), "UTF-8")
                 + "&response_type=code"
-                + "&state=" + URLEncoder.encode(state, "UTF-8");
+                + "&state=" + URLEncoder.encode(newState, "UTF-8");
         response.sendRedirect(url);
     }
 
@@ -129,7 +135,15 @@ public class DeveloperOauth2Controller {
         String provider = null;
         String token = null;
         String mode = null;
-        if (decodedState != null && decodedState.startsWith("BINDING|")) {
+        String frontendRedirectUrl = null;
+        // 解析state，支持带frontendRedirectUrl
+        String[] stateParts = decodedState.split("\\|");
+        for (String part : stateParts) {
+            if (part.startsWith("FRONTENDURL=")) {
+                frontendRedirectUrl = java.net.URLDecoder.decode(part.substring("FRONTENDURL=".length()), "UTF-8");
+            }
+        }
+        if (decodedState.startsWith("BINDING|")) {
             // BINDING|随机串|portalId|provider|token
             String[] arr = decodedState.split("\\|");
             if (arr.length >= 5) {
@@ -140,7 +154,7 @@ public class DeveloperOauth2Controller {
                 token = arr[4];
                 mode = "BINDING";
             }
-        } else if (decodedState != null && decodedState.startsWith("LOGIN|")) {
+        } else if (decodedState.startsWith("LOGIN|")) {
             // LOGIN|portalId|provider
             String[] arr = decodedState.split("\\|");
             if (arr.length >= 3) {
@@ -224,12 +238,14 @@ public class DeveloperOauth2Controller {
             Optional<AuthResponseDto> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
                 String jwt = loginResult.get().getToken();
-                // 动态读取前端回调地址
-                String redirectUrl = null;
-                for (PortalSetting s : settings) {
-                    if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
-                        redirectUrl = s.getFrontendRedirectUrl();
-                        break;
+                // 优先用state里的frontendRedirectUrl
+                String redirectUrl = frontendRedirectUrl;
+                if (redirectUrl == null || redirectUrl.isEmpty()) {
+                    for (PortalSetting s : settings) {
+                        if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
+                            redirectUrl = s.getFrontendRedirectUrl();
+                            break;
+                        }
                     }
                 }
                 if (redirectUrl == null || redirectUrl.isEmpty()) {

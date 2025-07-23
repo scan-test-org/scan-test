@@ -26,13 +26,16 @@ public class McpMarketController {
     @GetMapping("/list")
     public Response<List<McpMarketCardDto>> list(@RequestParam(defaultValue = "1") int pageNo,
                                                  @RequestParam(defaultValue = "10") int pageSize,
-                                                 @RequestParam(required = false) String keyword) {
-        return Response.ok(mcpMarketService.list(pageNo, pageSize, keyword));
+                                                 @RequestParam(required = false) String mcpName,
+                                                 @RequestParam(defaultValue = "public") String namespaceId) {
+        return Response.ok(mcpMarketService.list(pageNo, pageSize, mcpName, namespaceId));
     }
 
     @Operation(summary = "获取MCP能力服务详情")
-    @GetMapping("/{mcpId}")
-    public Response<McpMarketDetailDto> detail(@PathVariable String mcpId) {
-        return Response.ok(mcpMarketService.detail(mcpId));
+    @GetMapping("/detail/{mcpName}")
+    public Response<McpMarketDetailDto> detail(@PathVariable String mcpName,
+                                               @RequestParam(defaultValue = "public") String namespaceId,
+                                               @RequestParam(required = false) String version) {
+        return Response.ok(mcpMarketService.detail(mcpName, namespaceId, version));
     }
 } 
