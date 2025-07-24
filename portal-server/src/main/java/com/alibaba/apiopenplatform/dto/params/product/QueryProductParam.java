@@ -7,7 +7,7 @@ import lombok.Data;
  * @author zh
  */
 @Data
-public class ListProductsParam {
+public class QueryProductParam {
 
     private String portalId;
 

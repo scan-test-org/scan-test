@@ -1,9 +1,6 @@
 package com.alibaba.apiopenplatform.service;
 
-import com.alibaba.apiopenplatform.dto.params.portal.CreatePortalParam;
-import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalParam;
-import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalSettingParam;
-import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalUiParam;
+import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
@@ -49,26 +46,29 @@ public interface PortalService {
     /**
      * 更新门户
      *
+     * @param portalId
      * @param param
      * @return
      */
-    PortalResult updatePortal(UpdatePortalParam param);
+    PortalResult updatePortal(String portalId, UpdatePortalParam param);
 
     /**
      * 更新门户设置
      *
+     * @param portalId
      * @param param
      * @return
      */
-    PortalResult updatePortalSetting(UpdatePortalSettingParam param);
+    PortalResult updatePortalSetting(String portalId, UpdatePortalSettingParam param);
 
     /**
      * 更新门户UI
      *
+     * @param portalId
      * @param param
      * @return
      */
-    PortalResult updatePortalUi(UpdatePortalUiParam param);
+    PortalResult updatePortalUi(String portalId, UpdatePortalUiParam param);
 
     /**
      * 删除门户
@@ -79,6 +79,7 @@ public interface PortalService {
 
     /**
      * 获取门户配置信息（PortalSetting）
+     *
      * @param portalId
      * @return
      */
@@ -91,4 +92,23 @@ public interface PortalService {
      * @return
      */
     String resolvePortal(String domain);
+
+
+    /**
+     * 为门户绑定域名
+     *
+     * @param portalId
+     * @param param
+     * @return
+     */
+    PortalResult bindDomain(String portalId, BindDomainParam param);
+
+    /**
+     * 删除门户绑定域名
+     *
+     * @param portalId
+     * @param domain
+     * @return
+     */
+    PortalResult unbindDomain(String portalId, String domain);
 }

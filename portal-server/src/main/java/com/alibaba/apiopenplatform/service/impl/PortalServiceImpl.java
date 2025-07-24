@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -15,6 +16,7 @@ import com.alibaba.apiopenplatform.entity.PortalUi;
 import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
+import com.alibaba.apiopenplatform.support.enums.DomainType;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,8 +90,8 @@ public class PortalServiceImpl implements PortalService {
     }
 
     @Override
-    public PortalResult updatePortal(UpdatePortalParam param) {
-        Portal portal = findPortal(param.getPortalId());
+    public PortalResult updatePortal(String portalId, UpdatePortalParam param) {
+        Portal portal = findPortal(portalId);
 
         param.update(portal);
         portalRepository.saveAndFlush(portal);
@@ -98,20 +100,14 @@ public class PortalServiceImpl implements PortalService {
     }
 
     @Override
-    public PortalResult updatePortalSetting(UpdatePortalSettingParam param) {
-        Portal portal = findPortal(param.getPortalId());
+    public PortalResult updatePortalSetting(String portalId, UpdatePortalSettingParam param) {
+        Portal portal = findPortal(portalId);
         PortalSetting portalSetting = portal.getPortalSetting();
+
         Optional.ofNullable(param.getBuiltinAuthEnabled())
                 .ifPresent(portalSetting::setBuiltinAuthEnabled);
         Optional.ofNullable(param.getOidcAuthEnabled())
                 .ifPresent(portalSetting::setOidcAuthEnabled);
-
-        // OIDC
-        if (Boolean.TRUE.equals(param.getOidcAuthEnabled())) {
-            Optional.ofNullable(param.getOidcOption())
-                    .map(OidcOption::convertTo)
-                    .ifPresent(portalSetting::setOidcConfig);
-        }
 
         Optional.ofNullable(param.getAutoApproveDevelopers())
                 .ifPresent(portalSetting::setAutoApproveDevelopers);
@@ -120,9 +116,9 @@ public class PortalServiceImpl implements PortalService {
         Optional.ofNullable(param.getFrontendRedirectUrl())
                 .ifPresent(portalSetting::setFrontendRedirectUrl);
         // 批量配置OIDC provider
-        if (param.getOidcConfigParams() != null) {
+        if (param.getOidcOptions() != null) {
             List<OidcConfig> configs = new java.util.ArrayList<>();
-            for (OidcConfigParam p : param.getOidcConfigParams()) {
+            for (OidcOption p : param.getOidcOptions()) {
                 OidcConfig config = p.convertTo();
                 config.setProvider(p.getProvider());
                 configs.add(config);
@@ -134,8 +130,8 @@ public class PortalServiceImpl implements PortalService {
     }
 
     @Override
-    public PortalResult updatePortalUi(UpdatePortalUiParam param) {
-        Portal portal = findPortal(param.getPortalId());
+    public PortalResult updatePortalUi(String portalId, UpdatePortalUiParam param) {
+        Portal portal = findPortal(portalId);
 
         PortalUi portalUi = portal.getPortalUi();
         Optional.ofNullable(param.getLogo())
@@ -159,6 +155,32 @@ public class PortalServiceImpl implements PortalService {
         return portalDomainRepository.findByDomain(domain)
                 .map(portalDomain -> portalDomain.getPortal().getPortalId())
                 .orElse(null);
+    }
+
+    @Override
+    public PortalResult bindDomain(String portalId, BindDomainParam param) {
+        Portal portal = findPortal(portalId);
+        portal.getPortalDomains().add(param.convertTo());
+
+        portalRepository.saveAndFlush(portal);
+        return getPortal(portalId);
+    }
+
+    @Override
+    public PortalResult unbindDomain(String portalId, String domain) {
+        Portal portal = findPortal(portalId);
+        PortalDomain portalDomain = portal.getPortalDomains().stream()
+                .filter(pd -> StrUtil.equals(pd.getDomain(), domain))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL_DOMAIN, domain));
+
+        // 默认域名不允许解绑
+        if (portalDomain.getType() == DomainType.DEFAULT) {
+            throw new BusinessException(ErrorCode.DOMAIN_NOT_ALLOWED_UNBIND, domain);
+        }
+
+        portalDomainRepository.delete(portalDomain);
+        return getPortal(portalId);
     }
 
     @Override

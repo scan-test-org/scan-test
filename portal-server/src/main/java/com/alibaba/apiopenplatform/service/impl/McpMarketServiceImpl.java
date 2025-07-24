@@ -28,7 +28,7 @@ import com.alibaba.nacos.api.model.Page;
  * 字段与Nacos官方文档和model保持一致。
  * @author zxd
  */
-//@Service
+@Service
 @RequiredArgsConstructor
 @Slf4j
 public class McpMarketServiceImpl implements McpMarketService {

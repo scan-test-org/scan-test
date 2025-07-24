@@ -85,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public PageResult<ProductResult> listProducts(ListProductsParam param, Pageable pageable) {
+    public PageResult<ProductResult> listProducts(QueryProductParam param, Pageable pageable) {
         if (contextHolder.isDeveloper()) {
             param.setPortalId(contextHolder.getPortal());
         }
@@ -96,12 +96,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResult updateProduct(UpdateProductParam param) {
-        Product product = findProduct(param.getProductId());
+    public ProductResult updateProduct(String productId, UpdateProductParam param) {
+        Product product = findProduct(productId);
 
         // 更换API产品类型
         if (param.getType() != null && product.getType() != param.getType()) {
-            productRefRepository.findFirstByProductId(param.getProductId())
+            productRefRepository.findFirstByProductId(productId)
                     .ifPresent(productRef -> {
                         throw new BusinessException(ErrorCode.PRODUCT_API_EXISTS, product.getProductId());
                     });
@@ -116,13 +116,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void publishProduct(PublishProductParam param) {
+    public void publishProduct(String productId, PublishProductParam param) {
         portalService.hasPortal(param.getPortalId());
-        if (publicationRepository.findByPortalIdAndProductId(param.getPortalId(), param.getProductId()).isPresent()) {
+        if (publicationRepository.findByPortalIdAndProductId(param.getPortalId(), productId).isPresent()) {
             return;
         }
 
-        Product Product = findProduct(param.getProductId());
+        Product Product = findProduct(productId);
         ProductPublication productPublication = param.convertTo();
         productPublication.setProduct(Product);
 
@@ -130,10 +130,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void unpublishProduct(UnPublishProductParam param) {
+    public void unpublishProduct(String productId, UnPublishProductParam param) {
         portalService.hasPortal(param.getPortalId());
 
-        publicationRepository.findByPortalIdAndProductId(param.getPortalId(), param.getProductId())
+        publicationRepository.findByPortalIdAndProductId(param.getPortalId(), productId)
                 .ifPresent(publicationRepository::delete);
     }
 
@@ -149,8 +149,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void addProductRef(CreateProductRefParam param) {
-        Product product = findProduct(param.getProductId());
+    public void addProductRef(String productId, CreateProductRefParam param) {
+        Product product = findProduct(productId);
 
         // 是否已存在API引用
         productRefRepository.findByProductIdAndApiId(product.getProductId(), param.getApiId())
@@ -207,7 +207,7 @@ public class ProductServiceImpl implements ProductService {
                 .getProduct();
     }
 
-    private Specification<Product> buildSpecification(ListProductsParam param) {
+    private Specification<Product> buildSpecification(QueryProductParam param) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 

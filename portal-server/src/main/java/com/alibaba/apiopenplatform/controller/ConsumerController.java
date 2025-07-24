@@ -30,37 +30,30 @@ public class ConsumerController {
     private final ConsumerService consumerService;
 
     @Operation(summary = "获取Consumer列表")
-    @GetMapping("/list")
+    @GetMapping
     public PageResult<ConsumerResult> listConsumers(QueryConsumerParam param,
                                                     Pageable pageable) {
         return consumerService.listConsumers(param, pageable);
     }
 
     @Operation(summary = "注册Consumer")
-    @PostMapping("/register")
+    @PostMapping
     @DeveloperAuth
     public ConsumerResult registerConsumer(@RequestBody @Valid CreateConsumerParam param) {
         return consumerService.registerConsumer(param);
     }
 
     @Operation(summary = "审批Consumer")
-    @PostMapping("/{consumerId}/approve")
+    @PatchMapping("/{consumerId}/status")
     @AdminAuth
     public void approveConsumer(
             @PathVariable @NotBlank(message = "Consumer ID不能为空") String consumerId) {
         consumerService.approveConsumer(consumerId);
     }
 
-    @Operation(summary = "开发者删除Consumer")
+    @Operation(summary = "删除Consumer")
     @DeleteMapping("/{consumerId}")
     public void deleteDevConsumer(
-            @PathVariable @NotBlank(message = "Consumer ID不能为空") String consumerId) {
-        consumerService.deleteConsumer(consumerId);
-    }
-
-    @Operation(summary = "管理员删除Consumer")
-    @DeleteMapping("/admin/{consumerId}")
-    public void deleteConsumer(
             @PathVariable @NotBlank(message = "Consumer ID不能为空") String consumerId) {
         consumerService.deleteConsumer(consumerId);
     }
