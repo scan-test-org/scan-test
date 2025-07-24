@@ -49,7 +49,4 @@ public class Product extends BaseEntity {
 
     @Column(name = "category", length = 64)
     private String category;
-
-    @Column(name = "tools", length = 1024)
-    private String tools;
 }

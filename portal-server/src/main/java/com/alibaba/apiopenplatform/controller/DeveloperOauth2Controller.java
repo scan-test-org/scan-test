@@ -78,7 +78,7 @@ public class DeveloperOauth2Controller {
     public void universalAuthorize(@RequestParam String portalId, @RequestParam String provider, @RequestParam String state, HttpServletResponse response) throws IOException {
         // 不再支持 frontendRedirectUrl 参数，统一从 PortalSetting 读取
         String newState = state;
-        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
+        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
         OidcConfig config = null;
         for (PortalSetting setting : settings) {
             if (setting.getOidcConfigs() != null) {
@@ -163,7 +163,7 @@ public class DeveloperOauth2Controller {
         }
         // --- 只重定向到前端回调页，带 code 和 state，不带 token ---
         String redirectUrl = frontendRedirectUrl;
-        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
+        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
         if (redirectUrl == null || redirectUrl.isEmpty()) {
             for (PortalSetting s : settings) {
                 if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
@@ -219,7 +219,7 @@ public class DeveloperOauth2Controller {
         if (portalId == null || provider == null) {
             throw new RuntimeException("state参数错误，未包含portalId/provider");
         }
-        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
+        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
         OidcConfig config = null;
         for (PortalSetting setting : settings) {
             if (setting.getOidcConfigs() != null) {
@@ -320,7 +320,7 @@ public class DeveloperOauth2Controller {
     @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮")
     @PostMapping("/providers")
     public List<Map<String, Object>> listOidcProviders(@RequestBody OidcProvidersRequestParam param) {
-        List<PortalSetting> settings = portalSettingRepository.findByPortalId(param.getPortalId());
+        List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(param.getPortalId());
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (PortalSetting setting : settings) {
             if (setting.getOidcConfigs() != null) {
