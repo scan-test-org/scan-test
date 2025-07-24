@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.dto.params.admin.AdminCreateDto;
 import com.alibaba.apiopenplatform.dto.params.admin.AdminLoginDto;
+import com.alibaba.apiopenplatform.dto.params.admin.ChangePasswordDto;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
 import com.alibaba.apiopenplatform.service.AdministratorService;
 import com.alibaba.apiopenplatform.core.response.Response;
@@ -18,6 +19,12 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Optional;
+
 /**
  * 管理员控制器，提供注册和登录等API接口
  *
@@ -25,7 +32,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  */
 @Tag(name = "管理员管理", description = "管理员初始化、登录、修改密码等相关接口")
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 @Validated
 public class AdministratorController {
@@ -36,12 +43,13 @@ public class AdministratorController {
 
     @Operation(summary = "管理员登录", description = "管理员登录，只需用户名和密码。前端只需传username和password，后端自动校验，无需portalId。")
     @PostMapping("/login")
-    public Response<AuthResponseDto> login(
-        @RequestBody(description = "管理员登录参数")
-        @Valid @org.springframework.web.bind.annotation.RequestBody AdminLoginDto dto) {
-        return administratorService.loginWithPassword(dto.getUsername(), dto.getPassword())
-                .map(Response::ok)
-                .orElseGet(() -> Response.fail("AUTH_FAILED", "用户名或密码错误"));
+    public ResponseEntity<?> login(@Valid @RequestBody AdminLoginDto dto) {
+        Optional<AuthResponseDto> result = administratorService.loginWithPassword(dto.getUsername(), dto.getPassword());
+        if (result.isPresent()) {
+            return ResponseEntity.ok(result.get());
+        } else {
+            return ResponseEntity.status(401).body(Collections.singletonMap("error", "AUTH_FAILED"));
+        }
     }
 
     // @Operation(summary = "管理员受保护接口", description = "仅测试用，返回管理员受保护信息")
@@ -52,14 +60,13 @@ public class AdministratorController {
 
     @Operation(summary = "管理员登出", description = "将 token 加入黑名单，前端自动传递Authorization请求头，无需用户手动输入。")
     @PostMapping("/logout")
-    public Response<Void> logout(
-        @Parameter(description = "认证Token，前端自动传递Authorization请求头") @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             long expireAt = System.currentTimeMillis() + 3600_000L;
             tokenBlacklistService.add(token, expireAt);
         }
-        return Response.ok(null);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "检查是否需要初始化管理员", description = "检查系统是否需要初始化管理员（全表无记录时返回true），前端无需传递portalId。")
@@ -78,17 +85,15 @@ public class AdministratorController {
     }
 
     @Operation(summary = "管理员修改密码", description = "需传递adminId、oldPassword、newPassword，前端自动传递token，后端校验当前登录管理员和adminId是否一致，防止越权。")
-    @PostMapping("/change-password")
-    public Response<String> changePassword(
-        @Parameter(description = "管理员ID") @RequestParam("adminId") String adminId,
-        @Parameter(description = "旧密码") @RequestParam("oldPassword") String oldPassword,
-        @Parameter(description = "新密码") @RequestParam("newPassword") String newPassword) {
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<?> changePassword(@PathVariable("id") String adminId,
+                                        @RequestBody ChangePasswordDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserId = authentication != null ? authentication.getName() : null;
         if (currentUserId == null || !currentUserId.equals(adminId)) {
-            return Response.fail("UNAUTHORIZED", "无权修改他人密码");
+            return ResponseEntity.status(403).body(Collections.singletonMap("error", "UNAUTHORIZED"));
         }
-        administratorService.changePassword(adminId, oldPassword, newPassword);
-        return Response.ok("修改密码成功");
+        administratorService.changePassword(adminId, dto.getOldPassword(), dto.getNewPassword());
+        return ResponseEntity.ok(Collections.singletonMap("message", "修改密码成功"));
     }
 } 

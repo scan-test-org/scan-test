@@ -42,6 +42,10 @@ import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.repository.PortalSettingRepository;
 import java.net.URLDecoder;
+import com.alibaba.apiopenplatform.dto.params.developer.OidcTokenRequestDto;
+import com.alibaba.apiopenplatform.dto.params.developer.OidcProvidersRequestDto;
+import com.alibaba.apiopenplatform.dto.params.developer.ListIdentitiesRequestDto;
+
 
 /**
  * 开发者 OAuth2 统一回调与外部身份绑定控制器
@@ -52,7 +56,7 @@ import java.net.URLDecoder;
 @Slf4j
 @Tag(name = "开发者OAuth2登录管理", description = "开发者OAuth2统一回调与外部身份绑定相关接口")
 @RestController
-@RequestMapping("/oauth2")
+@RequestMapping("/oauth")
 @RequiredArgsConstructor
 public class DeveloperOauth2Controller {
     private final DeveloperRepository developerRepository;
@@ -70,18 +74,10 @@ public class DeveloperOauth2Controller {
      * @param state 前端生成的state参数
      */
     @Operation(summary = "OIDC授权入口", description = "前端需拼接state参数，格式为：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。")
-    @GetMapping("/api/oauth/authorize")
-    public void universalAuthorize(
-        @Parameter(description = "门户唯一标识") @RequestParam("portalId") String portalId,
-        @Parameter(description = "OIDC provider 名") @RequestParam("provider") String provider,
-        @Parameter(description = "state参数") @RequestParam("state") String state,
-        @Parameter(description = "前端回调地址，可选") @RequestParam(value = "frontendRedirectUrl", required = false) String frontendRedirectUrl,
-        HttpServletResponse response) throws IOException {
-        // 将frontendRedirectUrl拼进state，分隔符自定义
+    @GetMapping("/authorize")
+    public void universalAuthorize(@RequestParam String portalId, @RequestParam String provider, @RequestParam String state, HttpServletResponse response) throws IOException {
+        // 不再支持 frontendRedirectUrl 参数，统一从 PortalSetting 读取
         String newState = state;
-        if (frontendRedirectUrl != null && !frontendRedirectUrl.isEmpty()) {
-            newState = state + "|FRONTENDURL=" + java.net.URLEncoder.encode(frontendRedirectUrl, "UTF-8");
-        }
         java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
         OidcConfig config = null;
         for (PortalSetting setting : settings) {
@@ -123,11 +119,7 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "OIDC统一回调", description = "state 推荐格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。详见接口注释和前端示例。")
     @GetMapping("/callback")
-    public void oidcCallback(
-        @Parameter(description = "授权码") @RequestParam("code") String code,
-        @Parameter(description = "state参数，整体需encodeURIComponent编码，格式见接口注释") @RequestParam("state") String state,
-                               HttpServletRequest request,
-                               HttpServletResponse response) throws IOException {
+    public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletResponse response) throws IOException {
         log.info("[OIDCCallback] code={}, state={}", code, state);
         // 先 URL 解码
         String decodedState = URLDecoder.decode(state, "UTF-8");
@@ -167,8 +159,66 @@ public class DeveloperOauth2Controller {
         }
         if (portalId == null || provider == null) {
             response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("state参数错误，未包含portalId/provider", "UTF-8"));
-                return;
+            return;
+        }
+        // --- 只重定向到前端回调页，带 code 和 state，不带 token ---
+        String redirectUrl = frontendRedirectUrl;
+        java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
+        if (redirectUrl == null || redirectUrl.isEmpty()) {
+            for (PortalSetting s : settings) {
+                if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
+                    redirectUrl = s.getFrontendRedirectUrl();
+                    break;
+                }
             }
+        }
+        if (redirectUrl == null || redirectUrl.isEmpty()) {
+            redirectUrl = "http://localhost:5173/callback";
+        }
+        if (!redirectUrl.contains("?")) {
+            redirectUrl += "?code=" + URLEncoder.encode(code, "UTF-8") + "&state=" + URLEncoder.encode(state, "UTF-8");
+        } else {
+            redirectUrl += "&code=" + URLEncoder.encode(code, "UTF-8") + "&state=" + URLEncoder.encode(state, "UTF-8");
+        }
+        response.sendRedirect(redirectUrl);
+    }
+
+    /**
+     * OIDC code 换取 token 标准接口
+     */
+    @Operation(summary = "OIDC code换token", description = "前端回调页用code和state换取JWT token，token只在响应体返回")
+    @PostMapping("/token")
+    public ResponseEntity<?> exchangeCodeForToken(@RequestBody OidcTokenRequestDto request) {
+        // 解析state，获取portalId、provider等
+        String decodedState;
+        try {
+            decodedState = java.net.URLDecoder.decode(request.getState(), "UTF-8");
+        } catch (java.io.UnsupportedEncodingException e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "state参数解码失败: " + e.getMessage()));
+        }
+        String portalId = null;
+        String provider = null;
+        String mode = null;
+        String tokenParam = null;
+        if (decodedState.startsWith("BINDING|")) {
+            String[] arr = decodedState.split("\\|");
+            if (arr.length >= 5) {
+                portalId = arr[2];
+                provider = arr[3];
+                tokenParam = arr[4];
+                mode = "BINDING";
+            }
+        } else if (decodedState.startsWith("LOGIN|")) {
+            String[] arr = decodedState.split("\\|");
+            if (arr.length >= 3) {
+                portalId = arr[1];
+                provider = arr[2];
+                mode = "LOGIN";
+            }
+        }
+        if (portalId == null || provider == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "state参数错误，未包含portalId/provider"));
+        }
         java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
         OidcConfig config = null;
         for (PortalSetting setting : settings) {
@@ -183,96 +233,59 @@ public class DeveloperOauth2Controller {
             if (config != null) break;
         }
         if (config == null || !config.isEnabled()) {
-            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("OIDC配置未启用", "UTF-8"));
-            return;
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "OIDC配置未启用"));
         }
         // --- 获取三方用户信息 ---
-            String providerSubject = null;
-            String displayName = null;
-            String rawInfoJson = null;
-            try {
-            Map<String, Object> userInfoMap = fetchUserInfoMap(code, config);
+        String providerSubject = null;
+        String displayName = null;
+        String rawInfoJson = null;
+        Map<String, Object> userInfoMap;
+        try {
+            userInfoMap = fetchUserInfoMap(request.getCode(), config);
             Object idObj = userInfoMap.get("sub");
             if (idObj == null) idObj = userInfoMap.get("id");
-                providerSubject = idObj != null ? String.valueOf(idObj) : null;
+            providerSubject = idObj != null ? String.valueOf(idObj) : null;
             Object nameObj = userInfoMap.get("name");
             if (nameObj == null) nameObj = userInfoMap.get("username");
-                if (nameObj == null) nameObj = userInfoMap.get("login");
-                displayName = nameObj != null ? String.valueOf(nameObj) : null;
-                rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
-            } catch (Exception e) {
-            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("获取三方用户信息失败:" + e.getMessage(), "UTF-8"));
-                return;
-            }
+            if (nameObj == null) nameObj = userInfoMap.get("login");
+            displayName = nameObj != null ? String.valueOf(nameObj) : null;
+            rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", "获取三方用户信息失败: " + e.getMessage()));
+        }
         if ("BINDING".equals(mode)) {
             // 绑定流程
             Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);
             if (extOpt.isPresent()) {
-                response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("该外部账号已被其他用户绑定", "UTF-8"));
-                return;
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "该外部账号已被其他用户绑定"));
             }
             // 通过 token 识别当前用户
             String userId = null;
-            if (token != null) {
+            if (tokenParam != null) {
                 try {
-                    Map<String, Object> claims = jwtService.parseAndValidateClaims(token);
+                    Map<String, Object> claims = jwtService.parseAndValidateClaims(tokenParam);
                     userId = (String) claims.get("userId");
                 } catch (Exception e) {
-                    response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("token无效或已过期", "UTF-8"));
-                    return;
+                    return ResponseEntity.badRequest().body(Collections.singletonMap("error", "token无效或已过期"));
                 }
             }
             if (userId == null || userId.isEmpty()) {
-                response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("未登录，无法绑定", "UTF-8"));
-                return;
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "未登录，无法绑定"));
             }
             Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
             if (!devOpt.isPresent()) {
-                response.sendRedirect("/bind-callback?result=fail&msg=" + URLEncoder.encode("用户不存在", "UTF-8"));
-                return;
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "用户不存在"));
             }
             developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, portalId);
-            // --- 新增：动态回调地址 ---
-            String redirectUrl = frontendRedirectUrl;
-            if (redirectUrl == null || redirectUrl.isEmpty()) {
-                for (PortalSetting s : settings) {
-                    if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
-                        redirectUrl = s.getFrontendRedirectUrl();
-                        break;
-                    }
-                }
-            }
-            if (redirectUrl == null || redirectUrl.isEmpty()) {
-                redirectUrl = "http://localhost:5173/bind-callback";
-            }
-            if (!redirectUrl.contains("?")) {
-                redirectUrl += "?result=success";
-            } else {
-                redirectUrl += "&result=success";
-            }
-            response.sendRedirect(redirectUrl);
+            return ResponseEntity.ok(Collections.singletonMap("result", "success"));
         } else {
             // 登录流程
             Optional<AuthResponseDto> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
                 String jwt = loginResult.get().getToken();
-                // 优先用state里的frontendRedirectUrl
-                String redirectUrl = frontendRedirectUrl;
-                if (redirectUrl == null || redirectUrl.isEmpty()) {
-                    for (PortalSetting s : settings) {
-                        if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
-                            redirectUrl = s.getFrontendRedirectUrl();
-                            break;
-                        }
-                    }
-                }
-                if (redirectUrl == null || redirectUrl.isEmpty()) {
-                    redirectUrl = "http://localhost:5173/";
-                }
-                if (!redirectUrl.endsWith("/")) redirectUrl += "/";
-                response.sendRedirect(redirectUrl + "?token=" + jwt);
+                return ResponseEntity.ok(Collections.singletonMap("token", jwt));
             } else {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("三方登录失败", "UTF-8"));
+                return ResponseEntity.status(401).body(Collections.singletonMap("error", "三方登录失败"));
             }
         }
     }
@@ -281,8 +294,8 @@ public class DeveloperOauth2Controller {
      * 查询当前用户所有外部身份绑定（只返回provider、subject、displayName、rawInfoJson）
      */
     @Operation(summary = "查询当前用户所有外部身份绑定", description = "只返回provider、subject、displayName、rawInfoJson")
-    @GetMapping("/list-identities")
-    public ResponseEntity<?> listIdentities() {
+    @PostMapping("/list-identities")
+    public ResponseEntity<?> listIdentities(@RequestBody ListIdentitiesRequestDto request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = (String) authentication.getPrincipal();
         Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
@@ -306,9 +319,9 @@ public class DeveloperOauth2Controller {
      * 查询指定门户下所有已启用的 OIDC provider
      */
     @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮")
-    @GetMapping("/api/oauth/providers")
-    public ResponseEntity<?> listOidcProviders(@RequestParam("portalId") String portalId) {
-        List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
+    @PostMapping("/providers")
+    public ResponseEntity<?> listOidcProviders(@RequestBody OidcProvidersRequestDto request) {
+        List<PortalSetting> settings = portalSettingRepository.findByPortalId(request.getPortalId());
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (PortalSetting setting : settings) {
             if (setting.getOidcConfigs() != null) {

@@ -16,14 +16,14 @@ import java.util.List;
  * @author zxd
  */
 @RestController
-@RequestMapping("/api/mcpmarket")
+@RequestMapping("/mcpmarket")
 @RequiredArgsConstructor
-@Tag(name = "MCP能力市场", description = "聚合Nacos MCP Server能力市场接口")
+@Tag(name = "MCP server", description = "聚合Nacos MCP Server市场接口")
 public class McpMarketController {
     private final McpMarketService mcpMarketService;
 
-    @Operation(summary = "获取MCP能力市场列表")
-    @GetMapping("/list")
+    @Operation(summary = "获取MCP市场列表")
+    @GetMapping
     public Response<List<McpMarketCardDto>> list(@RequestParam(defaultValue = "1") int pageNo,
                                                  @RequestParam(defaultValue = "10") int pageSize,
                                                  @RequestParam(required = false) String mcpName,
@@ -31,8 +31,8 @@ public class McpMarketController {
         return Response.ok(mcpMarketService.list(pageNo, pageSize, mcpName, namespaceId));
     }
 
-    @Operation(summary = "获取MCP能力服务详情")
-    @GetMapping("/detail/{mcpName}")
+    @Operation(summary = "获取MCP服务详情")
+    @GetMapping("/{mcpName}")
     public Response<McpMarketDetailDto> detail(@PathVariable String mcpName,
                                                @RequestParam(defaultValue = "public") String namespaceId,
                                                @RequestParam(required = false) String version) {
