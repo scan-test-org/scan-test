@@ -20,27 +20,8 @@ public class APIGClient extends GatewayClient {
 
     private final AsyncClient apigClient;
 
-    private final Gateway gateway;
-
-    public APIGClient(Gateway gateway) {
-        this.gateway = gateway;
-        this.apigClient = createClient(gateway.getApigConfig());
-    }
-
-    @Override
-    public String getGatewayId() {
-        return gateway.getGatewayId();
-    }
-
-    @Override
-    public boolean tryConnection() {
-        try {
-//            getRestAPIs();
-            return true;
-        } catch (Exception e) {
-            log.warn("Connection test failed for APIG instance: {}", getGatewayId(), e);
-            return false;
-        }
+    public APIGClient(APIGConfig config) {
+        this.apigClient = createClient(config);
     }
 
     @Override

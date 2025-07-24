@@ -1,265 +1,235 @@
 package com.alibaba.apiopenplatform.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.product.*;
-import com.alibaba.apiopenplatform.dto.result.PageResult;
-import com.alibaba.apiopenplatform.dto.result.ProductResult;
-import com.alibaba.apiopenplatform.dto.result.APIRefResult;
+import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Product;
-import com.alibaba.apiopenplatform.entity.ProductSetting;
-import com.alibaba.apiopenplatform.entity.APIRef;
+import com.alibaba.apiopenplatform.entity.ProductRef;
+import com.alibaba.apiopenplatform.entity.ProductPublication;
 import com.alibaba.apiopenplatform.repository.ProductRepository;
-import com.alibaba.apiopenplatform.repository.APIRefRepository;
+import com.alibaba.apiopenplatform.repository.ProductRefRepository;
+import com.alibaba.apiopenplatform.repository.ProductPublicationRepository;
+import com.alibaba.apiopenplatform.service.GatewayService;
+import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.service.ProductService;
+import com.alibaba.apiopenplatform.support.enums.ProductStatus;
+import com.alibaba.apiopenplatform.support.enums.ProductType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Product Service Implementation
  * @author zh
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    private final ProductRepository productRepository;
-    private final APIRefRepository apiRefRepository;
+    private final ContextHolder contextHolder;
 
-    public ProductServiceImpl(ProductRepository productRepository, APIRefRepository apiRefRepository) {
-        this.productRepository = productRepository;
-        this.apiRefRepository = apiRefRepository;
-    }
+    private final PortalService portalService;
+
+    private final GatewayService gatewayService;
+
+    private final ProductRepository productRepository;
+
+    private final ProductRefRepository productRefRepository;
+
+    private final ProductPublicationRepository publicationRepository;
 
     @Override
     public ProductResult createProduct(CreateProductParam param) {
-        // 检查产品名称是否已存在
-        if (productRepository.findByNameAndOwnerId(param.getName(), param.getOwnerId()).isPresent()) {
-            throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT, param.getName());
-        }
+        productRepository.findByNameAndAdminId(param.getName(), "admin")
+                .ifPresent(APIProduct -> {
+                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT, param.getName());
+                });
 
-        // 生成产品ID
         String productId = IdGenerator.genApiProductId();
-        
-        // 转换参数为实体
+
         Product product = param.convertTo();
         product.setProductId(productId);
-
-        // 设置默认值
-        if (product.getStatus() == null) {
-            product.setStatus("DRAFT"); // 默认状态为草稿
-        }
-        if (product.getEnableConsumerAuth() == null) {
-            product.setEnableConsumerAuth("true"); // 默认启用消费者鉴权
-        }
-        if (product.getType() == null) {
-            product.setType("REST_API"); // 默认类型为REST_API
-        }
-
-        // 初始化产品设置
-        ProductSetting productSetting = new ProductSetting();
-        productSetting.setProductId(productId);
-        product.setProductSetting(productSetting);
-
-        // 保存产品
+        product.setAdminId("admin");
         productRepository.save(product);
-
         return getProduct(productId);
     }
 
     @Override
     public ProductResult getProduct(String productId) {
+//        Product product = contextHolder.isAdministrator() ?
+//                findProduct(productId) :
+//                findPublishedProduct(contextHolder.getPortal(), productId);
         Product product = findProduct(productId);
-        return new ProductResult().convertFrom(product);
+
+        ProductResult result = new ProductResult().convertFrom(product);
+
+        // 补充API Spec信息
+        fullFillAPISpec(result);
+        return result;
     }
 
     @Override
-    public PageResult<ProductResult> listProducts(String portalId, int pageNumber, int pageSize) {
-        // 根据portalId查询产品列表，支持分页
-        Page<Product> products = productRepository.findByOwnerId(
-                portalId,
-                PageRequest.of(pageNumber, pageSize,
-                        Sort.by(Sort.Order.desc("gmtCreate")))
-        );
+    public PageResult<ProductResult> listProducts(ListProductsParam param, Pageable pageable) {
+        if (contextHolder.isDeveloper()) {
+            param.setPortalId(contextHolder.getPortal());
+        }
 
-        // 转换为结果对象
-        Page<ProductResult> pages = products.map(product -> new ProductResult().convertFrom(product));
-        return new PageResult<ProductResult>().convertFrom(pages);
-    }
-
-    @Override
-    public PageResult<ProductResult> listProductsByStatus(String status, int pageNumber, int pageSize) {
-        Page<Product> products = productRepository.findByStatus(
-                status,
-                PageRequest.of(pageNumber, pageSize,
-                        Sort.by(Sort.Order.desc("gmtCreate")))
-        );
-
-        Page<ProductResult> pages = products.map(product -> new ProductResult().convertFrom(product));
-        return new PageResult<ProductResult>().convertFrom(pages);
-    }
-
-    @Override
-    public PageResult<ProductResult> listProductsByType(String type, int pageNumber, int pageSize) {
-        Page<Product> products = productRepository.findByType(
-                type,
-                PageRequest.of(pageNumber, pageSize,
-                        Sort.by(Sort.Order.desc("gmtCreate")))
-        );
-
-        Page<ProductResult> pages = products.map(product -> new ProductResult().convertFrom(product));
-        return new PageResult<ProductResult>().convertFrom(pages);
-    }
-
-    @Override
-    public PageResult<ProductResult> listProductsByCategory(String category, int pageNumber, int pageSize) {
-        Page<Product> products = productRepository.findByCategory(
-                category,
-                PageRequest.of(pageNumber, pageSize,
-                        Sort.by(Sort.Order.desc("gmtCreate")))
-        );
-
-        Page<ProductResult> pages = products.map(product -> new ProductResult().convertFrom(product));
-        return new PageResult<ProductResult>().convertFrom(pages);
+        Page<Product> products = productRepository.findAll(buildSpecification(param), pageable);
+        return new PageResult<ProductResult>().convertFrom(
+                products, product -> new ProductResult().convertFrom(product));
     }
 
     @Override
     public ProductResult updateProduct(UpdateProductParam param) {
         Product product = findProduct(param.getProductId());
 
-        // 更新产品基本信息
-        Optional.ofNullable(param.getName()).ifPresent(product::setName);
-        Optional.ofNullable(param.getDescription()).ifPresent(product::setDescription);
-        Optional.ofNullable(param.getAdminId()).ifPresent(product::setAdminId);
-        Optional.ofNullable(param.getStatus()).ifPresent(product::setStatus);
+        // 更换API产品类型
+        if (param.getType() != null && product.getType() != param.getType()) {
+            productRefRepository.findFirstByProductId(param.getProductId())
+                    .ifPresent(productRef -> {
+                        throw new BusinessException(ErrorCode.PRODUCT_API_EXISTS, product.getProductId());
+                    });
+        }
+        param.update(product);
+
+        // Consumer鉴权配置同步至网关
         Optional.ofNullable(param.getEnableConsumerAuth()).ifPresent(product::setEnableConsumerAuth);
-        Optional.ofNullable(param.getType()).ifPresent(product::setType);
-        Optional.ofNullable(param.getDocument()).ifPresent(product::setDocument);
-        Optional.ofNullable(param.getIcon()).ifPresent(product::setIcon);
-        Optional.ofNullable(param.getCategory()).ifPresent(product::setCategory);
-
-        productRepository.saveAndFlush(product);
-
-        return getProduct(product.getProductId());
-    }
-
-    @Override
-    public ProductResult updateProductSetting(UpdateProductSettingParam param) {
-        Product product = findProduct(param.getProductId());
-
-        ProductSetting productSetting = product.getProductSetting();
-        
-        // 更新产品设置
-        Optional.ofNullable(param.getApiList())
-                .ifPresent(productSetting::setApiList);
-
-        Optional.ofNullable(param.getAuthType())
-                .ifPresent(productSetting::setAuthType);
-
-        Optional.ofNullable(param.getRateLimit())
-                .ifPresent(productSetting::setRateLimit);
 
         productRepository.saveAndFlush(product);
         return getProduct(product.getProductId());
     }
 
     @Override
-    public ProductResult publishProduct(String productId) {
-        Product product = findProduct(productId);
-        product.setStatus("PUBLISHED");
-        productRepository.saveAndFlush(product);
-        return getProduct(productId);
+    public void publishProduct(PublishProductParam param) {
+        portalService.hasPortal(param.getPortalId());
+        if (publicationRepository.findByPortalIdAndProductId(param.getPortalId(), param.getProductId()).isPresent()) {
+            return;
+        }
+
+        Product Product = findProduct(param.getProductId());
+        ProductPublication productPublication = param.convertTo();
+        productPublication.setProduct(Product);
+
+        publicationRepository.save(productPublication);
     }
 
     @Override
-    public ProductResult unpublishProduct(String productId) {
-        Product product = findProduct(productId);
-        product.setStatus("DISABLED");
-        productRepository.saveAndFlush(product);
-        return getProduct(productId);
+    public void unpublishProduct(UnPublishProductParam param) {
+        portalService.hasPortal(param.getPortalId());
+
+        publicationRepository.findByPortalIdAndProductId(param.getPortalId(), param.getProductId())
+                .ifPresent(publicationRepository::delete);
     }
 
     @Override
     public void deleteProduct(String productId) {
-        Product product = findProduct(productId);
-        productRepository.delete(product);
+        Product Product = findProduct(productId);
+        productRepository.delete(Product);
     }
 
-    /**
-     * 查找产品，如果不存在则抛出异常
-     */
     private Product findProduct(String productId) {
-        Product product = productRepository.findByProductId(productId);
-        if (product == null) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId);
+        return productRepository.findByProductId(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, productId));
+    }
+
+    @Override
+    public void addProductRef(CreateProductRefParam param) {
+        Product product = findProduct(param.getProductId());
+
+        // 是否已存在API引用
+        productRefRepository.findByProductIdAndApiId(product.getProductId(), param.getApiId())
+                .ifPresent(productRef -> {
+                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT_REF, product.getProductId());
+                });
+
+        APIResult api = gatewayService.fetchAPI(param.getGatewayId(), param.getApiId());
+        if (StrUtil.equalsIgnoreCase(api.getType(), product.getType().name())) {
+            throw new BusinessException(ErrorCode.PRODUCT_TYPE_NOT_MATCH, product.getProductId());
         }
-        return product;
+
+        ProductRef productRef = param.convertTo();
+        productRefRepository.save(productRef);
     }
 
     @Override
-    public APIRefResult addAPIRef(APIRefParam param) {
-        // 检查产品是否存在
-        findProduct(param.getProductId());
-        
-        // 检查是否已存在相同的API引用
-        if (apiRefRepository.findByProductIdAndApiId(param.getProductId(), param.getApiId()) != null) {
-            throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.API_REF, param.getApiId());
-        }
+    public void deleteProductRef(String productId) {
+        ProductRef productRef = productRefRepository.findFirstByProductId(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId));
 
-        APIRef apiRef = param.convertTo();
-        apiRef = apiRefRepository.save(apiRef);
-        
-        return new APIRefResult().convertFrom(apiRef);
+        productRefRepository.delete(productRef);
     }
 
-    @Override
-    public List<APIRefResult> getAPIRefsByProductId(String productId) {
-        // 检查产品是否存在
-        findProduct(productId);
-        
-        List<APIRef> apiRefs = apiRefRepository.findByProductId(productId);
-        return apiRefs.stream()
-                .map(apiRef -> new APIRefResult().convertFrom(apiRef))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void deleteAPIRef(String productId, String apiId) {
-        // 检查产品是否存在
-        findProduct(productId);
-        
-        APIRef apiRef = apiRefRepository.findByProductIdAndApiId(productId, apiId);
-        if (apiRef == null) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.API_REF, apiId);
-        }
-        apiRefRepository.delete(apiRef);
-    }
-
-    @Override
-    public List<APIRefResult> batchAddAPIRefs(String productId, List<APIRefParam> apiRefParams) {
-        // 检查产品是否存在
-        findProduct(productId);
-        
-        List<APIRef> apiRefs = apiRefParams.stream()
-                .map(param -> {
-                    param.setProductId(productId);
-                    return param.convertTo();
+    private void fullFillAPISpec(ProductResult product) {
+        productRefRepository.findFirstByProductId(product.getProductId())
+                .map(productRef -> {
+                    try {
+                        ProductType type = product.getType();
+                        if (type == ProductType.REST_API) {
+                            String apiSpec = gatewayService.fetchAPISpec(productRef.getGatewayId(), productRef.getApiId());
+                            product.setApiSpec(apiSpec);
+                        } else {
+                            String mcpSpec = gatewayService.fetchMcpSpec(productRef.getGatewayId(), productRef.getApiId(), productRef.getRoutes().get(0));
+                            product.setMcpSpec(mcpSpec);
+                        }
+                        product.setStatus(ProductStatus.ENABLE);
+                    } catch (Exception e) {
+                        log.error("Failed to fetch API spec for gateway: {}, api: {}",
+                                productRef.getGatewayId(), productRef.getApiId(), e);
+                        product.setStatus(ProductStatus.DISABLE);
+                    }
+                    return product;
                 })
-                .collect(Collectors.toList());
+                .orElseGet(() -> {
+                    product.setStatus(ProductStatus.PENDING);
+                    return product;
+                });
+    }
 
-        List<APIRef> savedApiRefs = apiRefRepository.saveAll(apiRefs);
-        
-        return savedApiRefs.stream()
-                .map(apiRef -> new APIRefResult().convertFrom(apiRef))
-                .collect(Collectors.toList());
+    private Product findPublishedProduct(String portalId, String productId) {
+        return publicationRepository.findByPortalIdAndProductId(portalId, productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId))
+                .getProduct();
+    }
+
+    private Specification<Product> buildSpecification(ListProductsParam param) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (StrUtil.isNotBlank(param.getPortalId())) {
+                Join<Product, ProductPublication> publication = root.join("publications");
+                predicates.add(cb.equal(publication.get("portalId"), param.getPortalId()));
+            }
+
+            if (param.getType() != null) {
+                predicates.add(cb.equal(root.get("type"), param.getType()));
+            }
+
+            if (StrUtil.isNotBlank(param.getCategory())) {
+                predicates.add(cb.equal(root.get("category"), param.getCategory()));
+            }
+
+            if (StrUtil.isNotBlank(param.getName())) {
+                String likePattern = "%" + param.getName() + "%";
+                predicates.add(cb.like(root.get("name"), likePattern));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }

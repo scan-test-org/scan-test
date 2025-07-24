@@ -9,17 +9,17 @@ import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import com.alibaba.apiopenplatform.entity.Portal;
+import com.alibaba.apiopenplatform.entity.PortalDomain;
 import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.entity.PortalUi;
+import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,22 +35,34 @@ public class PortalServiceImpl implements PortalService {
 
     private final PortalRepository portalRepository;
 
+    private final PortalDomainRepository portalDomainRepository;
+
+    private final String domainFormat = "%s.api.portal.com";
+
     public PortalResult createPortal(CreatePortalParam param) {
-        if (portalRepository.findByNameAndAdminId(param.getName(), "admin").isPresent()) {
-            throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, param.getName());
-        }
+        portalRepository.findByNameAndAdminId(param.getName(), "admin")
+                .ifPresent(portal -> {
+                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, portal.getName());
+                });
 
         String portalId = IdGenerator.genPortalId();
         Portal portal = param.convertTo();
         portal.setPortalId(portalId);
+        portal.setAdminId("admin");
 
-        // 初始化
+        // Setting
         PortalSetting portalSetting = new PortalSetting();
-        portalSetting.setPortalId(portalId);
+        portalSetting.setPortal(portal);
+        // Ui
         PortalUi portalUi = new PortalUi();
-        portalUi.setPortalId(portalId);
+        portalUi.setPortal(portal);
         portal.setPortalSetting(portalSetting);
         portal.setPortalUi(portalUi);
+        // Domain
+        PortalDomain portalDomain = new PortalDomain();
+        portalDomain.setDomain(String.format(domainFormat, portalId));
+        portalDomain.setPortal(portal);
+        portal.getPortalDomains().add(portalDomain);
 
         portalRepository.save(portal);
 
@@ -72,8 +84,7 @@ public class PortalServiceImpl implements PortalService {
     public PageResult<PortalResult> listPortals(Pageable pageable) {
         Page<Portal> portals = portalRepository.findByAdminId("admin", pageable);
 
-        Page<PortalResult> pages = portals.map(portal -> new PortalResult().convertFrom(portal));
-        return new PageResult<PortalResult>().convertFrom(pages);
+        return new PageResult<PortalResult>().convertFrom(portals, portal -> new PortalResult().convertFrom(portal));
     }
 
     @Override
@@ -94,6 +105,14 @@ public class PortalServiceImpl implements PortalService {
                 .ifPresent(portalSetting::setBuiltinAuthEnabled);
         Optional.ofNullable(param.getOidcAuthEnabled())
                 .ifPresent(portalSetting::setOidcAuthEnabled);
+
+        // OIDC
+        if (Boolean.TRUE.equals(param.getOidcAuthEnabled())) {
+            Optional.ofNullable(param.getOidcOption())
+                    .map(OidcOption::convertTo)
+                    .ifPresent(portalSetting::setOidcConfig);
+        }
+
         Optional.ofNullable(param.getAutoApproveDevelopers())
                 .ifPresent(portalSetting::setAutoApproveDevelopers);
         Optional.ofNullable(param.getAutoApproveSubscriptions())
@@ -136,6 +155,13 @@ public class PortalServiceImpl implements PortalService {
     }
 
     @Override
+    public String resolvePortal(String domain) {
+        return portalDomainRepository.findByDomain(domain)
+                .map(portalDomain -> portalDomain.getPortal().getPortalId())
+                .orElse(null);
+    }
+
+    @Override
     public PortalSettingConfig getPortalSetting(String portalId) {
         Portal portal = findPortal(portalId);
         if (portal.getPortalSetting() == null) {
@@ -145,8 +171,7 @@ public class PortalServiceImpl implements PortalService {
     }
 
     private Portal findPortal(String portalId) {
-        return portalRepository.
-                findByPortalIdAndAdminId(portalId, "admin")
+        return portalRepository.findByPortalId(portalId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
     }
 }

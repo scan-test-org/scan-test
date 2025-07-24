@@ -21,5 +21,5 @@ public class Resources {
 
     public static final String GATEWAY = "Gateway";
 
-    public static final String API_REF = "APIRef";
+    public static final String PRODUCT_REF = "ProductRef";
 }

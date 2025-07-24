@@ -28,13 +28,25 @@ public class ImportGatewayParam implements InputConverter<Gateway> {
     private String gatewayId;
 
     @Valid
-    private APIGConfigParam apigConfigParam;
+    private APIGOption apigOption;
 
     @Valid
-    private HigressConfigParam higressConfigParam;
+    private HigressOption higressOption;
 
     @AssertTrue(message = "网关配置不能为空")
     private boolean isGatewayConfigValid() {
-        return gatewayType.isAPIG() && apigConfigParam != null || gatewayType.isHigress() && higressConfigParam != null;
+        return gatewayType.isAPIG() && apigOption != null || gatewayType.isHigress() && higressOption != null;
+    }
+
+    @Override
+    public Gateway convertTo() {
+        Gateway gateway = InputConverter.super.convertTo();
+        if (higressOption != null) {
+            gateway.setHigressConfig(higressOption.convertTo());
+        }
+        if (apigOption != null) {
+            gateway.setApigConfig(apigOption.convertTo());
+        }
+        return gateway;
     }
 }

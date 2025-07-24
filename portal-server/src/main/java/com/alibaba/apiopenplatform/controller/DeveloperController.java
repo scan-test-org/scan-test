@@ -12,19 +12,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import javax.validation.Valid;
 
-import static org.springframework.data.domain.Sort.Direction.DESC;
 
 import java.util.Collections;
 import java.util.Optional;

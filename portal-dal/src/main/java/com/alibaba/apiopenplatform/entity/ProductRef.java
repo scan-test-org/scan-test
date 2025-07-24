@@ -1,22 +1,26 @@
 package com.alibaba.apiopenplatform.entity;
 
+import com.alibaba.apiopenplatform.support.converter.StringListConverter;
+import com.alibaba.apiopenplatform.support.enums.ProductType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
+import java.util.List;
 
 /**
  * API Reference Entity
+ *
  * @author zh
  */
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "t_apim_api_ref",
+@Table(name = "t_apim_product_ref",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"api_id"}, name = "uk_api_id")
         })
 @Data
-public class APIRef extends BaseEntity {
+public class ProductRef extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,4 +34,15 @@ public class APIRef extends BaseEntity {
 
     @Column(name = "product_id", length = 32, nullable = false)
     private String productId;
+
+    @Column(name = "routes", columnDefinition = "text")
+    @Convert(converter = StringListConverter.class)
+    private List<String> routes;
+
+    @Column(name = "operations", columnDefinition = "text")
+    @Convert(converter = StringListConverter.class)
+    private List<String> operations;
+
+    @Column(name = "type", length = 32, nullable = false)
+    private ProductType type;
 }

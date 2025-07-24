@@ -10,6 +10,8 @@ import lombok.Data;
 @Data
 public class MCPServerResult implements OutputConverter<MCPServerResult, HttpRoute> {
 
+    private String apiId;
+
     private String routeId;
 
     private String name;

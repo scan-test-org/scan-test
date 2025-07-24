@@ -83,4 +83,12 @@ public interface PortalService {
      * @return
      */
     PortalSettingConfig getPortalSetting(String portalId);
+
+    /**
+     * 根据请求域名解析门户
+     *
+     * @param domain
+     * @return
+     */
+    String resolvePortal(String domain);
 }

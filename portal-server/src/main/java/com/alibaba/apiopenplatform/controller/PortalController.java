@@ -12,19 +12,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-import static org.springframework.data.domain.Sort.Direction.DESC;
-
 /**
  * @author zh
  */
 @RestController
-@RequestMapping("/portal")
+@RequestMapping("/portals")
 @Slf4j
 @Validated
 @Tag(name = "门户管理")
@@ -50,7 +47,7 @@ public class PortalController {
 
     @Operation(summary = "获取门户列表")
     @GetMapping("/list")
-    public PageResult<PortalResult> listPortals(@PageableDefault(sort = "gmtCreate", direction = DESC) Pageable pageable) {
+    public PageResult<PortalResult> listPortals(Pageable pageable) {
         return portalService.listPortals(pageable);
     }
 

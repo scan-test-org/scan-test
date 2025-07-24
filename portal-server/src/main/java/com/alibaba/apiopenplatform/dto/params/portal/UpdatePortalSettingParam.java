@@ -20,6 +20,8 @@ public class UpdatePortalSettingParam {
 
     private Boolean oidcAuthEnabled;
 
+    @Valid
+    private OidcOption oidcOption;
     private String frontendRedirectUrl;
 
     // 移除单个oidcConfigParam字段及相关校验
@@ -28,10 +30,10 @@ public class UpdatePortalSettingParam {
 
     private Boolean autoApproveSubscriptions;
 
-    private List<OidcConfigParam> oidcConfigParams;
+    private List<OidcOption> oidcOptions;
 
     @AssertTrue(message = "OIDC 鉴权配置不能为空")
     private boolean isOidcConfigValid() {
-        return !Boolean.TRUE.equals(oidcAuthEnabled) || oidcConfigParams != null && !oidcConfigParams.isEmpty();
+        return !Boolean.TRUE.equals(oidcAuthEnabled) || oidcOption != null;
     }
 }

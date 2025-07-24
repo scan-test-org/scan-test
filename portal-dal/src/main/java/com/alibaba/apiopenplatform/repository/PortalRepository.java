@@ -16,6 +16,9 @@ public interface PortalRepository extends BaseRepository<Portal, Long> {
     Optional<Portal> findByPortalIdAndAdminId(String portalId, String adminId);
 
     @EntityGraph("portal.properties")
+    Optional<Portal> findByPortalId(String portalId);
+
+    @EntityGraph("portal.properties")
     Optional<Portal> findByNameAndAdminId(String name, String adminId);
 
     @EntityGraph("portal.properties")
