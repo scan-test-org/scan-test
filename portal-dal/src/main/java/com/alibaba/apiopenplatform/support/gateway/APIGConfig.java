@@ -14,5 +14,7 @@ public class APIGConfig {
 
     private String region;
 
-    private String gatewayId;
+    public String buildUniqueKey() {
+        return String.format("%s:%s:%s", accessKey, secretKey, region);
+    }
 }

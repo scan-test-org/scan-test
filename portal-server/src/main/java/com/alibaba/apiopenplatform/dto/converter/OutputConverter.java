@@ -2,7 +2,6 @@ package com.alibaba.apiopenplatform.dto.converter;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
-import org.springframework.lang.NonNull;
 
 /**
  * @author zh

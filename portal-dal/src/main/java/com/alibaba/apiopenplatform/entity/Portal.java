@@ -2,8 +2,12 @@ package com.alibaba.apiopenplatform.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author zh
@@ -19,7 +23,8 @@ import javax.persistence.*;
         name = "portal.properties",
         attributeNodes = {
                 @NamedAttributeNode("portalSetting"),
-                @NamedAttributeNode("portalUi")
+                @NamedAttributeNode("portalUi"),
+                @NamedAttributeNode("portalDomains")
         }
 )
 @Data
@@ -34,17 +39,21 @@ public class Portal extends BaseEntity {
     @Column(name = "name", length = 64, nullable = false)
     private String name;
 
+    @Column(name = "title", length = 64, nullable = false)
+    private String title;
+
     @Column(name = "description", length = 256)
     private String description;
 
     @Column(name = "admin_id", length = 32)
     private String adminId;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @PrimaryKeyJoinColumn
+    @OneToOne(mappedBy = "portal", cascade = CascadeType.ALL, orphanRemoval = true)
     private PortalSetting portalSetting;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @PrimaryKeyJoinColumn
+    @OneToOne(mappedBy = "portal", cascade = CascadeType.ALL, orphanRemoval = true)
     private PortalUi portalUi;
+
+    @OneToMany(mappedBy = "portal", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PortalDomain> portalDomains = new ArrayList<>();
 }

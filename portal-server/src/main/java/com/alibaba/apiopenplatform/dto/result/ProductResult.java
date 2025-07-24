@@ -2,6 +2,8 @@ package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
 import com.alibaba.apiopenplatform.entity.Product;
+import com.alibaba.apiopenplatform.support.enums.ProductStatus;
+import com.alibaba.apiopenplatform.support.enums.ProductType;
 import lombok.Data;
 
 /**
@@ -16,15 +18,11 @@ public class ProductResult implements OutputConverter<ProductResult, Product> {
 
     private String description;
 
-    private String ownerId;
-
-    private String adminId;
-
-    private String status;
+    private ProductStatus status;
 
     private String enableConsumerAuth;
 
-    private String type;
+    private ProductType type;
 
     private String document;
 
@@ -32,12 +30,7 @@ public class ProductResult implements OutputConverter<ProductResult, Product> {
 
     private String category;
 
-    private ProductSettingConfig productSettingConfig;
+    private String apiSpec;
 
-    @Override
-    public ProductResult convertFrom(Product source) {
-        OutputConverter.super.convertFrom(source);
-        productSettingConfig = new ProductSettingConfig().convertFrom(source.getProductSetting());
-        return this;
-    }
+    private String mcpSpec;
 }

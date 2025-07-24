@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
  * @author zh
  */
 @Data
-public class OidcConfigParam implements InputConverter<OidcConfig> {
+public class OidcOption implements InputConverter<OidcConfig> {
 
     private String id;
     @NotBlank(message = "provider不能为空")

@@ -11,6 +11,8 @@ public class Resources {
 
     public static final String PORTAL_UI = "PortalUI";
 
+    public static final String PORTAL_DOMAIN = "PortalDomain";
+
     public static final String PRODUCT = "Product";
 
     public static final String PRODUCT_SETTING = "ProductSetting";
@@ -21,5 +23,6 @@ public class Resources {
 
     public static final String GATEWAY = "Gateway";
 
-    public static final String API_REF = "APIRef";
+    public static final String PRODUCT_REF = "ProductRef";
+
 }

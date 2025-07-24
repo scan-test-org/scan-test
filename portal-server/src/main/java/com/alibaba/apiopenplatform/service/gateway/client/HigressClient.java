@@ -8,7 +8,6 @@ import com.alibaba.apiopenplatform.support.gateway.HigressConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
 import java.util.function.Function;
 
 /**
@@ -17,35 +16,12 @@ import java.util.function.Function;
 @Slf4j
 public class HigressClient extends GatewayClient {
 
-    private final Gateway instance;
-
     private final RestTemplate restTemplate;
 
-    public HigressClient(Gateway instance) {
-        this.instance = instance;
+    public HigressClient(HigressConfig higressConfig) {
         this.restTemplate = HTTPClientFactory.createRestTemplate();
     }
 
-    @Override
-    public String getGatewayId() {
-        return instance.getGatewayId();
-    }
-
-    @Override
-    public boolean tryConnection() {
-        try {
-            return true;
-//            ResponseEntity<String> response = restTemplate.getForEntity(
-//                    buildUrl("/health"),
-//                    String.class
-//            );
-
-//            return response.getStatusCode().is2xxSuccessful();
-        } catch (Exception e) {
-            log.warn("Connection test failed for Higress instance: {}", instance.getGatewayId(), e);
-            return false;
-        }
-    }
 
     @Override
     public void close() {

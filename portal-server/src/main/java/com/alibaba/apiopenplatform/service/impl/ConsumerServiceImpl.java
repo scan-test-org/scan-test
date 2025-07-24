@@ -1,30 +1,35 @@
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.core.security.ContextHolder;
+import com.alibaba.apiopenplatform.dto.params.consumer.QueryConsumerParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateConsumerParam;
 import com.alibaba.apiopenplatform.dto.result.ConsumerResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import com.alibaba.apiopenplatform.entity.Consumer;
-import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.repository.ConsumerRepository;
 import com.alibaba.apiopenplatform.service.ConsumerService;
-import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
-import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
-import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.support.enums.ConsumerStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.Predicate;
+
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author zh
@@ -40,12 +45,13 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private final GatewayService gatewayService;
 
-    private final DeveloperService developerService;
+    private final ContextHolder contextHolder;
 
     @Override
     public ConsumerResult registerConsumer(CreateConsumerParam param) {
-        PortalResult portal = portalService.getPortal(param.getPortalId());
+        PortalResult portal = portalService.getPortal(contextHolder.getPortal());
         Consumer consumer = param.convertTo();
+//        consumer.setDeveloperId(contextHolder.getUser());
         consumer.setDeveloperId("developer");
 
         // 审批策略
@@ -92,26 +98,16 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     @Override
-    public PageResult<ConsumerResult> listConsumers(Pageable pageable) {
-        Page<Consumer> consumers = consumerRepository.findByDeveloperId("developer", pageable);
+    public PageResult<ConsumerResult> listConsumers(QueryConsumerParam param, Pageable pageable) {
+        Page<Consumer> consumers = consumerRepository.findAll(buildSpecification(param), pageable);
 
         // List默认不返回Credential
-        Page<ConsumerResult> pages = consumers.map(consumer -> new ConsumerResult().convertFrom(consumer));
-        return new PageResult<ConsumerResult>().convertFrom(pages);
-    }
-
-    @Override
-    public PageResult<ConsumerResult> listConsumers(String portalId, Pageable pageable) {
-        portalService.hasPortal(portalId);
-        Page<Consumer> consumers = consumerRepository.findByPortalId(portalId, pageable);
-
-        Page<ConsumerResult> pages = consumers.map(consumer -> new ConsumerResult().convertFrom(consumer));
-        return new PageResult<ConsumerResult>().convertFrom(pages);
+        return new PageResult<ConsumerResult>().convertFrom(consumers, consumer -> new ConsumerResult().convertFrom(consumer));
     }
 
     @Override
     public ConsumerResult getConsumer(String consumerId) {
-        Consumer consumer = findConsumer(consumerId);
+        Consumer consumer = contextHolder.isDeveloper() ? findDevConsumer(consumerId) : findConsumer(consumerId);
 
         ConsumerResult consumerResult = new ConsumerResult().convertFrom(consumer);
         fullFillConsumer(consumerResult);
@@ -120,16 +116,42 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public void deleteConsumer(String consumerId) {
-        Consumer consumer = findConsumer(consumerId);
+        Consumer consumer = contextHolder.isDeveloper() ? findDevConsumer(consumerId) : findConsumer(consumerId);
         consumerRepository.delete(consumer);
     }
 
     private Consumer findConsumer(String consumerId) {
+        return consumerRepository.findByConsumerId(consumerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER, consumerId));
+    }
+
+    private Consumer findDevConsumer(String consumerId) {
         return consumerRepository.findByDeveloperIdAndConsumerId("developer", consumerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER, consumerId));
     }
 
     private void fullFillConsumer(ConsumerResult consumerResult) {
 
+    }
+
+    public Specification<Consumer> buildSpecification(QueryConsumerParam param) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (contextHolder.isDeveloper()) {
+                predicates.add(cb.equal(root.get("developerId"), contextHolder.getUser()));
+            }
+
+            if (StrUtil.isNotBlank(param.getPortalId())) {
+                predicates.add(cb.equal(root.get("portalId"), param.getPortalId()));
+            }
+
+            if (StrUtil.isNotBlank(param.getName())) {
+                String likePattern = "%" + param.getName() + "%";
+                predicates.add(cb.like(cb.lower(root.get("name")), likePattern));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }

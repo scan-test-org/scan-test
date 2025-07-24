@@ -264,12 +264,22 @@ public class DeveloperServiceImpl implements DeveloperService {
     }
 
     @Override
+    public boolean hasDeveloper(String portalId, String developerId) {
+        return findDeveloper(developerId) != null;
+    }
+
+    @Override
+    public DeveloperResult getDeveloper(String developerId) {
+        Developer developer = findDeveloper(developerId);
+        return new DeveloperResult().convertFrom(developer);
+    }
+
+    @Override
     public PageResult<DeveloperResult> listDevelopers(String portalId, Pageable pageable) {
         portalService.hasPortal(portalId);
         Page<Developer> developers = developerRepository.findByPortalId(portalId, pageable);
 
-        Page<DeveloperResult> pages = developers.map(developer -> new DeveloperResult().convertFrom(developer));
-        return new PageResult<DeveloperResult>().convertFrom(pages);
+        return new PageResult<DeveloperResult>().convertFrom(developers, developer -> new DeveloperResult().convertFrom(developer));
     }
 
     @Override

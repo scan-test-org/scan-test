@@ -26,6 +26,9 @@ public class Gateway extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "gateway_name", length = 64, nullable = false)
+    private String gatewayName;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "name", length = 32, nullable = false)
     private GatewayType gatewayType;
