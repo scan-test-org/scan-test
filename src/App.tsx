@@ -1,14 +1,20 @@
-import { RouterProvider } from 'react-router-dom'
-import { ConfigProvider } from 'antd'
-import zhCN from 'antd/locale/zh_CN'
-import { router } from './routes'
+import { RouterProvider } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import { router } from './routes';
+import aliyunThemeToken from './aliyunThemeToken';
 
-function App(): JSX.Element {
+function App() {
   return (
-    <ConfigProvider locale={zhCN}>
-      <RouterProvider router={router} />
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        token: aliyunThemeToken,
+      }}
+    >
+      <RouterProvider router={router}/>
     </ConfigProvider>
-  )
+  );
 }
 
-export default App 
+export default App;
