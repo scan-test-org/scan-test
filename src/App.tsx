@@ -1,12 +1,20 @@
 import { BrowserRouter } from "react-router-dom";
 import { Router } from "./router";
+import { ConfigProvider } from 'antd';
 import './App.css'
+import aliyunThemeToken from './aliyunThemeToken.ts';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Router />
-    </BrowserRouter>
+    <ConfigProvider
+      theme={{
+        token: aliyunThemeToken
+      }}
+    >
+      <BrowserRouter>
+        <Router />
+      </BrowserRouter>
+    </ConfigProvider>
   );
 }
 
