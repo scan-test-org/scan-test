@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.integration;
 
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateDto;
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperLoginDto;
+import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
+import com.alibaba.apiopenplatform.dto.params.developer.DeveloperLoginParam;
 import com.alibaba.apiopenplatform.core.response.Response;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class DeveloperAuthIntegrationTest {
 
     @Test
     void testRegister() {
-        DeveloperCreateDto createDto = new DeveloperCreateDto();
+        DeveloperCreateParam createDto = new DeveloperCreateParam();
         createDto.setUsername("devtest001");
         createDto.setPassword("dev123456");
         ResponseEntity<Response> registerResp = restTemplate.postForEntity(
@@ -37,7 +37,7 @@ public class DeveloperAuthIntegrationTest {
 
     @Test
     void testLogin() {
-        DeveloperLoginDto loginDto = new DeveloperLoginDto("devtest002", "123456");
+        DeveloperLoginParam loginDto = new DeveloperLoginParam("devtest002", "123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
                 "/api/developer/login", loginDto, Response.class);
         System.out.println("登录响应：" + loginResp);
@@ -48,7 +48,7 @@ public class DeveloperAuthIntegrationTest {
     @Test
     void testProtectedApiWithValidToken() {
         // 先登录获取token
-        DeveloperLoginDto loginDto = new DeveloperLoginDto("devtest002", "123456");
+        DeveloperLoginParam loginDto = new DeveloperLoginParam("devtest002", "123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
                 "/api/developer/login", loginDto, Response.class);
         assertThat(loginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -78,7 +78,7 @@ public class DeveloperAuthIntegrationTest {
     @Test
     void testTokenBlacklist() {
         // 1. 登录获取token
-        DeveloperLoginDto loginDto = new DeveloperLoginDto("devtest002", "123456");
+        DeveloperLoginParam loginDto = new DeveloperLoginParam("devtest002", "123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
                 "/api/developer/login", loginDto, Response.class);
         assertThat(loginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -104,13 +104,13 @@ public class DeveloperAuthIntegrationTest {
     @Test
     void testDeleteAccount() {
         // 注册
-        DeveloperCreateDto createDto = new DeveloperCreateDto();
+        DeveloperCreateParam createDto = new DeveloperCreateParam();
         createDto.setUsername("devtest003");
         createDto.setPassword("123456");
         restTemplate.postForEntity("/api/developer/register", createDto, Response.class);
 
         // 登录获取token
-        DeveloperLoginDto loginDto = new DeveloperLoginDto("devtest003", "123456");
+        DeveloperLoginParam loginDto = new DeveloperLoginParam("devtest003", "123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity("/api/developer/login", loginDto, Response.class);
         assertThat(loginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(loginResp.getBody().getCode()).isEqualTo("SUCCESS");

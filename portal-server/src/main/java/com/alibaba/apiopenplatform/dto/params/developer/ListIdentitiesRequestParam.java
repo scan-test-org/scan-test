@@ -5,7 +5,7 @@ package com.alibaba.apiopenplatform.dto.params.developer;
  * 用于 /oauth/list-identities 接口
  * @author zxd
  */
-public class ListIdentitiesRequestDto {
+public class ListIdentitiesRequestParam {
     private String userId;
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }

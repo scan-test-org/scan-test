@@ -5,7 +5,7 @@ package com.alibaba.apiopenplatform.dto.params.developer;
  * 用于 /oauth/providers 接口
  * @author zxd
  */
-public class OidcProvidersRequestDto {
+public class OidcProvidersRequestParam {
     private String portalId;
     public String getPortalId() { return portalId; }
     public void setPortalId(String portalId) { this.portalId = portalId; }

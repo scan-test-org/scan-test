@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.integration;
 
-import com.alibaba.apiopenplatform.dto.params.admin.AdminCreateDto;
-import com.alibaba.apiopenplatform.dto.params.admin.AdminLoginDto;
+import com.alibaba.apiopenplatform.dto.params.admin.AdminCreateParam;
+import com.alibaba.apiopenplatform.dto.params.admin.AdminLoginParam;
 import com.alibaba.apiopenplatform.core.response.Response;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ public class AdministratorAuthIntegrationTest {
 
     @Test
     void testAdminRegister() {
-        AdminCreateDto createDto = new AdminCreateDto();
+        AdminCreateParam createDto = new AdminCreateParam();
         createDto.setUsername("admintest001");
         createDto.setPassword("admin123456");
         ResponseEntity<Response> registerResp = restTemplate.postForEntity(
@@ -38,7 +38,7 @@ public class AdministratorAuthIntegrationTest {
 
     @Test
     void testAdminLogin() {
-        AdminLoginDto loginDto = new AdminLoginDto();
+        AdminLoginParam loginDto = new AdminLoginParam();
         loginDto.setUsername("admintest001");
         loginDto.setPassword("admin123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
@@ -51,7 +51,7 @@ public class AdministratorAuthIntegrationTest {
     @Test
     void testAdminProtectedApiWithValidToken() {
         // 登录获取token
-        AdminLoginDto loginDto = new AdminLoginDto();
+        AdminLoginParam loginDto = new AdminLoginParam();
         loginDto.setUsername("admintest001");
         loginDto.setPassword("admin123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
@@ -84,7 +84,7 @@ public class AdministratorAuthIntegrationTest {
     @Test
     void testAdminTokenBlacklist() {
         // 登录获取token
-        AdminLoginDto loginDto = new AdminLoginDto();
+        AdminLoginParam loginDto = new AdminLoginParam();
         loginDto.setUsername("admintest001");
         loginDto.setPassword("admin123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(
@@ -122,7 +122,7 @@ public class AdministratorAuthIntegrationTest {
         assertThat(respBefore.getBody().getMessage()).isNotNull();
 
         // 初始化
-        AdminCreateDto createDto = new AdminCreateDto();
+        AdminCreateParam createDto = new AdminCreateParam();
         createDto.setUsername("admintest002");
         createDto.setPassword("admin123456");
         ResponseEntity<Response> initResp = restTemplate.postForEntity(
@@ -152,11 +152,11 @@ public class AdministratorAuthIntegrationTest {
     @Test
     void testChangePasswordSuccessAndFail() {
         // 初始化并登录
-        AdminCreateDto createDto = new AdminCreateDto();
+        AdminCreateParam createDto = new AdminCreateParam();
         createDto.setUsername("admintest004");
         createDto.setPassword("admin123456");
         restTemplate.postForEntity("/api/admin/init", createDto, Response.class);
-        AdminLoginDto loginDto = new AdminLoginDto();
+        AdminLoginParam loginDto = new AdminLoginParam();
         loginDto.setUsername("admintest004");
         loginDto.setPassword("admin123456");
         ResponseEntity<Response> loginResp = restTemplate.postForEntity(

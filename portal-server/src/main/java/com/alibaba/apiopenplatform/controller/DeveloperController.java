@@ -1,8 +1,8 @@
 package com.alibaba.apiopenplatform.controller;
 
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateDto;
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperLoginDto;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
+import com.alibaba.apiopenplatform.dto.params.developer.DeveloperLoginParam;
+import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.core.response.Response;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
@@ -29,8 +29,8 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 import java.util.Collections;
 import java.util.Optional;
 import org.springframework.http.ResponseEntity;
-import com.alibaba.apiopenplatform.dto.params.developer.UnbindExternalIdentityDto;
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperStatusDto;
+import com.alibaba.apiopenplatform.dto.params.developer.UnbindExternalIdentityParam;
+import com.alibaba.apiopenplatform.dto.params.developer.DeveloperStatusParam;
 
 /**
  * 开发者账号相关接口
@@ -39,7 +39,7 @@ import com.alibaba.apiopenplatform.dto.params.developer.DeveloperStatusDto;
  */
 @Tag(name = "开发者管理", description = "提供开发者认证、管理等功能")
 @RestController
-@RequestMapping("/developer")
+@RequestMapping("/developers")
 @RequiredArgsConstructor
 @Validated
 public class DeveloperController {
@@ -48,31 +48,25 @@ public class DeveloperController {
 
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
-    public ResponseEntity<?> register(@Valid @RequestBody DeveloperCreateDto dto) {
-        developerService.createDeveloper(dto);
-        return ResponseEntity.status(201).build();
+    public void register(@Valid @RequestBody DeveloperCreateParam param) {
+        developerService.createDeveloper(param);
     }
 
     @Operation(summary = "开发者登录", description = "开发者账号密码登录")
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody DeveloperLoginDto dto) {
-        Optional<AuthResponseDto> result = developerService.loginWithPassword(dto.getUsername(), dto.getPassword());
-        if (result.isPresent()) {
-            return ResponseEntity.ok(result.get());
-        } else {
-            return ResponseEntity.status(401).body(Collections.singletonMap("error", "AUTH_FAILED"));
-        }
+    public AuthResponseResult login(@Valid @RequestBody DeveloperLoginParam param) {
+        return developerService.loginWithPassword(param.getUsername(), param.getPassword())
+                .orElseThrow(() -> new RuntimeException("AUTH_FAILED"));
     }
 
-    @Operation(summary = "开发者登出", description = "将 token 加入黑名单，仅测试用")
+    @Operation(summary = "开发者登出", description = "登出")
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+    public void logout(@RequestHeader("Authorization") String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             long expireAt = System.currentTimeMillis() + 3600_000L;
             tokenBlacklistService.add(token, expireAt);
         }
-        return ResponseEntity.ok().build();
     }
 
     // @Operation(summary = "开发者个人信息", description = "受保护接口示例，仅测试用")
@@ -81,33 +75,30 @@ public class DeveloperController {
     //     return Response.ok("开发者受保护信息");
     // }
 
-    @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号。providerName和providerSubject参数建议通过/identity/list-identities接口获取，前端自动传递，用户无需手动输入。")
-    @DeleteMapping("/{id}/external-identity")
-    public ResponseEntity<?> unbindExternalIdentity(@PathVariable String id,
-                                                @RequestBody UnbindExternalIdentityDto dto) {
-        developerService.unbindExternalIdentity(id, dto.getProviderName(), dto.getProviderSubject(), dto.getPortalId());
-        return ResponseEntity.noContent().build();
+    @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号。providerName和providerSubject参数建议通过/list-identities接口获取。")
+    @DeleteMapping("/{developerId}/external-identity")
+    public void unbindExternalIdentity(@PathVariable("developerId") String developerId,
+                                       @RequestBody UnbindExternalIdentityParam param) {
+        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject(), param.getPortalId());
     }
 
     @Operation(summary = "注销账号", description = "注销当前登录用户账号")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteAccount(@PathVariable String id) {
-        developerService.deleteDeveloperAccount(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{developerId}")
+    public void deleteAccount(@PathVariable("developerId") String developerId) {
+        developerService.deleteDeveloperAccount(developerId);
     }
 
     @Operation(summary = "获取门户的开发者列表")
     @GetMapping
-    public ResponseEntity<?> listDevelopers(@RequestParam String portalId,
+    public PageResult<DeveloperResult> listDevelopers(@RequestParam String portalId,
                                         @PageableDefault(sort = "gmtCreate", direction = DESC) Pageable pageable) {
-        return ResponseEntity.ok(developerService.listDevelopers(portalId, pageable));
+        return developerService.listDevelopers(portalId, pageable);
     }
 
-    @Operation(summary = "设置开发者状态", description = "管理员审核开发者账号，status可为ACTIVE/APPROVED/REJECTED等")
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<?> setDeveloperStatus(@PathVariable String id,
-                                            @RequestBody DeveloperStatusDto dto) {
-        developerService.setDeveloperStatus(dto.getPortalId(), id, dto.getStatus());
-        return ResponseEntity.ok().build();
+    @Operation(summary = "设置开发者状态", description = "管理员审核开发者账号，status为APPROVED/PENDING等")
+    @PatchMapping("/{developerId}/status")
+    public void setDeveloperStatus(@PathVariable("developerId") String developerId,
+                                   @RequestBody DeveloperStatusParam param) {
+        developerService.setDeveloperStatus(param.getPortalId(), developerId, param.getStatus());
     }
 }

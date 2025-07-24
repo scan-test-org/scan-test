@@ -2,8 +2,8 @@ package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.EnumUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateDto;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
+import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.Developer;
@@ -58,17 +58,17 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     @Transactional
-    public Developer createDeveloper(DeveloperCreateDto createDto) {
-        if (developerRepository.findByUsername(createDto.getUsername()).isPresent()) {
+    public Developer createDeveloper(DeveloperCreateParam param) {
+        if (developerRepository.findByUsername(param.getUsername()).isPresent()) {
             throw new IllegalArgumentException("用户名已存在");
         }
-        Developer developer = createDto.convertTo();
+        Developer developer = param.convertTo();
         developer.setDeveloperId(generateDeveloperId());
-        developer.setPortalId(createDto.getPortalId());
-        developer.setAvatarUrl(createDto.getAvatarUrl());
-        developer.setPasswordHash(PasswordHasher.hash(createDto.getPassword()));
+        developer.setPortalId(param.getPortalId());
+        developer.setAvatarUrl(param.getAvatarUrl());
+        developer.setPasswordHash(PasswordHasher.hash(param.getPassword()));
         // 根据门户配置决定是否自动审批
-        PortalSetting setting = portalSettingRepository.findByPortalId(createDto.getPortalId())
+        PortalSetting setting = portalSettingRepository.findByPortalId(param.getPortalId())
             .stream().findFirst().orElse(null);
         boolean autoApprove = setting != null && Boolean.TRUE.equals(setting.getAutoApproveDevelopers());
         developer.setStatus(autoApprove ? DeveloperStatus.APPROVED : DeveloperStatus.PENDING);
@@ -77,7 +77,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     }
 
     @Override
-    public Optional<AuthResponseDto> loginWithPassword(String username, String password) {
+    public Optional<AuthResponseResult> loginWithPassword(String username, String password) {
         Optional<Developer> devOpt = developerRepository.findByUsername(username);
         if (!devOpt.isPresent()) {
             return Optional.empty();
@@ -102,7 +102,7 @@ public class DeveloperServiceImpl implements DeveloperService {
                 developer.getDeveloperId(), // userId
                 claims // extraClaims
         );
-        AuthResponseDto dto = new AuthResponseDto();
+        AuthResponseResult dto = new AuthResponseResult();
         dto.setToken(token);
         dto.setUserId(developer.getDeveloperId());
         dto.setUsername(developer.getUsername());
@@ -113,7 +113,7 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     @Transactional
-    public Optional<AuthResponseDto> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson) {
+    public Optional<AuthResponseResult> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson) {
         log.info("[handleExternalLogin] providerName={}, providerSubject={}, email={}, displayName={}", providerName, providerSubject, email, displayName);
         // 1. 查找现有外部身份关联
         Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(providerName, providerSubject);
@@ -161,7 +161,7 @@ public class DeveloperServiceImpl implements DeveloperService {
             log.error("[handleExternalLogin] 生成JWT异常: {}", e.getMessage(), e);
             return Optional.empty();
         }
-        AuthResponseDto dto = new AuthResponseDto();
+        AuthResponseResult dto = new AuthResponseResult();
         dto.setToken(token);
         dto.setUserId(developer.getDeveloperId());
         dto.setUsername(developer.getUsername());

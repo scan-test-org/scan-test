@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.service.impl;
 
-import com.alibaba.apiopenplatform.dto.params.admin.AdminCreateDto;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import com.alibaba.apiopenplatform.dto.params.admin.AdminCreateParam;
+import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.entity.Administrator;
 import com.alibaba.apiopenplatform.repository.AdministratorRepository;
 import com.alibaba.apiopenplatform.service.AdministratorService;
@@ -42,20 +42,20 @@ public class AdministratorServiceImpl implements AdministratorService {
 
     @Override
     @Transactional
-    public Administrator createAdministrator(AdminCreateDto createDto) {
+    public Administrator createAdministrator(AdminCreateParam param) {
         // 检查用户名唯一性
-        if (administratorRepository.findByUsername(createDto.getUsername()).isPresent()) {
-            throw new BusinessException(ErrorCode.RESOURCE_EXIST, "username", createDto.getUsername());
+        if (administratorRepository.findByUsername(param.getUsername()).isPresent()) {
+            throw new BusinessException(ErrorCode.RESOURCE_EXIST, "username", param.getUsername());
         }
         Administrator admin = new Administrator();
         admin.setAdminId(generateAdminId());
-        admin.setUsername(createDto.getUsername());
-        admin.setPasswordHash(PasswordHasher.hash(createDto.getPassword()));
+        admin.setUsername(param.getUsername());
+        admin.setPasswordHash(PasswordHasher.hash(param.getPassword()));
         return administratorRepository.save(admin);
     }
 
     @Override
-    public Optional<AuthResponseDto> loginWithPassword(String username, String password) {
+    public Optional<AuthResponseResult> loginWithPassword(String username, String password) {
         Optional<Administrator> adminOpt = administratorRepository.findByUsername(username);
         if (!adminOpt.isPresent()) {
             return Optional.empty();
@@ -73,7 +73,7 @@ public class AdministratorServiceImpl implements AdministratorService {
                 admin.getAdminId(), // userId
                 claims // extraClaims
         );
-        AuthResponseDto dto = new AuthResponseDto();
+        AuthResponseResult dto = new AuthResponseResult();
         dto.setToken(token);
         dto.setUserId(admin.getAdminId());
         dto.setUsername(admin.getUsername());

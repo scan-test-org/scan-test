@@ -1,6 +1,6 @@
 package com.alibaba.apiopenplatform.core.security;
 
-import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -30,7 +30,7 @@ public class DeveloperAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();
-        Optional<AuthResponseDto> result = developerService.loginWithPassword(username, password);
+        Optional<AuthResponseResult> result = developerService.loginWithPassword(username, password);
         if (result.isPresent()) {
             GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_DEVELOPER");
             return new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));

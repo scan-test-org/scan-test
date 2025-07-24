@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
  * @author zxd
  */
 @Data
-public class AdminCreateDto {
+public class AdminCreateParam {
     @NotBlank(message = "用户名不能为空")
     private String username;
     @NotBlank(message = "密码不能为空")

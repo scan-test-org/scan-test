@@ -1,6 +1,6 @@
 package com.alibaba.apiopenplatform.dto.params.developer;
 
-public class UnbindExternalIdentityDto {
+public class UnbindExternalIdentityParam {
     private String providerName;
     private String providerSubject;
     private String portalId;

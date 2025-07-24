@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,9 +42,9 @@ import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.repository.PortalSettingRepository;
 import java.net.URLDecoder;
-import com.alibaba.apiopenplatform.dto.params.developer.OidcTokenRequestDto;
-import com.alibaba.apiopenplatform.dto.params.developer.OidcProvidersRequestDto;
-import com.alibaba.apiopenplatform.dto.params.developer.ListIdentitiesRequestDto;
+import com.alibaba.apiopenplatform.dto.params.developer.OidcTokenRequestParam;
+import com.alibaba.apiopenplatform.dto.params.developer.OidcProvidersRequestParam;
+import com.alibaba.apiopenplatform.dto.params.developer.ListIdentitiesRequestParam;
 
 
 /**
@@ -56,7 +56,7 @@ import com.alibaba.apiopenplatform.dto.params.developer.ListIdentitiesRequestDto
 @Slf4j
 @Tag(name = "开发者OAuth2登录管理", description = "开发者OAuth2统一回调与外部身份绑定相关接口")
 @RestController
-@RequestMapping("/oauth")
+@RequestMapping("/developers")
 @RequiredArgsConstructor
 public class DeveloperOauth2Controller {
     private final DeveloperRepository developerRepository;
@@ -117,7 +117,7 @@ public class DeveloperOauth2Controller {
      *   String provider = arr[3];
      *   String token = arr.length > 4 ? arr[4] : null;
      */
-    @Operation(summary = "OIDC统一回调", description = "state 推荐格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。详见接口注释和前端示例。")
+    @Operation(summary = "OIDC统一回调", description = "state 推荐格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。")
     @GetMapping("/callback")
     public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletResponse response) throws IOException {
         log.info("[OIDCCallback] code={}, state={}", code, state);
@@ -188,13 +188,13 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "OIDC code换token", description = "前端回调页用code和state换取JWT token，token只在响应体返回")
     @PostMapping("/token")
-    public ResponseEntity<?> exchangeCodeForToken(@RequestBody OidcTokenRequestDto request) {
+    public Map<String, Object> exchangeCodeForToken(@RequestBody OidcTokenRequestParam param) {
         // 解析state，获取portalId、provider等
         String decodedState;
         try {
-            decodedState = java.net.URLDecoder.decode(request.getState(), "UTF-8");
+            decodedState = java.net.URLDecoder.decode(param.getState(), "UTF-8");
         } catch (java.io.UnsupportedEncodingException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "state参数解码失败: " + e.getMessage()));
+            throw new RuntimeException("state参数解码失败: " + e.getMessage());
         }
         String portalId = null;
         String provider = null;
@@ -217,7 +217,7 @@ public class DeveloperOauth2Controller {
             }
         }
         if (portalId == null || provider == null) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "state参数错误，未包含portalId/provider"));
+            throw new RuntimeException("state参数错误，未包含portalId/provider");
         }
         java.util.List<PortalSetting> settings = portalSettingRepository.findByPortalId(portalId);
         OidcConfig config = null;
@@ -233,7 +233,7 @@ public class DeveloperOauth2Controller {
             if (config != null) break;
         }
         if (config == null || !config.isEnabled()) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "OIDC配置未启用"));
+            throw new RuntimeException("OIDC配置未启用");
         }
         // --- 获取三方用户信息 ---
         String providerSubject = null;
@@ -241,7 +241,7 @@ public class DeveloperOauth2Controller {
         String rawInfoJson = null;
         Map<String, Object> userInfoMap;
         try {
-            userInfoMap = fetchUserInfoMap(request.getCode(), config);
+            userInfoMap = fetchUserInfoMap(param.getCode(), config);
             Object idObj = userInfoMap.get("sub");
             if (idObj == null) idObj = userInfoMap.get("id");
             providerSubject = idObj != null ? String.valueOf(idObj) : null;
@@ -251,13 +251,13 @@ public class DeveloperOauth2Controller {
             displayName = nameObj != null ? String.valueOf(nameObj) : null;
             rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Collections.singletonMap("error", "获取三方用户信息失败: " + e.getMessage()));
+            throw new RuntimeException("获取三方用户信息失败: " + e.getMessage());
         }
         if ("BINDING".equals(mode)) {
             // 绑定流程
             Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);
             if (extOpt.isPresent()) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "该外部账号已被其他用户绑定"));
+                throw new RuntimeException("该外部账号已被其他用户绑定");
             }
             // 通过 token 识别当前用户
             String userId = null;
@@ -266,26 +266,25 @@ public class DeveloperOauth2Controller {
                     Map<String, Object> claims = jwtService.parseAndValidateClaims(tokenParam);
                     userId = (String) claims.get("userId");
                 } catch (Exception e) {
-                    return ResponseEntity.badRequest().body(Collections.singletonMap("error", "token无效或已过期"));
+                    throw new RuntimeException("token无效或已过期");
                 }
             }
             if (userId == null || userId.isEmpty()) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "未登录，无法绑定"));
+                throw new RuntimeException("未登录，无法绑定");
             }
             Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
             if (!devOpt.isPresent()) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "用户不存在"));
+                throw new RuntimeException("用户不存在");
             }
             developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, portalId);
-            return ResponseEntity.ok(Collections.singletonMap("result", "success"));
+            return Collections.singletonMap("result", "success");
         } else {
             // 登录流程
-            Optional<AuthResponseDto> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
+            Optional<AuthResponseResult> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
-                String jwt = loginResult.get().getToken();
-                return ResponseEntity.ok(Collections.singletonMap("token", jwt));
+                return Collections.singletonMap("token", loginResult.get().getToken());
             } else {
-                return ResponseEntity.status(401).body(Collections.singletonMap("error", "三方登录失败"));
+                throw new RuntimeException("三方登录失败");
             }
         }
     }
@@ -295,12 +294,12 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "查询当前用户所有外部身份绑定", description = "只返回provider、subject、displayName、rawInfoJson")
     @PostMapping("/list-identities")
-    public ResponseEntity<?> listIdentities(@RequestBody ListIdentitiesRequestDto request) {
+    public List<Map<String, Object>> listIdentities(@RequestBody ListIdentitiesRequestParam param) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = (String) authentication.getPrincipal();
         Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
         if (!devOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.emptyList());
+            throw new RuntimeException("UNAUTHORIZED");
         }
         List<DeveloperExternalIdentity> identities = developerExternalIdentityRepository.findByDeveloper_DeveloperId(devOpt.get().getDeveloperId());
         List<Map<String, Object>> result = new java.util.ArrayList<>();
@@ -312,7 +311,7 @@ public class DeveloperOauth2Controller {
             map.put("rawInfoJson", ext.getRawInfoJson());
             result.add(map);
         }
-        return ResponseEntity.ok(result);
+        return result;
     }
 
     /**
@@ -320,8 +319,8 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮")
     @PostMapping("/providers")
-    public ResponseEntity<?> listOidcProviders(@RequestBody OidcProvidersRequestDto request) {
-        List<PortalSetting> settings = portalSettingRepository.findByPortalId(request.getPortalId());
+    public List<Map<String, Object>> listOidcProviders(@RequestBody OidcProvidersRequestParam param) {
+        List<PortalSetting> settings = portalSettingRepository.findByPortalId(param.getPortalId());
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (PortalSetting setting : settings) {
             if (setting.getOidcConfigs() != null) {
@@ -337,7 +336,7 @@ public class DeveloperOauth2Controller {
                 }
             }
         }
-        return ResponseEntity.ok(result);
+        return result;
     }
 
     // --- 通用三方用户信息获取 ---

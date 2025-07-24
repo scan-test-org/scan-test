@@ -211,10 +211,10 @@ public class SecurityConfig {
                     SecurityContextHolder.getContext().setAuthentication(newAuth);
                     return newPrincipal;
                 } else {
-                    Optional<com.alibaba.apiopenplatform.dto.result.AuthResponseDto> authResult = developerService.handleExternalLogin(
+                    Optional<com.alibaba.apiopenplatform.dto.result.AuthResponseResult> authResult = developerService.handleExternalLogin(
                             providerName, providerSubject, email, displayName, rawInfoJson);
-                    String myJwt = authResult.map(com.alibaba.apiopenplatform.dto.result.AuthResponseDto::getToken).orElse(null);
-                    String developerId = authResult.map(com.alibaba.apiopenplatform.dto.result.AuthResponseDto::getUserId).orElse(null);
+                    String myJwt = authResult.map(com.alibaba.apiopenplatform.dto.result.AuthResponseResult::getToken).orElse(null);
+                    String developerId = authResult.map(com.alibaba.apiopenplatform.dto.result.AuthResponseResult::getUserId).orElse(null);
                     attributes.put("token", myJwt);
                     OidcUser newPrincipal = new CustomOidcUser(
                         Collections.singleton(new SimpleGrantedAuthority("ROLE_DEVELOPER")),

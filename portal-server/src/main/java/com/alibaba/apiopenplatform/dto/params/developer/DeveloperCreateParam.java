@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
  */
 @Data
 @NoArgsConstructor
-public class DeveloperCreateDto implements InputConverter<Developer> {
+public class DeveloperCreateParam implements InputConverter<Developer> {
     @NotBlank(message = "用户名不能为空")
     @Size(max = 64, message = "用户名长度不能超过64个字符")
     private String username;
