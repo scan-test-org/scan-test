@@ -93,13 +93,13 @@ const PortalCard = memo(({ portal, onNavigate }: {
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <LinkOutlined className="h-3 w-3" />
             <a 
-              href={portal.url} 
+              href={portal.url || 'http://localhost:5173?portalId=test_portal'} 
               target="_blank" 
               rel="noopener noreferrer"
               className="hover:underline text-blue-600"
               onClick={handleLinkClick}
             >
-              {portal.url}
+              {portal.url || 'http://localhost:5173'}
             </a>
           </div>
         </div>
