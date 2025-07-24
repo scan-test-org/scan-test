@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 public interface PortalSettingRepository extends JpaRepository<PortalSetting, Long> {
-    Optional<PortalSetting> findByPortalIdAndProvider(String portalId, String provider);
+    Optional<PortalSetting> findByPortal_PortalIdAndProvider(String portalId, String provider);
 
-    java.util.List<PortalSetting> findByPortalId(String portalId);
+    java.util.List<PortalSetting> findByPortal_PortalId(String portalId);
 } 

@@ -68,7 +68,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         developer.setAvatarUrl(param.getAvatarUrl());
         developer.setPasswordHash(PasswordHasher.hash(param.getPassword()));
         // 根据门户配置决定是否自动审批
-        PortalSetting setting = portalSettingRepository.findByPortalId(param.getPortalId())
+        PortalSetting setting = portalSettingRepository.findByPortal_PortalId(param.getPortalId())
             .stream().findFirst().orElse(null);
         boolean autoApprove = setting != null && Boolean.TRUE.equals(setting.getAutoApproveDevelopers());
         developer.setStatus(autoApprove ? DeveloperStatus.APPROVED : DeveloperStatus.PENDING);
@@ -175,7 +175,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Transactional
     public void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson, String portalId) {
         // 查库校验 providerName 是否为有效 provider，需传递 portalId
-        PortalSetting setting = portalSettingRepository.findByPortalIdAndProvider(portalId, providerName)
+        PortalSetting setting = portalSettingRepository.findByPortal_PortalIdAndProvider(portalId, providerName)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "portal_setting", portalId + "," + providerName));
         boolean valid = false;
         if (setting.getOidcConfigs() != null) {
@@ -231,7 +231,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Transactional
     public void unbindExternalIdentity(String userId, String providerName, String providerSubject, String portalId) {
         // 新增：查库校验 providerName 是否为有效 provider
-        portalSettingRepository.findByPortalIdAndProvider(portalId, providerName)
+        portalSettingRepository.findByPortal_PortalIdAndProvider(portalId, providerName)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "portal_setting", portalId + "," + providerName));
         // 查找该用户所有外部身份
         java.util.List<DeveloperExternalIdentity> identities = developerExternalIdentityRepository.findByDeveloper_DeveloperId(userId);
