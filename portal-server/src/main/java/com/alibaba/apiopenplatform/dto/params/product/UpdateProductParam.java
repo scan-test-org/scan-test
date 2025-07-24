@@ -15,9 +15,6 @@ import javax.validation.constraints.NotBlank;
 @Data
 public class UpdateProductParam implements InputConverter<Product> {
 
-    @NotBlank(message = "产品ID不能为空")
-    private String productId;
-
     private String name;
 
     private String description;

@@ -4,7 +4,6 @@ import lombok.Data;
 
 import javax.validation.Valid;
 import javax.validation.constraints.AssertTrue;
-import javax.validation.constraints.NotBlank;
 import java.util.List;
 
 /**
@@ -12,9 +11,6 @@ import java.util.List;
  */
 @Data
 public class UpdatePortalSettingParam {
-
-    @NotBlank(message = "门户ID不能为空")
-    private String portalId;
 
     private Boolean builtinAuthEnabled;
 

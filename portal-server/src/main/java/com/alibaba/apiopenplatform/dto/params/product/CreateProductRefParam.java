@@ -24,9 +24,6 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
     @NotBlank(message = "网关ID不能为空")
     private String gatewayId;
 
-    @NotBlank(message = "API产品ID不能为空")
-    private String productId;
-
     private List<String> routes;
 
     @NotNull(message = "API产品类型不能为空")

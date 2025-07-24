@@ -28,15 +28,15 @@ public class ProductController {
     private final ProductService productService;
 
     @Operation(summary = "创建API产品")
-    @PostMapping("/create")
+    @PostMapping
     @AdminAuth
     public ProductResult createProduct(@RequestBody @Valid CreateProductParam param) {
         return productService.createProduct(param);
     }
 
     @Operation(summary = "获取API产品列表")
-    @GetMapping("/list")
-    public PageResult<ProductResult> listProducts(ListProductsParam param,
+    @GetMapping
+    public PageResult<ProductResult> listProducts(QueryProductParam param,
                                                   Pageable pageable) {
         return productService.listProducts(param, pageable);
     }
@@ -48,24 +48,24 @@ public class ProductController {
     }
 
     @Operation(summary = "更新API产品")
-    @PostMapping("/update")
+    @PutMapping("/{productId}")
     @AdminAuth
-    public ProductResult updateProduct(@RequestBody @Valid UpdateProductParam param) {
-        return productService.updateProduct(param);
+    public ProductResult updateProduct(@PathVariable String productId, @RequestBody @Valid UpdateProductParam param) {
+        return productService.updateProduct(productId, param);
     }
 
     @Operation(summary = "发布API产品")
-    @PostMapping("/publish")
+    @PostMapping("/{productId}/publish")
     @AdminAuth
-    public void publishProduct(@RequestBody @Valid PublishProductParam param) {
-        productService.publishProduct(param);
+    public void publishProduct(@PathVariable String productId, @RequestBody @Valid PublishProductParam param) {
+        productService.publishProduct(productId, param);
     }
 
     @Operation(summary = "下线API产品")
-    @PostMapping("/unpublish")
+    @PostMapping("/{productId}/offline")
     @AdminAuth
-    public void unpublishProduct(@RequestBody @Valid UnPublishProductParam param) {
-        productService.unpublishProduct(param);
+    public void unpublishProduct(@PathVariable String productId, @RequestBody @Valid UnPublishProductParam param) {
+        productService.unpublishProduct(productId, param);
     }
 
     @Operation(summary = "删除API产品")
@@ -76,14 +76,14 @@ public class ProductController {
     }
 
     @Operation(summary = "API产品关联API或MCP Server")
-    @PostMapping("/ref")
+    @PostMapping("/{productId}/ref")
     @AdminAuth
-    public void addProductRef(@RequestBody @Valid CreateProductRefParam param) {
-        productService.addProductRef(param);
+    public void addProductRef(@PathVariable String productId, @RequestBody @Valid CreateProductRefParam param) {
+        productService.addProductRef(productId, param);
     }
 
     @Operation(summary = "删除API产品关联的API或MCP Server")
-    @DeleteMapping("/ref/{productId}")
+    @DeleteMapping("/{productId}/ref")
     @AdminAuth
     public void deleteProductRef(@PathVariable String productId) {
         productService.deleteProductRef(productId);

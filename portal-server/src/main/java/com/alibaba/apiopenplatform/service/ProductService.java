@@ -33,31 +33,34 @@ public interface ProductService {
      * @param pageable
      * @return
      */
-    PageResult<ProductResult> listProducts(ListProductsParam param, Pageable pageable);
+    PageResult<ProductResult> listProducts(QueryProductParam param, Pageable pageable);
 
     /**
      * 更新门户
      *
+     * @param productId
      * @param param
      * @return
      */
-    ProductResult updateProduct(UpdateProductParam param);
+    ProductResult updateProduct(String productId, UpdateProductParam param);
 
     /**
      * 发布API产品
      *
+     * @param productId
      * @param param
      * @return
      */
-    void publishProduct(PublishProductParam param);
+    void publishProduct(String productId, PublishProductParam param);
 
     /**
      * 下线产品
      *
+     * @param productId
      * @param param
      * @return
      */
-    void unpublishProduct(UnPublishProductParam param);
+    void unpublishProduct(String productId, UnPublishProductParam param);
 
     /**
      * 删除产品
@@ -69,9 +72,10 @@ public interface ProductService {
     /**
      * API产品引用API或MCP Server
      *
+     * @param productId
      * @param param
      */
-    void addProductRef(CreateProductRefParam param);
+    void addProductRef(String productId, CreateProductRefParam param);
 
     /**
      * 删除API产品的引用
