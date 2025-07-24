@@ -7,11 +7,11 @@ const { Title, Paragraph } = Typography;
 
 function HomePage() {
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    if (!token) {
-      window.location.href = `/login?portalId=test_portal`;
-    }
+    // const params = new URLSearchParams(window.location.search);
+    // const token = params.get("token");
+    // if (!token) {
+    //   window.location.href = `/login?portalId=test_portal`;
+    // }
   }, []);
 
   return (

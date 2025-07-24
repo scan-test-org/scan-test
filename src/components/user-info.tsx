@@ -26,7 +26,8 @@ export function UserInfo() {
           Authorization: `Bearer ${token}`,
         },
       })
-        .then((data: { displayName: string; rawInfoJson: string }[]) => {
+        .then((response) => {
+          const data = response.data as { displayName: string; rawInfoJson: string }[];
           if (Array.isArray(data) && data.length > 0) {
             const info = data[0];
             let raw: { picture?: string } = {};

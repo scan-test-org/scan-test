@@ -26,7 +26,7 @@ const Login: React.FC = () => {
   useEffect(() => {
     if (!portalId) return;
     api
-      .get("/oauth2/api/oauth/providers", { params: { portalId } })
+      .post("/developers/providers", { portalId })
       .then((res: any) => setProviders(res.data || res))
       .catch(() => setProviders([]));
   }, [portalId]);

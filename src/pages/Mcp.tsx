@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Card, Table, Tag, Button, Space, Typography, Input, Badge, Avatar } from "antd";
-import { SearchOutlined, EyeOutlined, SettingOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
+import { Card, Table, Tag, Button, Space, Typography, Input, Badge } from "antd";
+import { SearchOutlined, EyeOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import api from "../lib/api";
@@ -42,9 +42,8 @@ function McpPage() {
 
   useEffect(() => {
     setLoading(true);
-    api.get("/api/mcpmarket/list")
+    api.get("/mcpmarket?pageNo=1&pageSize=10")
       .then((res: any) => {
-        console.log(res);
         if (res.code === "SUCCESS" && Array.isArray(res.data)) {
           const mapped = res.data.map((item: McpMarketItem) => ({
             key: item.id,

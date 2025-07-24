@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../lib/api';
 import { Layout } from '../components/Layout';
@@ -83,7 +83,7 @@ function McpDetail() {
     if (!mcpName) return;
     setLoading(true);
     setError('');
-    api.get(`/api/mcpmarket/detail/${mcpName}`)
+    api.get(`/mcpmarket/${mcpName}`)
       .then((res: { data: McpDetailData }) => {
         setData(res.data || res);
       })
