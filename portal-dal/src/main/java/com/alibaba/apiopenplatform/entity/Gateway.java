@@ -15,7 +15,7 @@ import javax.persistence.*;
  */
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "t_apim_gateway",
+@Table(name = "gateway",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"gateway_id"}, name = "uk_gateway_id"),
         })

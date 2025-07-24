@@ -14,7 +14,7 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "t_apim_portal",
+@Table(name = "portal",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"portal_id"}, name = "uk_portal_id"),
                 @UniqueConstraint(columnNames = {"name", "admin_id"}, name = "uk_name_admin_id")

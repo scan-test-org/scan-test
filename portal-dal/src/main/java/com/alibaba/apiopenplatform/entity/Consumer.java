@@ -11,7 +11,7 @@ import javax.persistence.*;
  * @author zh
  */
 @Entity
-@Table(name = "t_apim_consumer",
+@Table(name = "consumer",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"consumer_id"}, name = "uk_consumer_id"),
                 @UniqueConstraint(columnNames = {"name", "portal_id", "developer_id"},

@@ -9,13 +9,11 @@ import javax.persistence.*;
 import java.util.List;
 
 /**
- * API Reference Entity
- *
  * @author zh
  */
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "t_apim_product_ref",
+@Table(name = "product_ref",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"api_id"}, name = "uk_api_id")
         })
