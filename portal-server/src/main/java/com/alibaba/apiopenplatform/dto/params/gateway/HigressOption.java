@@ -11,7 +11,7 @@ import javax.validation.constraints.NotBlank;
  * @author zh
  */
 @Data
-public class HigressConfigParam implements InputConverter<HigressConfig> {
+public class HigressOption implements InputConverter<HigressConfig> {
 
     @NotBlank(message = "Higress Controller Host不能为空")
     private String host;

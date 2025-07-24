@@ -29,18 +29,17 @@ public class PageResult<T> implements OutputConverter<PageResult<T>, Page<T>> {
 
     private long totalElements;
 
-    @Override
-    public PageResult<T> convertFrom(Page<T> source) {
-        OutputConverter.super.convertFrom(source);
-
+    public <S> PageResult<T> mapFrom(PageResult<S> source, Function<S, T> mapper) {
+        setContent(source.getContent().stream()
+                .map(mapper)
+                .collect(Collectors.toList()));
         setSize(source.getSize());
         setNumber(source.getNumber());
         setTotalElements(source.getTotalElements());
-
         return this;
     }
 
-    public <S> PageResult<T> mapFrom(PageResult<S> source, Function<S, T> mapper) {
+    public <S> PageResult<T> convertFrom(Page<S> source, Function<S, T> mapper) {
         setContent(source.getContent().stream()
                 .map(mapper)
                 .collect(Collectors.toList()));

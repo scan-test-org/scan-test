@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
-import com.alibaba.apiopenplatform.entity.APIRef;
+import com.alibaba.apiopenplatform.entity.ProductRef;
 import lombok.Data;
 
 /**
@@ -9,7 +9,7 @@ import lombok.Data;
  * @author zh
  */
 @Data
-public class APIRefResult implements OutputConverter<APIRefResult, APIRef> {
+public class ProductRefResult implements OutputConverter<ProductRefResult, ProductRef> {
 
     private Long id;
     private String apiId;
@@ -17,7 +17,7 @@ public class APIRefResult implements OutputConverter<APIRefResult, APIRef> {
     private String productId;
 
     @Override
-    public APIRefResult convertFrom(APIRef source) {
+    public ProductRefResult convertFrom(ProductRef source) {
         OutputConverter.super.convertFrom(source);
         return this;
     }

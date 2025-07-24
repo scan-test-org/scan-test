@@ -1,7 +1,12 @@
 package com.alibaba.apiopenplatform.dto.result;
 
+import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
+import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -9,7 +14,10 @@ import java.time.LocalDateTime;
  * @author zh
  */
 @Data
-public class GatewayResult {
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class GatewayResult implements OutputConverter<GatewayResult, Gateway> {
 
     private String gatewayId;
 
@@ -19,5 +27,14 @@ public class GatewayResult {
 
     private String region;
 
-    private LocalDateTime gmtCreate;
+    private LocalDateTime createAt;
+
+    @Override
+    public GatewayResult convertFrom(Gateway source) {
+        OutputConverter.super.convertFrom(source);
+        if (source.getGatewayType().isAPIG()) {
+            setRegion(source.getApigConfig().getRegion());
+        }
+        return this;
+    }
 }

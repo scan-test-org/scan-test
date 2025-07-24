@@ -1,5 +1,8 @@
 package com.alibaba.apiopenplatform.dto.params.product;
 
+import com.alibaba.apiopenplatform.dto.converter.InputConverter;
+import com.alibaba.apiopenplatform.entity.Product;
+import com.alibaba.apiopenplatform.support.enums.ProductType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -9,20 +12,19 @@ import javax.validation.constraints.NotBlank;
 /**
  * @author zh
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class UpdateProductParam extends CreateProductParam {
+public class UpdateProductParam implements InputConverter<Product> {
 
     @NotBlank(message = "产品ID不能为空")
     private String productId;
 
-    private String adminId;
+    private String name;
 
-    private String status;
+    private String description;
 
-    private String enableConsumerAuth;
+    private ProductType type;
 
-    private String type;
+    private Boolean enableConsumerAuth;
 
     private String document;
 

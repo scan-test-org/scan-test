@@ -1,7 +1,9 @@
 package com.alibaba.apiopenplatform.repository;
 
+import com.alibaba.apiopenplatform.entity.ProductPublication;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.lang.NonNull;
 
@@ -16,7 +18,7 @@ import java.util.List;
  * @author zh
  */
 @NoRepositoryBean
-public interface BaseRepository<D, I> extends JpaRepository<D, I> {
+public interface BaseRepository<D, I> extends JpaRepository<D, I>, JpaSpecificationExecutor<D> {
 
     /**
      * 根据ID集合批量查询实体列表

@@ -9,7 +9,10 @@ import javax.persistence.AttributeConverter;
  */
 public abstract class JsonConverter<T> implements AttributeConverter<T, String> {
 
-    private final Class<T> type;
+    private Class<T> type;
+
+    protected JsonConverter() {
+    }
 
     protected JsonConverter(Class<T> type) {
         this.type = type;
@@ -22,6 +25,7 @@ public abstract class JsonConverter<T> implements AttributeConverter<T, String> 
 
     @Override
     public T convertToEntityAttribute(String dbData) {
+
         return dbData == null ? null : JSONUtil.toBean(dbData, type);
     }
 }
