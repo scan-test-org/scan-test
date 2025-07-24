@@ -11,7 +11,7 @@ import javax.persistence.*;
  */
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "t_apim_product",
+@Table(name = "product",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"product_id"}, name = "uk_product_id"),
                 @UniqueConstraint(columnNames = {"name"}, name = "uk_name")

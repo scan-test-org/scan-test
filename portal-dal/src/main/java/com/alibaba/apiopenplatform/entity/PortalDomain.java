@@ -13,7 +13,7 @@ import javax.persistence.*;
  * @author zh
  */
 @Entity
-@Table(name = "t_apim_portal_domain",
+@Table(name = "portal_domain",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"domain"}, name = "uk_domain")
         }

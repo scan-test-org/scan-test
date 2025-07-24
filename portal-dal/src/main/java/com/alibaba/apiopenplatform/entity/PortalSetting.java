@@ -16,7 +16,7 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "t_apim_portal_setting")
+@Table(name = "portal_setting")
 @Data
 public class PortalSetting extends BaseEntity {
     @Id

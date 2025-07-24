@@ -11,7 +11,7 @@ import javax.persistence.*;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "t_apim_product_publishment")
+@Table(name = "product_publishment")
 @NamedEntityGraph(
         name = "product.properties",
         attributeNodes = @NamedAttributeNode("product")

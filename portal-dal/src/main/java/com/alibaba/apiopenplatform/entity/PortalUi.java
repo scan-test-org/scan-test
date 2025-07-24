@@ -14,7 +14,7 @@ import javax.persistence.*;
  */
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "t_apim_portal_ui")
+@Table(name = "portal_ui")
 @Data
 public class PortalUi extends BaseEntity {
     @Id
