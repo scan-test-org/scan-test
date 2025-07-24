@@ -134,7 +134,7 @@ function McpPage() {
       key: 'action',
       render: (_: unknown, record: McpServer) => (
         <Space>
-          <Link to={`/mcp/${record.key}`}>
+          <Link to={`/mcp/${record.name}`}>
             <Button type="link" icon={<EyeOutlined />}>
               查看
             </Button>

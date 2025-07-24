@@ -7,8 +7,8 @@ import googleIcon from "../assets/google.png";
 
 const oidcIcons: Record<string, React.ReactNode> = {
   google: <img src={googleIcon} alt="Google" className="w-5 h-5 mr-2" />,
-  github: <img src={githubIcon} alt="GitHub" className="w-5 h-5 mr-2" />,
-  aliyun: <img src={aliyunIcon} alt="Aliyun" className="w-5 h-5 mr-2" />,
+  github: <img src={githubIcon} alt="GitHub" className="w-6 h-6 mr-2" />,
+  aliyun: <img src={aliyunIcon} alt="Aliyun" className="w-6 h-6 mr-2" />,
 };
 
 const Login: React.FC = () => {
@@ -66,7 +66,7 @@ const Login: React.FC = () => {
       <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md flex flex-col items-center border border-gray-100">
         {/* Logo */}
         <div className="mb-4">
-          <span className="block text-4xl text-gray-900 text-center">⬛</span>
+          <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-4" />
         </div>
         <h2 className="text-2xl font-bold mb-6 text-gray-900 text-center">
           登录 API Portal

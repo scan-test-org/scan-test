@@ -8,6 +8,7 @@ import Mcp from "./pages/Mcp";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from './pages/Profile'
+import McpDetail from "./pages/McpDetail";
 
 export function Router() {
   return (
@@ -18,6 +19,7 @@ export function Router() {
       <Route path="/apis/:id" element={<ApiDetail />} />
       <Route path="/consumers" element={<Consumers />} />
       <Route path="/mcp" element={<Mcp />} />
+      <Route path="/mcp/:mcpName" element={<McpDetail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/profile" element={<Profile />} />

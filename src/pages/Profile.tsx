@@ -140,7 +140,7 @@ const Profile: React.FC = () => {
                   className={`w-full flex items-center gap-2 py-2 rounded border text-base font-medium shadow-sm px-3 ${bound ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-gray-200 text-gray-900'}`}
                 >
                   {icon && <img src={icon} alt={provider.provider} className="w-6 h-6" />}
-                  <span className="flex-1">{provider.displayName || provider.provider}登录</span>
+                  <span className="flex-1">{provider.displayName || provider.provider}</span>
                   {bound ? (
                     <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">已绑定</span>
                   ) : (
