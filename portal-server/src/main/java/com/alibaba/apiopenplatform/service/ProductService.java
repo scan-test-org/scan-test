@@ -143,4 +143,9 @@ public interface ProductService {
      * @return
      */
     List<APIRefResult> batchAddAPIRefs(String productId, List<APIRefParam> apiRefParams);
+
+    /**
+     * 上架MCP Server为Product
+     */
+    ProductResult addMcpServerProduct(com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam param);
 }

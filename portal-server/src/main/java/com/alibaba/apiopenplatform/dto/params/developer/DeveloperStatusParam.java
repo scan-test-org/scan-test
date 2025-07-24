@@ -1,6 +1,6 @@
 package com.alibaba.apiopenplatform.dto.params.developer;
 
-public class DeveloperStatusDto {
+public class DeveloperStatusParam {
     private String portalId;
     private String status;
     // getter/setter

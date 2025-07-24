@@ -1,6 +1,6 @@
 package com.alibaba.apiopenplatform.dto.params.admin;
 
-public class ChangePasswordDto {
+public class ChangePasswordParam {
     private String oldPassword;
     private String newPassword;
     // getter/setter

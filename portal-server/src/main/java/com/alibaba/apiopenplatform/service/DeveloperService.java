@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.service;
 
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateDto;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
+import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.Developer;
@@ -19,9 +19,9 @@ public interface DeveloperService {
 
     Optional<Developer> findByDeveloperId(String developerId);
 
-    Developer createDeveloper(DeveloperCreateDto createDto);
+    Developer createDeveloper(DeveloperCreateParam param);
 
-    Optional<AuthResponseDto> loginWithPassword(String username, String password);
+    Optional<AuthResponseResult> loginWithPassword(String username, String password);
 
     /**
      * 外部身份登录/绑定入口
@@ -33,7 +33,7 @@ public interface DeveloperService {
      * @param rawInfoJson     第三方原始信息JSON
      * @return 登录结果
      */
-    Optional<AuthResponseDto> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson);
+    Optional<AuthResponseResult> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson);
 
     /**
      * 绑定外部身份（不切换登录态，仅写数据库）

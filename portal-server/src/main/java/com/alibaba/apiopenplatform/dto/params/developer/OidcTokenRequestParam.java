@@ -5,7 +5,7 @@ package com.alibaba.apiopenplatform.dto.params.developer;
  * 用于 /oauth/token 接口
  * @author zxd
  */
-public class OidcTokenRequestDto {
+public class OidcTokenRequestParam {
     private String code;
     private String state;
     public String getCode() { return code; }

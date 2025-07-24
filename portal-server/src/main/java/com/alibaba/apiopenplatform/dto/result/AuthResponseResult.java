@@ -8,7 +8,7 @@ import lombok.Data;
  * @author zxd
  */
 @Data
-public class AuthResponseDto {
+public class AuthResponseResult {
     private String token;
     private String userId;
     private String username;

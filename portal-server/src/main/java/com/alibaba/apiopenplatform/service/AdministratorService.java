@@ -1,8 +1,8 @@
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.entity.Administrator;
-import com.alibaba.apiopenplatform.dto.params.admin.AdminCreateDto;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseDto;
+import com.alibaba.apiopenplatform.dto.params.admin.AdminCreateParam;
+import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import java.util.Optional;
 
 /**
@@ -24,12 +24,12 @@ public interface AdministratorService {
     /**
      * 创建管理员
      */
-    Administrator createAdministrator(AdminCreateDto createDto);
+    Administrator createAdministrator(AdminCreateParam param);
 
     /**
      * 校验用户名和密码，返回认证结果DTO
      */
-    Optional<AuthResponseDto> loginWithPassword(String username, String password);
+    Optional<AuthResponseResult> loginWithPassword(String username, String password);
 
     /**
      * 检查指定portalId下是否需要初始化管理员

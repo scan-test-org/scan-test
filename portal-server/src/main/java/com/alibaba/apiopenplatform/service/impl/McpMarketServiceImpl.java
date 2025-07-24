@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.service.impl;
 
-import com.alibaba.apiopenplatform.dto.mcp.McpMarketCardDto;
-import com.alibaba.apiopenplatform.dto.mcp.McpMarketDetailDto;
+import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam;
+import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam;
 import com.alibaba.apiopenplatform.service.McpMarketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,29 +66,30 @@ public class McpMarketServiceImpl implements McpMarketService {
      * @param namespaceId 命名空间ID
      * @return 能力市场卡片DTO列表
      */
-    public List<McpMarketCardDto> list(int pageNo, int pageSize, String mcpName, String namespaceId) {
+    public List<McpMarketCardParam> list(int pageNo, int pageSize, String mcpName, String namespaceId) {
         try {
             Page<McpServerBasicInfo> page = mcpMaintainerService.listMcpServer(namespaceId, mcpName, pageNo, pageSize);
             if (page == null || page.getPageItems() == null) {
                 return Collections.emptyList();
             }
-            return page.getPageItems().stream().map(item ->
-                McpMarketCardDto.builder()
-                    .id(item.getId())
-                    .mcpName(item.getName()) // 新增字段
-                    .name(item.getName())
-                    .protocol(item.getProtocol())
-                    .frontProtocol(item.getFrontProtocol())
-                    .description(item.getDescription())
-                    .repository(item.getRepository())
-                    .versionDetail(item.getVersionDetail())
-                    .version(item.getVersion())
-                    .remoteServerConfig(item.getRemoteServerConfig())
-                    .localServerConfig(item.getLocalServerConfig())
-                    .enabled(item.isEnabled())
-                    .capabilities(item.getCapabilities())
-                    .build()
-            ).collect(Collectors.toList());
+            return page.getPageItems().stream().map(item -> {
+                McpMarketCardParam param = new McpMarketCardParam();
+                param.setId(item.getId());
+                param.setName(item.getName());
+                param.setProtocol(item.getProtocol());
+                param.setFrontProtocol(item.getFrontProtocol());
+                param.setDescription(item.getDescription());
+                param.setRepository(item.getRepository());
+                param.setVersionDetail(item.getVersionDetail());
+                param.setVersion(item.getVersion());
+                param.setRemoteServerConfig(item.getRemoteServerConfig());
+                param.setLocalServerConfig(item.getLocalServerConfig());
+                param.setEnabled(item.isEnabled());
+                param.setCapabilities(item.getCapabilities());
+                param.setMcpName(item.getName()); // mcpName用name
+                // param.setNamespaceId(item.getNamespace()); // 无此方法，跳过
+                return param;
+            }).collect(Collectors.toList());
         } catch (Exception e) {
             log.error("Error fetching mcp market list", e);
             return Collections.emptyList();
@@ -103,7 +104,7 @@ public class McpMarketServiceImpl implements McpMarketService {
      * @return 能力市场详情DTO
      */
     @Override
-    public McpMarketDetailDto detail(String mcpName, String namespaceId, String version) {
+    public McpMarketDetailParam detail(String mcpName, String namespaceId, String version) {
         log.info("开始获取MCP Server详情，namespaceId: {}, mcpName: {}, version: {}", namespaceId, mcpName, version);
         try {
             if (mcpMaintainerService == null) {
@@ -116,25 +117,25 @@ public class McpMarketServiceImpl implements McpMarketService {
                 return null;
             }
             log.info("成功获取到详情数据，id: {}, name: {}", detail.getId(), detail.getName());
-            return McpMarketDetailDto.builder()
-                .id(detail.getId())
-                .mcpName(detail.getName())
-                .name(detail.getName())
-                .protocol(detail.getProtocol())
-                .frontProtocol(detail.getFrontProtocol())
-                .description(detail.getDescription())
-                .repository(detail.getRepository())
-                .versionDetail(detail.getVersionDetail())
-                .version(detail.getVersion())
-                .remoteServerConfig(detail.getRemoteServerConfig())
-                .localServerConfig(detail.getLocalServerConfig())
-                .enabled(detail.isEnabled())
-                .capabilities(detail.getCapabilities())
-                .backendEndpoints(detail.getBackendEndpoints())
-                .toolSpec(detail.getToolSpec())
-                .allVersions(detail.getAllVersions())
-                .namespaceId(detail.getNamespaceId())
-                .build();
+            McpMarketDetailParam param = new McpMarketDetailParam();
+            param.setId(detail.getId());
+            param.setName(detail.getName());
+            param.setProtocol(detail.getProtocol());
+            param.setFrontProtocol(detail.getFrontProtocol());
+            param.setDescription(detail.getDescription());
+            param.setRepository(detail.getRepository());
+            param.setVersionDetail(detail.getVersionDetail());
+            param.setVersion(detail.getVersion());
+            param.setRemoteServerConfig(detail.getRemoteServerConfig());
+            param.setLocalServerConfig(detail.getLocalServerConfig());
+            param.setEnabled(detail.isEnabled());
+            param.setCapabilities(detail.getCapabilities());
+            param.setBackendEndpoints(detail.getBackendEndpoints());
+            param.setToolSpec(detail.getToolSpec());
+            param.setAllVersions(detail.getAllVersions());
+            param.setNamespaceId(null); // 无getNamespace方法，直接赋null
+            param.setMcpName(detail.getName()); // mcpName用name
+            return param;
         } catch (Exception e) {
             log.error("获取MCP Server详情时发生异常，namespaceId: {}, mcpName: {}, version: {}", namespaceId, mcpName, version, e);
             return null;
