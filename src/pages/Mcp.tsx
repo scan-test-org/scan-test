@@ -1,7 +1,9 @@
+import React, { useEffect, useState } from "react";
 import { Card, Table, Tag, Button, Space, Typography, Input, Badge, Avatar } from "antd";
 import { SearchOutlined, EyeOutlined, SettingOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
+import api from "../lib/api";
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -17,40 +19,51 @@ interface McpServer {
   category: string;
 }
 
-const mockMcpServers: McpServer[] = [
-  {
-    key: "1",
-    name: "GitHub MCP Server",
-    description: "GitHub仓库和项目管理服务",
-    status: "active",
-    version: "v1.0.0",
-    endpoints: 15,
-    lastUpdated: "2025-01-15",
-    category: "Development"
-  },
-  {
-    key: "2",
-    name: "Database MCP Server",
-    description: "数据库连接和查询服务",
-    status: "active",
-    version: "v1.2.0",
-    endpoints: 8,
-    lastUpdated: "2025-01-14",
-    category: "Data"
-  },
-  {
-    key: "3",
-    name: "File System MCP Server",
-    description: "文件系统操作服务",
-    status: "maintenance",
-    version: "v1.1.0",
-    endpoints: 12,
-    lastUpdated: "2025-01-13",
-    category: "Storage"
-  }
-];
+interface McpMarketItem {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  versionDetail: {
+    version: string;
+    release_date: string;
+    is_latest: boolean;
+  };
+  enabled: boolean;
+  protocol: string;
+  frontProtocol: string;
+  capabilities: string[];
+  mcpName: string;
+}
 
 function McpPage() {
+  const [loading, setLoading] = useState(false);
+  const [mcpServers, setMcpServers] = useState<McpServer[]>([]);
+
+  useEffect(() => {
+    setLoading(true);
+    api.get("/api/mcpmarket/list")
+      .then((res: any) => {
+        console.log(res);
+        if (res.code === "SUCCESS" && Array.isArray(res.data)) {
+          const mapped = res.data.map((item: McpMarketItem) => ({
+            key: item.id,
+            name: item.name,
+            description: item.description,
+            status: item.enabled ? "active" : "inactive",
+            version: item.versionDetail?.version || item.version,
+            endpoints: item.capabilities?.length ?? 0,
+            lastUpdated: item.versionDetail?.release_date
+              ? new Date(item.versionDetail.release_date).toISOString().slice(0, 10)
+              : "",
+            category: item.protocol || "",
+          }));
+          setMcpServers(mapped);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active':
@@ -71,7 +84,7 @@ function McpPage() {
       key: 'name',
       render: (name: string, record: McpServer) => (
         <div className="flex items-center space-x-3">
-          <Avatar className="bg-blue-500" />
+          {/* <Avatar className="bg-blue-500" /> */}
           <div>
             <div className="font-medium">{name}</div>
             <div className="text-sm text-gray-500">{record.description}</div>
@@ -89,6 +102,7 @@ function McpPage() {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
+      width: 100,
       render: (status: string) => (
         <Badge 
           status={status === 'active' ? 'success' : status === 'maintenance' ? 'processing' : 'default'} 
@@ -105,6 +119,7 @@ function McpPage() {
     {
       title: '端点数量',
       dataIndex: 'endpoints',
+      width: 100,
       key: 'endpoints',
       render: (endpoints: number) => endpoints.toLocaleString()
     },
@@ -119,14 +134,14 @@ function McpPage() {
       key: 'action',
       render: (_: unknown, record: McpServer) => (
         <Space>
-          <Link to={`/mcp/${record.key}`}>
+          <Link to={`/mcp/${record.name}`}>
             <Button type="link" icon={<EyeOutlined />}>
               查看
             </Button>
           </Link>
-          <Button type="link" icon={<SettingOutlined />}>
+          {/* <Button type="link" icon={<SettingOutlined />}>
             配置
-          </Button>
+          </Button> */}
         </Space>
       ),
     },
@@ -154,10 +169,11 @@ function McpPage() {
         
         <Table 
           columns={columns} 
-          dataSource={mockMcpServers}
+          dataSource={mcpServers}
+          loading={loading}
           rowKey="key"
           pagination={{
-            total: mockMcpServers.length,
+            total: mcpServers.length,
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
@@ -170,24 +186,24 @@ function McpPage() {
       <Card title="MCP 服务器统计" className="mt-8">
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{mockMcpServers.length}</div>
+            <div className="text-2xl font-bold text-blue-600">{mcpServers.length}</div>
             <div className="text-sm text-gray-500">总服务器</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              {mockMcpServers.filter(s => s.status === 'active').length}
+              {mcpServers.filter(s => s.status === 'active').length}
             </div>
             <div className="text-sm text-gray-500">活跃服务器</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {mockMcpServers.reduce((sum, s) => sum + s.endpoints, 0)}
+              {mcpServers.reduce((sum, s) => sum + s.endpoints, 0)}
             </div>
             <div className="text-sm text-gray-500">总端点</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600">
-              {mockMcpServers.filter(s => s.status === 'maintenance').length}
+              {mcpServers.filter(s => s.status === 'maintenance').length}
             </div>
             <div className="text-sm text-gray-500">维护中</div>
           </div>

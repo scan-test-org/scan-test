@@ -1,10 +1,19 @@
 import { Button, Card, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
+import { useEffect } from "react";
 
 const { Title, Paragraph } = Typography;
 
 function HomePage() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (!token) {
+      window.location.href = `/login?portalId=test_portal`;
+    }
+  }, []);
+
   return (
     <Layout>
       <div className="text-center">

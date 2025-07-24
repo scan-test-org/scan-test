@@ -1,18 +1,9 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
-import { LoginDialog } from "./login-dialog";
-import { UserMenu } from "./user-menu";
+import { UserInfo } from "./user-info";
 
 export function Navigation() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-    setIsLoggedIn(loggedIn);
-  }, []);
-
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,9 +11,9 @@ export function Navigation() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">C</span>
+                <span className="text-white font-bold text-sm">A</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">Company</span>
+              <span className="text-xl font-bold text-gray-900">API Portal</span>
             </Link>
           </div>
           
@@ -56,11 +47,7 @@ export function Navigation() {
                 size="middle"
               />
             </div>
-            {isLoggedIn ? (
-              <UserMenu />
-            ) : (
-              <LoginDialog />
-            )}
+            <UserInfo />
           </div>
         </div>
       </div>
