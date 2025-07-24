@@ -12,19 +12,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import javax.validation.Valid;
 
-import static org.springframework.data.domain.Sort.Direction.DESC;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -91,7 +89,7 @@ public class DeveloperController {
     @Operation(summary = "获取门户的开发者列表")
     @GetMapping
     public PageResult<DeveloperResult> listDevelopers(@RequestParam String portalId,
-                                        @PageableDefault(sort = "gmtCreate", direction = DESC) Pageable pageable) {
+                                        @PageableDefault(sort = "gmtCreate", direction = Sort.Direction.DESC) Pageable pageable) {
         return developerService.listDevelopers(portalId, pageable);
     }
 

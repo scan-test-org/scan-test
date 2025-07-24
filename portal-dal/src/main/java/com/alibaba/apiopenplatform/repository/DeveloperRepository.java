@@ -20,5 +20,6 @@ public interface DeveloperRepository extends JpaRepository<Developer, Long> {
     Optional<Developer> findByPortalIdAndUsername(String portalId, String username);
     Optional<Developer> findByPortalIdAndEmail(String portalId, String email);
 
-    Page<Developer> findByPortalId(String adminId, Pageable pageable);
+    Optional<Developer> findByDeveloperIdAndPortalId(String developerId, String portalId);
+    Page<Developer> findByPortalId(String portalId, Pageable pageable);
 } 

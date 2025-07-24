@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface PortalSettingRepository extends JpaRepository<PortalSetting, Long> {
     Optional<PortalSetting> findByPortalIdAndProvider(String portalId, String provider);
 

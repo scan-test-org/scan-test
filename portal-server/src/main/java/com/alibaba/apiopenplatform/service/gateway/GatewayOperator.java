@@ -2,17 +2,15 @@ package com.alibaba.apiopenplatform.service.gateway;
 
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
-import com.alibaba.apiopenplatform.dto.result.APIResult;
-import com.alibaba.apiopenplatform.dto.result.ConsumerResult;
-import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
-import com.alibaba.apiopenplatform.dto.result.PageResult;
-import com.alibaba.apiopenplatform.repository.GatewayRepository;
+import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
+import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.service.gateway.client.GatewayClient;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,25 +23,32 @@ public abstract class GatewayOperator<T> {
 
     private final Map<String, GatewayClient> clientCache = new ConcurrentHashMap<>();
 
-    abstract public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, int pageNumber, int pageSize);
+    abstract public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, Pageable pageable);
 
-    abstract public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, int pageNumber, int pageSize);
+    abstract public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, Pageable pageable);
 
-    abstract public PageResult<MCPServerResult> fetchMcpServers(Gateway gateway, int pageNumber, int pageSize);
+    abstract public PageResult<MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable);
 
-    abstract public void fetchAPISpec(Gateway gateway, String apiId);
+    abstract public String fetchAPISpec(Gateway gateway, String apiId);
+
+    abstract public String fetchMcpSpec(Gateway gateway, String apiId, String routeId);
+
+    abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
 
     abstract public void createConsumer(Gateway gateway);
 
     abstract public void deleteConsumer(Gateway gateway);
 
+    abstract public APIResult fetchAPI(Gateway gateway, String apiId);
 
     abstract public GatewayType getGatewayType();
 
     @SuppressWarnings("unchecked")
     protected T getClient(Gateway gateway) {
+        String clientKey = gateway.getGatewayType().isAPIG() ?
+                gateway.getApigConfig().buildUniqueKey() : gateway.getHigressConfig().buildUniqueKey();
         return (T) clientCache.computeIfAbsent(
-                gateway.getGatewayId(),
+                clientKey,
                 key -> createClient(gateway)
         );
     }
@@ -55,9 +60,9 @@ public abstract class GatewayOperator<T> {
         switch (gateway.getGatewayType()) {
             case APIG_API:
             case APIG_AI:
-                return new APIGClient(gateway);
+                return new APIGClient(gateway.getApigConfig());
             case HIGRESS:
-                return new HigressClient(gateway);
+                return new HigressClient(gateway.getHigressConfig());
             default:
                 throw new BusinessException(ErrorCode.INTERNAL_ERROR,
                         "No factory found for gateway type: " + gateway.getGatewayType());

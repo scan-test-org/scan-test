@@ -13,9 +13,6 @@ import javax.validation.constraints.Size;
 @Data
 public class CreateConsumerParam implements InputConverter<Consumer> {
 
-    @NotBlank(message = "门户ID不能为空")
-    private String portalId;
-
     @NotBlank(message = "Consumer名称不能为空")
     @Size(max = 50, message = "Consumer名称长度不能超过50个字符")
     private String name;

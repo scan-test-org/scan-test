@@ -15,4 +15,8 @@ public class HigressConfig {
     private String accessToken;
 
     private String jwtPolicy;
+
+    public String buildUniqueKey() {
+        return String.format("%s:%s:%s", host, port, accessToken);
+    }
 }

@@ -1,41 +1,29 @@
 package com.alibaba.apiopenplatform.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 
 
+import java.util.Collection;
 import java.util.Optional;
 
 import com.alibaba.apiopenplatform.entity.Product;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
-    
-    @EntityGraph("product.properties")
-    Product findByProductId(String productId);
+public interface ProductRepository extends BaseRepository<Product, Long> {
 
-    @EntityGraph("product.properties")
-    Optional<Product> findByNameAndOwnerId(String name, String ownerId);
+    Optional<Product> findByProductId(String productId);
 
-    @EntityGraph("product.properties")
-    Page<Product> findByOwnerId(String ownerId, Pageable pageable);
+    Optional<Product> findByProductIdAndAdminId(String productId, String adminId);
 
-    @EntityGraph("product.properties")
-    Optional<Product> findByProductIdAndOwnerId(String productId, String ownerId);
+    Optional<Product> findByNameAndAdminId(String name, String adminId);
 
-    @EntityGraph("product.properties")
-    Page<Product> findByStatus(String status, Pageable pageable);
+    Page<Product> findByProductIdIn(Collection<String> productIds, Pageable pageable);
 
-    @EntityGraph("product.properties")
+    Page<Product> findByAdminId(String adminId, Pageable pageable);
+
     Page<Product> findByType(String type, Pageable pageable);
 
-    @EntityGraph("product.properties")
     Page<Product> findByCategory(String category, Pageable pageable);
-
-    @EntityGraph("product.properties")
-    Page<Product> findByStatusAndType(String status, String type, Pageable pageable);
 }

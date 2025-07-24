@@ -22,5 +22,5 @@ public class DeveloperResult implements OutputConverter<DeveloperResult, Develop
 
     private String avatarUrl;
 
-    private LocalDateTime gmtCreate;
+    private LocalDateTime createAt;
 }

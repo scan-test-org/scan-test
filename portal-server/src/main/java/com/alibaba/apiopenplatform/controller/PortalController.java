@@ -1,9 +1,7 @@
 package com.alibaba.apiopenplatform.controller;
 
-import com.alibaba.apiopenplatform.dto.params.portal.CreatePortalParam;
-import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalParam;
-import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalSettingParam;
-import com.alibaba.apiopenplatform.dto.params.portal.UpdatePortalUiParam;
+import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
+import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
@@ -12,22 +10,20 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-import static org.springframework.data.domain.Sort.Direction.DESC;
-
 /**
  * @author zh
  */
 @RestController
-@RequestMapping("/portal")
+@RequestMapping("/portals")
 @Slf4j
 @Validated
 @Tag(name = "门户管理")
+@AdminAuth
 public class PortalController {
 
     private final PortalService portalService;
@@ -37,7 +33,7 @@ public class PortalController {
     }
 
     @Operation(summary = "创建门户")
-    @PostMapping("/create")
+    @PostMapping
     public PortalResult createPortal(@Valid @RequestBody CreatePortalParam param) {
         return portalService.createPortal(param);
     }
@@ -49,38 +45,50 @@ public class PortalController {
     }
 
     @Operation(summary = "获取门户列表")
-    @GetMapping("/list")
-    public PageResult<PortalResult> listPortals(@PageableDefault(sort = "gmtCreate", direction = DESC) Pageable pageable) {
+    @GetMapping
+    public PageResult<PortalResult> listPortals(Pageable pageable) {
         return portalService.listPortals(pageable);
     }
 
     @Operation(summary = "获取门户配置信息")
-    @GetMapping("/setting/{portalId}")
+    @GetMapping("/{portalId}/setting")
     public PortalSettingConfig getPortalSetting(@PathVariable String portalId) {
         return portalService.getPortalSetting(portalId);
     }
 
     @Operation(summary = "更新门户的基础信息")
-    @PostMapping("/update")
-    public PortalResult updatePortal(@Valid @RequestBody UpdatePortalParam param) {
-        return portalService.updatePortal(param);
+    @PutMapping("/{portalId}")
+    public PortalResult updatePortal(@PathVariable String portalId, @Valid @RequestBody UpdatePortalParam param) {
+        return portalService.updatePortal(portalId, param);
     }
 
     @Operation(summary = "更新门户的配置信息")
-    @PostMapping("/setting")
-    public PortalResult updatePortalSetting(@Valid @RequestBody UpdatePortalSettingParam param) {
-        return portalService.updatePortalSetting(param);
+    @PutMapping("/{portalId}/setting")
+    public PortalResult updatePortalSetting(@PathVariable String portalId, @Valid @RequestBody UpdatePortalSettingParam param) {
+        return portalService.updatePortalSetting(portalId, param);
     }
 
     @Operation(summary = "更新门户的UI配置")
-    @PostMapping("/ui")
-    public PortalResult updatePortalUi(@Valid @RequestBody UpdatePortalUiParam param) {
-        return portalService.updatePortalUi(param);
+    @PutMapping("/{portalId}/ui")
+    public PortalResult updatePortalUi(@PathVariable String portalId, @Valid @RequestBody UpdatePortalUiParam param) {
+        return portalService.updatePortalUi(portalId, param);
     }
 
     @Operation(summary = "删除门户")
     @DeleteMapping("/{portalId}")
     public void deletePortal(@PathVariable String portalId) {
         portalService.deletePortal(portalId);
+    }
+
+    @Operation(summary = "绑定域名")
+    @PostMapping("/{portalId}/domains")
+    public PortalResult bindDomain(@PathVariable String portalId, @Valid @RequestBody BindDomainParam param) {
+        return portalService.bindDomain(portalId, param);
+    }
+
+    @Operation(summary = "解绑域名")
+    @DeleteMapping("/{portalId}/domains/{domain}")
+    public PortalResult unbindDomain(@PathVariable String portalId, @PathVariable String domain) {
+        return portalService.unbindDomain(portalId, domain);
     }
 }

@@ -1,15 +1,9 @@
 package com.alibaba.apiopenplatform.service;
 
-import com.alibaba.apiopenplatform.dto.params.product.CreateProductParam;
-import com.alibaba.apiopenplatform.dto.params.product.UpdateProductParam;
-import com.alibaba.apiopenplatform.dto.params.product.UpdateProductSettingParam;
-import com.alibaba.apiopenplatform.dto.params.product.APIRefParam;
+import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
-import com.alibaba.apiopenplatform.dto.result.APIRefResult;
-import org.springframework.data.domain.Page;
-
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 /**
  * @author zh
@@ -17,7 +11,7 @@ import java.util.List;
 public interface ProductService {
 
     /**
-     * 创建门户
+     * 创建API产品
      *
      * @param param
      * @return
@@ -25,84 +19,48 @@ public interface ProductService {
     ProductResult createProduct(CreateProductParam param);
 
     /**
-     * 查询门户
+     * 查询API产品
      *
-     * @param portalId
+     * @param productId
      * @return
      */
     ProductResult getProduct(String productId);
 
     /**
-     * 查询产品列表
+     * 查询API产品列表
      *
-     * @param portalId
-     * @param pageNumber
-     * @param pageSize
+     * @param param
+     * @param pageable
      * @return
      */
-    PageResult<ProductResult> listProducts(String portalId, int pageNumber, int pageSize);
-
-    /**
-     * 根据状态查询产品列表
-     *
-     * @param status
-     * @param pageNumber
-     * @param pageSize
-     * @return
-     */
-    PageResult<ProductResult> listProductsByStatus(String status, int pageNumber, int pageSize);
-
-    /**
-     * 根据类型查询产品列表
-     *
-     * @param type
-     * @param pageNumber
-     * @param pageSize
-     * @return
-     */
-    PageResult<ProductResult> listProductsByType(String type, int pageNumber, int pageSize);
-
-    /**
-     * 根据分类查询产品列表
-     *
-     * @param category
-     * @param pageNumber
-     * @param pageSize
-     * @return
-     */
-    PageResult<ProductResult> listProductsByCategory(String category, int pageNumber, int pageSize);
+    PageResult<ProductResult> listProducts(QueryProductParam param, Pageable pageable);
 
     /**
      * 更新门户
      *
+     * @param productId
      * @param param
      * @return
      */
-    ProductResult updateProduct(UpdateProductParam param);
+    ProductResult updateProduct(String productId, UpdateProductParam param);
 
     /**
-     * 更新产品设置
-     *
-     * @param param
-     * @return
-     */
-    ProductResult updateProductSetting(UpdateProductSettingParam param);
-
-    /**
-     * 发布产品
+     * 发布API产品
      *
      * @param productId
+     * @param param
      * @return
      */
-    ProductResult publishProduct(String productId);
+    void publishProduct(String productId, PublishProductParam param);
 
     /**
      * 下线产品
      *
      * @param productId
+     * @param param
      * @return
      */
-    ProductResult unpublishProduct(String productId);
+    void unpublishProduct(String productId, UnPublishProductParam param);
 
     /**
      * 删除产品
@@ -112,37 +70,19 @@ public interface ProductService {
     void deleteProduct(String productId);
 
     /**
-     * 为产品添加API引用
+     * API产品引用API或MCP Server
      *
+     * @param productId
      * @param param
-     * @return
      */
-    APIRefResult addAPIRef(APIRefParam param);
+    void addProductRef(String productId, CreateProductRefParam param);
 
     /**
-     * 获取产品的API引用列表
+     * 删除API产品的引用
      *
      * @param productId
-     * @return
      */
-    List<APIRefResult> getAPIRefsByProductId(String productId);
-
-    /**
-     * 删除产品的API引用
-     *
-     * @param productId
-     * @param apiId
-     */
-    void deleteAPIRef(String productId, String apiId);
-
-    /**
-     * 批量添加API引用
-     *
-     * @param productId
-     * @param apiRefParams
-     * @return
-     */
-    List<APIRefResult> batchAddAPIRefs(String productId, List<APIRefParam> apiRefParams);
+    void deleteProductRef(String productId);
 
     /**
      * 上架MCP Server为Product

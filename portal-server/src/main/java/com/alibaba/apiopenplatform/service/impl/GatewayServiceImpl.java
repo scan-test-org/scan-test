@@ -4,7 +4,10 @@ import cn.hutool.core.util.EnumUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
+import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.APIResult;
+import com.alibaba.apiopenplatform.dto.result.GatewayResult;
 import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.Consumer;
@@ -19,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,8 +43,42 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     private Map<GatewayType, GatewayOperator> gatewayOperators;
 
+    public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable) {
+        return gatewayOperators.get(param.getGatewayType()).fetchGateways(param, pageable);
+    }
+
+    public void importGateway(ImportGatewayParam param) {
+        gatewayRepository.findByGatewayId(param.getGatewayId())
+                .ifPresent(gateway -> {
+                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.GATEWAY, param.getGatewayId());
+                });
+
+        Gateway gateway = param.convertTo();
+        gateway.setAdminId("admin");
+        gatewayRepository.save(gateway);
+    }
+
     @Override
-    public PageResult<APIResult> fetchAPIs(String gatewayId, String apiType, int pageNumber, int pageSize) {
+    public PageResult<GatewayResult> listGateways(Pageable pageable) {
+        Page<Gateway> gateways = gatewayRepository.findByAdminId("admin", pageable);
+
+        return new PageResult<GatewayResult>().convertFrom(gateways, gateway -> new GatewayResult().convertFrom(gateway));
+    }
+
+    @Override
+    public void deleteGateway(String gatewayId) {
+        Gateway gateway = findGateway(gatewayId);
+        gatewayRepository.delete(gateway);
+    }
+
+
+    public APIResult fetchAPI(String gatewayId, String apiId) {
+        Gateway gateway = findGateway(gatewayId);
+        return getOperator(gateway).fetchAPI(gateway, apiId);
+    }
+
+    @Override
+    public PageResult<APIResult> fetchAPIs(String gatewayId, String apiType, Pageable pageable) {
         Gateway gateway = findGateway(gatewayId);
         GatewayType gatewayType = gateway.getGatewayType();
 
@@ -47,15 +86,15 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
             APIGAPIType type = EnumUtil.fromString(APIGAPIType.class, apiType);
             switch (type) {
                 case REST:
-                    return fetchRESTAPIs(gatewayId, pageNumber, pageSize);
+                    return fetchRESTAPIs(gatewayId, pageable);
                 case MCP:
-                    return fetchHTTPAPIs(gatewayId, pageNumber, pageSize);
+                    return fetchHTTPAPIs(gatewayId, pageable);
                 default:
             }
         }
 
         if (gatewayType.isHigress()) {
-            return fetchRoutes(gatewayId, pageNumber, pageSize);
+            return fetchRoutes(gatewayId, pageable);
         }
 
         throw new BusinessException(ErrorCode.INTERNAL_ERROR,
@@ -63,32 +102,38 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public PageResult<APIResult> fetchHTTPAPIs(String gatewayId, int pageNumber, int pageSize) {
+    public PageResult<APIResult> fetchHTTPAPIs(String gatewayId, Pageable pageable) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchHTTPAPIs(gateway, pageNumber, pageSize);
+        return getOperator(gateway).fetchHTTPAPIs(gateway, pageable);
     }
 
     @Override
-    public PageResult<APIResult> fetchRESTAPIs(String gatewayId, int pageNumber, int pageSize) {
+    public PageResult<APIResult> fetchRESTAPIs(String gatewayId, Pageable pageable) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchRESTAPIs(gateway, pageNumber, pageSize);
+        return getOperator(gateway).fetchRESTAPIs(gateway, pageable);
     }
 
     @Override
-    public PageResult<APIResult> fetchRoutes(String gatewayId, int pageNumber, int pageSize) {
+    public PageResult<APIResult> fetchRoutes(String gatewayId, Pageable pageable) {
         return null;
     }
 
     @Override
-    public PageResult<MCPServerResult> fetchMcpServers(String gatewayId, int pageNumber, int pageSize) {
+    public PageResult<MCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchMcpServers(gateway, pageNumber, pageSize);
+        return getOperator(gateway).fetchMcpServers(gateway, pageable);
     }
 
     @Override
-    public void fetchAPISpec(String gatewayId, String apiId) {
+    public String fetchAPISpec(String gatewayId, String apiId) {
         Gateway gateway = findGateway(gatewayId);
-//        return getOperator(gateway).fetchHTTPAPIs(gateway, pageNumber, pageSize);
+        return getOperator(gateway).fetchAPISpec(gateway, apiId);
+    }
+
+    @Override
+    public String fetchMcpSpec(String gatewayId, String apiId, String routeId) {
+        Gateway gateway = findGateway(gatewayId);
+        return getOperator(gateway).fetchMcpSpec(gateway, apiId, routeId);
     }
 
     @Override
@@ -119,7 +164,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     private Gateway findGateway(String gatewayId) {
-        return gatewayRepository.findByAdminIdAndGatewayId("admin", gatewayId)
+        return gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.GATEWAY, gatewayId));
     }
 

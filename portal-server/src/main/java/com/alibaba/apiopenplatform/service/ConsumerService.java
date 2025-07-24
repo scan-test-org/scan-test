@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.service;
 
+import com.alibaba.apiopenplatform.dto.params.consumer.QueryConsumerParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateConsumerParam;
 import com.alibaba.apiopenplatform.dto.result.ConsumerResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
@@ -35,24 +36,14 @@ public interface ConsumerService {
      */
     ConsumerResult createConsumer(CreateConsumerParam param);
 
-
     /**
-     * 列出Developer的Consumer
+     * 获取Consumer列表
      *
+     * @param param
      * @param pageable
      * @return
      */
-    PageResult<ConsumerResult> listConsumers(Pageable pageable);
-
-
-    /**
-     * 列出Portal的Consumer
-     *
-     * @param portalId
-     * @param pageable
-     * @return
-     */
-    PageResult<ConsumerResult> listConsumers(String portalId, Pageable pageable);
+    PageResult<ConsumerResult> listConsumers(QueryConsumerParam param, Pageable pageable);
 
 
     /**

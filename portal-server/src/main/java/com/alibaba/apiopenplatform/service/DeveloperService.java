@@ -41,9 +41,9 @@ public interface DeveloperService {
      * @param userId          本地用户ID
      * @param providerName    外部身份提供商
      * @param providerSubject 外部身份唯一标识
-     * @param displayName 第三方显示名
-     * @param rawInfoJson 第三方原始信息JSON
-     * @param portalId 门户唯一标识
+     * @param displayName     第三方显示名
+     * @param rawInfoJson     第三方原始信息JSON
+     * @param portalId        门户唯一标识
      * @param displayName     第三方显示名
      * @param rawInfoJson     第三方原始信息JSON
      */
@@ -55,9 +55,10 @@ public interface DeveloperService {
      * @param userId          当前开发者ID
      * @param providerName    第三方类型
      * @param providerSubject 第三方唯一标识
-     * @param portalId 门户唯一标识
+     * @param portalId        门户唯一标识
      */
     void unbindExternalIdentity(String userId, String providerName, String providerSubject, String portalId);
+
     /**
      * 注销开发者账号（删除账号及所有外部身份）
      *
@@ -65,6 +66,15 @@ public interface DeveloperService {
      */
     void deleteDeveloperAccount(String userId);
 
+    boolean hasDeveloper(String portalId, String developerId);
+
+    /**
+     * 查询开发者详情
+     *
+     * @param developerId
+     * @return
+     */
+    DeveloperResult getDeveloper(String developerId);
 
     /**
      * 查询门户下的开发者列表

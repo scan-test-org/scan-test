@@ -1,6 +1,8 @@
 package com.alibaba.apiopenplatform.repository;
 
 import com.alibaba.apiopenplatform.entity.Gateway;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -9,5 +11,7 @@ import java.util.Optional;
  */
 public interface GatewayRepository extends BaseRepository<Gateway, Long> {
 
-    Optional<Gateway> findByAdminIdAndGatewayId(String adminId, String gatewayId);
+    Optional<Gateway> findByGatewayId(String gatewayId);
+
+    Page<Gateway> findByAdminId(String adminId, Pageable pageable);
 }
