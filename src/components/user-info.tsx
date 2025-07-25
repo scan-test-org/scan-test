@@ -2,11 +2,8 @@ import { useState, useEffect } from "react";
 import { Button, Avatar, Spin } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import api from "../lib/api";
-
-function getTokenFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("token");
-}
+import { getTokenFromCookie } from "../lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface UserInfo {
   displayName: string;
@@ -16,16 +13,13 @@ interface UserInfo {
 export function UserInfo() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loadingUser, setLoadingUser] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = getTokenFromUrl();
+    const token = getTokenFromCookie();
     if (token) {
       setLoadingUser(true);
-      api.get("/oauth2/list-identities", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      api.post("/developers/list-identities")
         .then((response) => {
           const data = response.data as { displayName: string; rawInfoJson: string }[];
           if (Array.isArray(data) && data.length > 0) {
@@ -46,15 +40,13 @@ export function UserInfo() {
     }
   }, []);
 
-  const portalId = "test_portal";
-
   if (loadingUser) {
     return <Spin size="small" />;
   }
   if (userInfo) {
     return (
       <div className="flex items-center space-x-2 cursor-pointer" onClick={() => {
-        window.location.href = `/profile?portalId=${portalId}&token=${getTokenFromUrl()}`;
+        navigate('/profile');
       }}>
         <Avatar src={userInfo.avatar} icon={<UserOutlined />} size="small" />
         <span>{userInfo.displayName}</span>
@@ -66,7 +58,7 @@ export function UserInfo() {
     <Button
       icon={<UserOutlined />}
       onClick={() => {
-        window.location.href = `/login?portalId=${portalId}`;
+        navigate(`/login`);
       }}
       type="default"
     >
