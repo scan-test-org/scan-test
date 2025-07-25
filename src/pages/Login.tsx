@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Form, Input, Button, Card, Divider, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import api from "../lib/api";
@@ -56,9 +56,9 @@ const Login: React.FC = () => {
 
   // 跳转到 OIDC 授权
   const handleOidcLogin = (provider: string) => {
-    const stateRaw = `LOGIN|${portalId}|${provider}`;
+    const stateRaw = `LOGIN|${provider}`;
     const state = encodeURIComponent(stateRaw);
-    window.location.href = `${api.defaults.baseURL}/developers/authorize?portalId=${portalId}&provider=${provider}&state=${state}`;
+    window.location.href = `${api.defaults.baseURL}developers/authorize?provider=${provider}&state=${state}`;
   };
 
   return (
