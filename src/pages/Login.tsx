@@ -134,7 +134,7 @@ const Login: React.FC = () => {
                 size="large"
                 icon={oidcIcons[provider.provider.toLowerCase()] || <span>🔑</span>}
               >
-                使用{provider.displayName || provider.provider}登录
+                使用{provider.displayName || provider.provider}
               </Button>
             ))
           )}
