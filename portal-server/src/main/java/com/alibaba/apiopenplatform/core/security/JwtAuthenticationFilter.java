@@ -37,8 +37,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         String authHeader = request.getHeader("Authorization");
+        String token = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+            token = authHeader.substring(7);
+        } else if (request.getCookies() != null) {
+            for (javax.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        if (token != null) {
             if (tokenBlacklistService.isBlacklisted(token)) {
                 log.warn("Token已被列入黑名单");
                 unauthorized(response, "Token已失效");
