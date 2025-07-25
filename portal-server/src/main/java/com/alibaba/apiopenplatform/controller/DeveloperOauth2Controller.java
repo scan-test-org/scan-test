@@ -147,20 +147,23 @@ public class DeveloperOauth2Controller {
             }
         } else if (decodedState.startsWith("LOGIN|")) {
             String[] arr = decodedState.split("\\|");
-            if (arr.length >= 2) {
-                provider = arr[1]; // 始终取第二段为 provider
+            if (arr.length == 2) {
+                provider = arr[1];
+                mode = "LOGIN";
+            } else if (arr.length >= 3) {
+                provider = arr[2];
                 mode = "LOGIN";
             }
         }
-        log.info("[OIDCCallback] 解析后 portalId={}, provider={}", portalId, provider);
+        if (portalId == null || provider == null) {
+            response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("未包含portalId/provider", "UTF-8"));
+            return;
+        }
         java.util.List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
-        log.info("[OIDCCallback] 查到 PortalSetting 数量: {}", settings.size());
         OidcConfig config = null;
         for (PortalSetting setting : settings) {
-            log.info("[OIDCCallback] PortalSetting id={}, portal.id={}, oidcConfigs={}", setting.getId(), setting.getPortal() != null ? setting.getPortal().getId() : null, setting.getOidcConfigs());
             if (setting.getOidcConfigs() != null) {
                 for (OidcConfig c : setting.getOidcConfigs()) {
-                    log.info("[OIDCCallback] 检查 OIDC 配置: provider={}, enabled={}", c.getProvider(), c.isEnabled());
                     if (provider.equals(c.getProvider())) {
                         config = c;
                         break;
@@ -169,14 +172,8 @@ public class DeveloperOauth2Controller {
             }
             if (config != null) break;
         }
-        if (config == null) {
-            log.warn("[OIDCCallback] 未找到匹配的 OIDC 配置，provider={}", provider);
-        }
-        if (config != null && !config.isEnabled()) {
-            log.warn("[OIDCCallback] OIDC 配置未启用，provider={}", provider);
-        }
-        if (portalId == null || provider == null) {
-            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("未包含portalId/provider", "UTF-8"));
+        if (config == null || !config.isEnabled()) {
+            response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("OIDC配置未启用", "UTF-8"));
             return;
         }
         // --- 获取三方用户信息 ---
@@ -195,13 +192,13 @@ public class DeveloperOauth2Controller {
             displayName = nameObj != null ? String.valueOf(nameObj) : null;
             rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
         } catch (Exception e) {
-            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("获取三方用户信息失败", "UTF-8"));
+            response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("获取三方用户信息失败", "UTF-8"));
             return;
         }
         if ("BINDING".equals(mode)) {
             Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);
             if (extOpt.isPresent()) {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("该外部账号已被其他用户绑定", "UTF-8"));
+                response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("该外部账号已被其他用户绑定", "UTF-8"));
                 return;
             }
             String userId = null;
@@ -210,17 +207,17 @@ public class DeveloperOauth2Controller {
                     Map<String, Object> claims = jwtService.parseAndValidateClaims(tokenParam);
                     userId = (String) claims.get("userId");
                 } catch (Exception e) {
-                    response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("token无效或已过期", "UTF-8"));
+                    response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("token无效或已过期", "UTF-8"));
                     return;
                 }
             }
             if (userId == null || userId.isEmpty()) {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("未登录，无法绑定", "UTF-8"));
+                response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("未登录，无法绑定", "UTF-8"));
                 return;
             }
             Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
             if (!devOpt.isPresent()) {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("用户不存在", "UTF-8"));
+                response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("用户不存在", "UTF-8"));
                 return;
             }
             developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, portalId);
@@ -243,7 +240,7 @@ public class DeveloperOauth2Controller {
                 }
                 return;
             } else {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("三方登录失败", "UTF-8"));
+                response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("三方登录失败", "UTF-8"));
                 return;
             }
         }
