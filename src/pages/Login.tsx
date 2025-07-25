@@ -21,17 +21,16 @@ const oidcIcons: Record<string, React.ReactNode> = {
 const Login: React.FC = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(false);
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const portalId = searchParams.get("portalId") || "";
+  // const location = useLocation();
+  // const searchParams = new URLSearchParams(location.search);
+  // const portalId = searchParams.get("portalId") || "";
 
   useEffect(() => {
-    if (!portalId) return;
     api
-      .post("/developers/providers", { portalId })
+      .post("/developers/providers")
       .then((res: { data?: Provider[] }) => setProviders(res.data || []))
       .catch(() => setProviders([]));
-  }, [portalId]);
+  }, []);
 
   // 账号密码登录
   const handlePasswordLogin = async (values: { username: string; password: string }) => {
