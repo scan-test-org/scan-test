@@ -73,8 +73,9 @@ public class DeveloperOauth2Controller {
      * OIDC授权入口，支持多配置
      * @param provider OIDC provider 名（如 github、google、aliyun、自定义）
      * @param state 前端生成的state参数
+     * @note portalId 已自动根据域名识别，无需传递
      */
-    @Operation(summary = "OIDC授权入口", description = "前端需拼接state参数，格式为：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。")
+    @Operation(summary = "OIDC授权入口", description = "前端需拼接state参数，格式为：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。portalId已自动根据域名识别，无需传递。整体encodeURIComponent。")
     @GetMapping("/authorize")
     public void universalAuthorize(@RequestParam String provider, @RequestParam String state, HttpServletResponse response) throws IOException {
         String portalId = contextHolder.getPortal();
@@ -118,8 +119,9 @@ public class DeveloperOauth2Controller {
      *   String portalId = arr[2];
      *   String provider = arr[3];
      *   String token = arr.length > 4 ? arr[4] : null;
+     * @note portalId 已自动根据域名识别，无需传递
      */
-    @Operation(summary = "OIDC统一回调", description = "state 推荐格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。")
+    @Operation(summary = "OIDC统一回调", description = "state 推荐格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。portalId已自动根据域名识别，无需传递。整体encodeURIComponent。")
     @GetMapping("/callback")
     public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletResponse response) throws IOException {
         log.info("[OIDCCallback] code={}, state={}", code, state);
@@ -184,8 +186,9 @@ public class DeveloperOauth2Controller {
 
     /**
      * OIDC code 换取 token 标准接口
+     * @note portalId 已自动根据域名识别，无需传递
      */
-    @Operation(summary = "OIDC code换token", description = "前端回调页用code和state换取JWT token，token只在响应体返回")
+    @Operation(summary = "OIDC code换token", description = "前端回调页用code和state换取JWT token，token只在响应体返回。portalId已自动根据域名识别，无需传递。")
     @PostMapping("/token")
     public Map<String, Object> exchangeCodeForToken(@RequestBody OidcTokenRequestParam param) {
         String portalId = contextHolder.getPortal();
@@ -313,8 +316,9 @@ public class DeveloperOauth2Controller {
 
     /**
      * 查询指定门户下所有已启用的 OIDC provider
+     * @note portalId 已自动根据域名识别，无需传递
      */
-    @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮")
+    @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮。portalId已自动根据域名识别，无需传递。")
     @PostMapping("/providers")
     public List<Map<String, Object>> listOidcProviders() {
         String portalId = contextHolder.getPortal();
