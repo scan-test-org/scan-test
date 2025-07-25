@@ -29,7 +29,21 @@ public class PortalResolvingFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain chain)
             throws ServletException, IOException {
         try {
-            String domain = request.getServerName();
+            String origin = request.getHeader("Origin");
+            String domain = null;
+            if (origin != null) {
+                try {
+                    java.net.URI uri = new java.net.URI(origin);
+                    domain = uri.getHost();
+                } catch (Exception e) {
+                    // 解析失败时可降级处理
+                    domain = null;
+                }
+            }
+            if (domain == null) {
+                // 降级处理，比如用 getServerName()
+                domain = request.getServerName();
+            }
             String portalId = portalService.resolvePortal(domain);
 
             if (StrUtil.isNotBlank(portalId)) {
