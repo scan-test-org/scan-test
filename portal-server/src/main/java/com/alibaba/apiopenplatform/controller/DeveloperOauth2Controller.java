@@ -139,22 +139,19 @@ public class DeveloperOauth2Controller {
             }
         }
         if (decodedState.startsWith("BINDING|")) {
-            // BINDING|随机串|portalId|provider|token
             String[] arr = decodedState.split("\\|");
             if (arr.length >= 5) {
-                final String parsedPortalId = arr[2];
-                final String parsedProvider = arr[3];
-                provider = parsedProvider;
+                provider = arr[3];
                 token = arr[4];
                 mode = "BINDING";
             }
         } else if (decodedState.startsWith("LOGIN|")) {
-            // LOGIN|portalId|provider
             String[] arr = decodedState.split("\\|");
-            if (arr.length >= 3) {
-                final String parsedPortalId = arr[1];
-                final String parsedProvider = arr[2];
-                provider = parsedProvider;
+            if (arr.length == 2) {
+                provider = arr[1];
+                mode = "LOGIN";
+            } else if (arr.length >= 3) {
+                provider = arr[2];
                 mode = "LOGIN";
             }
         }
@@ -192,7 +189,6 @@ public class DeveloperOauth2Controller {
     @PostMapping("/token")
     public Map<String, Object> exchangeCodeForToken(@RequestBody OidcTokenRequestParam param) {
         String portalId = contextHolder.getPortal();
-        // 解析state，获取portalId、provider等
         String decodedState;
         try {
             decodedState = java.net.URLDecoder.decode(param.getState(), "UTF-8");
@@ -211,7 +207,10 @@ public class DeveloperOauth2Controller {
             }
         } else if (decodedState.startsWith("LOGIN|")) {
             String[] arr = decodedState.split("\\|");
-            if (arr.length >= 3) {
+            if (arr.length == 2) {
+                provider = arr[1];
+                mode = "LOGIN";
+            } else if (arr.length >= 3) {
                 provider = arr[2];
                 mode = "LOGIN";
             }
