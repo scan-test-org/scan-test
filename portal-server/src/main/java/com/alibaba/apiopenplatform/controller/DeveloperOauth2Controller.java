@@ -45,7 +45,7 @@ import java.net.URLDecoder;
 import com.alibaba.apiopenplatform.dto.params.developer.OidcTokenRequestParam;
 import com.alibaba.apiopenplatform.dto.params.developer.OidcProvidersRequestParam;
 import com.alibaba.apiopenplatform.dto.params.developer.ListIdentitiesRequestParam;
-
+import com.alibaba.apiopenplatform.core.security.ContextHolder;
 
 /**
  * 开发者 OAuth2 统一回调与外部身份绑定控制器
@@ -66,6 +66,7 @@ public class DeveloperOauth2Controller {
     private final PortalSettingRepository portalSettingRepository;
     private final RestTemplate restTemplate = new RestTemplate();
     private final JwtService jwtService;
+    private final ContextHolder contextHolder;
 
     /**
      * OIDC授权入口，支持多配置
@@ -319,8 +320,12 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮")
     @PostMapping("/providers")
-    public List<Map<String, Object>> listOidcProviders(@RequestBody OidcProvidersRequestParam param) {
-        List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(param.getPortalId());
+    public List<Map<String, Object>> listOidcProviders() {
+        String portalId = contextHolder.getPortal();
+        if (portalId == null || portalId.isEmpty()) {
+            throw new RuntimeException("该域名未被绑定或未注册到管理后台，请联系管理员或检查域名配置。");
+        }
+        List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (PortalSetting setting : settings) {
             if (setting.getOidcConfigs() != null) {
