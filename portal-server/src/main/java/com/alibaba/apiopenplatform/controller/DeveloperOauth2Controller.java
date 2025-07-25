@@ -46,6 +46,7 @@ import com.alibaba.apiopenplatform.dto.params.developer.OidcTokenRequestParam;
 import com.alibaba.apiopenplatform.dto.params.developer.OidcProvidersRequestParam;
 import com.alibaba.apiopenplatform.dto.params.developer.ListIdentitiesRequestParam;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
+import javax.servlet.http.Cookie;
 
 
 /**
@@ -127,10 +128,9 @@ public class DeveloperOauth2Controller {
         log.info("[OIDCCallback] code={}, state={}", code, state);
         String portalId = contextHolder.getPortal();
         String provider = null;
-        String token = null;
+        String tokenParam = null;
         String mode = null;
         String frontendRedirectUrl = null;
-        // 解析state，支持带frontendRedirectUrl
         String decodedState = URLDecoder.decode(state, "UTF-8");
         String[] stateParts = decodedState.split("\\|");
         for (String part : stateParts) {
@@ -142,7 +142,7 @@ public class DeveloperOauth2Controller {
             String[] arr = decodedState.split("\\|");
             if (arr.length >= 5) {
                 provider = arr[3];
-                token = arr[4];
+                tokenParam = arr[4];
                 mode = "BINDING";
             }
         } else if (decodedState.startsWith("LOGIN|")) {
@@ -156,29 +156,94 @@ public class DeveloperOauth2Controller {
             }
         }
         if (portalId == null || provider == null) {
-            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("未包含portalId/provider", "UTF-8"));
+            response.sendRedirect("/?login=fail&msg=未包含portalId/provider");
             return;
         }
-        // --- 只重定向到前端回调页，带 code 和 state，不带 token ---
-        String redirectUrl = frontendRedirectUrl;
         java.util.List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
-        if (redirectUrl == null || redirectUrl.isEmpty()) {
-            for (PortalSetting s : settings) {
-                if (s.getFrontendRedirectUrl() != null && !s.getFrontendRedirectUrl().isEmpty()) {
-                    redirectUrl = s.getFrontendRedirectUrl();
-                    break;
+        OidcConfig config = null;
+        for (PortalSetting setting : settings) {
+            if (setting.getOidcConfigs() != null) {
+                for (OidcConfig c : setting.getOidcConfigs()) {
+                    if (provider.equals(c.getProvider())) {
+                        config = c;
+                        break;
+                    }
                 }
             }
+            if (config != null) break;
         }
-        if (redirectUrl == null || redirectUrl.isEmpty()) {
-            redirectUrl = "http://localhost:5173/callback";
+        if (config == null || !config.isEnabled()) {
+            response.sendRedirect("/?login=fail&msg=OIDC配置未启用");
+            return;
         }
-        if (!redirectUrl.contains("?")) {
-            redirectUrl += "?code=" + URLEncoder.encode(code, "UTF-8") + "&state=" + URLEncoder.encode(state, "UTF-8");
+        // --- 获取三方用户信息 ---
+        String providerSubject = null;
+        String displayName = null;
+        String rawInfoJson = null;
+        Map<String, Object> userInfoMap;
+        try {
+            userInfoMap = fetchUserInfoMap(code, config);
+            Object idObj = userInfoMap.get("sub");
+            if (idObj == null) idObj = userInfoMap.get("id");
+            providerSubject = idObj != null ? String.valueOf(idObj) : null;
+            Object nameObj = userInfoMap.get("name");
+            if (nameObj == null) nameObj = userInfoMap.get("username");
+            if (nameObj == null) nameObj = userInfoMap.get("login");
+            displayName = nameObj != null ? String.valueOf(nameObj) : null;
+            rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
+        } catch (Exception e) {
+            response.sendRedirect("/?login=fail&msg=获取三方用户信息失败");
+            return;
+        }
+        if ("BINDING".equals(mode)) {
+            Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);
+            if (extOpt.isPresent()) {
+                response.sendRedirect("/?login=fail&msg=该外部账号已被其他用户绑定");
+                return;
+            }
+            String userId = null;
+            if (tokenParam != null) {
+                try {
+                    Map<String, Object> claims = jwtService.parseAndValidateClaims(tokenParam);
+                    userId = (String) claims.get("userId");
+                } catch (Exception e) {
+                    response.sendRedirect("/?login=fail&msg=token无效或已过期");
+                    return;
+                }
+            }
+            if (userId == null || userId.isEmpty()) {
+                response.sendRedirect("/?login=fail&msg=未登录，无法绑定");
+                return;
+            }
+            Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
+            if (!devOpt.isPresent()) {
+                response.sendRedirect("/?login=fail&msg=用户不存在");
+                return;
+            }
+            developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, portalId);
+            response.sendRedirect("/settings/account?bind=success");
+            return;
         } else {
-            redirectUrl += "&code=" + URLEncoder.encode(code, "UTF-8") + "&state=" + URLEncoder.encode(state, "UTF-8");
+            Optional<AuthResponseResult> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
+            if (loginResult.isPresent()) {
+                String token = loginResult.get().getToken();
+                // 设置到 cookie（非 HttpOnly）
+                Cookie cookie = new Cookie("token", token);
+                cookie.setPath("/");
+                cookie.setMaxAge(3600); // 1小时
+                response.addCookie(cookie);
+                // 跳转到前端首页或指定页面
+                if (frontendRedirectUrl != null) {
+                    response.sendRedirect(frontendRedirectUrl);
+                } else {
+                    response.sendRedirect("/");
+                }
+                return;
+            } else {
+                response.sendRedirect("/?login=fail&msg=三方登录失败");
+                return;
+            }
         }
-        response.sendRedirect(redirectUrl);
     }
 
     /**
@@ -187,7 +252,7 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "OIDC code换token", description = "前端回调页用code和state换取JWT token，token只在响应体返回。portalId已自动根据域名识别，无需传递。")
     @PostMapping("/token")
-    public Map<String, Object> exchangeCodeForToken(@RequestBody OidcTokenRequestParam param) {
+    public Map<String, Object> exchangeCodeForToken(@RequestBody OidcTokenRequestParam param, HttpServletResponse response) {
         String portalId = contextHolder.getPortal();
         String decodedState;
         try {
@@ -253,12 +318,10 @@ public class DeveloperOauth2Controller {
             throw new RuntimeException("获取三方用户信息失败: " + e.getMessage());
         }
         if ("BINDING".equals(mode)) {
-            // 绑定流程
             Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);
             if (extOpt.isPresent()) {
                 throw new RuntimeException("该外部账号已被其他用户绑定");
             }
-            // 通过 token 识别当前用户
             String userId = null;
             if (tokenParam != null) {
                 try {
@@ -278,10 +341,15 @@ public class DeveloperOauth2Controller {
             developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, portalId);
             return Collections.singletonMap("result", "success");
         } else {
-            // 登录流程
             Optional<AuthResponseResult> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
-                return Collections.singletonMap("token", loginResult.get().getToken());
+                String token = loginResult.get().getToken();
+                // 设置到 cookie（非 HttpOnly）
+                Cookie cookie = new Cookie("token", token);
+                cookie.setPath("/");
+                cookie.setMaxAge(3600); // 1小时
+                response.addCookie(cookie);
+                return Collections.singletonMap("token", token);
             } else {
                 throw new RuntimeException("三方登录失败");
             }
