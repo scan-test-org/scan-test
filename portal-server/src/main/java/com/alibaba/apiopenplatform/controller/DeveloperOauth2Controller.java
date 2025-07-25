@@ -45,6 +45,7 @@ import java.net.URLDecoder;
 import com.alibaba.apiopenplatform.dto.params.developer.OidcTokenRequestParam;
 import com.alibaba.apiopenplatform.dto.params.developer.OidcProvidersRequestParam;
 import com.alibaba.apiopenplatform.dto.params.developer.ListIdentitiesRequestParam;
+import com.alibaba.apiopenplatform.core.security.ContextHolder;
 
 
 /**
@@ -66,16 +67,17 @@ public class DeveloperOauth2Controller {
     private final PortalSettingRepository portalSettingRepository;
     private final RestTemplate restTemplate = new RestTemplate();
     private final JwtService jwtService;
+    private final ContextHolder contextHolder;
 
     /**
      * OIDC授权入口，支持多配置
-     * @param portalId 门户唯一标识
      * @param provider OIDC provider 名（如 github、google、aliyun、自定义）
      * @param state 前端生成的state参数
      */
     @Operation(summary = "OIDC授权入口", description = "前端需拼接state参数，格式为：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。整体encodeURIComponent。")
     @GetMapping("/authorize")
-    public void universalAuthorize(@RequestParam String portalId, @RequestParam String provider, @RequestParam String state, HttpServletResponse response) throws IOException {
+    public void universalAuthorize(@RequestParam String provider, @RequestParam String state, HttpServletResponse response) throws IOException {
+        String portalId = contextHolder.getPortal();
         // 不再支持 frontendRedirectUrl 参数，统一从 PortalSetting 读取
         String newState = state;
         java.util.List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
@@ -121,14 +123,13 @@ public class DeveloperOauth2Controller {
     @GetMapping("/callback")
     public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletResponse response) throws IOException {
         log.info("[OIDCCallback] code={}, state={}", code, state);
-        // 先 URL 解码
-        String decodedState = URLDecoder.decode(state, "UTF-8");
-        String portalId = null;
+        String portalId = contextHolder.getPortal();
         String provider = null;
         String token = null;
         String mode = null;
         String frontendRedirectUrl = null;
         // 解析state，支持带frontendRedirectUrl
+        String decodedState = URLDecoder.decode(state, "UTF-8");
         String[] stateParts = decodedState.split("\\|");
         for (String part : stateParts) {
             if (part.startsWith("FRONTENDURL=")) {
@@ -141,7 +142,6 @@ public class DeveloperOauth2Controller {
             if (arr.length >= 5) {
                 final String parsedPortalId = arr[2];
                 final String parsedProvider = arr[3];
-                portalId = parsedPortalId;
                 provider = parsedProvider;
                 token = arr[4];
                 mode = "BINDING";
@@ -152,13 +152,12 @@ public class DeveloperOauth2Controller {
             if (arr.length >= 3) {
                 final String parsedPortalId = arr[1];
                 final String parsedProvider = arr[2];
-                portalId = parsedPortalId;
                 provider = parsedProvider;
                 mode = "LOGIN";
             }
         }
         if (portalId == null || provider == null) {
-            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("state参数错误，未包含portalId/provider", "UTF-8"));
+            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("未包含portalId/provider", "UTF-8"));
             return;
         }
         // --- 只重定向到前端回调页，带 code 和 state，不带 token ---
@@ -189,6 +188,7 @@ public class DeveloperOauth2Controller {
     @Operation(summary = "OIDC code换token", description = "前端回调页用code和state换取JWT token，token只在响应体返回")
     @PostMapping("/token")
     public Map<String, Object> exchangeCodeForToken(@RequestBody OidcTokenRequestParam param) {
+        String portalId = contextHolder.getPortal();
         // 解析state，获取portalId、provider等
         String decodedState;
         try {
@@ -196,14 +196,12 @@ public class DeveloperOauth2Controller {
         } catch (java.io.UnsupportedEncodingException e) {
             throw new RuntimeException("state参数解码失败: " + e.getMessage());
         }
-        String portalId = null;
         String provider = null;
         String mode = null;
         String tokenParam = null;
         if (decodedState.startsWith("BINDING|")) {
             String[] arr = decodedState.split("\\|");
             if (arr.length >= 5) {
-                portalId = arr[2];
                 provider = arr[3];
                 tokenParam = arr[4];
                 mode = "BINDING";
@@ -211,13 +209,12 @@ public class DeveloperOauth2Controller {
         } else if (decodedState.startsWith("LOGIN|")) {
             String[] arr = decodedState.split("\\|");
             if (arr.length >= 3) {
-                portalId = arr[1];
                 provider = arr[2];
                 mode = "LOGIN";
             }
         }
         if (portalId == null || provider == null) {
-            throw new RuntimeException("state参数错误，未包含portalId/provider");
+            throw new RuntimeException("未包含portalId/provider");
         }
         java.util.List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
         OidcConfig config = null;
@@ -319,8 +316,9 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮")
     @PostMapping("/providers")
-    public List<Map<String, Object>> listOidcProviders(@RequestBody OidcProvidersRequestParam param) {
-        List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(param.getPortalId());
+    public List<Map<String, Object>> listOidcProviders() {
+        String portalId = contextHolder.getPortal();
+        List<PortalSetting> settings = portalSettingRepository.findByPortal_PortalId(portalId);
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (PortalSetting setting : settings) {
             if (setting.getOidcConfigs() != null) {

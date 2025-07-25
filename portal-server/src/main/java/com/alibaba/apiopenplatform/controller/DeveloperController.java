@@ -8,6 +8,7 @@ import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
+import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ import com.alibaba.apiopenplatform.dto.params.developer.DeveloperStatusParam;
 public class DeveloperController {
     private final DeveloperService developerService;
     private final TokenBlacklistService tokenBlacklistService;
+    private final ContextHolder contextHolder;
 
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
@@ -77,7 +79,8 @@ public class DeveloperController {
     @DeleteMapping("/{developerId}/external-identity")
     public void unbindExternalIdentity(@PathVariable("developerId") String developerId,
                                        @RequestBody UnbindExternalIdentityParam param) {
-        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject(), param.getPortalId());
+        String portalId = contextHolder.getPortal();
+        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject(), portalId);
     }
 
     @Operation(summary = "注销账号", description = "注销当前登录用户账号")
@@ -88,8 +91,8 @@ public class DeveloperController {
 
     @Operation(summary = "获取门户的开发者列表")
     @GetMapping
-    public PageResult<DeveloperResult> listDevelopers(@RequestParam String portalId,
-                                        @PageableDefault(sort = "gmtCreate", direction = Sort.Direction.DESC) Pageable pageable) {
+    public PageResult<DeveloperResult> listDevelopers(@PageableDefault(sort = "gmtCreate", direction = Sort.Direction.DESC) Pageable pageable) {
+        String portalId = contextHolder.getPortal();
         return developerService.listDevelopers(portalId, pageable);
     }
 
@@ -97,6 +100,7 @@ public class DeveloperController {
     @PatchMapping("/{developerId}/status")
     public void setDeveloperStatus(@PathVariable("developerId") String developerId,
                                    @RequestBody DeveloperStatusParam param) {
-        developerService.setDeveloperStatus(param.getPortalId(), developerId, param.getStatus());
+        String portalId = contextHolder.getPortal();
+        developerService.setDeveloperStatus(portalId, developerId, param.getStatus());
     }
 }
