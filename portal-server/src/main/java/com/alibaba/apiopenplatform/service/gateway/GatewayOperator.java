@@ -31,7 +31,7 @@ public abstract class GatewayOperator<T> {
 
     abstract public String fetchAPISpec(Gateway gateway, String apiId);
 
-    abstract public String fetchMcpSpec(Gateway gateway, String apiId, String routeId, String name);
+    abstract public String fetchMcpSpec(Gateway gateway, String apiId, String routeIdentifier, String name);
 
     abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
 

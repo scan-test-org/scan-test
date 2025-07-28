@@ -91,17 +91,5 @@ public class ProductController {
         productService.deleteProductRef(productId);
     }
 
-    /**
-     * 上架MCP Server为Product
-     */
-    @PostMapping("/mcp-server")
-    public ResponseEntity<?> addMcpServerProduct(@RequestBody com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam param) {
-        // 校验必填字段
-        if (param == null || param.getId() == null || param.getName() == null) {
-            // 字段缺失，返回200和空对象
-            return ResponseEntity.ok().build();
-        }
-        ProductResult result = productService.addMcpServerProduct(param);
-        return ResponseEntity.ok(result);
-    }
+
 }

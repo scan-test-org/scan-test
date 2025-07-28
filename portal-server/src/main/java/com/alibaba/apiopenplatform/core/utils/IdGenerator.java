@@ -25,6 +25,7 @@ public class IdGenerator {
     private static final String API_PRODUCT_PREFIX = "product-";
     private static final String DEVELOPER_PREFIX = "dev-";
     private static final String ADMINISTRATOR_PREFIX = "admin-";
+    private static final String NACOS_PREFIX = "nacos-";
 
     public static String genPortalId() {
         return PORTAL_PREFIX + ObjectId.next();
@@ -40,6 +41,10 @@ public class IdGenerator {
 
     public static String genAdministratorId() {
         return ADMINISTRATOR_PREFIX + ObjectId.next();
+    }
+
+    public static String genNacosId() {
+        return NACOS_PREFIX + ObjectId.next();
     }
 
     public static String genIdWithPrefix(String prefix) {
