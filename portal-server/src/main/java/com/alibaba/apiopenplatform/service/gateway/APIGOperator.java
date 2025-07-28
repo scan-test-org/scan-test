@@ -1,22 +1,18 @@
 package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.core.codec.Base64;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
-import com.alibaba.apiopenplatform.dto.result.GatewayResult;
+import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
-import com.alibaba.apiopenplatform.dto.result.APIResult;
-import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
-import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.aliyun.sdk.service.apig20240327.models.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@Primary
 public class APIGOperator extends GatewayOperator<APIGClient> {
 
     @Override
@@ -42,7 +39,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public PageResult<MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+    public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
     }
 
@@ -76,7 +73,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId) {
+    public String fetchMcpSpec(Gateway gateway, String apiId, String routeIdentifier) {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
     }
 

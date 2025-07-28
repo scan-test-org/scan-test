@@ -36,4 +36,8 @@ public enum GatewayType {
     public boolean isAPIG() {
         return this == APIG_API || this == APIG_AI;
     }
+
+    public boolean isAIGateway() {
+        return this == APIG_AI;
+    }
 }

@@ -190,11 +190,6 @@ public class ProductServiceImpl implements ProductService {
                     throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT_REF, product.getProductId());
                 });
 
-        APIResult api = gatewayService.fetchAPI(param.getGatewayId(), param.getApiId());
-        if (StrUtil.equalsIgnoreCase(api.getType(), product.getType().name())) {
-            throw new BusinessException(ErrorCode.PRODUCT_TYPE_NOT_MATCH, product.getProductId());
-        }
-
         ProductRef productRef = param.convertTo();
         productRefRepository.save(productRef);
     }

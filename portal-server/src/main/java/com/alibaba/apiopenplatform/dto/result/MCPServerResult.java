@@ -1,18 +1,14 @@
 package com.alibaba.apiopenplatform.dto.result;
 
-import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
-import com.aliyun.sdk.service.apig20240327.models.HttpRoute;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author zh
  */
 @Data
-public class MCPServerResult implements OutputConverter<MCPServerResult, HttpRoute> {
+public class MCPServerResult {
 
-    private String apiId;
-
-    private String routeId;
-
-    private String name;
+    protected String name;
 }
