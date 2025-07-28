@@ -38,17 +38,9 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     private final GatewayRepository gatewayRepository;
 
-//    private final APIGOperator apigOperator;
-//
-//    private final AIGatewayOperator aiGatewayOperator;
-
     private Map<GatewayType, GatewayOperator> gatewayOperators;
 
     public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable) {
-
-//        return param.getGatewayType().isAIGateway() ?
-//                aiGatewayOperator.fetchGateways(param, pageable) : apigOperator.fetchGateways(param, pageable);
-
         return gatewayOperators.get(param.getGatewayType()).fetchGateways(param, pageable);
     }
 
@@ -130,9 +122,9 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public String fetchMcpSpec(String gatewayId, String apiId, String routeIdentifier) {
+    public String fetchMcpSpec(String gatewayId, String apiId, String routeId, String name) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchMcpSpec(gateway, apiId, routeIdentifier);
+        return getOperator(gateway).fetchMcpSpec(gateway, apiId, routeId, name);
     }
 
     @Override

@@ -20,7 +20,7 @@ public class ProductResult implements OutputConverter<ProductResult, Product> {
 
     private ProductStatus status;
 
-    private String enableConsumerAuth;
+    private Boolean enableConsumerAuth;
 
     private ProductType type;
 

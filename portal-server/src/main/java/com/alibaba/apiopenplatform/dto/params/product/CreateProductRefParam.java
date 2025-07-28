@@ -11,6 +11,7 @@ import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author zh
@@ -23,7 +24,7 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
     @NotBlank(message = "网关ID不能为空")
     private String gatewayId;
 
-    private List<String> routes;
+    private List<RouteOption> routes;
 
     @NotNull(message = "API产品类型不能为空")
     private ProductType type;
@@ -36,4 +37,11 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
             return StrUtil.isNotBlank(apiId);
         }
     }
-} 
+
+    @Override
+    public ProductRef convertTo() {
+        ProductRef productRef = InputConverter.super.convertTo();
+        productRef.setRoutes(routes.stream().map(RouteOption::convertTo).collect(Collectors.toList()));
+        return productRef;
+    }
+}

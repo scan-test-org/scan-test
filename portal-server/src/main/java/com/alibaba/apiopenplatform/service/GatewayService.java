@@ -62,7 +62,7 @@ public interface GatewayService {
 
     String fetchAPISpec(String gatewayId, String apiId);
 
-    String fetchMcpSpec(String gatewayId, String apiId, String routeIdentifier);
+    String fetchMcpSpec(String gatewayId, String apiId, String routeId, String name);
 
     void createConsumer(Consumer consumer);
 

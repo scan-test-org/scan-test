@@ -19,6 +19,7 @@ import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.service.ProductService;
 import com.alibaba.apiopenplatform.support.enums.ProductStatus;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
+import com.alibaba.apiopenplatform.support.product.RouteConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -211,7 +212,8 @@ public class ProductServiceImpl implements ProductService {
                             String apiSpec = gatewayService.fetchAPISpec(productRef.getGatewayId(), productRef.getApiId());
                             product.setApiSpec(apiSpec);
                         } else {
-                            String mcpSpec = gatewayService.fetchMcpSpec(productRef.getGatewayId(), productRef.getApiId(), productRef.getRoutes().get(0));
+                            RouteConfig routeConfig = productRef.getRoutes().get(0);
+                            String mcpSpec = gatewayService.fetchMcpSpec(productRef.getGatewayId(), productRef.getApiId(), routeConfig.getRouteId(), routeConfig.getName());
                             product.setMcpSpec(mcpSpec);
                         }
                         product.setStatus(ProductStatus.ENABLE);

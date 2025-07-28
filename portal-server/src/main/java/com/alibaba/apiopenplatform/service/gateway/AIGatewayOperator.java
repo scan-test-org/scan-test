@@ -48,8 +48,8 @@ public class AIGatewayOperator extends APIGOperator {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeIdentifier) {
-        HttpRoute httpRoute = fetchHTTPRoute(gateway, apiId, routeIdentifier);
+    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId, String name) {
+        HttpRoute httpRoute = fetchHTTPRoute(gateway, apiId, routeId);
 
         APIGMCPServerResult mcpServerResult = new APIGMCPServerResult().convertFrom(httpRoute);
         return JSONUtil.toJsonStr(mcpServerResult);
