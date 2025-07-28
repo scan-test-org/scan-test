@@ -1,4 +1,4 @@
-import { Card, Row, Col, Statistic, Progress, Tag, Table } from 'antd'
+import { Card, Row, Col, Statistic, Progress, Tag, Table, Tooltip } from 'antd'
 import { 
   EyeOutlined, 
   UserOutlined, 
@@ -213,7 +213,11 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
                   </div>
                   <div>
                     <span className="text-gray-600">Client ID:</span>
-                    <span className="ml-2 font-medium">{config.clientId}</span>
+                    <span className="ml-2 font-medium" style={{ maxWidth: 280, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'bottom', whiteSpace: 'nowrap' }}>
+                      <Tooltip title={config.clientId} placement="top" color="#000">
+                        {config.clientId}
+                      </Tooltip>
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-600">授权范围:</span>
