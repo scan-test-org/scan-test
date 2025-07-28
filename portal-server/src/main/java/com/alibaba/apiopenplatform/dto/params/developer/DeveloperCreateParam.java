@@ -23,9 +23,6 @@ public class DeveloperCreateParam implements InputConverter<Developer> {
     @Size(min = 6, max = 32, message = "密码长度应为6-32位")
     private String password;
 
-    @Size(max = 64, message = "portalId长度不能超过64个字符")
-    private String portalId;
-
     @Size(max = 256, message = "头像url长度不能超过256个字符")
     private String avatarUrl;
 } 
