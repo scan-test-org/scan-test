@@ -8,10 +8,22 @@ const api: AxiosInstance = axios.create({
   },
 })
 
+// 获取cookie中的token
+const getTokenFromCookie = (): string | null => {
+  const cookies = document.cookie.split(';')
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=')
+    if (name === 'token') {
+      return value
+    }
+  }
+  return null
+}
+
 // 请求拦截器
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('token')
+    const token = getTokenFromCookie()
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -22,6 +34,11 @@ api.interceptors.request.use(
   }
 )
 
+// 删除cookie中的token
+const removeTokenFromCookie = (): void => {
+  document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+}
+
 // 响应拦截器
 api.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -29,11 +46,28 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
+      removeTokenFromCookie()
       window.location.href = '/login'
     }
     return Promise.reject(error)
   }
 )
 
-export default api 
+export default api
+
+// Portal相关API
+export const portalApi = {
+  // 获取portal详情
+  getPortalDetail: (portalId: string) => {
+    return api.get(`/portals/${portalId}`)
+  },
+  // 绑定域名
+  bindDomain: (portalId: string, domainData: { domain: string; protocol: string; type: string }) => {
+    return api.post(`/portals/${portalId}/domains`, domainData)
+  },
+  // 解绑域名
+  unbindDomain: (portalId: string, domain: string) => {
+    const encodedDomain = encodeURIComponent(domain)
+    return api.delete(`/portals/${portalId}/domains/${encodedDomain}`)
+  }
+} 

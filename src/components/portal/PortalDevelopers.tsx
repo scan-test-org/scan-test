@@ -1,20 +1,7 @@
 import { Card, Table, Badge, Button, Space, Avatar, Tag, Input } from 'antd'
 import { SearchOutlined, UserAddOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useState } from 'react'
-
-interface Portal {
-  id: string
-  name: string
-  title: string
-  description: string
-  url: string
-  userAuth: string
-  rbac: string
-  authStrategy: string
-  apiVisibility: string
-  pageVisibility: string
-  logo?: string
-}
+import { Portal } from '@/types'
 
 interface PortalDevelopersProps {
   portal: Portal

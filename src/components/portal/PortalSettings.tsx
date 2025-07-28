@@ -1,28 +1,20 @@
-import { Card, Form, Input, Select, Switch, Button, Divider, Space, Tag } from 'antd'
-import { SaveOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Card, Form, Input, Select, Switch, Button, Divider, Space, Tag, Table, Modal, message } from 'antd'
+import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useState } from 'react'
-
-interface Portal {
-  id: string
-  name: string
-  title: string
-  description: string
-  url: string
-  userAuth: string
-  rbac: string
-  authStrategy: string
-  apiVisibility: string
-  pageVisibility: string
-  logo?: string
-}
+import { Portal } from '@/types'
+import { portalApi } from '@/lib/api'
 
 interface PortalSettingsProps {
   portal: Portal
+  onRefresh?: () => void
 }
 
-export function PortalSettings({ portal }: PortalSettingsProps) {
+export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
+  const [domainModalVisible, setDomainModalVisible] = useState(false)
+  const [domainForm] = Form.useForm()
+  const [domainLoading, setDomainLoading] = useState(false)
 
   const handleSave = async () => {
     setLoading(true)
@@ -41,6 +33,90 @@ export function PortalSettings({ portal }: PortalSettingsProps) {
   const handleReset = () => {
     form.resetFields()
   }
+
+  // 域名管理相关函数
+  const handleAddDomain = () => {
+    setDomainModalVisible(true)
+    domainForm.resetFields()
+  }
+
+  const handleDomainModalOk = async () => {
+    try {
+      setDomainLoading(true)
+      const values = await domainForm.validateFields()
+      await portalApi.bindDomain(portal.portalId, {
+        domain: values.domain,
+        protocol: values.protocol,
+        type: 'CUSTOM'
+      })
+      message.success('域名绑定成功')
+      setDomainModalVisible(false)
+      onRefresh?.()
+    } catch (error) {
+      console.error('绑定域名失败:', error)
+      message.error('绑定域名失败')
+    } finally {
+      setDomainLoading(false)
+    }
+  }
+
+  const handleDomainModalCancel = () => {
+    setDomainModalVisible(false)
+    domainForm.resetFields()
+  }
+
+  const handleDeleteDomain = async (domain: string) => {
+    try {
+      await portalApi.unbindDomain(portal.portalId, domain)
+      message.success('域名解绑成功')
+      onRefresh?.()
+    } catch (error) {
+      console.error('解绑域名失败:', error)
+      message.error('解绑域名失败')
+    }
+  }
+
+  // 域名表格列定义
+  const domainColumns = [
+    {
+      title: '域名',
+      dataIndex: 'domain',
+      key: 'domain',
+    },
+    {
+      title: '协议',
+      dataIndex: 'protocol',
+      key: 'protocol',
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
+      render: (type: string) => (
+        <Tag color={type === 'DEFAULT' ? 'blue' : 'green'}>
+          {type === 'DEFAULT' ? '默认域名' : '自定义域名'}
+        </Tag>
+      )
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_, record: any) => (
+        <Space>
+          {record.type === 'CUSTOM' && (
+            <Button 
+              type="link" 
+              danger 
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteDomain(record.domain)}
+            >
+              解绑
+            </Button>
+          )}
+        </Space>
+      )
+    }
+  ]
 
   return (
     <div className="p-6 space-y-6">
@@ -66,12 +142,12 @@ export function PortalSettings({ portal }: PortalSettingsProps) {
           name: portal.name,
           title: portal.title,
           description: portal.description,
-          url: portal.url,
-          userAuth: portal.userAuth,
-          rbac: portal.rbac,
-          authStrategy: portal.authStrategy,
-          apiVisibility: portal.apiVisibility,
-          pageVisibility: portal.pageVisibility,
+          domain: portal.portalDomainConfig[0]?.domain || '',
+          builtinAuthEnabled: portal.portalSettingConfig.builtinAuthEnabled,
+          oidcAuthEnabled: portal.portalSettingConfig.oidcAuthEnabled,
+          autoApproveDevelopers: portal.portalSettingConfig.autoApproveDevelopers,
+          autoApproveSubscriptions: portal.portalSettingConfig.autoApproveSubscriptions,
+          frontendRedirectUrl: portal.portalSettingConfig.frontendRedirectUrl,
           enableAnalytics: true,
           enableNotifications: true,
           enableAuditLog: true,
@@ -86,14 +162,14 @@ export function PortalSettings({ portal }: PortalSettingsProps) {
           <div className="grid grid-cols-2 gap-6">
             <Form.Item
               name="name"
-              label="Portal ID"
+              label="名称"
               rules={[{ required: true, message: '请输入Portal ID' }]}
             >
               <Input placeholder="请输入Portal ID" />
             </Form.Item>
             <Form.Item
               name="title"
-              label="Portal标题"
+              label="标题"
               rules={[{ required: true, message: '请输入Portal标题' }]}
             >
               <Input placeholder="请输入Portal标题" />
@@ -105,54 +181,77 @@ export function PortalSettings({ portal }: PortalSettingsProps) {
             >
               <Input.TextArea rows={3} placeholder="请输入Portal描述" />
             </Form.Item>
-            <Form.Item
-              name="url"
-              label="Portal URL"
-              rules={[{ required: true, message: '请输入Portal URL' }]}
+            {/* <Form.Item
+              name="domain"
+              label="Portal域名"
+              rules={[{ required: true, message: '请输入Portal域名' }]}
               className="col-span-2"
             >
-              <Input placeholder="https://portal.example.com" />
-            </Form.Item>
+              <Input placeholder="portal.example.com" />
+            </Form.Item> */}
           </div>
         </Card>
 
         <Card title="认证设置" className="mb-6">
           <div className="grid grid-cols-2 gap-6">
             <Form.Item
-              name="userAuth"
-              label="用户认证"
-              rules={[{ required: true, message: '请选择用户认证方式' }]}
+              name="builtinAuthEnabled"
+              label="内置认证"
+              valuePropName="checked"
             >
-              <Select placeholder="请选择用户认证方式">
-                <Select.Option value="Konnect Built-in">Konnect Built-in</Select.Option>
-                <Select.Option value="LDAP">LDAP</Select.Option>
-                <Select.Option value="OAuth2">OAuth2</Select.Option>
-                <Select.Option value="SAML">SAML</Select.Option>
-              </Select>
+              <Switch />
             </Form.Item>
             <Form.Item
-              name="rbac"
-              label="RBAC"
-              rules={[{ required: true, message: '请选择RBAC状态' }]}
+              name="oidcAuthEnabled"
+              label="OIDC认证"
+              valuePropName="checked"
             >
-              <Select placeholder="请选择RBAC状态">
-                <Select.Option value="Enabled">启用</Select.Option>
-                <Select.Option value="Disabled">禁用</Select.Option>
-              </Select>
+              <Switch />
             </Form.Item>
             <Form.Item
-              name="authStrategy"
-              label="认证策略"
-              rules={[{ required: true, message: '请选择认证策略' }]}
+              name="autoApproveDevelopers"
+              label="开发者自动审批"
+              valuePropName="checked"
             >
-              <Select placeholder="请选择认证策略">
-                <Select.Option value="key-auth">API Key</Select.Option>
-                <Select.Option value="oauth2">OAuth2</Select.Option>
-                <Select.Option value="jwt">JWT</Select.Option>
-                <Select.Option value="basic-auth">Basic Auth</Select.Option>
-              </Select>
+              <Switch />
+            </Form.Item>
+            <Form.Item
+              name="autoApproveSubscriptions"
+              label="订阅自动审批"
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+            <Form.Item
+              name="frontendRedirectUrl"
+              label="前端重定向URL"
+              className="col-span-2"
+            >
+              <Input placeholder="http://portal.example.com/callback" />
             </Form.Item>
           </div>
+        </Card>
+
+        <Card 
+          title="域名管理" 
+          className="mb-6"
+          extra={
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={handleAddDomain}
+            >
+              绑定域名
+            </Button>
+          }
+        >
+          <Table 
+            columns={domainColumns} 
+            dataSource={portal.portalDomainConfig}
+            rowKey="domain"
+            pagination={false}
+            size="small"
+          />
         </Card>
 
         <Card title="可见性设置" className="mb-6">
@@ -266,6 +365,43 @@ export function PortalSettings({ portal }: PortalSettingsProps) {
           </div>
         </Card>
       </Form>
+
+      {/* 域名绑定模态框 */}
+      <Modal
+        title="绑定域名"
+        open={domainModalVisible}
+        onOk={handleDomainModalOk}
+        onCancel={handleDomainModalCancel}
+        confirmLoading={domainLoading}
+        okText="绑定"
+        cancelText="取消"
+      >
+        <Form
+          form={domainForm}
+          layout="vertical"
+        >
+          <Form.Item
+            name="domain"
+            label="域名"
+            rules={[
+              { required: true, message: '请输入域名' },
+              { pattern: /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/, message: '请输入有效的域名格式' }
+            ]}
+          >
+            <Input placeholder="example.com" />
+          </Form.Item>
+          <Form.Item
+            name="protocol"
+            label="协议"
+            rules={[{ required: true, message: '请选择协议' }]}
+          >
+            <Select placeholder="请选择协议">
+              <Select.Option value="HTTP">HTTP</Select.Option>
+              <Select.Option value="HTTPS">HTTPS</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 } 

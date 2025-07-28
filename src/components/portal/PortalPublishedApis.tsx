@@ -1,19 +1,6 @@
 import { Card, Table, Badge, Button, Space, Tag } from 'antd'
 import { EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
-
-interface Portal {
-  id: string
-  name: string
-  title: string
-  description: string
-  url: string
-  userAuth: string
-  rbac: string
-  authStrategy: string
-  apiVisibility: string
-  pageVisibility: string
-  logo?: string
-}
+import { Portal } from '@/types'
 
 interface PortalPublishedApisProps {
   portal: Portal

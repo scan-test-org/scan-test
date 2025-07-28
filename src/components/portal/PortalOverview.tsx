@@ -6,20 +6,7 @@ import {
   ClockCircleOutlined,
   LinkOutlined
 } from '@ant-design/icons'
-
-interface Portal {
-  id: string
-  name: string
-  title: string
-  description: string
-  url: string
-  userAuth: string
-  rbac: string
-  authStrategy: string
-  apiVisibility: string
-  pageVisibility: string
-  logo?: string
-}
+import { Portal } from '@/types'
 
 interface PortalOverviewProps {
   portal: Portal
@@ -139,25 +126,41 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
                 <span className="font-medium">{portal.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">URL</span>
+                <span className="text-gray-600">管理员ID</span>
+                <span className="font-medium">{portal.adminId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">域名</span>
                 <div className="flex items-center gap-2">
                   <LinkOutlined />
-                  <a href={portal.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                    {portal.url}
+                  <a href={`http://${portal.portalDomainConfig[0]?.domain}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    {portal.portalDomainConfig[0]?.domain}
                   </a>
                 </div>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">用户认证</span>
-                <Tag color="blue">{portal.userAuth}</Tag>
+                <span className="text-gray-600">内置认证</span>
+                <Tag color={portal.portalSettingConfig.builtinAuthEnabled ? "green" : "default"}>
+                  {portal.portalSettingConfig.builtinAuthEnabled ? "已启用" : "已禁用"}
+                </Tag>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">RBAC</span>
-                <Tag color={portal.rbac === "Enabled" ? "green" : "default"}>{portal.rbac}</Tag>
+                <span className="text-gray-600">OIDC认证</span>
+                <Tag color={portal.portalSettingConfig.oidcAuthEnabled ? "green" : "default"}>
+                  {portal.portalSettingConfig.oidcAuthEnabled ? "已启用" : "已禁用"}
+                </Tag>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">认证策略</span>
-                <Tag color="purple">{portal.authStrategy}</Tag>
+                <span className="text-gray-600">开发者自动审批</span>
+                <Tag color={portal.portalSettingConfig.autoApproveDevelopers ? "green" : "default"}>
+                  {portal.portalSettingConfig.autoApproveDevelopers ? "已启用" : "已禁用"}
+                </Tag>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">订阅自动审批</span>
+                <Tag color={portal.portalSettingConfig.autoApproveSubscriptions ? "green" : "default"}>
+                  {portal.portalSettingConfig.autoApproveSubscriptions ? "已启用" : "已禁用"}
+                </Tag>
               </div>
             </div>
           </Card>
@@ -190,6 +193,42 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
           </Card>
         </Col>
       </Row>
+
+      {/* OIDC配置 */}
+      {portal.portalSettingConfig.oidcConfigs.length > 0 && (
+        <Card title="OIDC认证配置">
+          <div className="space-y-4">
+            {portal.portalSettingConfig.oidcConfigs.map((config) => (
+              <div key={config.id} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium">{config.name}</h4>
+                  <Tag color={config.enabled ? "green" : "default"}>
+                    {config.enabled ? "已启用" : "已禁用"}
+                  </Tag>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">提供商:</span>
+                    <span className="ml-2 font-medium">{config.provider}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Client ID:</span>
+                    <span className="ml-2 font-medium">{config.clientId}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">授权范围:</span>
+                    <span className="ml-2 font-medium">{config.scopes}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">重定向URI:</span>
+                    <span className="ml-2 font-medium">{config.redirectUri}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* 最近活动 */}
       <Card title="最近活动">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, Badge, Dropdown, MenuProps, Card, Typography, Space, Tag } from 'antd'
+import { Button, Dropdown, MenuProps, Typography, Spin } from 'antd'
 import { 
   LinkOutlined,
   MoreOutlined,
@@ -16,35 +16,12 @@ import { PortalPublishedApis } from '@/components/portal/PortalPublishedApis'
 import { PortalDevelopers } from '@/components/portal/PortalDevelopers'
 import { PortalConsumers } from '@/components/portal/PortalConsumers'
 import { PortalSettings } from '@/components/portal/PortalSettings'
+import { portalApi } from '@/lib/api'
+import { Portal } from '@/types'
 
 const { Title, Paragraph } = Typography
 
-interface Portal {
-  id: string
-  name: string
-  title: string
-  description: string
-  url: string
-  userAuth: string
-  rbac: string
-  authStrategy: string
-  apiVisibility: string
-  pageVisibility: string
-  logo?: string
-}
-
-const mockPortal: Portal = {
-  id: "26fe0661",
-  name: "test",
-  title: "Company",
-  description: "测试公司门户",
-  url: "https://3995a4355203.us.kongportals.com",
-  userAuth: "Konnect Built-in",
-  rbac: "Disabled",
-  authStrategy: "Key-Auth",
-  apiVisibility: "Private",
-  pageVisibility: "Private"
-}
+// 移除mockPortal，使用真实API数据
 
 const menuItems = [
   {
@@ -83,18 +60,39 @@ export default function PortalDetail() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState("overview")
-  const [isInitialized, setIsInitialized] = useState(false)
-  const portal = mockPortal
+  const [portal, setPortal] = useState<Portal | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchPortalData = async () => {
+    try {
+      setLoading(true)
+      const portalId = searchParams.get('id') || 'portal-6882e06f4fd0c963020e3485'
+      const response = await portalApi.getPortalDetail(portalId)
+      if (response && response.code === 'SUCCESS') {
+        setPortal(response.data)
+      } else {
+        setError(response?.message || '获取Portal信息失败')
+      }
+    } catch (err) {
+      console.error('获取Portal信息失败:', err)
+      setError('获取Portal信息失败')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    setIsInitialized(true)
-  }, [])
+    fetchPortalData()
+  }, [searchParams])
 
   const handleBackToPortals = () => {
     navigate('/portals')
   }
 
   const renderContent = () => {
+    if (!portal) return null
+    
     switch (activeTab) {
       case "overview":
         return <PortalOverview portal={portal} />
@@ -105,7 +103,7 @@ export default function PortalDetail() {
       case "consumers":
         return <PortalConsumers portal={portal} />
       case "settings":
-        return <PortalSettings portal={portal} />
+        return <PortalSettings portal={portal} onRefresh={fetchPortalData} />
       default:
         return <PortalOverview portal={portal} />
     }
@@ -130,8 +128,23 @@ export default function PortalDetail() {
     },
   ]
 
-  if (!isInitialized) {
-    return <div className="flex h-full items-center justify-center">Loading...</div>
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spin size="large" />
+      </div>
+    )
+  }
+
+  if (error || !portal) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error || 'Portal信息不存在'}</p>
+          <Button onClick={() => navigate('/portals')}>返回Portal列表</Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -162,12 +175,12 @@ export default function PortalDetail() {
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <LinkOutlined className="h-3 w-3" />
             <a 
-              href={portal.url} 
+              href={`http://${portal.portalDomainConfig[0]?.domain}`} 
               target="_blank" 
               rel="noopener noreferrer"
               className="hover:underline truncate text-blue-600"
             >
-              {portal.url}
+              {portal.portalDomainConfig[0]?.domain}
             </a>
           </div>
         </div>
@@ -211,7 +224,7 @@ export default function PortalDetail() {
             <Button 
               type="primary" 
               icon={<LinkOutlined />}
-              href={portal.url}
+              href={`http://${portal.portalDomainConfig[0]?.domain}`}
               target="_blank"
             >
               访问Portal
