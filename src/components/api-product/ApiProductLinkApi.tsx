@@ -1,20 +1,7 @@
 import { Card, Button, Table, Tag, Space, Modal, Form, Input, Select } from 'antd'
 import { PlusOutlined, LinkOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useState } from 'react'
-
-interface ApiProduct {
-  id: string
-  name: string
-  description: string
-  version: string
-  status: string
-  visibility: string
-  createdAt: string
-  updatedAt: string
-  portals: number
-  linkedServices: number
-  policies: number
-}
+import type { ApiProduct } from '@/types/api-product'
 
 interface ApiProductLinkApiProps {
   apiProduct: ApiProduct

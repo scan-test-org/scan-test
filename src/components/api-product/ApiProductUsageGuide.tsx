@@ -1,22 +1,10 @@
 import { Card, Button, Input, Space, Tag } from 'antd'
 import { SaveOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons'
 import { useState } from 'react'
+import type { ApiProduct } from '@/types/api-product'
 
 const { TextArea } = Input
 
-interface ApiProduct {
-  id: string
-  name: string
-  description: string
-  version: string
-  status: string
-  visibility: string
-  createdAt: string
-  updatedAt: string
-  portals: number
-  linkedServices: number
-  policies: number
-}
 
 interface ApiProductUsageGuideProps {
   apiProduct: ApiProduct

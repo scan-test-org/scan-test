@@ -1,85 +1,18 @@
 import { Card, Button, Input, Space, Tag, Divider } from 'antd'
 import { SaveOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons'
 import { useState } from 'react'
+import type { ApiProduct } from '@/types/api-product';
 
 const { TextArea } = Input
-
-interface ApiProduct {
-  id: string
-  name: string
-  description: string
-  version: string
-  status: string
-  visibility: string
-  createdAt: string
-  updatedAt: string
-  portals: number
-  linkedServices: number
-  policies: number
-}
 
 interface ApiProductApiDocsProps {
   apiProduct: ApiProduct
 }
 
-const mockApiDocs = `# Payment API Documentation
-
-## Overview
-This API provides payment processing capabilities for e-commerce applications.
-
-## Authentication
-All API requests require authentication using API keys.
-
-## Endpoints
-
-### POST /payments
-Create a new payment transaction.
-
-**Request Body:**
-\`\`\`json
-{
-  "amount": 100.00,
-  "currency": "USD",
-  "payment_method": "card",
-  "description": "Payment for order #123"
-}
-\`\`\`
-
-**Response:**
-\`\`\`json
-{
-  "id": "pay_123456789",
-  "status": "succeeded",
-  "amount": 100.00,
-  "currency": "USD",
-  "created_at": "2025-01-08T10:30:00Z"
-}
-\`\`\`
-
-### GET /payments/{id}
-Retrieve payment details by ID.
-
-**Response:**
-\`\`\`json
-{
-  "id": "pay_123456789",
-  "status": "succeeded",
-  "amount": 100.00,
-  "currency": "USD",
-  "created_at": "2025-01-08T10:30:00Z"
-}
-\`\`\`
-
-## Error Codes
-- 400: Bad Request
-- 401: Unauthorized
-- 404: Payment Not Found
-- 500: Internal Server Error
-`
-
 export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [content, setContent] = useState(mockApiDocs)
+  const [content, setContent] = useState(apiProduct.apiSpec)
+  
 
   const handleSave = () => {
     setIsEditing(false)
@@ -142,23 +75,6 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
             </pre>
           </div>
         )}
-      </Card>
-
-      <Card title="文档设置">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span>文档可见性</span>
-            <Tag color="green">公开</Tag>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>版本控制</span>
-            <Tag color="blue">启用</Tag>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>自动生成</span>
-            <Tag color="orange">禁用</Tag>
-          </div>
-        </div>
       </Card>
     </div>
   )

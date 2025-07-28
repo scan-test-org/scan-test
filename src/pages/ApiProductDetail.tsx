@@ -10,35 +10,9 @@ import { ApiProductLinkApi } from '@/components/api-product/ApiProductLinkApi'
 import { ApiProductApiDocs } from '@/components/api-product/ApiProductApiDocs'
 import { ApiProductUsageGuide } from '@/components/api-product/ApiProductUsageGuide'
 import { ApiProductPortal } from '@/components/api-product/ApiProductPortal'
-import { ApiProductPolicy } from '@/components/api-product/ApiProductPolicy'
+import api from '@/lib/api.ts';
+import type { ApiProduct } from '@/types/api-product';
 
-interface ApiProduct {
-  id: string
-  name: string
-  description: string
-  version: string
-  status: string
-  visibility: string
-  createdAt: string
-  updatedAt: string
-  portals: number
-  linkedServices: number
-  policies: number
-}
-
-const mockApiProduct: ApiProduct = {
-  id: "api-001",
-  name: "Payment API",
-  description: "支付处理API，提供完整的支付解决方案",
-  version: "v1.2.0",
-  status: "published",
-  visibility: "public",
-  createdAt: "2025-01-01T10:00:00Z",
-  updatedAt: "2025-01-08T15:30:00Z",
-  portals: 3,
-  linkedServices: 5,
-  policies: 8
-}
 
 const menuItems = [
   {
@@ -65,11 +39,6 @@ const menuItems = [
     key: "portal",
     label: "Portal",
     description: "发布的门户"
-  },
-  {
-    key: "policy",
-    label: "Policy",
-    description: "策略管理"
   }
 ]
 
@@ -77,11 +46,15 @@ export default function ApiProductDetail() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState("overview")
-  const [isInitialized, setIsInitialized] = useState(false)
-  const apiProduct = mockApiProduct
+  const [apiProduct, setApiProduct] = useState<ApiProduct>({} as ApiProduct)
 
   useEffect(() => {
-    setIsInitialized(true)
+    const productId = searchParams.get('productId')
+    if (productId) {
+      api.get(`/products/${productId}`).then(res => {
+        setApiProduct(res.data)
+      })
+    }
   }, [])
 
   const handleBackToApiProducts = () => {
@@ -100,8 +73,6 @@ export default function ApiProductDetail() {
         return <ApiProductUsageGuide apiProduct={apiProduct} />
       case "portal":
         return <ApiProductPortal apiProduct={apiProduct} />
-      case "policy":
-        return <ApiProductPolicy apiProduct={apiProduct} />
       default:
         return <ApiProductOverview apiProduct={apiProduct} />
     }
@@ -130,19 +101,15 @@ export default function ApiProductDetail() {
     },
   ]
 
-  if (!isInitialized) {
-    return <div className="flex h-full items-center justify-center">Loading...</div>
-  }
-
   return (
     <div className="flex h-full">
       {/* API Product 详情侧边栏 */}
       <div className="w-64 border-r bg-white flex flex-col">
         {/* 返回按钮 */}
-        <div className="p-4 border-b">
+        <div className="pb-4 border-b">
           <Button
             type="text"
-            className="w-full justify-start"
+            // className="w-full justify-start"
             onClick={handleBackToApiProducts}
             icon={<LeftOutlined />}
           >
@@ -159,12 +126,12 @@ export default function ApiProductDetail() {
             </Dropdown>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Badge>{apiProduct.version}</Badge>
               <Badge status={apiProduct.status === "published" ? "success" : "default"}>
                 {apiProduct.status === "published" ? "已发布" : "草稿"}
               </Badge>
-            </div>
+            </div> */}
             <p className="text-sm text-gray-500">{apiProduct.description}</p>
           </div>
         </div>

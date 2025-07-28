@@ -1,108 +1,41 @@
-import { useState, useCallback, memo, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'
-import { Button, Card, Badge, Dropdown, Select, Row, Col, Statistic } from 'antd'
-import { PlusOutlined, MoreOutlined, ApiOutlined, ClockCircleOutlined } from '@ant-design/icons'
-import type { MenuProps } from 'antd'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { MenuProps } from 'antd';
+import { Badge, Button, Card, Col, Dropdown, Modal, Row, Select, Statistic, Form, Input, message } from 'antd';
+import type { ApiProduct } from '@/types/api-product';
+import { ApiOutlined, ClockCircleOutlined, MoreOutlined, PlusOutlined } from '@ant-design/icons';
 import api from '@/lib/api.ts';
+import { getStatusBadgeVariant } from '@/lib/utils';
 
-interface ApiProduct {
-  id: string
-  name: string
-  description: string
-  type: "restApi" | "mcpServer"
-  category: string
-  status: "active" | "inactive"
-  requests: number
-  errorRate: string
-  avgLatency: string
-  createdAt: string
-  labels: string[]
-}
-
-const mockApiProducts: ApiProduct[] = [
-  {
-    id: "1",
-    name: "test",
-    description: "测试API产品",
-    type: "restApi",
-    category: "Testing",
-    status: "active",
-    requests: 0,
-    errorRate: "0.00%",
-    avgLatency: "0ms",
-    createdAt: "Jul 8, 2025, 5:00 PM",
-    labels: []
-  },
-  {
-    id: "2",
-    name: "payments",
-    description: "支付处理API",
-    type: "restApi",
-    category: "Finance",
-    status: "active",
-    requests: 15420,
-    errorRate: "0.12%",
-    avgLatency: "245ms",
-    createdAt: "Jul 5, 2025, 2:30 PM",
-    labels: ["production", "payment"]
-  },
-  {
-    id: "3",
-    name: "users",
-    description: "用户管理和认证API",
-    type: "restApi",
-    category: "Authentication",
-    status: "active",
-    requests: 8765,
-    errorRate: "0.08%",
-    avgLatency: "180ms",
-    createdAt: "Jul 3, 2025, 11:15 AM",
-    labels: ["auth", "users"]
-  },
-  {
-    id: "4",
-    name: "notifications",
-    description: "消息通知服务",
-    type: "mcpServer",
-    category: "Communication",
-    status: "active",
-    requests: 3421,
-    errorRate: "0.05%",
-    avgLatency: "120ms",
-    createdAt: "Jul 1, 2025, 9:45 AM",
-    labels: ["notification", "mcp"]
-  },
-  {
-    id: "5",
-    name: "analytics",
-    description: "数据分析和统计API",
-    type: "restApi",
-    category: "Analytics",
-    status: "inactive",
-    requests: 0,
-    errorRate: "0.00%",
-    avgLatency: "0ms",
-    createdAt: "Jun 28, 2025, 4:20 PM",
-    labels: ["analytics", "draft"]
-  }
-]
 
 // 优化的产品卡片组件
-const ProductCard = memo(({ product, onNavigate }: {
+const ProductCard = memo(({ product, onNavigate, handleRefresh }: {
   product: ApiProduct;
-  onNavigate: (id: string) => void;
+  onNavigate: (productId: string) => void;
+  handleRefresh: () => void;
 }) => {
   const getTypeIcon = (type: string) => {
-    return type === "restApi" ? <ApiOutlined className="h-4 w-4" /> : <ClockCircleOutlined className="h-4 w-4" />
+    return type === "REST_API" ? <ApiOutlined className="h-4 w-4" /> : <ClockCircleOutlined className="h-4 w-4" />
   }
 
   const getTypeBadgeVariant = (type: string) => {
-    return type === "restApi" ? "blue" : "purple"
+    return type === "REST_API" ? "blue" : "purple"
   }
 
-  const handleClick = useCallback(() => {
-    onNavigate(product.id)
-  }, [product.id, onNavigate])
+
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    onNavigate(product.productId)
+  }, [product.productId, onNavigate]);
+
+
+
+  const handleDelete = useCallback((productId: string, e?: React.MouseEvent | any) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    api.delete(`/products/${productId}`).then(res => {
+      message.success('API Product 删除成功');
+      handleRefresh();
+    });
+  }, [handleRefresh]);
 
   const dropdownItems: MenuProps['items'] = [
     {
@@ -116,6 +49,7 @@ const ProductCard = memo(({ product, onNavigate }: {
       key: 'delete',
       label: '删除',
       danger: true,
+      onClick: (info: any) => handleDelete(product.productId, info?.domEvent),
     },
   ]
 
@@ -133,9 +67,9 @@ const ProductCard = memo(({ product, onNavigate }: {
           <div>
             <h3 className="text-lg font-semibold">{product.name}</h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <Badge color="default" text={product.category} />
-              <Badge color={getTypeBadgeVariant(product.type)} text={product.type === "restApi" ? "REST API" : "MCP Server"} />
-              <Badge color={product.status === "active" ? "green" : "orange"} text={product.status === "active" ? "活跃" : "非活跃"} />
+              <Badge color="green" text={product.category} />
+              <Badge color={getTypeBadgeVariant(product.type)} text={product.type === "REST_API" ? "REST API" : "MCP Server"} />
+              <Badge color={getStatusBadgeVariant(product.status)} text={product.status === "PENDING" ? "待关联" : product.status === "READY" ? "已关联" : "已发布"} />
             </div>
           </div>
         </div>
@@ -153,7 +87,7 @@ const ProductCard = memo(({ product, onNavigate }: {
           <p className="text-sm text-gray-600">{product.description}</p>
         )}
 
-        <Row gutter={16} className="text-center">
+        {/* <Row gutter={16} className="text-center">
           <Col span={8}>
             <Statistic title="Requests" value={product.requests} />
           </Col>
@@ -163,20 +97,23 @@ const ProductCard = memo(({ product, onNavigate }: {
           <Col span={8}>
             <Statistic title="Avg. Latency" value={product.avgLatency} />
           </Col>
-        </Row>
+        </Row> */}
 
         <div className="space-y-2 text-sm">
+
+          <div className="flex justify-between">
+            <span className="text-gray-500">Product ID</span>
+            <span>{product.productId}</span>
+          </div>
+
           <div className="flex justify-between">
             <span className="text-gray-500">Created At</span>
             <span>{product.createdAt}</span>
           </div>
+          
           <div className="flex justify-between">
-            <span className="text-gray-500">Labels</span>
-            <span>{product.labels.length > 0 ? product.labels.join(", ") : "None"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Custom Attributes</span>
-            <span>None</span>
+            <span className="text-gray-500">enableConsumerAuth</span>
+            <span>{product.enableConsumerAuth }</span>
           </div>
         </div>
       </div>
@@ -187,20 +124,28 @@ const ProductCard = memo(({ product, onNavigate }: {
 ProductCard.displayName = 'ProductCard'
 
 export default function ApiProducts() {
-  const navigate = useNavigate()
-  const [apiProducts, setApiProducts] = useState<ApiProduct[]>(mockApiProducts)
-  const [selectedCategory, setSelectedCategory] = useState<string>("All")
-  const [selectedType, setSelectedType] = useState<string>("All")
+  const navigate = useNavigate();
+  const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedType, setSelectedType] = useState<string>('All');
+
+  const [createVisible, setCreateVisible] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
+    fetchApiProducts();
+  }, []);
+
+  const fetchApiProducts = useCallback(() => {
     api.get('/products').then(res => {
-      console.log('api-products res', res);
-    })
-  }, [])
+      setApiProducts(res.data.content);
+    });
+  }, []);
+  
 
   // 优化的过滤器处理函数
   const handleCategoryChange = useCallback((category: string) => {
-    setSelectedCategory(category)
+    setSelectedCategory(category);
   }, [])
 
   const handleTypeChange = useCallback((type: string) => {
@@ -209,7 +154,7 @@ export default function ApiProducts() {
 
   // 使用useMemo优化数据计算
   const categories = useMemo(() =>
-    ["All", ...Array.from(new Set(apiProducts.map(product => product.category)))],
+    ["All", ...Array.from(new Set(apiProducts?.map(product => product.category)))],
     [apiProducts]
   )
 
@@ -220,20 +165,37 @@ export default function ApiProducts() {
 
   // 过滤API Products
   const filteredProducts = useMemo(() =>
-    apiProducts.filter(product => {
+    apiProducts?.filter(product => {
       const categoryMatch = selectedCategory === "All" || product.category === selectedCategory
       const typeMatch = selectedType === "All" ||
-        (selectedType === "REST API" && product.type === "restApi") ||
-        (selectedType === "MCP Server" && product.type === "mcpServer")
-      return categoryMatch && typeMatch
+        (selectedType === "REST API" && product.type === "REST_API") ||
+        (selectedType === 'MCP Server' && product.type === 'MCP_SERVER')
+      return categoryMatch && typeMatch;
     }),
-    [apiProducts, selectedCategory, selectedType]
+    [apiProducts, selectedCategory, selectedType],
   )
 
   // 优化的导航处理函数
   const handleNavigateToProduct = useCallback((productId: string) => {
-    navigate(`/api-products/detail?id=${productId}`)
-  }, [navigate])
+    navigate(`/api-products/detail?productId=${productId}`);
+  }, [navigate]);
+
+  const handleCreate = async () => {
+    try {
+      const values = await form.validateFields();
+      api.post('/products', values).then(res => {
+        form.resetFields();
+        message.success('API Product 创建成功');
+        fetchApiProducts();
+      }).finally(() => {
+        setCreateVisible(false);
+      });
+     
+    } catch (e) {
+      // 校验失败
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -244,7 +206,9 @@ export default function ApiProducts() {
             管理和配置您的API产品
           </p>
         </div>
-        <Button type="primary" icon={<PlusOutlined />}>
+        <Button onClick={() => {
+          setCreateVisible(true);
+        }} type="primary" icon={<PlusOutlined/>}>
           创建 API Product
         </Button>
       </div>
@@ -280,12 +244,63 @@ export default function ApiProducts() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredProducts.map((product) => (
           <ProductCard
-            key={product.id}
+            key={product.productId}
             product={product}
             onNavigate={handleNavigateToProduct}
+            handleRefresh={fetchApiProducts}
           />
         ))}
       </div>
+
+      <Modal
+        title="创建API Product"
+        open={createVisible}
+        onOk={handleCreate}
+        onCancel={() => {
+          setCreateVisible(false);
+          form.resetFields();
+        }}
+        destroyOnClose
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          preserve={false}
+        >
+          <Form.Item
+            label="名称"
+            name="name"
+            rules={[{ required: true, message: '请输入API Product名称' }]}
+          >
+            <Input placeholder="请输入API Product名称" />
+          </Form.Item>
+          <Form.Item
+            label="描述"
+            name="description"
+            rules={[{ required: true, message: '请输入描述' }]}
+          >
+            <Input.TextArea placeholder="请输入描述" rows={3} />
+          </Form.Item>
+          <Form.Item
+            label="类型"
+            name="type"
+            rules={[{ required: true, message: '请选择类型' }]}
+          >
+            <Select placeholder="请选择类型">
+              <Select.Option value="REST_API">REST API</Select.Option>
+              <Select.Option value="MCP_SERVER">MCP Server</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="分类"
+            name="category"
+            rules={[{ required: true, message: '请输入分类' }]}
+          >
+            <Input placeholder="请输入分类" />
+          </Form.Item>
+        </Form>
+        
+      </Modal>
     </div>
   )
 }

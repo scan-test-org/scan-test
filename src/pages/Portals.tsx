@@ -19,21 +19,6 @@ interface Portal {
   logo?: string
 }
 
-const mockPortals: Portal[] = [
-  {
-    id: "1",
-    name: "test",
-    description: "测试公司门户",
-    title: "Company",
-    url: "https://3995a4355203.us.kongportals.com",
-    userAuth: "Konnect Built-in",
-    rbac: "Disabled",
-    authStrategy: "key-auth",
-    apiVisibility: "Private",
-    pageVisibility: "Private",
-    logo: undefined
-  }
-]
 
 // 优化的Portal卡片组件
 const PortalCard = memo(({ portal, onNavigate }: {
@@ -139,7 +124,7 @@ PortalCard.displayName = 'PortalCard'
 
 export default function Portals() {
   const navigate = useNavigate()
-  const [portals, setPortals] = useState<Portal[]>(mockPortals)
+  const [portals, setPortals] = useState<Portal[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 

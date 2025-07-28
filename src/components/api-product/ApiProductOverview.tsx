@@ -6,20 +6,8 @@ import {
   EyeOutlined,
   ClockCircleOutlined
 } from '@ant-design/icons'
-
-interface ApiProduct {
-  id: string
-  name: string
-  description: string
-  version: string
-  status: string
-  visibility: string
-  createdAt: string
-  updatedAt: string
-  portals: number
-  linkedServices: number
-  policies: number
-}
+import type { ApiProduct } from '@/types/api-product'
+import { getStatusBadgeVariant } from '@/lib/utils'
 
 interface ApiProductOverviewProps {
   apiProduct: ApiProduct
@@ -35,7 +23,7 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
 
       {/* 统计卡片 */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card>
             <Statistic
               title="关联门户"
@@ -45,7 +33,7 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card>
             <Statistic
               title="关联服务"
@@ -55,17 +43,8 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="策略数量"
-              value={apiProduct.policies}
-              prefix={<SettingOutlined />}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
+        
+        <Col xs={24} sm={12} lg={8}>
           <Card>
             <Statistic
               title="用户数量"
@@ -87,27 +66,16 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
                 <span className="font-medium">{apiProduct.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">版本</span>
-                <Tag color="blue">{apiProduct.version}</Tag>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-gray-600">状态</span>
-                <Tag color={apiProduct.status === "published" ? "green" : "orange"}>
-                  {apiProduct.status === "published" ? "已发布" : "草稿"}
+                <Tag color={getStatusBadgeVariant(apiProduct.status)}>
+                  {apiProduct.status === "PENDING" ? "待关联" : apiProduct.status === "READY" ? "已关联" : "已发布"}
                 </Tag>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">可见性</span>
-                <Tag color="purple">{apiProduct.visibility}</Tag>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-gray-600">创建时间</span>
-                <span>{new Date(apiProduct.createdAt).toLocaleDateString()}</span>
+                <span>{apiProduct.createdAt}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">更新时间</span>
-                <span>{new Date(apiProduct.updatedAt).toLocaleDateString()}</span>
-              </div>
+              
             </div>
           </Card>
         </Col>
@@ -139,11 +107,6 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
           </Card>
         </Col>
       </Row>
-
-      {/* 描述 */}
-      <Card title="产品描述">
-        <p className="text-gray-700">{apiProduct.description}</p>
-      </Card>
     </div>
   )
 } 
