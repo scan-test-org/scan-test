@@ -25,4 +25,6 @@ public class Resources {
 
     public static final String PRODUCT_REF = "ProductRef";
 
+    public static final String NACOS_INSTANCE = "NacosInstance";
+
 }
