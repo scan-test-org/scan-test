@@ -59,11 +59,11 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeIdentifier) {
+    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId, String name) {
         HigressClient client = getClient(gateway);
 
         HigressMCPServerResult mcpServerResult = client.execute(c -> {
-            McpServer mcpServer = c.mcpServerService().query(routeIdentifier);
+            McpServer mcpServer = c.mcpServerService().query(name);
             return new HigressMCPServerResult().convertFrom(mcpServer);
         });
 

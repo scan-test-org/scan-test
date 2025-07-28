@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.support.converter.StringListConverter;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
+import com.alibaba.apiopenplatform.support.product.RouteConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -35,7 +36,7 @@ public class ProductRef extends BaseEntity {
 
     @Column(name = "routes", columnDefinition = "text")
     @Convert(converter = StringListConverter.class)
-    private List<String> routes;
+    private List<RouteConfig> routes;
 
     @Column(name = "operations", columnDefinition = "text")
     @Convert(converter = StringListConverter.class)

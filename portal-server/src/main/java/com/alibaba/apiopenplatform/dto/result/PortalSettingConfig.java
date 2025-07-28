@@ -17,8 +17,6 @@ public class PortalSettingConfig implements OutputConverter<PortalSettingConfig,
 
     private Boolean oidcAuthEnabled;
 
-    private OidcConfig oidcConfig;
-
     private Boolean autoApproveDevelopers;
 
     private Boolean autoApproveSubscriptions;
