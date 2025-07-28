@@ -79,7 +79,7 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "OIDC授权入口", description = "重定向到第三方登录页面。state参数格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。注意：需要先配置对应的OIDC配置。")
     @GetMapping("/authorize")
-    public void universalAuthorize(@RequestParam String provider, @RequestParam String state, HttpServletResponse response) throws IOException {
+    public void universalAuthorize(@RequestParam String provider, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String portalId = contextHolder.getPortal();
         // 不再支持 frontendRedirectUrl 参数，统一从 PortalSetting 读取
         String newState = state;
@@ -114,9 +114,12 @@ public class DeveloperOauth2Controller {
             log.error("[OIDC配置未启用] provider={}, configs={}", provider, settings);
             throw new BusinessException(ErrorCode.OIDC_CONFIG_DISABLED);
         }
+        // 动态生成redirectUri，基于当前请求的域名
+        String redirectUri = generateRedirectUri(request);
+        
         String url = config.getAuthorizationEndpoint()
                 + "?client_id=" + config.getClientId()
-                + "&redirect_uri=" + URLEncoder.encode(config.getRedirectUri(), "UTF-8")
+                + "&redirect_uri=" + URLEncoder.encode(redirectUri, "UTF-8")
                 + "&scope=" + URLEncoder.encode(config.getScopes(), "UTF-8")
                 + "&response_type=code"
                 + "&state=" + URLEncoder.encode(newState, "UTF-8");
@@ -140,7 +143,7 @@ public class DeveloperOauth2Controller {
      */
     @Operation(summary = "OIDC统一回调", description = "处理第三方登录回调。state参数格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。注意：此接口由第三方平台调用，不能直接测试。")
     @GetMapping("/callback")
-    public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletResponse response) throws IOException {
+    public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         log.info("[OIDCCallback] code={}, state={}", code, state);
         String portalId = contextHolder.getPortal();
         String provider = null;
@@ -149,11 +152,6 @@ public class DeveloperOauth2Controller {
         String frontendRedirectUrl = null;
         String decodedState = URLDecoder.decode(state, "UTF-8");
         String[] stateParts = decodedState.split("\\|");
-        for (String part : stateParts) {
-            if (part.startsWith("FRONTENDURL=")) {
-                frontendRedirectUrl = java.net.URLDecoder.decode(part.substring("FRONTENDURL=".length()), "UTF-8");
-            }
-        }
         if (decodedState.startsWith("BINDING|")) {
             String[] arr = decodedState.split("\\|");
             if (arr.length >= 5) {
@@ -169,22 +167,29 @@ public class DeveloperOauth2Controller {
             }
         }
         if (portalId == null || provider == null) {
-            response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("未包含portalId/provider", "UTF-8"));
+            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("未包含portalId/provider", "UTF-8"));
             return;
         }
         // 通过portalId查询对应的Portal，然后获取PortalSetting
         Optional<Portal> portalOpt = portalRepository.findByPortalId(portalId);
         if (!portalOpt.isPresent()) {
             log.error("[Portal不存在] portalId={}", portalId);
-            response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("Portal不存在", "UTF-8"));
+            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("Portal不存在", "UTF-8"));
             return;
         }
         Portal portal = portalOpt.get();
         PortalSetting portalSetting = portal.getPortalSetting();
         if (portalSetting == null) {
             log.error("[PortalSetting不存在] portalId={}", portalId);
-            response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("PortalSetting不存在", "UTF-8"));
+            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("PortalSetting不存在", "UTF-8"));
             return;
+        }
+        
+        // 从数据库配置中获取frontendRedirectUrl
+        frontendRedirectUrl = portalSetting.getFrontendRedirectUrl();
+        if (frontendRedirectUrl == null || frontendRedirectUrl.isEmpty()) {
+            // 如果数据库没有配置，使用默认值
+            frontendRedirectUrl = "/";
         }
         java.util.List<PortalSetting> settings = java.util.Arrays.asList(portalSetting);
         OidcConfig config = null;
@@ -203,7 +208,7 @@ public class DeveloperOauth2Controller {
         }
         if (config == null || !config.isEnabled()) {
             log.error("[OIDC配置未启用] provider={}, configs={}", provider, settings);
-            response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("OIDC配置未启用", "UTF-8"));
+            response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("OIDC配置未启用", "UTF-8"));
             return;
         }
         // --- 获取三方用户信息 ---
@@ -212,7 +217,7 @@ public class DeveloperOauth2Controller {
         String rawInfoJson = null;
         Map<String, Object> userInfoMap;
         try {
-            userInfoMap = fetchUserInfoMap(code, config);
+            userInfoMap = fetchUserInfoMap(code, config, request);
             Object idObj = userInfoMap.get("sub");
             if (idObj == null) idObj = userInfoMap.get("id");
             providerSubject = idObj != null ? String.valueOf(idObj) : null;
@@ -222,13 +227,13 @@ public class DeveloperOauth2Controller {
             displayName = nameObj != null ? String.valueOf(nameObj) : null;
             rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
         } catch (Exception e) {
-            response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("获取三方用户信息失败", "UTF-8"));
+            response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("获取三方用户信息失败", "UTF-8"));
             return;
         }
         if ("BINDING".equals(mode)) {
             Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);
             if (extOpt.isPresent()) {
-                response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("该外部账号已被其他用户绑定", "UTF-8"));
+                response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("该外部账号已被其他用户绑定", "UTF-8"));
                 return;
             }
             String userId = null;
@@ -237,7 +242,7 @@ public class DeveloperOauth2Controller {
                     Map<String, Object> claims = jwtService.parseAndValidateClaims(tokenParam);
                     userId = (String) claims.get("userId");
                 } catch (Exception e) {
-                    response.sendRedirect(frontendRedirectUrl + "/?login=fail&msg=" + java.net.URLEncoder.encode("token无效或已过期", "UTF-8"));
+                    response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("token无效或已过期", "UTF-8"));
                     return;
                 }
             }
@@ -341,12 +346,12 @@ public class DeveloperOauth2Controller {
     }
 
     // --- 通用三方用户信息获取 ---
-    private Map<String, Object> fetchUserInfoMap(String code, OidcConfig config) {
+    private Map<String, Object> fetchUserInfoMap(String code, OidcConfig config, HttpServletRequest request) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client_id", config.getClientId());
         params.add("client_secret", config.getClientSecret());
         params.add("code", code);
-        params.add("redirect_uri", config.getRedirectUri());
+        params.add("redirect_uri", generateRedirectUri(request));
         params.add("grant_type", "authorization_code");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -358,5 +363,23 @@ public class DeveloperOauth2Controller {
         HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
         ResponseEntity<Map> userResp = restTemplate.exchange(config.getUserInfoEndpoint(), HttpMethod.GET, userEntity, Map.class);
         return userResp.getBody();
+    }
+    
+    /**
+     * 动态生成redirectUri，基于当前请求的域名
+     */
+    private String generateRedirectUri(HttpServletRequest request) {
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        
+        // 构建基础URL
+        String baseUrl = scheme + "://" + serverName;
+        if (serverPort != 80 && serverPort != 443) {
+            baseUrl += ":" + serverPort;
+        }
+        
+        // 添加回调路径
+        return baseUrl + "/developers/callback";
     }
 } 
