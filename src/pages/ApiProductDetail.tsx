@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button, Badge, Dropdown, MenuProps } from 'antd'
-import { 
+import {
   MoreOutlined,
   LeftOutlined
 } from '@ant-design/icons'
@@ -140,7 +140,7 @@ export default function ApiProductDetail() {
       <div className="w-64 border-r bg-white flex flex-col">
         {/* 返回按钮 */}
         <div className="p-4 border-b">
-          <Button 
+          <Button
             type="text"
             className="w-full justify-start"
             onClick={handleBackToApiProducts}
@@ -181,7 +181,7 @@ export default function ApiProductDetail() {
                   : "hover:bg-gray-100"
               }`}
             >
-              <item.icon className="h-4 w-4" />
+              {/*<item.icon className="h-4 w-4" />*/}
               <div>
                 <div className="font-medium">{item.label}</div>
                 <div className="text-xs opacity-70">{item.description}</div>
@@ -197,4 +197,4 @@ export default function ApiProductDetail() {
       </div>
     </div>
   )
-} 
+}

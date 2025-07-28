@@ -17,7 +17,7 @@ const Layout: React.FC = () => {
 
   useEffect(() => {
     // 进入详情页自动折叠侧边栏
-    if (location.pathname.startsWith('/portals/detail')) {
+    if (location.pathname.startsWith('/portals/detail') || location.pathname.startsWith('/api-products/detail')) {
       setSidebarCollapsed(true)
     } else {
       setSidebarCollapsed(false)
@@ -40,9 +40,9 @@ const Layout: React.FC = () => {
       <header className="w-full h-16 flex items-center justify-between px-8 bg-white border-b shadow-sm">
         <div className="flex items-center space-x-2">
         <div className="bg-white">
-              <Button 
-                type="text" 
-                icon={<MenuOutlined />} 
+              <Button
+                type="text"
+                icon={<MenuOutlined />}
                 onClick={toggleSidebar}
                 className="hover:bg-gray-100"
               />
@@ -98,10 +98,10 @@ const Layout: React.FC = () => {
             })}
           </nav>
         </aside>
-        
+
         {/* 主内容区域 */}
         <div className="flex-1 min-h-screen">
-          
+
           <main className="p-8">
             <Outlet />
           </main>
@@ -111,4 +111,4 @@ const Layout: React.FC = () => {
   )
 }
 
-export default Layout 
+export default Layout

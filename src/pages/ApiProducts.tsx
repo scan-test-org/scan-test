@@ -1,8 +1,9 @@
-import { useState, useCallback, memo, useMemo } from 'react'
+import { useState, useCallback, memo, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'
-import { Button, Card, Badge, Dropdown, Space, Select, Row, Col, Statistic } from 'antd'
+import { Button, Card, Badge, Dropdown, Select, Row, Col, Statistic } from 'antd'
 import { PlusOutlined, MoreOutlined, ApiOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
+import api from '@/lib/api.ts';
 
 interface ApiProduct {
   id: string
@@ -87,8 +88,8 @@ const mockApiProducts: ApiProduct[] = [
 ]
 
 // 优化的产品卡片组件
-const ProductCard = memo(({ product, onNavigate }: { 
-  product: ApiProduct; 
+const ProductCard = memo(({ product, onNavigate }: {
+  product: ApiProduct;
   onNavigate: (id: string) => void;
 }) => {
   const getTypeIcon = (type: string) => {
@@ -119,8 +120,8 @@ const ProductCard = memo(({ product, onNavigate }: {
   ]
 
   return (
-    <Card 
-      className="hover:shadow-lg transition-shadow cursor-pointer" 
+    <Card
+      className="hover:shadow-lg transition-shadow cursor-pointer"
       onClick={handleClick}
       bodyStyle={{ padding: '16px' }}
     >
@@ -139,14 +140,14 @@ const ProductCard = memo(({ product, onNavigate }: {
           </div>
         </div>
         <Dropdown menu={{ items: dropdownItems }} trigger={['click']}>
-          <Button 
-            type="text" 
+          <Button
+            type="text"
             icon={<MoreOutlined />}
             onClick={(e) => e.stopPropagation()}
           />
         </Dropdown>
       </div>
-      
+
       <div className="space-y-4">
         {product.description && (
           <p className="text-sm text-gray-600">{product.description}</p>
@@ -190,7 +191,13 @@ export default function ApiProducts() {
   const [apiProducts, setApiProducts] = useState<ApiProduct[]>(mockApiProducts)
   const [selectedCategory, setSelectedCategory] = useState<string>("All")
   const [selectedType, setSelectedType] = useState<string>("All")
-  
+
+  useEffect(() => {
+    api.get('/products').then(res => {
+      console.log('api-products res', res);
+    })
+  }, [])
+
   // 优化的过滤器处理函数
   const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category)
@@ -201,21 +208,21 @@ export default function ApiProducts() {
   }, [])
 
   // 使用useMemo优化数据计算
-  const categories = useMemo(() => 
+  const categories = useMemo(() =>
     ["All", ...Array.from(new Set(apiProducts.map(product => product.category)))],
     [apiProducts]
   )
-  
-  const types = useMemo(() => 
+
+  const types = useMemo(() =>
     ["All", "REST API", "MCP Server"],
     []
   )
-  
+
   // 过滤API Products
-  const filteredProducts = useMemo(() => 
+  const filteredProducts = useMemo(() =>
     apiProducts.filter(product => {
       const categoryMatch = selectedCategory === "All" || product.category === selectedCategory
-      const typeMatch = selectedType === "All" || 
+      const typeMatch = selectedType === "All" ||
         (selectedType === "REST API" && product.type === "restApi") ||
         (selectedType === "MCP Server" && product.type === "mcpServer")
       return categoryMatch && typeMatch
@@ -281,4 +288,4 @@ export default function ApiProducts() {
       </div>
     </div>
   )
-} 
+}

@@ -210,13 +210,15 @@ export default function Consoles() {
       </div>
 
       <div className="bg-white rounded-lg border">
-        <Table 
-          columns={columns} 
+        <Table
+          columns={columns}
           dataSource={gateways}
           rowKey="id"
-          pagination={false}
+          pagination={{
+            position: ['bottomRight'],
+          }}
         />
       </div>
     </div>
   )
-} 
+}

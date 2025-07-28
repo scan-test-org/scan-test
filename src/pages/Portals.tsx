@@ -68,7 +68,7 @@ const PortalCard = memo(({ portal, onNavigate }: {
   ]
 
   return (
-    <Card 
+    <Card
       className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] border-2 hover:border-blue-200"
       onClick={handleCardClick}
       bodyStyle={{ padding: '16px' }}
@@ -78,7 +78,7 @@ const PortalCard = memo(({ portal, onNavigate }: {
           <Avatar size={40} className="bg-blue-500">
             {portal.title.charAt(0).toUpperCase()}
           </Avatar>
-          <div>
+          <div className="ml-2">
             <h3 className="text-lg font-semibold">{portal.title}</h3>
           </div>
         </div>
@@ -86,15 +86,15 @@ const PortalCard = memo(({ portal, onNavigate }: {
           <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
         </Dropdown>
       </div>
-      
+
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="text-sm font-medium">{portal.name}</div>
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <LinkOutlined className="h-3 w-3" />
-            <a 
-              href={portal.url || 'http://localhost:5173?portalId=test_portal'} 
-              target="_blank" 
+            <a
+              href={portal.url || 'http://localhost:5173?portalId=test_portal'}
+              target="_blank"
               rel="noopener noreferrer"
               className="hover:underline text-blue-600"
               onClick={handleLinkClick}
@@ -146,7 +146,7 @@ export default function Portals() {
   useEffect(() => {
     setLoading(true)
     setError(null)
-    api.get('/portal/list')
+    api.get('/portals')
       .then((res: any) => {
         // 兼容后端返回结构
         const list = res?.data?.content || []
@@ -209,4 +209,4 @@ export default function Portals() {
       </div>
     </div>
   )
-} 
+}
