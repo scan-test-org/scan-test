@@ -21,7 +21,7 @@ public interface DeveloperService {
 
     Developer createDeveloper(DeveloperCreateParam param);
 
-    Optional<AuthResponseResult> loginWithPassword(String username, String password);
+    AuthResponseResult loginWithPassword(String username, String password);
 
     /**
      * 外部身份登录/绑定入口
@@ -48,6 +48,14 @@ public interface DeveloperService {
      * @param rawInfoJson     第三方原始信息JSON
      */
     void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson, String portalId);
+
+    /**
+     * 为开发者生成认证结果（用于注册后自动登录）
+     *
+     * @param developer 开发者实体
+     * @return 认证结果
+     */
+    AuthResponseResult generateAuthResult(Developer developer);
 
     /**
      * 解绑外部身份（第三方登录）

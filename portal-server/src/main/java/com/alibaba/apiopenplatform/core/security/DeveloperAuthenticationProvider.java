@@ -30,11 +30,11 @@ public class DeveloperAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();
-        Optional<AuthResponseResult> result = developerService.loginWithPassword(username, password);
-        if (result.isPresent()) {
+        try {
+            developerService.loginWithPassword(username, password);
             GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_DEVELOPER");
             return new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
-        } else {
+        } catch (Exception e) {
             throw new BadCredentialsException("用户名或密码错误");
         }
     }
