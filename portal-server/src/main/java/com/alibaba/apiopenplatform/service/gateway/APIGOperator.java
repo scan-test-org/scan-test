@@ -73,7 +73,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeIdentifier) {
+    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId, String name) {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
     }
 

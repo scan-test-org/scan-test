@@ -1,6 +1,7 @@
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
+import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.aliyun.sdk.service.apig20240327.models.HttpRoute;
 import com.aliyun.sdk.service.apig20240327.models.HttpRouteMatch;
 import lombok.Data;
@@ -26,4 +27,6 @@ public class APIGMCPServerResult extends MCPServerResult implements OutputConver
     private HttpRouteMatch match;
 
     private HttpRoute.McpServerInfo mcpServerInfo;
+
+    private String from = GatewayType.APIG_AI.getType();
 }
