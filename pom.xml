@@ -28,7 +28,7 @@
         <springdoc.version>1.7.0</springdoc.version>
         <apigsdk.version>4.0.6</apigsdk.version>
         <okhttp.version>4.12.0</okhttp.version>
-        <higress-sdk.version>0.0.2</higress-sdk.version>
+        <higress-sdk.version>0.0.1-SNAPSHOT</higress-sdk.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>

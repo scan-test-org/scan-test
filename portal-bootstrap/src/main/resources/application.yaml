@@ -12,17 +12,17 @@ spring:
         format_sql: true
 
 db:
-   host: rm-uf6pc9n1jzi2478l4eo.mysql.rds.aliyuncs.com
-   port: 3306
-   name: portal_db
-   username: portal_test
-   password: portal-Go
-
-#   host: localhost
+#   host: rm-uf6pc9n1jzi2478l4eo.mysql.rds.aliyuncs.com
 #   port: 3306
-#   name: api_open_platform
-#   username: root
-#   password: 12345678
+#   name: portal_db
+#   username: portal_test
+#   password: portal-Go
+
+   host: localhost
+   port: 3306
+   name: api_open_platform
+   username: root
+   password: 12345678
 
 springdoc:
   api-docs:

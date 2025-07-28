@@ -6,10 +6,7 @@ import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
-import com.alibaba.apiopenplatform.dto.result.APIResult;
-import com.alibaba.apiopenplatform.dto.result.GatewayResult;
-import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
-import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.repository.GatewayRepository;
@@ -41,9 +38,17 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     private final GatewayRepository gatewayRepository;
 
+//    private final APIGOperator apigOperator;
+//
+//    private final AIGatewayOperator aiGatewayOperator;
+
     private Map<GatewayType, GatewayOperator> gatewayOperators;
 
     public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable) {
+
+//        return param.getGatewayType().isAIGateway() ?
+//                aiGatewayOperator.fetchGateways(param, pageable) : apigOperator.fetchGateways(param, pageable);
+
         return gatewayOperators.get(param.getGatewayType()).fetchGateways(param, pageable);
     }
 
@@ -71,12 +76,6 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
         gatewayRepository.delete(gateway);
     }
 
-
-    public APIResult fetchAPI(String gatewayId, String apiId) {
-        Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchAPI(gateway, apiId);
-    }
-
     @Override
     public PageResult<APIResult> fetchAPIs(String gatewayId, String apiType, Pageable pageable) {
         Gateway gateway = findGateway(gatewayId);
@@ -87,7 +86,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
             switch (type) {
                 case REST:
                     return fetchRESTAPIs(gatewayId, pageable);
-                case MCP:
+                case HTTP:
                     return fetchHTTPAPIs(gatewayId, pageable);
                 default:
             }
@@ -131,9 +130,9 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public String fetchMcpSpec(String gatewayId, String apiId, String routeId) {
+    public String fetchMcpSpec(String gatewayId, String apiId, String routeIdentifier) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchMcpSpec(gateway, apiId, routeId);
+        return getOperator(gateway).fetchMcpSpec(gateway, apiId, routeIdentifier);
     }
 
     @Override

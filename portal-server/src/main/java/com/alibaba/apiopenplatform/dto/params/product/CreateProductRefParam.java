@@ -18,7 +18,6 @@ import java.util.List;
 @Data
 public class CreateProductRefParam implements InputConverter<ProductRef> {
 
-    @NotBlank(message = "API ID不能为空")
     private String apiId;
 
     @NotBlank(message = "网关ID不能为空")
@@ -31,6 +30,10 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
 
     @AssertTrue(message = "MCP Server路由ID不能为空")
     private boolean isMCPValid() {
-        return type != ProductType.MCP_SERVER || CollUtil.isNotEmpty(routes);
+        if (type == ProductType.MCP_SERVER) {
+            return CollUtil.isNotEmpty(routes);
+        } else {
+            return StrUtil.isNotBlank(apiId);
+        }
     }
 } 

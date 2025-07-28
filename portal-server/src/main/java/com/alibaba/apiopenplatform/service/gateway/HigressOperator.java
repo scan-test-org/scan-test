@@ -1,14 +1,20 @@
 package com.alibaba.apiopenplatform.service.gateway;
 
+import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
-import com.aliyun.sdk.service.apig20240327.models.HttpRoute;
+import com.alibaba.higress.sdk.model.PaginatedResult;
+import com.alibaba.higress.sdk.model.mcp.McpServer;
+import com.alibaba.higress.sdk.model.mcp.McpServerPageQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author zh
@@ -28,19 +34,40 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public PageResult<MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+    public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+        HigressClient client = getClient(gateway);
 
-        return null;
+        McpServerPageQuery query = new McpServerPageQuery();
+        query.setPageNum(pageable.getPageNumber());
+        query.setPageSize(pageable.getPageSize());
+
+        return client.execute(c -> {
+            PaginatedResult<McpServer> page = c.mcpServerService().list(query);
+            List<HigressMCPServerResult> mcpServers = page.getData().stream()
+                    .map(s -> new HigressMCPServerResult().convertFrom(s))
+                    .collect(Collectors.toList());
+
+            return PageResult.of(mcpServers, pageable.getPageNumber(), pageable.getPageSize(), page.getTotal());
+
+        });
     }
 
     @Override
     public String fetchAPISpec(Gateway gateway, String apiId) {
+
         return null;
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId) {
-        return "";
+    public String fetchMcpSpec(Gateway gateway, String apiId, String routeIdentifier) {
+        HigressClient client = getClient(gateway);
+
+        HigressMCPServerResult mcpServerResult = client.execute(c -> {
+            McpServer mcpServer = c.mcpServerService().query(routeIdentifier);
+            return new HigressMCPServerResult().convertFrom(mcpServer);
+        });
+
+        return JSONUtil.toJsonStr(mcpServerResult);
     }
 
     @Override

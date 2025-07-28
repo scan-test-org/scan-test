@@ -73,11 +73,14 @@
         <dependency>
             <groupId>io.higress.api</groupId>
             <artifactId>higress-admin-sdk</artifactId>
-            <version>0.0.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.bouncycastle</groupId>
                     <artifactId>bcprov-jdk16</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>bcprov-jdk18on</artifactId>
+                    <groupId>org.bouncycastle</groupId>
                 </exclusion>
             </exclusions>
         </dependency>

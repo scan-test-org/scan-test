@@ -3,10 +3,7 @@ package com.alibaba.apiopenplatform.service.gateway;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
-import com.alibaba.apiopenplatform.dto.result.APIResult;
-import com.alibaba.apiopenplatform.dto.result.HttpRouteResult;
-import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
-import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
@@ -24,7 +21,7 @@ import org.springframework.stereotype.Service;
 public class AIGatewayOperator extends APIGOperator {
 
     @Override
-    public PageResult<MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+    public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
         PageResult<APIResult> page = fetchAPIs(gateway, APIGAPIType.MCP, PageRequest.of(0, 1));
         if (page.getTotalElements() == 0) {
             return PageResult.empty(pageable.getPageNumber(), pageable.getPageSize());
@@ -38,9 +35,9 @@ public class AIGatewayOperator extends APIGOperator {
                 return PageResult.empty(pageable.getPageNumber(), pageable.getPageSize());
             }
 
-            return PageResult.<MCPServerResult>builder().build()
+            return PageResult.<APIGMCPServerResult>builder().build()
                     .mapFrom(routesPage, route -> {
-                        MCPServerResult r = new MCPServerResult().convertFrom(route);
+                        APIGMCPServerResult r = new APIGMCPServerResult().convertFrom(route);
                         r.setApiId(apiId);
                         return r;
                     });
@@ -51,11 +48,11 @@ public class AIGatewayOperator extends APIGOperator {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId) {
-        HttpRoute httpRoute = fetchHTTPRoute(gateway, apiId, routeId);
+    public String fetchMcpSpec(Gateway gateway, String apiId, String routeIdentifier) {
+        HttpRoute httpRoute = fetchHTTPRoute(gateway, apiId, routeIdentifier);
 
-        HttpRouteResult routeResult = new HttpRouteResult().convertFrom(httpRoute);
-        return JSONUtil.toJsonStr(routeResult);
+        APIGMCPServerResult mcpServerResult = new APIGMCPServerResult().convertFrom(httpRoute);
+        return JSONUtil.toJsonStr(mcpServerResult);
     }
 
     @Override
