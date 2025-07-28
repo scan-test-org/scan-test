@@ -160,7 +160,9 @@ public class PortalServiceImpl implements PortalService {
     @Override
     public PortalResult bindDomain(String portalId, BindDomainParam param) {
         Portal portal = findPortal(portalId);
-        portal.getPortalDomains().add(param.convertTo());
+        PortalDomain portalDomain = param.convertTo();
+        portalDomain.setPortal(portal);
+        portal.getPortalDomains().add(portalDomain);
 
         portalRepository.saveAndFlush(portal);
         return getPortal(portalId);
@@ -179,7 +181,8 @@ public class PortalServiceImpl implements PortalService {
             throw new BusinessException(ErrorCode.DOMAIN_NOT_ALLOWED_UNBIND, domain);
         }
 
-        portalDomainRepository.delete(portalDomain);
+        portal.getPortalDomains().remove(portalDomain);
+        portalRepository.save(portal);
         return getPortal(portalId);
     }
 
