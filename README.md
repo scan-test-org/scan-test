@@ -50,7 +50,7 @@ src/
 ## 部署方式
 1. 构建本地镜像
 ```bash
-docker build -t /daofeng/api-portal-admin:latest .
+docker buildx build --platform linux/amd64 -t /daofeng/api-portal-admin:latest .
 ```
 
 2. 推送镜像到ACR
