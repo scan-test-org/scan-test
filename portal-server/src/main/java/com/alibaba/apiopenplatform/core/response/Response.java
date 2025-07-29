@@ -20,7 +20,6 @@ public class Response<T> {
     public static <T> Response<T> ok(T data) {
         return new Response<T>()
                 .setCode("SUCCESS")
-                .setMessage("操作成功")
                 .setData(data);
     }
 

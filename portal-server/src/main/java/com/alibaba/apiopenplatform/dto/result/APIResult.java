@@ -14,13 +14,10 @@ public class APIResult implements OutputConverter<APIResult, HttpApiApiInfo> {
 
     private String name;
 
-    private String type;
-
     @Override
     public APIResult convertFrom(HttpApiApiInfo apiInfo) {
         setApiId(apiInfo.getHttpApiId());
         setName(apiInfo.getName());
-        setType(apiInfo.getType());
         return this;
     }
 }

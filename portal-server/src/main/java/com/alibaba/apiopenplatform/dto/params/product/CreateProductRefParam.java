@@ -21,9 +21,8 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
 
     private String apiId;
 
+    @NotBlank(message = "网关ID不能为空")
     private String gatewayId;
-
-    private String nacosId;
 
     private List<RouteOption> routes;
 
@@ -39,21 +38,10 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
         }
     }
 
-    @AssertTrue(message = "Gateway ID或Nacos ID必须指定一个")
-    private boolean isSourceValid() {
-        if (type == ProductType.MCP_SERVER) {
-            return StrUtil.isNotBlank(nacosId);
-        } else {
-            return StrUtil.isNotBlank(gatewayId);
-        }
-    }
-
     @Override
     public ProductRef convertTo() {
         ProductRef productRef = InputConverter.super.convertTo();
-        if (routes != null) {
-            productRef.setRoutes(routes.stream().map(RouteOption::convertTo).collect(Collectors.toList()));
-        }
+        productRef.setRoutes(routes.stream().map(RouteOption::convertTo).collect(Collectors.toList()));
         return productRef;
     }
 }
