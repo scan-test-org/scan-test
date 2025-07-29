@@ -9,5 +9,13 @@ export default defineConfig({
     allowedHosts: [
       'portal-6882e06f4fd0c963020e3485.api.portal.com'
     ]
+  },
+  optimizeDeps: {
+    include: ['monaco-editor/esm/vs/editor/editor.api']
+  },
+  build: {
+    rollupOptions: {
+      external: ['monaco-editor']
+    }
   }
 })
