@@ -72,6 +72,8 @@ public class SecurityConfig {
                 .antMatchers("/developers", "/developers/login").permitAll()
                 // OAuth2相关接口（无需认证）
                 .antMatchers("/developers/authorize", "/developers/callback").permitAll()
+                // 获取OIDC提供商列表（无需认证，登录前需要）
+                .antMatchers("/developers/providers").permitAll()
                 .antMatchers("/login/oauth2/**", "/oauth2/**").permitAll()
                 .antMatchers("/bind-callback").permitAll()
                 // 管理员接口（需要ADMIN角色）
