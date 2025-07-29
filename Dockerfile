@@ -8,8 +8,8 @@ COPY . .
 RUN curl https://anpm.alibaba-inc.com/open/install-node.sh?v=20 | bash
 
 
-RUN npm install
-RUN npm run build
+# RUN npm install
+# RUN npm run build
 
 EXPOSE 3000
 CMD ["node", "server.js"]

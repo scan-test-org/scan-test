@@ -2,6 +2,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import process from 'process';
 
 // 模拟 __dirname（ESM 中不再可用）
 const __filename = fileURLToPath(import.meta.url);
@@ -15,16 +16,18 @@ const DIST_DIR = path.join(__dirname, 'dist');
 // 提供静态文件（JS、CSS、图片等）
 app.use(express.static(DIST_DIR));
 
-// SPA：所有未匹配的路由返回 index.html（支持前端路由）
-// app.get('/', (req, res) => {
-//   res.sendFile(path.resolve(DIST_DIR, 'index.html'));
+// 处理 API 路由（如果有的话）
+// app.get('/api/*', (req, res) => {
+//   res.status(404).json({ error: 'API endpoint not found' });
 // });
 
-app.get('/*', (req, res) => {
-  res.sendFile(path.resolve(DIST_DIR, 'index.html'));
+// SPA：所有其他路由返回 index.html（支持前端路由）
+app.get('*', (req, res) => {
+  res.sendFile(path.join(DIST_DIR, 'index.html'));
 });
+
 // 设置端口
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
