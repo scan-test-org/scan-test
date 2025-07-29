@@ -54,5 +54,9 @@ export const portalApi = {
   unbindDomain: (portalId: string, domain: string) => {
     const encodedDomain = encodeURIComponent(domain)
     return api.delete(`/portals/${portalId}/domains/${encodedDomain}`)
+  },
+  // 更新Portal设置
+  updatePortalSettings: (portalId: string, settings: any) => {
+    return api.put(`/portals/${portalId}/setting`, settings)
   }
 } 

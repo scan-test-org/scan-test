@@ -16,16 +16,31 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
   const [domainForm] = Form.useForm()
   const [domainLoading, setDomainLoading] = useState(false)
 
+  // 通用的设置更新方法 - 仅更新表单值，不立即保存
+  const handleSettingUpdate = (fieldName: string, value: any) => {
+    form.setFieldsValue({ [fieldName]: value })
+  }
+
   const handleSave = async () => {
     setLoading(true)
     try {
       const values = await form.validateFields()
       console.log('保存设置:', values)
-      // 这里可以调用API保存设置
-      setTimeout(() => {
-        setLoading(false)
-      }, 1000)
+      
+      // 调用API保存设置
+      const updateData = {
+        ...values,
+        // 保持现有的OIDC配置
+        oidcOptions: portal.portalSettingConfig.oidcConfigs || []
+      }
+      
+      await portalApi.updatePortalSettings(portal.portalId, updateData)
+      message.success('设置保存成功')
+      onRefresh?.()
     } catch (error) {
+      console.error('保存设置失败:', error)
+      message.error('保存设置失败')
+    } finally {
       setLoading(false)
     }
   }
@@ -158,28 +173,36 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
             label="内置认证"
             valuePropName="checked"
           >
-            <Switch />
+            <Switch 
+              onChange={(checked) => handleSettingUpdate('builtinAuthEnabled', checked)}
+            />
           </Form.Item>
           <Form.Item
             name="oidcAuthEnabled"
             label="OIDC认证"
             valuePropName="checked"
           >
-            <Switch />
+            <Switch 
+              onChange={(checked) => handleSettingUpdate('oidcAuthEnabled', checked)}
+            />
           </Form.Item>
           <Form.Item
             name="autoApproveDevelopers"
             label="开发者自动审批"
             valuePropName="checked"
           >
-            <Switch />
+            <Switch 
+              onChange={(checked) => handleSettingUpdate('autoApproveDevelopers', checked)}
+            />
           </Form.Item>
           <Form.Item
             name="autoApproveSubscriptions"
             label="订阅自动审批"
             valuePropName="checked"
           >
-            <Switch />
+            <Switch 
+              onChange={(checked) => handleSettingUpdate('autoApproveSubscriptions', checked)}
+            />
           </Form.Item>
           <Form.Item
             name="frontendRedirectUrl"
@@ -260,7 +283,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <div className="text-sm text-gray-500">启用访问统计和分析功能</div>
             </div>
             <Form.Item name="enableAnalytics" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('enableAnalytics', checked)}
+              />
             </Form.Item>
           </div>
           <Divider />
@@ -270,7 +295,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <div className="text-sm text-gray-500">启用邮件和Webhook通知</div>
             </div>
             <Form.Item name="enableNotifications" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('enableNotifications', checked)}
+              />
             </Form.Item>
           </div>
           <Divider />
@@ -280,7 +307,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <div className="text-sm text-gray-500">记录用户操作和系统事件</div>
             </div>
             <Form.Item name="enableAuditLog" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('enableAuditLog', checked)}
+              />
             </Form.Item>
           </div>
           <Divider />
@@ -290,7 +319,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <div className="text-sm text-gray-500">启用API调用频率限制</div>
             </div>
             <Form.Item name="enableRateLimiting" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('enableRateLimiting', checked)}
+              />
             </Form.Item>
           </div>
           <Divider />
@@ -300,7 +331,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <div className="text-sm text-gray-500">启用响应缓存以提高性能</div>
             </div>
             <Form.Item name="enableCaching" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('enableCaching', checked)}
+              />
             </Form.Item>
           </div>
           <Divider />
@@ -310,7 +343,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <div className="text-sm text-gray-500">启用响应压缩以减少带宽</div>
             </div>
             <Form.Item name="enableCompression" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('enableCompression', checked)}
+              />
             </Form.Item>
           </div>
           <Divider />
@@ -320,7 +355,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <div className="text-sm text-gray-500">强制使用HTTPS连接</div>
             </div>
             <Form.Item name="enableSSL" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('enableSSL', checked)}
+              />
             </Form.Item>
           </div>
           <Divider />
@@ -330,7 +367,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <div className="text-sm text-gray-500">启用跨域资源共享</div>
             </div>
             <Form.Item name="enableCORS" valuePropName="checked" noStyle>
-              <Switch />
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('enableCORS', checked)}
+              />
             </Form.Item>
           </div>
         </div>
