@@ -22,7 +22,7 @@ public class HigressMCPServerResult extends MCPServerResult implements OutputCon
 
         r.setFromType(mcpServer.getType().name());
         r.setMcpServerConfig(mcpServer.getRawConfigurations());
-        r.setFromType(GatewayType.HIGRESS.getType());
+        r.setFromGateway(GatewayType.HIGRESS.getType());
 
         r.setDomains(mcpServer.getDomains().stream().map(domain -> Domain.builder()
                 .domain(domain)

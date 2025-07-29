@@ -1,5 +1,7 @@
 package com.alibaba.apiopenplatform.service.gateway;
 
+import cn.hutool.core.codec.Base64;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -7,7 +9,7 @@ import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
-import com.aliyun.sdk.service.apig20240327.models.HttpRoute;
+import com.aliyun.sdk.service.apig20240327.models.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -52,11 +54,36 @@ public class AIGatewayOperator extends APIGOperator {
         HttpRoute httpRoute = fetchHTTPRoute(gateway, apiId, routeId);
 
         APIGMCPServerResult mcpServerResult = new APIGMCPServerResult().convertFrom(httpRoute);
+
+        if (StrUtil.isBlank(mcpServerResult.getMcpServerConfig())
+                && StrUtil.equalsIgnoreCase("ApiGatewayHttpToMCP", mcpServerResult.getFromType())) {
+            mcpServerResult.setMcpServerConfig(fetchMcpPlugin(gateway, routeId));
+        }
         return JSONUtil.toJsonStr(mcpServerResult);
     }
 
     @Override
     public GatewayType getGatewayType() {
         return GatewayType.APIG_AI;
+    }
+
+
+    public String fetchMcpPlugin(Gateway gateway, String routeId) {
+        PageResult<PluginAttachmentResult> page = fetchPluginAttachment(gateway, "GatewayRoute", routeId,
+                PageRequest.of(1, 100));
+
+        for (PluginAttachmentResult attachment : page.getContent()) {
+            PluginClassInfo pluginClassInfo = attachment.getPluginClassInfo();
+
+            if (!StrUtil.equalsIgnoreCase(pluginClassInfo.getName(), "mcp-server")) {
+                continue;
+            }
+
+            String pluginConfig = attachment.getPluginConfig();
+            if (StrUtil.isNotBlank(pluginConfig)) {
+                return Base64.decodeStr(pluginConfig);
+            }
+        }
+        return null;
     }
 }
