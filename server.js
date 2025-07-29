@@ -1,27 +1,31 @@
-import express from 'express'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import compression from 'compression'
+// server.js
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+// 模拟 __dirname（ESM 中不再可用）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const app = express()
-const PORT = 3000
+const app = express();
 
+// 静态资源目录（你的构建输出目录，如 dist）
+const DIST_DIR = path.join(__dirname, 'dist');
 
-// 压缩中间件
-app.use(compression())
+// 提供静态文件（JS、CSS、图片等）
+app.use(express.static(DIST_DIR));
 
-// 静态文件服务
-app.use(express.static(path.join(__dirname, 'dist')))
+// SPA：所有未匹配的路由返回 index.html（支持前端路由）
+// app.get('/', (req, res) => {
+//   res.sendFile(path.resolve(DIST_DIR, 'index.html'));
+// });
 
-// 所有其他请求都返回index.html（SPA路由）
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
-})
+app.get('/*', (req, res) => {
+  res.sendFile(path.resolve(DIST_DIR, 'index.html'));
+});
+// 设置端口
+const PORT = 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Portal Admin Server is running on port ${PORT}`)
-  console.log(`📱 Open http://localhost:${PORT} to view the application`)
-}) 
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+});

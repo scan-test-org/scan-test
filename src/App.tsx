@@ -1,8 +1,7 @@
-import React from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import { RouterProvider } from 'react-router-dom'
 import { ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
-import AppRoutes from './routes'
+import { router } from './routes'
 import aliyunThemeToken from './aliyunThemeToken'
 import './App.css'
 
@@ -14,9 +13,7 @@ function App() {
         token: aliyunThemeToken,
       }}
     >
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </ConfigProvider>
   )
 }

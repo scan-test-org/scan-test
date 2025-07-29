@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 
 import { getToken, removeToken } from './utils'
 
 const api: AxiosInstance = axios.create({
-  baseURL: (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: (import.meta as any).env.VITE_API_BASE_URL || 'http://47.117.149.200:8080',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
