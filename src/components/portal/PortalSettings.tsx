@@ -24,7 +24,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
   
   // 本地OIDC配置状态，避免频繁刷新
   const [localOidcConfigs, setLocalOidcConfigs] = useState<OidcConfig[]>(
-    portal.portalSettingConfig.oidcConfigs || []
+    portal.portalSettingConfig.oidcOptions || []
   )
   
   // 本地域名配置状态，避免频繁刷新
@@ -34,9 +34,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
 
   // 当portal数据更新时，同步本地配置
   useEffect(() => {
-    setLocalOidcConfigs(portal.portalSettingConfig.oidcConfigs || [])
+    setLocalOidcConfigs(portal.portalSettingConfig.oidcOptions || [])
     setLocalDomainConfigs(portal.portalDomainConfig || [])
-  }, [portal.portalSettingConfig.oidcConfigs, portal.portalDomainConfig])
+  }, [portal.portalSettingConfig.oidcOptions, portal.portalDomainConfig])
 
   // 通用的设置更新方法 - 仅更新表单值，不立即保存
   const handleSettingUpdate = (fieldName: string, value: any) => {
@@ -53,7 +53,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       const updateData = {
         ...values,
         // 保持现有的OIDC配置
-        oidcOptions: portal.portalSettingConfig.oidcConfigs || []
+        oidcOptions: portal.portalSettingConfig.oidcOptions || []
       }
       
       await portalApi.updatePortalSettings(portal.portalId, updateData)
@@ -178,7 +178,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       console.error('保存OIDC配置失败:', error)
       message.error('保存OIDC配置失败')
       // 如果保存失败，回滚本地状态
-      setLocalOidcConfigs(portal.portalSettingConfig.oidcConfigs || [])
+      setLocalOidcConfigs(portal.portalSettingConfig.oidcOptions || [])
     } finally {
       setOidcLoading(false)
     }
@@ -210,7 +210,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       console.error('删除OIDC配置失败:', error)
       message.error('删除OIDC配置失败')
       // 如果删除失败，回滚本地状态
-      setLocalOidcConfigs(portal.portalSettingConfig.oidcConfigs || [])
+      setLocalOidcConfigs(portal.portalSettingConfig.oidcOptions || [])
     }
   }
 
