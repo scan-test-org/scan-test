@@ -90,6 +90,4 @@ public class ProductController {
     public void deleteProductRef(@PathVariable String productId) {
         productService.deleteProductRef(productId);
     }
-
-
 }

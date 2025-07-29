@@ -1,6 +1,6 @@
 package com.alibaba.apiopenplatform.service.gateway;
 
-import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
+import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
 import com.alibaba.apiopenplatform.support.enums.NacosStatus;
 import com.alibaba.nacos.maintainer.client.ai.AiMaintainerFactory;
@@ -43,7 +43,7 @@ public class NacosOperator {
     /**
      * 获取Nacos中的MCP Server列表
      */
-    public List<MCPServerResult> fetchMcpServers(NacosInstance nacosInstance) {
+    public List<NacosMCPServerResult> fetchMcpServers(NacosInstance nacosInstance) {
         try {
             McpMaintainerService service = buildMcpService(nacosInstance);
             String namespace = nacosInstance.getNamespace() != null ? nacosInstance.getNamespace() : "public";
@@ -54,10 +54,11 @@ public class NacosOperator {
                 return new ArrayList<>();
             }
             
-            List<MCPServerResult> results = new ArrayList<>();
+            List<NacosMCPServerResult> results = new ArrayList<>();
             for (McpServerBasicInfo basicInfo : page.getPageItems()) {
-                MCPServerResult result = new MCPServerResult();
-                result.setName(basicInfo.getName());
+                NacosMCPServerResult result = new NacosMCPServerResult().convertFrom(basicInfo);
+                // 设置来源Gateway信息
+                result.setFromGateway(nacosInstance.getNacosId());
                 results.add(result);
             }
             

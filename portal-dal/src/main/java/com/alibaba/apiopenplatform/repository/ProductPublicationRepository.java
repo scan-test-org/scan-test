@@ -16,5 +16,5 @@ public interface ProductPublicationRepository extends BaseRepository<ProductPubl
     Page<ProductPublication> findByPortalId(String portalId, Pageable pageable);
 
     @EntityGraph("product.properties")
-    Optional<ProductPublication> findByPortalIdAndProduct_ProductId(String portalId, String productId);
+    Optional<ProductPublication> findByPortalIdAndProductId(String portalId, String productId);
 }

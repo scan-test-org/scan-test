@@ -7,7 +7,7 @@ import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.CreateNacosParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
-import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
+import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
@@ -190,16 +190,16 @@ public class NacosServiceImpl implements NacosService {
     }
 
     @Override
-    public PageResult<MCPServerResult> fetchMcpServers(String nacosId, Pageable pageable) {
+    public PageResult<NacosMCPServerResult> fetchMcpServers(String nacosId, Pageable pageable) {
         NacosInstance nacosInstance = findNacosInstance(nacosId);
         
-        List<MCPServerResult> mcpServers = nacosOperator.fetchMcpServers(nacosInstance);
+        List<NacosMCPServerResult> mcpServers = nacosOperator.fetchMcpServers(nacosInstance);
         
         // 简单的分页处理
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), mcpServers.size());
         
-        List<MCPServerResult> pageContent = mcpServers.subList(start, end);
+        List<NacosMCPServerResult> pageContent = mcpServers.subList(start, end);
         
         return PageResult.of(pageContent, pageable.getPageNumber(), pageable.getPageSize(), mcpServers.size());
     }

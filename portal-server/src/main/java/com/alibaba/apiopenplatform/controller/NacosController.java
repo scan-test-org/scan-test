@@ -5,7 +5,7 @@ import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam;
 import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.CreateNacosParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
-import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
+import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.service.NacosService;
@@ -64,7 +64,7 @@ public class NacosController {
 
     @Operation(summary = "获取Nacos中的MCP Server列表")
     @GetMapping("/{nacosId}/mcp-servers")
-    public PageResult<MCPServerResult> fetchMcpServers(@PathVariable String nacosId,
+    public PageResult<NacosMCPServerResult> fetchMcpServers(@PathVariable String nacosId,
                                                        Pageable pageable) {
         return nacosService.fetchMcpServers(nacosId, pageable);
     }

@@ -13,7 +13,8 @@ import java.util.List;
 @Schema(
         oneOf = {
                 APIGMCPServerResult.class,
-                HigressMCPServerResult.class
+                HigressMCPServerResult.class,
+                NacosMCPServerResult.class
         },
         discriminatorProperty = "type"
 )
