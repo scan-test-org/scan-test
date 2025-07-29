@@ -29,6 +29,7 @@ import java.util.Optional;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import com.alibaba.apiopenplatform.entity.Administrator;
 
 /**
  * 管理员控制器，提供注册和登录等API接口
@@ -102,16 +103,40 @@ public class AdministratorController {
         return "初始化成功";
     }
 
-    @Operation(summary = "管理员修改密码", description = "需传递adminId、oldPassword、newPassword，前端自动传递token，后端校验当前登录管理员和adminId是否一致，防止越权。")
-    @PatchMapping("/{adminId}/password")
-    public String changePassword(@PathVariable("adminId") String adminId,
-                                 @RequestBody ChangePasswordParam param) {
+    @Operation(summary = "管理员修改密码", description = "修改当前登录管理员的密码，需传递oldPassword、newPassword")
+    @PatchMapping("/password")
+    public String changePassword(@RequestBody ChangePasswordParam param) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserId = authentication != null ? authentication.getName() : null;
-        if (currentUserId == null || !currentUserId.equals(adminId)) {
+        if (currentUserId == null) {
             throw new BusinessException(ErrorCode.AUTH_REQUIRED);
         }
-        administratorService.changePassword(adminId, param.getOldPassword(), param.getNewPassword());
+        administratorService.changePassword(currentUserId, param.getOldPassword(), param.getNewPassword());
         return "修改密码成功";
+    }
+
+
+
+    @Operation(summary = "获取当前登录管理员信息", description = "根据token自动获取当前登录管理员的详细信息")
+    @GetMapping
+    public Map<String, Object> getCurrentAdminInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = authentication != null ? authentication.getName() : null;
+        if (currentUserId == null) {
+            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
+        }
+        
+        Optional<Administrator> adminOpt = administratorService.findByAdminId(currentUserId);
+        if (!adminOpt.isPresent()) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "admin", currentUserId);
+        }
+        
+        Administrator admin = adminOpt.get();
+        Map<String, Object> result = new HashMap<>();
+        result.put("adminId", admin.getAdminId());
+        result.put("username", admin.getUsername());
+        result.put("createAt", admin.getCreateAt());
+        result.put("updatedAt", admin.getUpdatedAt());
+        return result;
     }
 } 

@@ -3,6 +3,7 @@ package com.alibaba.apiopenplatform.service;
 import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
+import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -88,4 +89,12 @@ public interface ProductService {
      * 上架MCP Server为Product
      */
     ProductResult addMcpServerProduct(com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam param);
+
+    /**
+     * 获取Nacos实例列表，用于创建Product时选择
+     *
+     * @param pageable
+     * @return
+     */
+    PageResult<NacosResult> listNacosInstances(Pageable pageable);
 }

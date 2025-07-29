@@ -28,8 +28,11 @@ public class ProductRef extends BaseEntity {
     @Column(name = "api_id", length = 32, nullable = false)
     private String apiId;
 
-    @Column(name = "gateway_id", length = 32, nullable = false)
+    @Column(name = "gateway_id", length = 32)
     private String gatewayId;
+
+    @Column(name = "nacos_id", length = 32)
+    private String nacosId;
 
     @Column(name = "product_id", length = 32, nullable = false)
     private String productId;

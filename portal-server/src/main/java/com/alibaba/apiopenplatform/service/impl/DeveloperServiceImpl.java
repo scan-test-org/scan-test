@@ -371,4 +371,51 @@ public class DeveloperServiceImpl implements DeveloperService {
         return developerRepository.findByDeveloperId(developerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.DEVELOPER, developerId));
     }
+
+    @Override
+    @Transactional
+    public boolean changePassword(String developerId, String oldPassword, String newPassword) {
+        Optional<Developer> devOpt = developerRepository.findByDeveloperId(developerId);
+        if (!devOpt.isPresent()) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", developerId);
+        }
+        Developer developer = devOpt.get();
+        if (!PasswordHasher.verify(oldPassword, developer.getPasswordHash())) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID);
+        }
+        developer.setPasswordHash(PasswordHasher.hash(newPassword));
+        developerRepository.save(developer);
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean updateProfile(String developerId, String username, String email, String avatarUrl) {
+        Optional<Developer> devOpt = developerRepository.findByDeveloperId(developerId);
+        if (!devOpt.isPresent()) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", developerId);
+        }
+        Developer developer = devOpt.get();
+        
+        // 检查用户名唯一性（如果修改了用户名）
+        if (username != null && !username.equals(developer.getUsername())) {
+            if (developerRepository.findByUsername(username).isPresent()) {
+                throw new BusinessException(ErrorCode.DEVELOPER_USERNAME_EXISTS, username);
+            }
+            developer.setUsername(username);
+        }
+        
+        // 更新邮箱
+        if (email != null) {
+            developer.setEmail(email);
+        }
+        
+        // 更新头像
+        if (avatarUrl != null) {
+            developer.setAvatarUrl(avatarUrl);
+        }
+        
+        developerRepository.save(developer);
+        return true;
+    }
 } 
