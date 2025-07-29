@@ -1,7 +1,7 @@
 import { Card, Form, Input, Select, Switch, Button, Divider, Space, Tag, Table, Modal, message, Tabs } from 'antd'
-import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons'
+import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { useState } from 'react'
-import { Portal } from '@/types'
+import { Portal, OidcConfig } from '@/types'
 import { portalApi } from '@/lib/api'
 
 interface PortalSettingsProps {
@@ -15,6 +15,12 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
   const [domainModalVisible, setDomainModalVisible] = useState(false)
   const [domainForm] = Form.useForm()
   const [domainLoading, setDomainLoading] = useState(false)
+  
+  // OIDC 配置相关状态
+  const [oidcModalVisible, setOidcModalVisible] = useState(false)
+  const [oidcForm] = Form.useForm()
+  const [oidcLoading, setOidcLoading] = useState(false)
+  const [editingOidc, setEditingOidc] = useState<OidcConfig | null>(null)
 
   // 通用的设置更新方法 - 仅更新表单值，不立即保存
   const handleSettingUpdate = (fieldName: string, value: any) => {
@@ -91,6 +97,79 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     }
   }
 
+  // OIDC 配置管理相关函数
+  const handleAddOidc = () => {
+    setEditingOidc(null)
+    setOidcModalVisible(true)
+    oidcForm.resetFields()
+  }
+
+  const handleEditOidc = (oidc: OidcConfig) => {
+    setEditingOidc(oidc)
+    setOidcModalVisible(true)
+    oidcForm.setFieldsValue(oidc)
+  }
+
+  const handleOidcModalOk = async () => {
+    try {
+      setOidcLoading(true)
+      const values = await oidcForm.validateFields()
+      
+      const currentOidcConfigs = portal.portalSettingConfig.oidcConfigs || []
+      let updatedOidcConfigs: OidcConfig[]
+      
+      if (editingOidc) {
+        // 编辑现有配置
+        updatedOidcConfigs = currentOidcConfigs.map(config => 
+          config.id === editingOidc.id ? { ...values, id: editingOidc.id } : config
+        )
+      } else {
+        // 添加新配置
+        const newId = `${values.provider}_${Date.now()}`
+        updatedOidcConfigs = [...currentOidcConfigs, { ...values, id: newId }]
+      }
+      
+      // 更新设置
+      await portalApi.updatePortalSettings(portal.portalId, {
+        ...form.getFieldsValue(),
+        oidcOptions: updatedOidcConfigs
+      })
+      
+      message.success(editingOidc ? 'OIDC配置更新成功' : 'OIDC配置添加成功')
+      setOidcModalVisible(false)
+      onRefresh?.()
+    } catch (error) {
+      console.error('保存OIDC配置失败:', error)
+      message.error('保存OIDC配置失败')
+    } finally {
+      setOidcLoading(false)
+    }
+  }
+
+  const handleOidcModalCancel = () => {
+    setOidcModalVisible(false)
+    setEditingOidc(null)
+    oidcForm.resetFields()
+  }
+
+  const handleDeleteOidc = async (oidcId: string) => {
+    try {
+      const currentOidcConfigs = portal.portalSettingConfig.oidcConfigs || []
+      const updatedOidcConfigs = currentOidcConfigs.filter(config => config.id !== oidcId)
+      
+      await portalApi.updatePortalSettings(portal.portalId, {
+        ...form.getFieldsValue(),
+        oidcOptions: updatedOidcConfigs
+      })
+      
+      message.success('OIDC配置删除成功')
+      onRefresh?.()
+    } catch (error) {
+      console.error('删除OIDC配置失败:', error)
+      message.error('删除OIDC配置失败')
+    }
+  }
+
   // 域名表格列定义
   const domainColumns = [
     {
@@ -133,6 +212,64 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     }
   ]
 
+  // OIDC 配置表格列定义
+  const oidcColumns = [
+    {
+      title: '提供商',
+      dataIndex: 'provider',
+      key: 'provider',
+      render: (provider: string) => (
+        <Tag color="blue">{provider}</Tag>
+      )
+    },
+    {
+      title: '名称',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Client ID',
+      dataIndex: 'clientId',
+      key: 'clientId',
+      render: (clientId: string) => (
+        <span className="font-mono text-xs">{clientId.substring(0, 20)}...</span>
+      )
+    },
+    {
+      title: '状态',
+      dataIndex: 'enabled',
+      key: 'enabled',
+      render: (enabled: boolean) => (
+        <Tag color={enabled ? 'green' : 'red'}>
+          {enabled ? '启用' : '禁用'}
+        </Tag>
+      )
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_: any, record: OidcConfig) => (
+        <Space>
+          <Button 
+            type="link" 
+            icon={<EditOutlined />}
+            onClick={() => handleEditOidc(record)}
+          >
+            编辑
+          </Button>
+          <Button 
+            type="link" 
+            danger 
+            icon={<DeleteOutlined />}
+            onClick={() => handleDeleteOidc(record.id)}
+          >
+            删除
+          </Button>
+        </Space>
+      )
+    }
+  ]
+
   const tabItems = [
     {
       key: 'basic',
@@ -167,50 +304,78 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       key: 'auth',
       label: '认证设置',
       children: (
-        <div className="grid grid-cols-2 gap-6">
-          <Form.Item
-            name="builtinAuthEnabled"
-            label="内置认证"
-            valuePropName="checked"
-          >
-            <Switch 
-              onChange={(checked) => handleSettingUpdate('builtinAuthEnabled', checked)}
+        <div className="space-y-6">
+          {/* 基本认证设置 */}
+          <div className="grid grid-cols-2 gap-6">
+            <Form.Item
+              name="builtinAuthEnabled"
+              label="内置认证"
+              valuePropName="checked"
+            >
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('builtinAuthEnabled', checked)}
+              />
+            </Form.Item>
+            <Form.Item
+              name="oidcAuthEnabled"
+              label="OIDC认证"
+              valuePropName="checked"
+            >
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('oidcAuthEnabled', checked)}
+              />
+            </Form.Item>
+            <Form.Item
+              name="autoApproveDevelopers"
+              label="开发者自动审批"
+              valuePropName="checked"
+            >
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('autoApproveDevelopers', checked)}
+              />
+            </Form.Item>
+            <Form.Item
+              name="autoApproveSubscriptions"
+              label="订阅自动审批"
+              valuePropName="checked"
+            >
+              <Switch 
+                onChange={(checked) => handleSettingUpdate('autoApproveSubscriptions', checked)}
+              />
+            </Form.Item>
+            <Form.Item
+              name="frontendRedirectUrl"
+              label="前端重定向URL"
+              className="col-span-2"
+            >
+              <Input placeholder="http://portal.example.com/callback" />
+            </Form.Item>
+          </div>
+
+          {/* OIDC 配置管理 */}
+          <Divider />
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-lg font-medium">OIDC 配置</h3>
+                <p className="text-sm text-gray-500">管理第三方身份提供商配置</p>
+              </div>
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                onClick={handleAddOidc}
+              >
+                添加 OIDC 配置
+              </Button>
+            </div>
+            <Table 
+              columns={oidcColumns} 
+              dataSource={portal.portalSettingConfig.oidcConfigs || []}
+              rowKey="id"
+              pagination={false}
+              size="small"
             />
-          </Form.Item>
-          <Form.Item
-            name="oidcAuthEnabled"
-            label="OIDC认证"
-            valuePropName="checked"
-          >
-            <Switch 
-              onChange={(checked) => handleSettingUpdate('oidcAuthEnabled', checked)}
-            />
-          </Form.Item>
-          <Form.Item
-            name="autoApproveDevelopers"
-            label="开发者自动审批"
-            valuePropName="checked"
-          >
-            <Switch 
-              onChange={(checked) => handleSettingUpdate('autoApproveDevelopers', checked)}
-            />
-          </Form.Item>
-          <Form.Item
-            name="autoApproveSubscriptions"
-            label="订阅自动审批"
-            valuePropName="checked"
-          >
-            <Switch 
-              onChange={(checked) => handleSettingUpdate('autoApproveSubscriptions', checked)}
-            />
-          </Form.Item>
-          <Form.Item
-            name="frontendRedirectUrl"
-            label="前端重定向URL"
-            className="col-span-2"
-          >
-            <Input placeholder="http://portal.example.com/callback" />
-          </Form.Item>
+          </div>
         </div>
       )
     },
@@ -459,6 +624,115 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <Select.Option value="HTTP">HTTP</Select.Option>
               <Select.Option value="HTTPS">HTTPS</Select.Option>
             </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* OIDC 配置模态框 */}
+      <Modal
+        title={editingOidc ? '编辑 OIDC 配置' : '添加 OIDC 配置'}
+        open={oidcModalVisible}
+        onOk={handleOidcModalOk}
+        onCancel={handleOidcModalCancel}
+        confirmLoading={oidcLoading}
+        width={800}
+        okText={editingOidc ? '更新' : '添加'}
+        cancelText="取消"
+      >
+        <Form
+          form={oidcForm}
+          layout="vertical"
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="provider"
+              label="提供商"
+              rules={[{ required: true, message: '请输入提供商名称' }]}
+            >
+              <Input placeholder="如: aliyun, google, github" />
+            </Form.Item>
+            <Form.Item
+              name="name"
+              label="显示名称"
+              rules={[{ required: true, message: '请输入显示名称' }]}
+            >
+              <Input placeholder="如: 阿里云登录" />
+            </Form.Item>
+            <Form.Item
+              name="clientId"
+              label="Client ID"
+              rules={[{ required: true, message: '请输入 Client ID' }]}
+            >
+              <Input placeholder="OAuth Client ID" />
+            </Form.Item>
+            <Form.Item
+              name="clientSecret"
+              label="Client Secret"
+              rules={[{ required: true, message: '请输入 Client Secret' }]}
+            >
+              <Input.Password placeholder="OAuth Client Secret" />
+            </Form.Item>
+            <Form.Item
+              name="scopes"
+              label="授权范围"
+              rules={[{ required: true, message: '请输入授权范围' }]}
+            >
+              <Input placeholder="如: openid profile email" />
+            </Form.Item>
+            <Form.Item
+              name="redirectUri"
+              label="重定向 URI"
+              rules={[{ required: true, message: '请输入重定向 URI' }]}
+            >
+              <Input placeholder="如: http://portal.example.com/callback" />
+            </Form.Item>
+          </div>
+          
+          <Divider />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              name="authorizationEndpoint"
+              label="授权端点"
+              rules={[{ required: true, message: '请输入授权端点' }]}
+            >
+              <Input placeholder="如: https://signin.aliyun.com/oauth2/v1/auth" />
+            </Form.Item>
+            <Form.Item
+              name="tokenEndpoint"
+              label="令牌端点"
+              rules={[{ required: true, message: '请输入令牌端点' }]}
+            >
+              <Input placeholder="如: https://oauth.aliyun.com/v1/token" />
+            </Form.Item>
+            <Form.Item
+              name="userInfoEndpoint"
+              label="用户信息端点"
+              rules={[{ required: true, message: '请输入用户信息端点' }]}
+            >
+              <Input placeholder="如: https://oauth.aliyun.com/v1/userinfo" />
+            </Form.Item>
+            <Form.Item
+              name="jwkSetUri"
+              label="JWK 集合 URI"
+            >
+              <Input placeholder="如: https://oauth.aliyun.com/v1/keys (可选)" />
+            </Form.Item>
+          </div>
+          
+          <Form.Item
+            name="logoUrl"
+            label="Logo URL"
+          >
+            <Input placeholder="提供商 Logo 图片地址 (可选)" />
+          </Form.Item>
+          
+          <Form.Item
+            name="enabled"
+            label="启用状态"
+            valuePropName="checked"
+          >
+            <Switch />
           </Form.Item>
         </Form>
       </Modal>
