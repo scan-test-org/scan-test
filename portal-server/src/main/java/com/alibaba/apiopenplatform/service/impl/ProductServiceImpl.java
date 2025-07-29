@@ -17,6 +17,7 @@ import com.alibaba.apiopenplatform.repository.ProductPublicationRepository;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.service.ProductService;
+import com.alibaba.apiopenplatform.service.NacosService;
 import com.alibaba.apiopenplatform.support.enums.ProductStatus;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import com.alibaba.apiopenplatform.support.product.RouteConfig;
@@ -49,6 +50,8 @@ public class ProductServiceImpl implements ProductService {
 
     private final GatewayService gatewayService;
 
+    private final NacosService nacosService;
+
     private final ProductRepository productRepository;
 
     private final ProductRefRepository productRefRepository;
@@ -68,6 +71,27 @@ public class ProductServiceImpl implements ProductService {
         product.setProductId(productId);
         product.setAdminId("admin");
         productRepository.save(product);
+
+        // 如果是MCP_SERVER类型，自动创建ProductRef关联Nacos实例
+        if (param.getType() == ProductType.MCP_SERVER) {
+            if (param.getNacosId() == null || param.getMcpServerName() == null) {
+                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "MCP_SERVER类型必须指定nacosId和mcpServerName");
+            }
+            
+            CreateProductRefParam refParam = new CreateProductRefParam();
+            refParam.setApiId(param.getMcpServerName()); // 使用MCP Server名称作为apiId
+            refParam.setNacosId(param.getNacosId());
+            refParam.setType(ProductType.MCP_SERVER);
+            
+            // 创建路由配置
+            RouteOption routeOption = new RouteOption();
+            routeOption.setRouteId(param.getMcpServerName());
+            routeOption.setName(param.getMcpServerName());
+            refParam.setRoutes(java.util.Arrays.asList(routeOption));
+            
+            addProductRef(productId, refParam);
+        }
+
         return getProduct(productId);
     }
 
@@ -260,5 +284,10 @@ public class ProductServiceImpl implements ProductService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    @Override
+    public PageResult<NacosResult> listNacosInstances(Pageable pageable) {
+        return nacosService.listNacosInstances(pageable);
     }
 }

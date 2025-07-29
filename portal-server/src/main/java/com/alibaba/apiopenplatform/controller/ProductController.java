@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import com.alibaba.apiopenplatform.dto.result.NacosResult;
+import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
+import com.alibaba.apiopenplatform.service.NacosService;
 
 /**
  * @author zh
@@ -28,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 public class ProductController {
 
     private final ProductService productService;
+    private final NacosService nacosService;
 
     @Operation(summary = "创建API产品")
     @PostMapping
@@ -91,5 +95,17 @@ public class ProductController {
         productService.deleteProductRef(productId);
     }
 
+    @Operation(summary = "获取Nacos实例列表，用于创建Product时选择")
+    @GetMapping("/nacos-instances")
+    @AdminAuth
+    public PageResult<NacosResult> listNacosInstances(Pageable pageable) {
+        return productService.listNacosInstances(pageable);
+    }
 
+    @Operation(summary = "获取指定Nacos实例中的MCP Server列表")
+    @GetMapping("/nacos-instances/{nacosId}/mcp-servers")
+    @AdminAuth
+    public PageResult<MCPServerResult> getMcpServersFromNacos(@PathVariable String nacosId, Pageable pageable) {
+        return nacosService.fetchMcpServers(nacosId, pageable);
+    }
 }

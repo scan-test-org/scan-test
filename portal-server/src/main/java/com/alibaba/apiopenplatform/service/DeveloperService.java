@@ -103,4 +103,25 @@ public interface DeveloperService {
      * @return
      */
     void setDeveloperStatus(String portalId, String developerId, String status);
+
+    /**
+     * 开发者修改密码
+     *
+     * @param developerId
+     * @param oldPassword
+     * @param newPassword
+     * @return
+     */
+    boolean changePassword(String developerId, String oldPassword, String newPassword);
+
+    /**
+     * 开发者更新个人信息
+     *
+     * @param developerId
+     * @param username
+     * @param email
+     * @param avatarUrl
+     * @return
+     */
+    boolean updateProfile(String developerId, String username, String email, String avatarUrl);
 }

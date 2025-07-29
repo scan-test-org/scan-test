@@ -34,9 +34,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 import org.springframework.http.ResponseEntity;
 import com.alibaba.apiopenplatform.dto.params.developer.UnbindExternalIdentityParam;
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperStatusParam;
+import com.alibaba.apiopenplatform.dto.params.developer.UpdateDeveloperProfileParam;
+import com.alibaba.apiopenplatform.dto.params.admin.ChangePasswordParam;
+import com.alibaba.apiopenplatform.core.exception.BusinessException;
+import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 
 /**
  * 开发者账号相关接口
@@ -139,7 +145,7 @@ public class DeveloperController {
         developerService.deleteDeveloperAccount(developerId);
     }
 
-    @Operation(summary = "获取门户的开发者列表")
+    @Operation(summary = "获取门户的开发者列表", description = "管理员功能：获取当前门户下所有开发者的分页列表")
     @GetMapping
     public PageResult<DeveloperResult> listDevelopers(@PageableDefault(sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String portalId = contextHolder.getPortal();
@@ -152,5 +158,56 @@ public class DeveloperController {
                                    @RequestBody DeveloperStatusParam param) {
         String portalId = contextHolder.getPortal();
         developerService.setDeveloperStatus(portalId, developerId, param.getStatus());
+    }
+
+    @Operation(summary = "获取当前开发者信息", description = "开发者功能：获取当前登录开发者的个人信息")
+    @GetMapping("/profile")
+    public Map<String, Object> getCurrentDeveloperInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = authentication != null ? authentication.getName() : null;
+        if (currentUserId == null) {
+            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
+        }
+        
+        Optional<Developer> devOpt = developerService.findByDeveloperId(currentUserId);
+        if (!devOpt.isPresent()) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", currentUserId);
+        }
+        
+        Developer developer = devOpt.get();
+        Map<String, Object> result = new HashMap<>();
+        result.put("developerId", developer.getDeveloperId());
+        result.put("username", developer.getUsername());
+        result.put("email", developer.getEmail());
+        result.put("avatarUrl", developer.getAvatarUrl());
+        result.put("status", developer.getStatus());
+        result.put("authType", developer.getAuthType());
+        result.put("createAt", developer.getCreateAt());
+        result.put("updatedAt", developer.getUpdatedAt());
+        return result;
+    }
+
+    @Operation(summary = "开发者修改密码", description = "修改当前登录开发者的密码")
+    @PatchMapping("/password")
+    public String changePassword(@RequestBody ChangePasswordParam param) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = authentication != null ? authentication.getName() : null;
+        if (currentUserId == null) {
+            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
+        }
+        developerService.changePassword(currentUserId, param.getOldPassword(), param.getNewPassword());
+        return "修改密码成功";
+    }
+
+    @Operation(summary = "开发者更新个人信息", description = "开发者功能：更新当前登录开发者的个人信息，包括用户名、邮箱、头像等")
+    @PutMapping("/profile")
+    public String updateProfile(@Valid @RequestBody UpdateDeveloperProfileParam param) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserId = authentication != null ? authentication.getName() : null;
+        if (currentUserId == null) {
+            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
+        }
+        developerService.updateProfile(currentUserId, param.getUsername(), param.getEmail(), param.getAvatarUrl());
+        return "更新个人信息成功";
     }
 }

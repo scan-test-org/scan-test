@@ -30,4 +30,10 @@ public class CreateProductParam implements InputConverter<Product> {
     private String icon;
 
     private String category;
+
+    // 当type为MCP_SERVER时，用于指定Nacos实例
+    private String nacosId;
+
+    // 当type为MCP_SERVER时，用于指定MCP Server名称
+    private String mcpServerName;
 }
