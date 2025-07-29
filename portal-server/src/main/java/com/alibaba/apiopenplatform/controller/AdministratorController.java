@@ -53,12 +53,8 @@ public class AdministratorController {
         AuthResponseResult authResult = administratorService.loginWithPassword(param.getUsername(), param.getPassword())
                 .orElseThrow(() -> new RuntimeException("AUTH_FAILED"));
         
-        // 设置cookie而不是返回token
-        Cookie cookie = new Cookie("token", authResult.getToken());
-        cookie.setPath("/");
-        cookie.setMaxAge(3600); // 1小时
-        cookie.setHttpOnly(false); // 允许前端JavaScript访问
-        response.addCookie(cookie);
+        // 设置cookie而不是返回token，设置SameSite属性，避免浏览器警告
+        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=Lax");
     }
 
     // @Operation(summary = "管理员受保护接口", description = "仅测试用，返回管理员受保护信息")
@@ -84,10 +80,7 @@ public class AdministratorController {
         }
         
         // 清除cookie
-        Cookie clearCookie = new Cookie("token", "");
-        clearCookie.setPath("/");
-        clearCookie.setMaxAge(0);
-        response.addCookie(clearCookie);
+        response.setHeader("Set-Cookie", "token=; Path=/; Max-Age=0; SameSite=Lax");
     }
 
     @Operation(summary = "检查是否需要初始化管理员", description = "检查系统是否需要初始化管理员（全表无记录时返回true）。")

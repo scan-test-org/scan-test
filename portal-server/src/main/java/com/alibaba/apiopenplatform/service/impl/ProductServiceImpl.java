@@ -259,7 +259,12 @@ public class ProductServiceImpl implements ProductService {
                                 mcpSpec = gatewayService.fetchMcpSpec(productRef.getGatewayId(), productRef.getApiId(), routeConfig.getRouteId(), routeConfig.getName());
                             } else if (productRef.getSourceType() == SourceType.NACOS) {
                                 // 从Nacos获取MCP Server详情
-                                McpMarketDetailParam detailParam = nacosService.getMcpServerDetail(productRef.getNacosId(), productRef.getApiId(), "public", null);
+                                // 对于Nacos，apiId字段存储的是mcpServerName
+                                String mcpServerName = productRef.getApiId();
+                                String namespaceId = "public"; // 暂时使用默认namespace
+                                String version = null; // 暂时使用最新版本
+                                
+                                McpMarketDetailParam detailParam = nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
                                 // 将详情转换为JSON字符串
                                 mcpSpec = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(detailParam);
                             } else {
