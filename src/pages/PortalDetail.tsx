@@ -152,10 +152,10 @@ export default function PortalDetail() {
       {/* Portal详情侧边栏 */}
       <div className="w-64 border-r bg-white flex flex-col">
         {/* 返回按钮 */}
-        <div className="p-4 border-b">
+        <div className="pb-4 border-b">
           <Button 
             type="text"
-            className="w-full justify-start text-gray-600 hover:text-gray-900"
+            // className="w-full justify-start text-gray-600 hover:text-gray-900"
             onClick={handleBackToPortals}
             icon={<LeftOutlined />}
           >
@@ -212,28 +212,7 @@ export default function PortalDetail() {
 
       {/* 主内容区域 */}
       <div className="flex-1 overflow-auto">
-        <div className="p-8">
-          {/* 页面标题 */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <Title level={2} className="mb-2">{portal.name}</Title>
-              <Paragraph className="text-gray-600 mb-0">
-                {menuItems.find(item => item.key === activeTab)?.description}
-              </Paragraph>
-            </div>
-            <Button 
-              type="primary" 
-              icon={<LinkOutlined />}
-              href={`http://${portal.portalDomainConfig[0]?.domain}`}
-              target="_blank"
-            >
-              访问Portal
-            </Button>
-          </div>
-
-          {/* 内容区域 */}
-          {renderContent()}
-        </div>
+      {renderContent()}
       </div>
     </div>
   )

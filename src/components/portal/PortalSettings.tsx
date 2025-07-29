@@ -1,4 +1,4 @@
-import { Card, Form, Input, Select, Switch, Button, Divider, Space, Tag, Table, Modal, message } from 'antd'
+import { Card, Form, Input, Select, Switch, Button, Divider, Space, Tag, Table, Modal, message, Tabs } from 'antd'
 import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { Portal } from '@/types'
@@ -101,7 +101,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     {
       title: '操作',
       key: 'action',
-      render: (_, record: any) => (
+      render: (_: any, record: any) => (
         <Space>
           {record.type === 'CUSTOM' && (
             <Button 
@@ -114,6 +114,226 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
             </Button>
           )}
         </Space>
+      )
+    }
+  ]
+
+  const tabItems = [
+    {
+      key: 'basic',
+      label: '基本信息',
+      children: (
+        <div className="grid grid-cols-2 gap-6">
+          <Form.Item
+            name="name"
+            label="名称"
+            rules={[{ required: true, message: '请输入Portal ID' }]}
+          >
+            <Input placeholder="请输入Portal ID" />
+          </Form.Item>
+          <Form.Item
+            name="title"
+            label="标题"
+            rules={[{ required: true, message: '请输入Portal标题' }]}
+          >
+            <Input placeholder="请输入Portal标题" />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="描述"
+            className="col-span-2"
+          >
+            <Input.TextArea rows={3} placeholder="请输入Portal描述" />
+          </Form.Item>
+        </div>
+      )
+    },
+    {
+      key: 'auth',
+      label: '认证设置',
+      children: (
+        <div className="grid grid-cols-2 gap-6">
+          <Form.Item
+            name="builtinAuthEnabled"
+            label="内置认证"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Item
+            name="oidcAuthEnabled"
+            label="OIDC认证"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Item
+            name="autoApproveDevelopers"
+            label="开发者自动审批"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Item
+            name="autoApproveSubscriptions"
+            label="订阅自动审批"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Item
+            name="frontendRedirectUrl"
+            label="前端重定向URL"
+            className="col-span-2"
+          >
+            <Input placeholder="http://portal.example.com/callback" />
+          </Form.Item>
+        </div>
+      )
+    },
+    {
+      key: 'domain',
+      label: '域名管理',
+      children: (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-lg font-medium">域名列表</h3>
+              <p className="text-sm text-gray-500">管理Portal的域名配置</p>
+            </div>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={handleAddDomain}
+            >
+              绑定域名
+            </Button>
+          </div>
+          <Table 
+            columns={domainColumns} 
+            dataSource={portal.portalDomainConfig}
+            rowKey="domain"
+            pagination={false}
+            size="small"
+          />
+        </div>
+      )
+    },
+    {
+      key: 'visibility',
+      label: '可见性设置',
+      children: (
+        <div className="grid grid-cols-2 gap-6">
+          <Form.Item
+            name="apiVisibility"
+            label="默认API可见性"
+            rules={[{ required: true, message: '请选择API可见性' }]}
+          >
+            <Select placeholder="请选择API可见性">
+              <Select.Option value="Public">公开</Select.Option>
+              <Select.Option value="Private">私有</Select.Option>
+              <Select.Option value="Authenticated">需要认证</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="pageVisibility"
+            label="默认页面可见性"
+            rules={[{ required: true, message: '请选择页面可见性' }]}
+          >
+            <Select placeholder="请选择页面可见性">
+              <Select.Option value="Public">公开</Select.Option>
+              <Select.Option value="Private">私有</Select.Option>
+              <Select.Option value="Authenticated">需要认证</Select.Option>
+            </Select>
+          </Form.Item>
+        </div>
+      )
+    },
+    {
+      key: 'features',
+      label: '功能开关',
+      children: (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">分析统计</div>
+              <div className="text-sm text-gray-500">启用访问统计和分析功能</div>
+            </div>
+            <Form.Item name="enableAnalytics" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+          <Divider />
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">通知系统</div>
+              <div className="text-sm text-gray-500">启用邮件和Webhook通知</div>
+            </div>
+            <Form.Item name="enableNotifications" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+          <Divider />
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">审计日志</div>
+              <div className="text-sm text-gray-500">记录用户操作和系统事件</div>
+            </div>
+            <Form.Item name="enableAuditLog" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+          <Divider />
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">限流控制</div>
+              <div className="text-sm text-gray-500">启用API调用频率限制</div>
+            </div>
+            <Form.Item name="enableRateLimiting" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+          <Divider />
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">缓存</div>
+              <div className="text-sm text-gray-500">启用响应缓存以提高性能</div>
+            </div>
+            <Form.Item name="enableCaching" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+          <Divider />
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">压缩</div>
+              <div className="text-sm text-gray-500">启用响应压缩以减少带宽</div>
+            </div>
+            <Form.Item name="enableCompression" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+          <Divider />
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">SSL/TLS</div>
+              <div className="text-sm text-gray-500">强制使用HTTPS连接</div>
+            </div>
+            <Form.Item name="enableSSL" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+          <Divider />
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">CORS</div>
+              <div className="text-sm text-gray-500">启用跨域资源共享</div>
+            </div>
+            <Form.Item name="enableCORS" valuePropName="checked" noStyle>
+              <Switch />
+            </Form.Item>
+          </div>
+        </div>
       )
     }
   ]
@@ -158,211 +378,12 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           enableCORS: true
         }}
       >
-        <Card title="基本信息" className="mb-6">
-          <div className="grid grid-cols-2 gap-6">
-            <Form.Item
-              name="name"
-              label="名称"
-              rules={[{ required: true, message: '请输入Portal ID' }]}
-            >
-              <Input placeholder="请输入Portal ID" />
-            </Form.Item>
-            <Form.Item
-              name="title"
-              label="标题"
-              rules={[{ required: true, message: '请输入Portal标题' }]}
-            >
-              <Input placeholder="请输入Portal标题" />
-            </Form.Item>
-            <Form.Item
-              name="description"
-              label="描述"
-              className="col-span-2"
-            >
-              <Input.TextArea rows={3} placeholder="请输入Portal描述" />
-            </Form.Item>
-            {/* <Form.Item
-              name="domain"
-              label="Portal域名"
-              rules={[{ required: true, message: '请输入Portal域名' }]}
-              className="col-span-2"
-            >
-              <Input placeholder="portal.example.com" />
-            </Form.Item> */}
-          </div>
-        </Card>
-
-        <Card title="认证设置" className="mb-6">
-          <div className="grid grid-cols-2 gap-6">
-            <Form.Item
-              name="builtinAuthEnabled"
-              label="内置认证"
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-            <Form.Item
-              name="oidcAuthEnabled"
-              label="OIDC认证"
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-            <Form.Item
-              name="autoApproveDevelopers"
-              label="开发者自动审批"
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-            <Form.Item
-              name="autoApproveSubscriptions"
-              label="订阅自动审批"
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-            <Form.Item
-              name="frontendRedirectUrl"
-              label="前端重定向URL"
-              className="col-span-2"
-            >
-              <Input placeholder="http://portal.example.com/callback" />
-            </Form.Item>
-          </div>
-        </Card>
-
-        <Card 
-          title="域名管理" 
-          className="mb-6"
-          extra={
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              onClick={handleAddDomain}
-            >
-              绑定域名
-            </Button>
-          }
-        >
-          <Table 
-            columns={domainColumns} 
-            dataSource={portal.portalDomainConfig}
-            rowKey="domain"
-            pagination={false}
-            size="small"
+        <Card>
+          <Tabs 
+            items={tabItems}
+            defaultActiveKey="basic"
+            type="card"
           />
-        </Card>
-
-        <Card title="可见性设置" className="mb-6">
-          <div className="grid grid-cols-2 gap-6">
-            <Form.Item
-              name="apiVisibility"
-              label="默认API可见性"
-              rules={[{ required: true, message: '请选择API可见性' }]}
-            >
-              <Select placeholder="请选择API可见性">
-                <Select.Option value="Public">公开</Select.Option>
-                <Select.Option value="Private">私有</Select.Option>
-                <Select.Option value="Authenticated">需要认证</Select.Option>
-              </Select>
-            </Form.Item>
-            <Form.Item
-              name="pageVisibility"
-              label="默认页面可见性"
-              rules={[{ required: true, message: '请选择页面可见性' }]}
-            >
-              <Select placeholder="请选择页面可见性">
-                <Select.Option value="Public">公开</Select.Option>
-                <Select.Option value="Private">私有</Select.Option>
-                <Select.Option value="Authenticated">需要认证</Select.Option>
-              </Select>
-            </Form.Item>
-          </div>
-        </Card>
-
-        <Card title="功能开关">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-medium">分析统计</div>
-                <div className="text-sm text-gray-500">启用访问统计和分析功能</div>
-              </div>
-              <Form.Item name="enableAnalytics" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-            </div>
-            <Divider />
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-medium">通知系统</div>
-                <div className="text-sm text-gray-500">启用邮件和Webhook通知</div>
-              </div>
-              <Form.Item name="enableNotifications" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-            </div>
-            <Divider />
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-medium">审计日志</div>
-                <div className="text-sm text-gray-500">记录用户操作和系统事件</div>
-              </div>
-              <Form.Item name="enableAuditLog" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-            </div>
-            <Divider />
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-medium">限流控制</div>
-                <div className="text-sm text-gray-500">启用API调用频率限制</div>
-              </div>
-              <Form.Item name="enableRateLimiting" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-            </div>
-            <Divider />
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-medium">缓存</div>
-                <div className="text-sm text-gray-500">启用响应缓存以提高性能</div>
-              </div>
-              <Form.Item name="enableCaching" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-            </div>
-            <Divider />
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-medium">压缩</div>
-                <div className="text-sm text-gray-500">启用响应压缩以减少带宽</div>
-              </div>
-              <Form.Item name="enableCompression" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-            </div>
-            <Divider />
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-medium">SSL/TLS</div>
-                <div className="text-sm text-gray-500">强制使用HTTPS连接</div>
-              </div>
-              <Form.Item name="enableSSL" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-            </div>
-            <Divider />
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-medium">CORS</div>
-                <div className="text-sm text-gray-500">启用跨域资源共享</div>
-              </div>
-              <Form.Item name="enableCORS" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-            </div>
-          </div>
         </Card>
       </Form>
 

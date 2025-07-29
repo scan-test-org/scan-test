@@ -118,7 +118,7 @@ export function PortalPublishedApis({ portal }: PortalPublishedApisProps) {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold mb-2">已发布API</h1>
+          <h1 className="text-2xl font-bold mb-2">API管理</h1>
           <p className="text-gray-600">管理在此Portal中发布的API</p>
         </div>
         <Button type="primary">
@@ -135,7 +135,7 @@ export function PortalPublishedApis({ portal }: PortalPublishedApisProps) {
         />
       </Card>
 
-      <Card title="发布设置">
+      {/* <Card title="发布设置">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <span>自动发布</span>
@@ -150,7 +150,7 @@ export function PortalPublishedApis({ portal }: PortalPublishedApisProps) {
             <Badge status="success" text="启用" />
           </div>
         </div>
-      </Card>
+      </Card> */}
     </div>
   )
 } 

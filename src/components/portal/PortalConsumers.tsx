@@ -195,7 +195,7 @@ export function PortalConsumers({ portal }: PortalConsumersProps) {
         />
       </Card>
 
-      <Card title="消费者统计">
+      {/* <Card title="消费者统计">
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{consumers.length}</div>
@@ -220,7 +220,7 @@ export function PortalConsumers({ portal }: PortalConsumersProps) {
             <div className="text-sm text-gray-500">总订阅数</div>
           </div>
         </div>
-      </Card>
+      </Card> */}
     </div>
   )
 } 

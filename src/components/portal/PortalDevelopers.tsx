@@ -159,7 +159,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
         />
       </Card>
 
-      <Card title="开发者统计">
+      {/* <Card title="开发者统计">
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{developers.length}</div>
@@ -184,7 +184,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
             <div className="text-sm text-gray-500">总订阅数</div>
           </div>
         </div>
-      </Card>
+      </Card> */}
     </div>
   )
 } 
