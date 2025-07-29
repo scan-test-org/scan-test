@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import api from "../lib/api";
 import { ProductType, ProductStatus, ProductCategory } from "../types";
-import type { Product, ApiResponse, PaginatedResponse } from "../types";
+import type { Product, ApiResponse, PaginatedResponse, McpServerProduct } from "../types";
+import { processProductSpecs } from "../lib/utils";
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -38,11 +39,14 @@ function McpPage() {
         const mapped = response.data.content
           .filter((item: Product) => item.type === ProductType.MCP_SERVER)
           .map((item: Product) => {
+            // 处理 mcpSpec 中的换行符转义
+            const processedItem = processProductSpecs(item);
+            
             // 尝试解析MCP配置以获取工具数量
             let toolCount = 0;
             try {
-              if (item.mcpSpec) {
-                const mcpConfig = JSON.parse(item.mcpSpec) as Record<string, unknown>;
+              if (processedItem.mcpSpec) {
+                const mcpConfig = JSON.parse(processedItem.mcpSpec) as Record<string, unknown>;
                 if (mcpConfig.tools && Array.isArray(mcpConfig.tools)) {
                   toolCount = mcpConfig.tools.length;
                 }

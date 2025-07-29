@@ -5,7 +5,8 @@ import { Layout } from '../components/Layout';
 import { Card, Typography, Tag, Space, Badge, Descriptions, Spin, Alert, Collapse, Button, message } from 'antd';
 import MonacoEditor from 'react-monaco-editor';
 import { ProductType, ProductStatus, ProductCategory } from '../types';
-import type { Product, ApiResponse, McpServerConfig, McpServerProduct } from '../types';
+import type { Product, ApiResponse, McpServerConfig, McpServerProduct, RestApiProduct } from '../types';
+import { processProductSpecs } from '../lib/utils';
 
 const { Title, Paragraph } = Typography;
 
@@ -16,31 +17,52 @@ function McpDetail() {
   const [data, setData] = useState<Product | null>(null);
   const [mcpConfig, setMcpConfig] = useState<McpServerConfig | null>(null);
 
+  console.log('McpDetail 组件渲染，mcpName:', mcpName);
+
   useEffect(() => {
-    if (!mcpName) return;
+    console.log('useEffect 触发，mcpName:', mcpName);
+    if (!mcpName) {
+      console.log('mcpName 为空，返回');
+      return;
+    }
     setLoading(true);
     setError('');
+    console.log('开始请求 API:', `/products/${mcpName}`);
     api.get(`/products/${mcpName}`)
       .then((res) => {
-        const response = res.data as ApiResponse<Product>;
+        console.log('API 响应:', res);
+        // 由于响应拦截器已经返回了 response.data，所以这里直接使用 res
+        const response = res as ApiResponse<Product>;
         if (response.code === "SUCCESS" && response.data) {
-          setData(response.data);
+          console.log('设置数据:', response.data);
+          
+                  // 处理 mcpSpec 和 apiSpec 中的换行符转义
+        const processedData = processProductSpecs(response.data);
+          
+          setData(processedData);
           
           // 解析MCP配置
-          if (response.data.type === ProductType.MCP_SERVER && (response.data as McpServerProduct).mcpSpec) {
+          if (processedData.type === ProductType.MCP_SERVER && (processedData as McpServerProduct).mcpSpec) {
             try {
-              const config = JSON.parse((response.data as McpServerProduct).mcpSpec) as McpServerConfig;
+              const config = JSON.parse((processedData as McpServerProduct).mcpSpec) as McpServerConfig;
               setMcpConfig(config);
             } catch (error) {
               console.warn('解析MCP配置失败:', error);
             }
           }
+        } else {
+          console.log('API 响应失败:', response);
+          setError(response.message || '数据加载失败');
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error('API请求失败:', error);
         setError('加载失败，请稍后重试');
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        console.log('请求完成，设置 loading 为 false');
+        setLoading(false);
+      });
   }, [mcpName]);
 
   if (loading) {
@@ -60,7 +82,11 @@ function McpDetail() {
     );
   }
   if (!data) {
-    return null;
+    return (
+      <Layout>
+        <Alert message="未找到相关数据" type="warning" showIcon className="my-8" />
+      </Layout>
+    );
   }
 
   const { name, description, status, category, productId, enableConsumerAuth } = data;
