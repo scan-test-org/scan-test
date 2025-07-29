@@ -1,109 +1,24 @@
-import { Card, Table, Tag, Button, Space, Typography, Input, Select } from "antd";
-import { SearchOutlined, EyeOutlined, FileTextOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import { Card, Tag, Button, Space, Typography, Input, Select, Row, Col } from "antd";
+import { SearchOutlined, EyeOutlined, FileTextOutlined, UserOutlined, ApiOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
+import api from "../lib/api";
+import type { ApiProduct } from '../types';
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
 
-interface ApiItem {
-  key: string;
-  name: string;
-  description: string;
-  category: string;
-  status: string;
-  version: string;
-  subscribers: number;
-}
-
-const mockApis: ApiItem[] = [
-  {
-    key: "1",
-    name: "Payment API",
-    description: "处理支付相关的API接口",
-    category: "Finance",
-    status: "active",
-    version: "v1.2.0",
-    subscribers: 25
-  },
-  {
-    key: "2",
-    name: "User API",
-    description: "用户管理和认证API",
-    category: "Authentication",
-    status: "active",
-    version: "v1.1.0",
-    subscribers: 18
-  },
-  {
-    key: "3",
-    name: "Notification API",
-    description: "消息通知服务API",
-    category: "Communication",
-    status: "draft",
-    version: "v1.0.0",
-    subscribers: 0
-  }
-];
-
 function APIsPage() {
-  const columns = [
-    {
-      title: 'API名称',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string, record: ApiItem) => (
-        <div>
-          <div className="font-medium">{name}</div>
-          <div className="text-sm text-gray-500">{record.description}</div>
-        </div>
-      ),
-    },
-    {
-      title: '分类',
-      dataIndex: 'category',
-      key: 'category',
-      render: (category: string) => <Tag color="blue">{category}</Tag>
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'green' : 'orange'}>
-          {status === 'active' ? '活跃' : '草稿'}
-        </Tag>
-      )
-    },
-    {
-      title: '版本',
-      dataIndex: 'version',
-      key: 'version',
-      render: (version: string) => <Tag color="purple">{version}</Tag>
-    },
-    {
-      title: '订阅者',
-      dataIndex: 'subscribers',
-      key: 'subscribers',
-      render: (subscribers: number) => subscribers.toLocaleString()
-    },
-    {
-      title: '操作',
-      key: 'action',
-      render: (_: any, record: ApiItem) => (
-        <Space>
-          <Link to={`/apis/${record.key}`}>
-            <Button type="link" icon={<EyeOutlined />}>
-              查看
-            </Button>
-          </Link>
-          <Button type="link" icon={<FileTextOutlined />}>
-            文档
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+
+  useEffect(() => {
+    api.get('/products').then((res) => {
+      setProducts(res.data?.content || []);
+    });
+  }, []);
+
 
   return (
     <Layout>
@@ -117,7 +32,7 @@ function APIsPage() {
       </div>
 
       <Card>
-        <div className="mb-4 flex gap-4">
+        <div className="mb-6 flex gap-4 flex-wrap">
           <Search
             placeholder="搜索API..."
             prefix={<SearchOutlined />}
@@ -131,30 +46,58 @@ function APIsPage() {
             <Select.Option value="Finance">Finance</Select.Option>
             <Select.Option value="Authentication">Authentication</Select.Option>
             <Select.Option value="Communication">Communication</Select.Option>
+            <Select.Option value="Analytics">Analytics</Select.Option>
+            <Select.Option value="Storage">Storage</Select.Option>
+            <Select.Option value="AI">AI</Select.Option>
           </Select>
-          <Select
-            placeholder="选择状态"
-            style={{ width: 150 }}
-            allowClear
-          >
-            <Select.Option value="active">活跃</Select.Option>
-            <Select.Option value="draft">草稿</Select.Option>
-          </Select>
+          
         </div>
         
-        <Table 
-          columns={columns} 
-          dataSource={mockApis}
-          rowKey="key"
-          pagination={{
-            total: mockApis.length,
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
-          }}
-        />
+        <Row gutter={[16, 16]}>
+          {products.map((api) => (
+            <Col xs={24} sm={12} lg={8} xl={6} key={api.key}>
+              <Card
+                hoverable
+                className="h-full"
+                actions={[
+                  <Link to={`/apis/${api.key}`} key="view">
+                    <Button type="link" icon={<EyeOutlined />} size="small">
+                      查看详情
+                    </Button>
+                  </Link>
+                ]}
+              >
+                <div className="mb-3">
+                  <div className="flex items-center mb-2">
+                    <ApiOutlined className="text-blue-500 mr-2" />
+                    <Title level={5} className="mb-0 flex-1 truncate">
+                      {api.name}
+                    </Title>
+                  </div>
+                  <Paragraph 
+                    className="text-gray-600 mb-3 text-sm min-h-[36px]" 
+                    ellipsis={{ rows: 2 }}
+                  >
+                    {api.description}
+                  </Paragraph>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Tag color="default">
+                      {api.category}
+                    </Tag>
+                    <div>
+                      <UserOutlined className="mr-1" />
+                      <span>{api.subscribers} 订阅者</span>
+                    </div>
+                  </div>
+                  
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
       </Card>
     </Layout>
   );

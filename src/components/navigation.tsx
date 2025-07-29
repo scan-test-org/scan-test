@@ -1,9 +1,25 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { UserInfo } from "./user-info";
 
 export function Navigation() {
+  const location = useLocation();
+  
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  const getNavLinkClass = (path: string) => {
+    const baseClass = "font-medium transition-colors";
+    return isActive(path) 
+      ? `${baseClass} text-blue-600 border-b-2 border-blue-600 pb-1` 
+      : `${baseClass} text-gray-700 hover:text-gray-900`;
+  };
+
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,19 +36,19 @@ export function Navigation() {
           <div className="hidden md:flex items-center space-x-8">
             <Link 
               to="/getting-started" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+              className={getNavLinkClass('/getting-started')}
             >
               Getting Started
             </Link>
             <Link 
               to="/apis" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+              className={getNavLinkClass('/apis')}
             >
               APIs
             </Link>
             <Link 
               to="/mcp" 
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+              className={getNavLinkClass('/mcp')}
             >
               MCP
             </Link>

@@ -4,7 +4,7 @@ import { getTokenFromCookie } from './utils';
 import { message } from 'antd';
 
 const api: AxiosInstance = axios.create({
-  baseURL: (import.meta as any).env.VITE_API_BASE_URL,
+  baseURL: (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8080',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
