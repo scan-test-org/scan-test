@@ -119,11 +119,13 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void publishProduct(String productId, PublishProductParam param) {
         portalService.hasPortal(param.getPortalId());
-        if (publicationRepository.findByPortalIdAndProductId(param.getPortalId(), productId).isPresent()) {
+        if (publicationRepository.findByPortalIdAndProduct_ProductId(param.getPortalId(), productId).isPresent()) {
             return;
         }
 
         Product Product = findProduct(productId);
+        findProductRef(productId);
+
         ProductPublication productPublication = param.convertTo();
         productPublication.setProduct(Product);
 
@@ -134,7 +136,7 @@ public class ProductServiceImpl implements ProductService {
     public void unpublishProduct(String productId, UnPublishProductParam param) {
         portalService.hasPortal(param.getPortalId());
 
-        publicationRepository.findByPortalIdAndProductId(param.getPortalId(), productId)
+        publicationRepository.findByPortalIdAndProduct_ProductId(param.getPortalId(), productId)
                 .ifPresent(publicationRepository::delete);
     }
 
@@ -178,7 +180,12 @@ public class ProductServiceImpl implements ProductService {
      */
     private Product findProduct(String productId) {
         return productRepository.findByProductId(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, productId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId));
+    }
+
+    private ProductRef findProductRef(String productId) {
+        return productRefRepository.findFirstByProductId(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId));
     }
 
     @Override
@@ -197,9 +204,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProductRef(String productId) {
-        ProductRef productRef = productRefRepository.findFirstByProductId(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId));
-
+        ProductRef productRef = findProductRef(productId);
         productRefRepository.delete(productRef);
     }
 
@@ -231,7 +236,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Product findPublishedProduct(String portalId, String productId) {
-        return publicationRepository.findByPortalIdAndProductId(portalId, productId)
+        return publicationRepository.findByPortalIdAndProduct_ProductId(portalId, productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId))
                 .getProduct();
     }

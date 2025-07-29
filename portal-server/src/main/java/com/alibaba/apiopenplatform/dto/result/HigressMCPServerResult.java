@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author zh
@@ -15,9 +16,20 @@ import java.util.List;
 @Data
 public class HigressMCPServerResult extends MCPServerResult implements OutputConverter<HigressMCPServerResult, McpServer> {
 
-    private List<String> domains;
+    @Override
+    public HigressMCPServerResult convertFrom(McpServer mcpServer) {
+        HigressMCPServerResult r = OutputConverter.super.convertFrom(mcpServer);
 
-    private String type;
+        r.setFromType(mcpServer.getType().name());
+        r.setMcpServerConfig(mcpServer.getRawConfigurations());
+        r.setFromType(GatewayType.HIGRESS.getType());
 
-    private String from = GatewayType.HIGRESS.getType();
+        r.setDomains(mcpServer.getDomains().stream().map(domain -> Domain.builder()
+                .domain(domain)
+                .protocol("HTTPS")
+                .build())
+                .collect(Collectors.toList()));
+
+        return r;
+    }
 }

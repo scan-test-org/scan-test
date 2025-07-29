@@ -11,14 +11,9 @@ import lombok.Data;
 @Data
 public class ProductRefResult implements OutputConverter<ProductRefResult, ProductRef> {
 
-    private Long id;
     private String apiId;
-    private String gatewayId;
-    private String productId;
 
-    @Override
-    public ProductRefResult convertFrom(ProductRef source) {
-        OutputConverter.super.convertFrom(source);
-        return this;
-    }
+    private String gatewayId;
+
+    private String productId;
 } 
