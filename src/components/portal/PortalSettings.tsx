@@ -1,6 +1,6 @@
 import { Card, Form, Input, Select, Switch, Button, Divider, Space, Tag, Table, Modal, message, Tabs } from 'antd'
 import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Portal, OidcConfig } from '@/types'
 import { portalApi } from '@/lib/api'
 
@@ -21,6 +21,22 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
   const [oidcForm] = Form.useForm()
   const [oidcLoading, setOidcLoading] = useState(false)
   const [editingOidc, setEditingOidc] = useState<OidcConfig | null>(null)
+  
+  // 本地OIDC配置状态，避免频繁刷新
+  const [localOidcConfigs, setLocalOidcConfigs] = useState<OidcConfig[]>(
+    portal.portalSettingConfig.oidcConfigs || []
+  )
+  
+  // 本地域名配置状态，避免频繁刷新
+  const [localDomainConfigs, setLocalDomainConfigs] = useState<any[]>(
+    portal.portalDomainConfig || []
+  )
+
+  // 当portal数据更新时，同步本地配置
+  useEffect(() => {
+    setLocalOidcConfigs(portal.portalSettingConfig.oidcConfigs || [])
+    setLocalDomainConfigs(portal.portalDomainConfig || [])
+  }, [portal.portalSettingConfig.oidcConfigs, portal.portalDomainConfig])
 
   // 通用的设置更新方法 - 仅更新表单值，不立即保存
   const handleSettingUpdate = (fieldName: string, value: any) => {
@@ -65,17 +81,26 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     try {
       setDomainLoading(true)
       const values = await domainForm.validateFields()
-      await portalApi.bindDomain(portal.portalId, {
+      
+      const newDomain = {
         domain: values.domain,
         protocol: values.protocol,
         type: 'CUSTOM'
-      })
+      }
+      
+      // 立即更新本地状态
+      setLocalDomainConfigs([...localDomainConfigs, newDomain])
+      
+      await portalApi.bindDomain(portal.portalId, newDomain)
       message.success('域名绑定成功')
       setDomainModalVisible(false)
-      onRefresh?.()
+      
+      // 不再调用onRefresh，因为我们已经更新了本地状态
     } catch (error) {
       console.error('绑定域名失败:', error)
       message.error('绑定域名失败')
+      // 如果绑定失败，回滚本地状态
+      setLocalDomainConfigs(portal.portalDomainConfig || [])
     } finally {
       setDomainLoading(false)
     }
@@ -88,12 +113,19 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
 
   const handleDeleteDomain = async (domain: string) => {
     try {
+      // 立即更新本地状态
+      const updatedDomains = localDomainConfigs.filter(d => d.domain !== domain)
+      setLocalDomainConfigs(updatedDomains)
+      
       await portalApi.unbindDomain(portal.portalId, domain)
       message.success('域名解绑成功')
-      onRefresh?.()
+      
+      // 不再调用onRefresh，因为我们已经更新了本地状态
     } catch (error) {
       console.error('解绑域名失败:', error)
       message.error('解绑域名失败')
+      // 如果解绑失败，回滚本地状态
+      setLocalDomainConfigs(portal.portalDomainConfig || [])
     }
   }
 
@@ -115,19 +147,21 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       setOidcLoading(true)
       const values = await oidcForm.validateFields()
       
-      const currentOidcConfigs = portal.portalSettingConfig.oidcConfigs || []
       let updatedOidcConfigs: OidcConfig[]
       
       if (editingOidc) {
         // 编辑现有配置
-        updatedOidcConfigs = currentOidcConfigs.map(config => 
+        updatedOidcConfigs = localOidcConfigs.map(config => 
           config.id === editingOidc.id ? { ...values, id: editingOidc.id } : config
         )
       } else {
         // 添加新配置
         const newId = `${values.provider}_${Date.now()}`
-        updatedOidcConfigs = [...currentOidcConfigs, { ...values, id: newId }]
+        updatedOidcConfigs = [...localOidcConfigs, { ...values, id: newId }]
       }
+      
+      // 立即更新本地状态，提供即时反馈
+      setLocalOidcConfigs(updatedOidcConfigs)
       
       // 更新设置
       await portalApi.updatePortalSettings(portal.portalId, {
@@ -137,10 +171,14 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       
       message.success(editingOidc ? 'OIDC配置更新成功' : 'OIDC配置添加成功')
       setOidcModalVisible(false)
-      onRefresh?.()
+      
+      // 不再调用onRefresh，因为我们已经更新了本地状态
+      // 这样可以避免不必要的页面刷新，提供更好的用户体验
     } catch (error) {
       console.error('保存OIDC配置失败:', error)
       message.error('保存OIDC配置失败')
+      // 如果保存失败，回滚本地状态
+      setLocalOidcConfigs(portal.portalSettingConfig.oidcConfigs || [])
     } finally {
       setOidcLoading(false)
     }
@@ -154,8 +192,10 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
 
   const handleDeleteOidc = async (oidcId: string) => {
     try {
-      const currentOidcConfigs = portal.portalSettingConfig.oidcConfigs || []
-      const updatedOidcConfigs = currentOidcConfigs.filter(config => config.id !== oidcId)
+      const updatedOidcConfigs = localOidcConfigs.filter(config => config.id !== oidcId)
+      
+      // 立即更新本地状态
+      setLocalOidcConfigs(updatedOidcConfigs)
       
       await portalApi.updatePortalSettings(portal.portalId, {
         ...form.getFieldsValue(),
@@ -163,10 +203,14 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       })
       
       message.success('OIDC配置删除成功')
-      onRefresh?.()
+      
+      // 不再调用onRefresh，因为我们已经更新了本地状态
+      // 这样可以避免不必要的页面刷新，提供更好的用户体验
     } catch (error) {
       console.error('删除OIDC配置失败:', error)
       message.error('删除OIDC配置失败')
+      // 如果删除失败，回滚本地状态
+      setLocalOidcConfigs(portal.portalSettingConfig.oidcConfigs || [])
     }
   }
 
@@ -370,7 +414,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
             </div>
             <Table 
               columns={oidcColumns} 
-              dataSource={portal.portalSettingConfig.oidcConfigs || []}
+              dataSource={localOidcConfigs}
               rowKey="id"
               pagination={false}
               size="small"
@@ -399,7 +443,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           </div>
           <Table 
             columns={domainColumns} 
-            dataSource={portal.portalDomainConfig}
+            dataSource={localDomainConfigs}
             rowKey="domain"
             pagination={false}
             size="small"

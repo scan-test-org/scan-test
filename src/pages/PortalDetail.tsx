@@ -17,7 +17,7 @@ import { PortalDevelopers } from '@/components/portal/PortalDevelopers'
 import { PortalConsumers } from '@/components/portal/PortalConsumers'
 import { PortalSettings } from '@/components/portal/PortalSettings'
 import { portalApi } from '@/lib/api'
-import { Portal } from '@/types'
+import { Portal, ApiResponse } from '@/types'
 
 const { Title, Paragraph } = Typography
 
@@ -58,17 +58,20 @@ const menuItems = [
 
 export default function PortalDetail() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const [activeTab, setActiveTab] = useState("overview")
+  const [searchParams, setSearchParams] = useSearchParams()
   const [portal, setPortal] = useState<Portal | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // 从URL查询参数获取当前tab，默认为overview
+  const currentTab = searchParams.get('tab') || 'overview'
+  const [activeTab, setActiveTab] = useState(currentTab)
 
   const fetchPortalData = async () => {
     try {
       setLoading(true)
       const portalId = searchParams.get('id') || 'portal-6882e06f4fd0c963020e3485'
-      const response = await portalApi.getPortalDetail(portalId)
+      const response = await portalApi.getPortalDetail(portalId) as ApiResponse<Portal>
       if (response && response.code === 'SUCCESS') {
         setPortal(response.data)
       } else {
@@ -86,8 +89,21 @@ export default function PortalDetail() {
     fetchPortalData()
   }, [searchParams])
 
+  // 当URL中的tab参数变化时，更新activeTab
+  useEffect(() => {
+    setActiveTab(currentTab)
+  }, [currentTab])
+
   const handleBackToPortals = () => {
     navigate('/portals')
+  }
+
+  // 处理tab切换，同时更新URL查询参数
+  const handleTabChange = (tabKey: string) => {
+    setActiveTab(tabKey)
+    const newSearchParams = new URLSearchParams(searchParams)
+    newSearchParams.set('tab', tabKey)
+    setSearchParams(newSearchParams)
   }
 
   const renderContent = () => {
@@ -192,7 +208,7 @@ export default function PortalDetail() {
             return (
               <button
                 key={item.key}
-                onClick={() => setActiveTab(item.key)}
+                onClick={() => handleTabChange(item.key)}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-colors ${
                   activeTab === item.key
                     ? "bg-blue-50 text-blue-600 border border-blue-200"
