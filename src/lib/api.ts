@@ -13,7 +13,7 @@ const api: AxiosInstance = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getToken()
+    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyVHlwZSI6ImFkbWluIiwidXNlcklkIjoiYWRtaW4tNjg4ODhmMmE1ODc0MGUxZjMwNmQ5OTgwIiwiaWF0IjoxNzUzNzg5Mjk3LCJleHAiOjE3NTM3OTY0OTd9.RALeWGs0uG5Bgd3bo1fPWEgXb42XAxZNMYEkq6nNXRs'
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }

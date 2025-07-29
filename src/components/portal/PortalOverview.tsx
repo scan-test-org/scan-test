@@ -195,10 +195,10 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
       </Row>
 
       {/* OIDC配置 */}
-      {portal.portalSettingConfig.oidcOptions.length > 0 && (
+      {portal.portalSettingConfig.oidcConfigs.length > 0 && (
         <Card title="OIDC认证配置">
           <div className="space-y-4">
-            {portal.portalSettingConfig.oidcOptions.map((config) => (
+            {portal.portalSettingConfig.oidcConfigs.map((config) => (
               <div key={config.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium">{config.name}</h4>
