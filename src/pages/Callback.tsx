@@ -1,11 +1,10 @@
 import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { message, Spin } from "antd";
 import api from "../lib/api";
 
 const Callback: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);

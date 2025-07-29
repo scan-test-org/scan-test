@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Card, Tag, Button, Space, Typography, Input, Select, Row, Col } from "antd";
-import { SearchOutlined, EyeOutlined, FileTextOutlined, UserOutlined, ApiOutlined } from "@ant-design/icons";
+import { Card, Tag, Button, Typography, Input, Select, Row, Col } from "antd";
+import { SearchOutlined, EyeOutlined, ApiOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import api from "../lib/api";
@@ -55,12 +55,12 @@ function APIsPage() {
         
         <Row gutter={[16, 16]}>
           {products.map((api) => (
-            <Col xs={24} sm={12} lg={8} xl={6} key={api.key}>
+            <Col xs={24} sm={12} lg={8} xl={6} key={api.productId}>
               <Card
                 hoverable
                 className="h-full"
                 actions={[
-                  <Link to={`/apis/${api.key}`} key="view">
+                  <Link to={`/apis/${api.productId}`} key="view">
                     <Button type="link" icon={<EyeOutlined />} size="small">
                       查看详情
                     </Button>
@@ -87,10 +87,7 @@ function APIsPage() {
                     <Tag color="default">
                       {api.category}
                     </Tag>
-                    <div>
-                      <UserOutlined className="mr-1" />
-                      <span>{api.subscribers} 订阅者</span>
-                    </div>
+                    
                   </div>
                   
                 </div>

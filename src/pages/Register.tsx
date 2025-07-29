@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Form, Input, Button, Card, message } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import api from '../lib/api'
@@ -7,9 +7,9 @@ import api from '../lib/api'
 const Register: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
-  const searchParams = new URLSearchParams(location.search)
-  const portalId = searchParams.get('portalId') || ''
+  // const location = useLocation()
+  // const searchParams = new URLSearchParams(location.search)
+  // const portalId = searchParams.get('portalId') || ''
 
   const handleRegister = async (values: { username: string; password: string; confirmPassword: string }) => {
     setLoading(true)

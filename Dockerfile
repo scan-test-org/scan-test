@@ -7,9 +7,7 @@ COPY . .
 
 RUN curl https://anpm.alibaba-inc.com/open/install-node.sh?v=20 | bash
 
-
-RUN npm install
-RUN npm run build
+# 不知道为啥 在docker里npm install 会报错 所以暂时先直接copy本地build好的dist文件
 
 EXPOSE 3000
 CMD ["node", "server.js"]
