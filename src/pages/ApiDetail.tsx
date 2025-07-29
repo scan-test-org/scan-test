@@ -3,8 +3,8 @@ import { useParams } from "react-router-dom";
 import { Card, Badge, Table, Typography, Space, Tag, Spin, Alert, Descriptions } from "antd";
 import { Layout } from "../components/Layout";
 import api from "../lib/api";
-import { ProductStatus, ProductCategory, ProductType } from "../types";
-import type { Product, ApiResponse, RestApiProduct } from "../types";
+import { ProductStatus, ProductCategory } from "../types";
+import type { Product, ApiResponse } from "../types";
 import { processProductSpecs } from "../lib/utils";
 
 const { Title, Paragraph } = Typography;

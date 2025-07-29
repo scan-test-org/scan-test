@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import api from "../lib/api";
 import { ProductType, ProductStatus, ProductCategory } from "../types";
-import type { Product, ApiResponse, PaginatedResponse, McpServerProduct } from "../types";
+import type { Product, ApiResponse, PaginatedResponse } from "../types";
 import { processProductSpecs } from "../lib/utils";
 
 const { Title, Paragraph } = Typography;

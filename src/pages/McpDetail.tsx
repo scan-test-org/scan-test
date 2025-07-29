@@ -5,7 +5,7 @@ import { Layout } from '../components/Layout';
 import { Card, Typography, Tag, Space, Badge, Descriptions, Spin, Alert, Collapse, Button, message } from 'antd';
 import MonacoEditor from 'react-monaco-editor';
 import { ProductType, ProductStatus, ProductCategory } from '../types';
-import type { Product, ApiResponse, McpServerConfig, McpServerProduct, RestApiProduct } from '../types';
+import type { Product, McpServerConfig, McpServerProduct } from '../types';
 import { processProductSpecs } from '../lib/utils';
 
 const { Title, Paragraph } = Typography;
@@ -29,10 +29,8 @@ function McpDetail() {
     setError('');
     console.log('开始请求 API:', `/products/${mcpName}`);
     api.get(`/products/${mcpName}`)
-      .then((res) => {
-        console.log('API 响应:', res);
-        // 由于响应拦截器已经返回了 response.data，所以这里直接使用 res
-        const response = res as ApiResponse<Product>;
+      .then((response: any) => {
+        console.log('API 响应:', response);
         if (response.code === "SUCCESS" && response.data) {
           console.log('设置数据:', response.data);
           
