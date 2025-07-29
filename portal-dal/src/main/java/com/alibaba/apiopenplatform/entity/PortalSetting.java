@@ -27,6 +27,9 @@ public class PortalSetting extends BaseEntity {
     @PrimaryKeyJoinColumn
     private Portal portal;
 
+    @Column(name = "portal_id", length = 32)
+    private String portalId;
+
     @Column(name = "provider", length = 32)
     // OIDC provider 名，例如 github、google、aliyun
     private String provider;
@@ -49,4 +52,11 @@ public class PortalSetting extends BaseEntity {
 
     @Column(name = "frontend_redirect_url", length = 256)
     private String frontendRedirectUrl;
+
+    public void setPortal(Portal portal) {
+        this.portal = portal;
+        if (portal != null) {
+            this.portalId = portal.getPortalId();
+        }
+    }
 }

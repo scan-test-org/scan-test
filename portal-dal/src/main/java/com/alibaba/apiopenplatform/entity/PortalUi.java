@@ -21,8 +21,8 @@ public class PortalUi extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @Column(name = "portal_id", length = 32)
-//    private String portalId;
+    @Column(name = "portal_id", length = 32)
+    private String portalId;
 
     @OneToOne
     @PrimaryKeyJoinColumn
@@ -33,4 +33,11 @@ public class PortalUi extends BaseEntity {
 
     @Column(name = "icon", length = 256)
     private String icon;
+
+    public void setPortal(Portal portal) {
+        this.portal = portal;
+        if (portal != null) {
+            this.portalId = portal.getPortalId();
+        }
+    }
 }
