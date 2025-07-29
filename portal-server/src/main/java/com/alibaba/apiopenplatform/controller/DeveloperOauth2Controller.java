@@ -77,7 +77,7 @@ public class DeveloperOauth2Controller {
      * @param state 前端生成的state参数
      * @note portalId 已自动根据域名识别，无需传递
      */
-    @Operation(summary = "OIDC授权入口", description = "重定向到第三方登录页面。state参数格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。注意：需要先配置对应的OIDC配置。")
+    @Operation(summary = "OIDC授权入口", description = "重定向到第三方登录页面。state参数格式：BINDING|{随机串}|{provider}|{token} 或 LOGIN|{provider}。portalId已自动根据域名识别，无需传递。注意：需要先配置对应的OIDC配置。")
     @GetMapping("/authorize")
     public void universalAuthorize(@RequestParam String provider, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String portalId = contextHolder.getPortal();
@@ -128,20 +128,19 @@ public class DeveloperOauth2Controller {
 
     /**
      * OIDC统一回调接口，支持登录和绑定分流
-     * state 推荐格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}
+     * state 推荐格式：BINDING|{随机串}|{provider}|{token} 或 LOGIN|{provider}
      * <br>前端示例：
-     *   const stateRaw = `BINDING|${Math.random().toString(36).slice(2)}|${portalId}|${provider}|${token}`;
+     *   const stateRaw = `BINDING|${Math.random().toString(36).slice(2)}|${provider}|${token}`;
      *   const state = encodeURIComponent(stateRaw);
      *   // 跳转参数 ...&state=${state}
      * 后端解析：
      *   String decodedState = URLDecoder.decode(state, "UTF-8");
      *   String[] arr = decodedState.split("\\|");
-     *   String portalId = arr[2];
-     *   String provider = arr[3];
-     *   String token = arr.length > 4 ? arr[4] : null;
+     *   String provider = arr[2]; // BINDING模式下
+     *   String token = arr.length > 3 ? arr[3] : null;
      * @note portalId 已自动根据域名识别，无需传递
      */
-    @Operation(summary = "OIDC统一回调", description = "处理第三方登录回调。state参数格式：BINDING|{随机串}|{portalId}|{provider}|{token} 或 LOGIN|{portalId}|{provider}。注意：此接口由第三方平台调用，不能直接测试。")
+    @Operation(summary = "OIDC统一回调", description = "处理第三方登录回调。state参数格式：BINDING|{随机串}|{provider}|{token} 或 LOGIN|{provider}。portalId已自动根据域名识别，无需传递。注意：此接口由第三方平台调用，不能直接测试。")
     @GetMapping("/callback")
     public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         log.info("[OIDCCallback] code={}, state={}", code, state);
@@ -154,20 +153,24 @@ public class DeveloperOauth2Controller {
         String[] stateParts = decodedState.split("\\|");
         if (decodedState.startsWith("BINDING|")) {
             String[] arr = decodedState.split("\\|");
-            if (arr.length >= 5) {
-                provider = arr[3];
-                tokenParam = arr[4];
+            if (arr.length >= 4) {
+                provider = arr[2]; // 第三段为provider
+                tokenParam = arr[3]; // 第四段为token
                 mode = "BINDING";
             }
         } else if (decodedState.startsWith("LOGIN|")) {
             String[] arr = decodedState.split("\\|");
             if (arr.length >= 2) {
-                provider = arr[1]; // 始终取第二段为 provider
+                provider = arr[1]; // 第二段为provider
                 mode = "LOGIN";
             }
         }
-        if (portalId == null || provider == null) {
-            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("未包含portalId/provider", "UTF-8"));
+        if (portalId == null) {
+            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("无法识别门户信息", "UTF-8"));
+            return;
+        }
+        if (provider == null) {
+            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("state参数格式错误", "UTF-8"));
             return;
         }
         // 通过portalId查询对应的Portal，然后获取PortalSetting
