@@ -91,8 +91,7 @@ public class ProductServiceImpl implements ProductService {
             CreateProductRefParam refParam = new CreateProductRefParam();
             refParam.setApiId(param.getMcpServerName()); // 使用MCP Server名称作为apiId
             refParam.setSourceType(param.getSourceType());
-            refParam.setType(ProductType.MCP_SERVER);
-            
+
             // 根据数据源类型设置相应的ID
             if (param.getSourceType() == SourceType.GATEWAY) {
                 refParam.setGatewayId(param.getGatewayId());
