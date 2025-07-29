@@ -65,32 +65,24 @@ const Profile: React.FC = () => {
   const [providers, setProviders] = useState<Provider[]>([])
   const [bindingStr, setBindingStr] = useState('')
   const [identities, setIdentities] = useState<Identity[]>([])
-  const location = useLocation()
-  const searchParams = new URLSearchParams(location.search)
-  const portalId = searchParams.get('portalId') || ''
-  const token = searchParams.get('token') || ''
 
   useEffect(() => {
-    if (!portalId) return
-    api.get('/oauth2/api/oauth/providers', { params: { portalId } })
+    api.post('/developers/providers')
       .then((res: Provider[] | { data: Provider[] }) => {
         if (Array.isArray(res)) setProviders(res)
         else setProviders(res.data || [])
       })
       .catch(() => setProviders([]))
-  }, [portalId])
+  }, [])
 
   useEffect(() => {
-    if (!token) return
-    api.get('/oauth2/list-identities', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    api.post('/developers/list-identities')
       .then((res: Identity[] | { data: Identity[] }) => {
         if (Array.isArray(res)) setIdentities(res)
         else setIdentities(res.data || [])
       })
       .catch(() => setIdentities([]))
-  }, [token])
+  }, [])
 
   // 生成随机串
   const randomStr = () => Math.random().toString(36).slice(2, 10)
@@ -98,11 +90,11 @@ const Profile: React.FC = () => {
   // 拼接BINDING串
   const handleBinding = (provider: string) => {
     const rand = randomStr()
-    const str = `BINDING|${rand}|${portalId}|${provider}|${token}`
+    const str = `BINDING|${rand}|${provider}`
     setBindingStr(str)
     // 跳转到OIDC授权接口
     const state = encodeURIComponent(str)
-    const url = `${api.defaults.baseURL}/oauth2/api/oauth/authorize?portalId=${portalId}&provider=${provider}&state=${state}&frontendRedirectUrl=http://${window.location.host}`
+    const url = `${api.defaults.baseURL}/developers/authorize?provider=${provider}&state=${state} `
     window.location.href = url
   }
 
