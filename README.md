@@ -47,14 +47,15 @@ src/
 └── hooks/         # 自定义hooks
 ```
 
-## 环境变量
+## 部署方式
+1. 构建本地镜像
+```bash
+docker build -t /daofeng/api-portal-admin:latest .
+```
 
-- `VITE_API_BASE_URL`: API基础URL
-- `VITE_APP_TITLE`: 应用标题
+2. 推送镜像到ACR
+```bash
+docker push /daofeng/api-portal-admin:latest
+```
 
-## 开发指南
-
-- 使用 `@/` 路径别名指向 `src/` 目录
-- 组件使用 Tailwind CSS 进行样式设计
-- 状态管理使用 Redux Toolkit
-- API调用使用配置好的 axios 实例
+3. ACK 对应的无状态重新部署
