@@ -54,7 +54,7 @@ public class AdministratorController {
                 .orElseThrow(() -> new RuntimeException("AUTH_FAILED"));
         
         // 设置cookie而不是返回token，设置SameSite属性，避免浏览器警告
-        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=Lax");
+        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=Lax; HttpOnly=false");
     }
 
     // @Operation(summary = "管理员受保护接口", description = "仅测试用，返回管理员受保护信息")
