@@ -117,9 +117,6 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     public void createConsumer(Gateway gateway) {
-//        client.execute(a -> a.(null));
-
-//        client.execute(c -> {})
     }
 
     @Override
@@ -154,6 +151,45 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         } catch (Exception e) {
             log.error("Error fetching API", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching API，Cause：" + e.getMessage());
+        }
+    }
+
+    @Override
+    public PageResult<PluginAttachmentResult> fetchPluginAttachment(Gateway gateway, String resourceType, String resourceId, Pageable pageable) {
+        APIGClient client = getClient(gateway);
+
+        List<PluginAttachmentResult> attachments = new ArrayList<>();
+        try {
+            ListPluginAttachmentsResponse response = client.execute(c -> {
+                ListPluginAttachmentsRequest request = ListPluginAttachmentsRequest.builder()
+                        .gatewayId(gateway.getGatewayId())
+                        .attachResourceId(resourceId)
+                        .attachResourceType(resourceType)
+                        .pageNumber(pageable.getPageNumber())
+                        .pageSize(pageable.getPageSize())
+                        .build();
+                try {
+                    return c.listPluginAttachments(request).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+
+            for (ListPluginAttachmentsResponseBody.Items item : response.getBody().getData().getItems()) {
+                attachments.add(PluginAttachmentResult.builder()
+                        .pluginClassInfo(item.getPluginClassInfo())
+                        .pluginConfig(item.getPluginConfig())
+                        .build());
+            }
+
+            int total = response.getBody().getData().getTotalSize();
+            return PageResult.of(attachments, pageable.getPageNumber(), pageable.getPageSize(), total);
+        } catch (Exception e) {
+            log.error("Error fetching Plugin Attachment", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Plugin Attachment，Cause：" + e.getMessage());
         }
     }
 
