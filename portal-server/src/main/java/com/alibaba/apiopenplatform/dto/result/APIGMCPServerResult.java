@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author zh
@@ -20,13 +21,21 @@ public class APIGMCPServerResult extends MCPServerResult implements OutputConver
 
     private String routeId;
 
-    private String name;
+    @Override
+    public APIGMCPServerResult convertFrom(HttpRoute httpRoute) {
+        APIGMCPServerResult r = OutputConverter.super.convertFrom(httpRoute);
 
-    private List<HttpRoute.DomainInfos> domainInfos;
+        HttpRoute.McpServerInfo mcpServerInfo = httpRoute.getMcpServerInfo();
+        r.setFromType(mcpServerInfo.getCreateFromType());
 
-    private HttpRouteMatch match;
-
-    private HttpRoute.McpServerInfo mcpServerInfo;
-
-    private String from = GatewayType.APIG_AI.getType();
+        r.setDomains(httpRoute.getDomainInfos().stream()
+                .map(domainInfo -> Domain.builder()
+                        .domain(domainInfo.getName())
+                        .protocol(domainInfo.getProtocol())
+                        .build())
+                .collect(Collectors.toList()));
+        r.setMcpServerConfig(mcpServerInfo.getMcpServerConfig());
+        r.setFromType(GatewayType.APIG_AI.getType());
+        return r;
+    }
 }

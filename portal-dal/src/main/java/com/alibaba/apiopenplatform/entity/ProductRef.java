@@ -41,7 +41,4 @@ public class ProductRef extends BaseEntity {
     @Column(name = "operations", columnDefinition = "text")
     @Convert(converter = StringListConverter.class)
     private List<String> operations;
-
-    @Column(name = "type", length = 32, nullable = false)
-    private ProductType type;
 }
