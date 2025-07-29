@@ -27,20 +27,8 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
 
     private List<RouteOption> routes;
 
-    @NotNull(message = "API产品类型不能为空")
-    private ProductType type;
-
     @NotNull(message = "数据源类型不能为空")
     private SourceType sourceType;
-
-    @AssertTrue(message = "MCP Server路由ID不能为空")
-    private boolean isMCPValid() {
-        if (type == ProductType.MCP_SERVER) {
-            return CollUtil.isNotEmpty(routes);
-        } else {
-            return StrUtil.isNotBlank(apiId);
-        }
-    }
 
     @AssertTrue(message = "数据源配置无效")
     private boolean isSourceValid() {
