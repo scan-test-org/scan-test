@@ -232,6 +232,7 @@ public class ProductServiceImpl implements ProductService {
                 });
 
         ProductRef productRef = param.convertTo();
+        productRef.setProductId(productId);
         productRefRepository.save(productRef);
     }
 

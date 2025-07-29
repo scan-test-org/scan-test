@@ -65,6 +65,7 @@ public class SecurityConfig {
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             .and()
             .authorizeRequests()
+//                .antMatchers("/**").permitAll()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // 管理员初始化、检测、登录接口（无需认证）
                 .antMatchers("/admins/init", "/admins/need-init", "/admins/login").permitAll()
