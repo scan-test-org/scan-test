@@ -2,7 +2,7 @@ package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.nacos.CreateNacosParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
-import com.alibaba.apiopenplatform.dto.result.MCPServerResult;
+import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
@@ -53,7 +53,7 @@ public interface NacosService {
     /**
      * 获取指定Nacos实例中的MCP Server列表
      */
-    PageResult<MCPServerResult> fetchMcpServers(String nacosId, Pageable pageable);
+    PageResult<NacosMCPServerResult> fetchMcpServers(String nacosId, Pageable pageable);
 
     /**
      * 查找Nacos实例

@@ -66,19 +66,34 @@ public class SecurityConfig {
             .and()
             .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // ========== 开发调试阶段临时放开 MCP Market 接口，后期务必加回权限 ==========
-                .antMatchers("/api/mcpmarket/**").permitAll()
-                // ========== ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
-                // 管理员初始化、检测、登录接口全部放行
-                .antMatchers("/api/admin/init", "/api/admin/need-init", "/api/admin/login", "/api/admin/change-password").permitAll()
-                .antMatchers("/api/developer/register", "/api/developer/login").permitAll()
-                .antMatchers("/api/oauth/authorize").permitAll()
+                // 管理员初始化、检测、登录接口（无需认证）
+                .antMatchers("/admins/init", "/admins/need-init", "/admins/login").permitAll()
+                // 开发者注册、登录接口（无需认证）
+                .antMatchers("/developers", "/developers/login").permitAll()
+                // OAuth2相关接口（无需认证）
+                .antMatchers("/developers/authorize", "/developers/callback").permitAll()
                 .antMatchers("/login/oauth2/**", "/oauth2/**").permitAll()
                 .antMatchers("/bind-callback").permitAll()
-                .antMatchers("/api/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/developer/**").permitAll()
+                // 管理员接口（需要ADMIN角色）
+                .antMatchers("/admins/**").hasRole("ADMIN")
+                // 开发者接口（需要DEVELOPER角色）
+                .antMatchers("/developers/**").hasRole("DEVELOPER")
+                // 门户管理接口（需要ADMIN角色）
+                .antMatchers("/portals/**").hasRole("ADMIN")
+                // 产品管理接口（需要ADMIN角色）
+                .antMatchers("/products/**").hasRole("ADMIN")
+                // 消费者管理接口（需要ADMIN角色）
+                .antMatchers("/consumers/**").hasRole("ADMIN")
+                // Nacos管理接口（需要ADMIN角色）
+                .antMatchers("/nacos/**").hasRole("ADMIN")
+                // 网关管理接口（需要ADMIN角色）
+                .antMatchers("/gateways/**").hasRole("ADMIN")
+                // MCP市场接口（需要ADMIN角色）
+                .antMatchers("/api/mcpmarket/**").hasRole("ADMIN")
+                // Swagger文档（开发环境可访问）
                 .antMatchers("/portal/swagger-ui.html", "/portal/swagger-ui/**", "/portal/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-                .anyRequest().permitAll()
+                // 其他所有请求需要认证
+                .anyRequest().authenticated()
             .and()
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
             .authenticationProvider(developerAuthenticationProvider);
