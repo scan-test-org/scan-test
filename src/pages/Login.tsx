@@ -36,17 +36,11 @@ const Login: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await api.post("/admins/login", {
+      await api.post("/admins/login", {
         username: values.username,
         password: values.password,
       });
-      // 登录成功后跳转到首页（token 由后端通过 Set-Cookie 设置）
-      if (res && res.data) {
-        // 跳转到首页
-        navigate('/');
-      } else {
-        setError("登录失败");
-      }
+      navigate('/');
     } catch {
       setError("账号或密码错误");
     } finally {
