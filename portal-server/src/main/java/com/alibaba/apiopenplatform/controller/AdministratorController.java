@@ -57,7 +57,7 @@ public class AdministratorController {
         Cookie cookie = new Cookie("token", authResult.getToken());
         cookie.setPath("/");
         cookie.setMaxAge(3600); // 1小时
-        cookie.setHttpOnly(true); // 防止XSS攻击
+        cookie.setHttpOnly(false); // 允许前端JavaScript访问
         response.addCookie(cookie);
     }
 

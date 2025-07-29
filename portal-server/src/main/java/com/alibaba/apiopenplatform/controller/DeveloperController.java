@@ -79,7 +79,7 @@ public class DeveloperController {
             Cookie cookie = new Cookie("token", authResult.getToken());
             cookie.setPath("/");
             cookie.setMaxAge(3600); // 1小时
-            cookie.setHttpOnly(true);
+            cookie.setHttpOnly(false); // 允许前端JavaScript访问
             response.addCookie(cookie);
         }
         // 如果不自动审批，则注册成功但不登录，需要等待管理员审批
@@ -94,7 +94,7 @@ public class DeveloperController {
         Cookie cookie = new Cookie("token", authResult.getToken());
         cookie.setPath("/");
         cookie.setMaxAge(3600); // 1小时
-        cookie.setHttpOnly(true); // 防止XSS攻击
+        cookie.setHttpOnly(false); // 允许前端JavaScript访问
         response.addCookie(cookie);
     }
 
