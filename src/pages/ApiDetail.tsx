@@ -1,33 +1,114 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Badge, Table, Typography, Space, Tag } from "antd";
+import { Card, Badge, Table, Typography, Space, Tag, Spin, Alert, Descriptions } from "antd";
 import { Layout } from "../components/Layout";
+import api from "../lib/api";
+import { ProductStatus, ProductCategory } from "../types";
+import type { Product, ApiResponse } from "../types";
 
 const { Title, Paragraph } = Typography;
 
+interface ApiEndpoint {
+  key: string;
+  method: string;
+  path: string;
+  description: string;
+}
+
 function ApiDetailPage() {
   const { id } = useParams();
-  
-  // 模拟API详情数据
-  const apiData = {
-    name: `API ${id}`,
-    description: "这是一个示例API的描述信息",
-    version: "v1.0.0",
-    status: "active",
-    category: "Payment",
-    endpoints: [
-      {
-        key: "1",
-        method: "GET",
-        path: "/api/payments",
-        description: "获取支付列表"
-      },
-      {
-        key: "2", 
-        method: "POST",
-        path: "/api/payments",
-        description: "创建新支付"
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [apiData, setApiData] = useState<Product | null>(null);
+  const [endpoints, setEndpoints] = useState<ApiEndpoint[]>([]);
+
+  useEffect(() => {
+    if (!id) return;
+    fetchApiDetail();
+  }, [id]);
+
+  const fetchApiDetail = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response: ApiResponse<Product> = await api.get(`/products/${id}`);
+      if (response.code === "SUCCESS" && response.data) {
+        setApiData(response.data);
+        
+        // 尝试从apiSpec中解析端点信息
+        if (response.data.apiSpec) {
+          try {
+            const spec = JSON.parse(response.data.apiSpec) as Record<string, unknown>;
+            if (spec.paths) {
+              const endpointList: ApiEndpoint[] = [];
+              Object.entries(spec.paths).forEach(([path, methods]: [string, unknown]) => {
+                const methodsObj = methods as Record<string, unknown>;
+                Object.keys(methodsObj).forEach((method) => {
+                  const methodObj = methodsObj[method] as Record<string, unknown>;
+                  endpointList.push({
+                    key: `${method}-${path}`,
+                    method: method.toUpperCase(),
+                    path,
+                    description: (methodObj.summary as string) || (methodObj.description as string) || '无描述'
+                  });
+                });
+              });
+              setEndpoints(endpointList);
+            }
+          } catch (error) {
+            console.warn('解析API规范失败:', error);
+            // 设置默认端点
+            setEndpoints([
+              {
+                key: "1",
+                method: "GET",
+                path: "/api/endpoints",
+                description: "获取端点列表"
+              }
+            ]);
+          }
+        } else {
+          // 设置默认端点
+          setEndpoints([
+            {
+              key: "1",
+              method: "GET",
+              path: "/api/endpoints",
+              description: "获取端点列表"
+            }
+          ]);
+        }
       }
-    ]
+    } catch (error) {
+      console.error('获取API详情失败:', error);
+      setError('加载失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusText = (status: ProductStatus) => {
+    switch (status) {
+      case ProductStatus.ENABLE:
+        return '活跃'
+      case ProductStatus.DISABLE:
+        return '非活跃'
+      default:
+        return status
+    }
+  };
+
+  const getCategoryText = (category: ProductCategory) => {
+    switch (category) {
+      case ProductCategory.OFFICIAL:
+        return '官方'
+      case ProductCategory.COMMUNITY:
+        return '社区'
+      case ProductCategory.CUSTOM:
+        return '自定义'
+      default:
+        return category
+    }
   };
 
   const columns = [
@@ -53,6 +134,32 @@ function ApiDetailPage() {
     }
   ];
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center min-h-[300px]">
+          <Spin size="large" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <Alert message={error} type="error" showIcon className="my-8" />
+      </Layout>
+    );
+  }
+
+  if (!apiData) {
+    return (
+      <Layout>
+        <Alert message="未找到API信息" type="warning" showIcon className="my-8" />
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="mb-8">
@@ -60,19 +167,34 @@ function ApiDetailPage() {
           {apiData.name}
         </Title>
         <Space className="mb-4">
-          <Badge status="success" text="活跃" />
-          <Tag color="blue">{apiData.version}</Tag>
-          <Tag color="purple">{apiData.category}</Tag>
+          <Badge 
+            status={apiData.status === ProductStatus.ENABLE ? 'success' : 'default'} 
+            text={getStatusText(apiData.status)} 
+          />
+          <Tag color="blue">v1.0.0</Tag>
+          <Tag color="purple">{getCategoryText(apiData.category)}</Tag>
         </Space>
         <Paragraph className="text-gray-600">
           {apiData.description}
         </Paragraph>
       </div>
 
+      <Card title="基本信息" className="mb-6">
+        <Descriptions column={1} bordered size="small">
+          <Descriptions.Item label="产品ID">{apiData.productId}</Descriptions.Item>
+          <Descriptions.Item label="类型">{apiData.type}</Descriptions.Item>
+          <Descriptions.Item label="状态">{getStatusText(apiData.status)}</Descriptions.Item>
+          <Descriptions.Item label="分类">{getCategoryText(apiData.category)}</Descriptions.Item>
+          <Descriptions.Item label="消费者认证">
+            {apiData.enableConsumerAuth ? '启用' : '禁用'}
+          </Descriptions.Item>
+        </Descriptions>
+      </Card>
+
       <Card title="API 端点" className="mb-8">
         <Table 
           columns={columns} 
-          dataSource={apiData.endpoints}
+          dataSource={endpoints}
           rowKey="key"
           pagination={false}
         />
