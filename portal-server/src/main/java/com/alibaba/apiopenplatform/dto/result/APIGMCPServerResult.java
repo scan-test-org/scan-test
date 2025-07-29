@@ -35,7 +35,7 @@ public class APIGMCPServerResult extends MCPServerResult implements OutputConver
                         .build())
                 .collect(Collectors.toList()));
         r.setMcpServerConfig(mcpServerInfo.getMcpServerConfig());
-        r.setFromType(GatewayType.APIG_AI.getType());
+        r.setFromGateway(GatewayType.APIG_AI.getType());
         return r;
     }
 }

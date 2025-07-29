@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.entity;
 
+import com.alibaba.apiopenplatform.support.converter.RouteConfigListConverter;
 import com.alibaba.apiopenplatform.support.converter.StringListConverter;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
@@ -43,7 +44,7 @@ public class ProductRef extends BaseEntity {
     private SourceType sourceType;
 
     @Column(name = "routes", columnDefinition = "text")
-    @Convert(converter = StringListConverter.class)
+    @Convert(converter = RouteConfigListConverter.class)
     private List<RouteConfig> routes;
 
     @Column(name = "operations", columnDefinition = "text")

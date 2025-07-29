@@ -90,6 +90,11 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
+    public PageResult<PluginAttachmentResult> fetchPluginAttachment(Gateway gateway, String resourceType, String resourceId, Pageable pageable) {
+        return null;
+    }
+
+    @Override
     public GatewayType getGatewayType() {
         return GatewayType.HIGRESS;
     }

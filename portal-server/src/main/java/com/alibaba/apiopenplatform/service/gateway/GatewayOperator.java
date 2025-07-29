@@ -41,6 +41,8 @@ public abstract class GatewayOperator<T> {
 
     abstract public APIResult fetchAPI(Gateway gateway, String apiId);
 
+    abstract public PageResult<PluginAttachmentResult> fetchPluginAttachment(Gateway gateway, String resourceType, String resourceId, Pageable pageable);
+
     abstract public GatewayType getGatewayType();
 
     @SuppressWarnings("unchecked")

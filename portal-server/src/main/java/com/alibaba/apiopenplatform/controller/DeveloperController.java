@@ -1,7 +1,6 @@
 package com.alibaba.apiopenplatform.controller;
 
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperLoginParam;
+import com.alibaba.apiopenplatform.dto.params.developer.*;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.core.response.Response;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
@@ -37,9 +36,6 @@ import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
 import org.springframework.http.ResponseEntity;
-import com.alibaba.apiopenplatform.dto.params.developer.UnbindExternalIdentityParam;
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperStatusParam;
-import com.alibaba.apiopenplatform.dto.params.developer.UpdateDeveloperProfileParam;
 import com.alibaba.apiopenplatform.dto.params.admin.ChangePasswordParam;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
