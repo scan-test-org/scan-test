@@ -12,10 +12,6 @@ import javax.persistence.*;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "product_publishment")
-@NamedEntityGraph(
-        name = "product.properties",
-        attributeNodes = @NamedAttributeNode("product")
-)
 @Data
 public class ProductPublication extends BaseEntity {
     @Id
@@ -25,7 +21,6 @@ public class ProductPublication extends BaseEntity {
     @Column(name = "portal_id", length = 32, nullable = false)
     private String portalId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", referencedColumnName = "product_id", updatable = false)
-    private Product product;
+    @Column(name = "product_id", length = 32, nullable = false)
+    private String productId;
 }

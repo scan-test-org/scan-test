@@ -27,8 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.*;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -163,9 +162,7 @@ public class ProductServiceImpl implements ProductService {
             return;
         }
 
-        Product Product = findProduct(productId);
         ProductPublication productPublication = param.convertTo();
-        productPublication.setProduct(Product);
 
         publicationRepository.save(productPublication);
     }
@@ -282,9 +279,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Product findPublishedProduct(String portalId, String productId) {
-        return publicationRepository.findByPortalIdAndProductId(portalId, productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId))
-                .getProduct();
+        ProductPublication publication = publicationRepository.findByPortalIdAndProductId(portalId, productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId));
+
+        return findProduct(publication.getProductId());
     }
 
     private Specification<Product> buildSpecification(QueryProductParam param) {
@@ -292,8 +290,11 @@ public class ProductServiceImpl implements ProductService {
             List<Predicate> predicates = new ArrayList<>();
 
             if (StrUtil.isNotBlank(param.getPortalId())) {
-                Join<Product, ProductPublication> publication = root.join("publications");
-                predicates.add(cb.equal(publication.get("portalId"), param.getPortalId()));
+                Subquery<String> subquery = query.subquery(String.class);
+                Root<ProductPublication> publicationRoot = subquery.from(ProductPublication.class);
+                subquery.select(publicationRoot.get("productId"))
+                        .where(cb.equal(publicationRoot.get("portalId"), param.getPortalId()));
+                predicates.add(root.get("productId").in(subquery));
             }
 
             if (param.getType() != null) {
