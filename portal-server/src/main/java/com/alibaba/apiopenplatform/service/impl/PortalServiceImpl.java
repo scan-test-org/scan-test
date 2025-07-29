@@ -39,7 +39,7 @@ public class PortalServiceImpl implements PortalService {
 
     private final PortalDomainRepository portalDomainRepository;
 
-    private final String domainFormat = "%s.api.portal.com";
+    private final String domainFormat = "%s.api.portal.io";
 
     public PortalResult createPortal(CreatePortalParam param) {
         portalRepository.findByNameAndAdminId(param.getName(), "admin")
