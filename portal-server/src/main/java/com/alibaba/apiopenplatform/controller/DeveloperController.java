@@ -76,11 +76,8 @@ public class DeveloperController {
         if (autoApprove) {
             // 如果自动审批，则自动登录
             AuthResponseResult authResult = developerService.generateAuthResult(developer);
-            Cookie cookie = new Cookie("token", authResult.getToken());
-            cookie.setPath("/");
-            cookie.setMaxAge(3600); // 1小时
-            cookie.setHttpOnly(false); // 允许前端JavaScript访问
-            response.addCookie(cookie);
+            // 设置SameSite属性，避免浏览器警告
+            response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=Lax");
         }
         // 如果不自动审批，则注册成功但不登录，需要等待管理员审批
     }
@@ -90,12 +87,8 @@ public class DeveloperController {
     public void login(@Valid @RequestBody DeveloperLoginParam param, HttpServletResponse response) {
         AuthResponseResult authResult = developerService.loginWithPassword(param.getUsername(), param.getPassword());
         
-        // 设置cookie而不是返回token
-        Cookie cookie = new Cookie("token", authResult.getToken());
-        cookie.setPath("/");
-        cookie.setMaxAge(3600); // 1小时
-        cookie.setHttpOnly(false); // 允许前端JavaScript访问
-        response.addCookie(cookie);
+        // 设置cookie而不是返回token，设置SameSite属性，避免浏览器警告
+        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=Lax");
     }
 
     @Operation(summary = "开发者登出", description = "登出")
@@ -115,10 +108,7 @@ public class DeveloperController {
         }
         
         // 清除cookie
-        Cookie clearCookie = new Cookie("token", "");
-        clearCookie.setPath("/");
-        clearCookie.setMaxAge(0);
-        response.addCookie(clearCookie);
+        response.setHeader("Set-Cookie", "token=; Path=/; Max-Age=0; SameSite=Lax");
     }
 
     // @Operation(summary = "开发者个人信息", description = "受保护接口示例，仅测试用")
