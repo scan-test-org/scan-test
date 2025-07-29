@@ -160,7 +160,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void publishProduct(String productId, PublishProductParam param) {
         portalService.hasPortal(param.getPortalId());
-        if (publicationRepository.findByPortalIdAndProduct_ProductId(param.getPortalId(), productId).isPresent()) {
+        if (publicationRepository.findByPortalIdAndProductId(param.getPortalId(), productId).isPresent()) {
             return;
         }
 
@@ -175,7 +175,7 @@ public class ProductServiceImpl implements ProductService {
     public void unpublishProduct(String productId, UnPublishProductParam param) {
         portalService.hasPortal(param.getPortalId());
 
-        publicationRepository.findByPortalIdAndProduct_ProductId(param.getPortalId(), productId)
+        publicationRepository.findByPortalIdAndProductId(param.getPortalId(), productId)
                 .ifPresent(publicationRepository::delete);
     }
 
@@ -282,7 +282,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Product findPublishedProduct(String portalId, String productId) {
-        return publicationRepository.findByPortalIdAndProduct_ProductId(portalId, productId)
+        return publicationRepository.findByPortalIdAndProductId(portalId, productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId))
                 .getProduct();
     }
