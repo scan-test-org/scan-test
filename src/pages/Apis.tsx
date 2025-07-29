@@ -1,7 +1,11 @@
+import { useEffect, useState } from "react";
 import { Card, Table, Tag, Button, Space, Typography, Input, Select } from "antd";
 import { SearchOutlined, EyeOutlined, FileTextOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
+import api from "../lib/api";
+import { ProductType, ProductStatus, ProductCategory } from "../types";
+import type { Product, ApiResponse, PaginatedResponse } from "../types";
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -16,37 +20,74 @@ interface ApiItem {
   subscribers: number;
 }
 
-const mockApis: ApiItem[] = [
-  {
-    key: "1",
-    name: "Payment API",
-    description: "处理支付相关的API接口",
-    category: "Finance",
-    status: "active",
-    version: "v1.2.0",
-    subscribers: 25
-  },
-  {
-    key: "2",
-    name: "User API",
-    description: "用户管理和认证API",
-    category: "Authentication",
-    status: "active",
-    version: "v1.1.0",
-    subscribers: 18
-  },
-  {
-    key: "3",
-    name: "Notification API",
-    description: "消息通知服务API",
-    category: "Communication",
-    status: "draft",
-    version: "v1.0.0",
-    subscribers: 0
-  }
-];
-
 function APIsPage() {
+  const [loading, setLoading] = useState(false);
+  const [apis, setApis] = useState<ApiItem[]>([]);
+  const [searchText, setSearchText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
+
+  useEffect(() => {
+    fetchApis();
+  }, []);
+
+  const fetchApis = async () => {
+    setLoading(true);
+    try {
+      const response: ApiResponse<PaginatedResponse<Product>> = await api.get("/products?type=REST_API&page=0&size=100");
+      if (response.code === "SUCCESS" && response.data) {
+        const mapped = response.data.content
+          .filter((item: Product) => item.type === ProductType.REST_API)
+          .map((item: Product) => ({
+            key: item.productId,
+            name: item.name,
+            description: item.description,
+            category: item.category,
+            status: item.status === ProductStatus.ENABLE ? 'active' : 'inactive',
+            version: 'v1.0.0', // 从apiSpec中解析版本信息
+            subscribers: 0, // 暂时设为0，后续可以从其他接口获取
+          }));
+        setApis(mapped);
+      }
+    } catch (error) {
+      console.error('获取API列表失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active':
+        return '活跃'
+      case 'inactive':
+        return '非活跃'
+      default:
+        return status
+    }
+  };
+
+  const getCategoryText = (category: string) => {
+    switch (category) {
+      case ProductCategory.OFFICIAL:
+        return '官方'
+      case ProductCategory.COMMUNITY:
+        return '社区'
+      case ProductCategory.CUSTOM:
+        return '自定义'
+      default:
+        return category
+    }
+  };
+
+  const filteredApis = apis.filter(api => {
+    const matchesSearch = api.name.toLowerCase().includes(searchText.toLowerCase()) ||
+                         api.description.toLowerCase().includes(searchText.toLowerCase());
+    const matchesCategory = !selectedCategory || api.category === selectedCategory;
+    const matchesStatus = !selectedStatus || api.status === selectedStatus;
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
   const columns = [
     {
       title: 'API名称',
@@ -63,7 +104,7 @@ function APIsPage() {
       title: '分类',
       dataIndex: 'category',
       key: 'category',
-      render: (category: string) => <Tag color="blue">{category}</Tag>
+      render: (category: string) => <Tag color="blue">{getCategoryText(category)}</Tag>
     },
     {
       title: '状态',
@@ -71,7 +112,7 @@ function APIsPage() {
       key: 'status',
       render: (status: string) => (
         <Tag color={status === 'active' ? 'green' : 'orange'}>
-          {status === 'active' ? '活跃' : '草稿'}
+          {getStatusText(status)}
         </Tag>
       )
     },
@@ -90,7 +131,7 @@ function APIsPage() {
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: ApiItem) => (
+      render: (_: unknown, record: ApiItem) => (
         <Space>
           <Link to={`/apis/${record.key}`}>
             <Button type="link" icon={<EyeOutlined />}>
@@ -122,32 +163,39 @@ function APIsPage() {
             placeholder="搜索API..."
             prefix={<SearchOutlined />}
             style={{ width: 300 }}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
           />
           <Select
             placeholder="选择分类"
             style={{ width: 150 }}
             allowClear
+            value={selectedCategory}
+            onChange={setSelectedCategory}
           >
-            <Select.Option value="Finance">Finance</Select.Option>
-            <Select.Option value="Authentication">Authentication</Select.Option>
-            <Select.Option value="Communication">Communication</Select.Option>
+            <Select.Option value={ProductCategory.OFFICIAL}>官方</Select.Option>
+            <Select.Option value={ProductCategory.COMMUNITY}>社区</Select.Option>
+            <Select.Option value={ProductCategory.CUSTOM}>自定义</Select.Option>
           </Select>
           <Select
             placeholder="选择状态"
             style={{ width: 150 }}
             allowClear
+            value={selectedStatus}
+            onChange={setSelectedStatus}
           >
             <Select.Option value="active">活跃</Select.Option>
-            <Select.Option value="draft">草稿</Select.Option>
+            <Select.Option value="inactive">非活跃</Select.Option>
           </Select>
         </div>
         
         <Table 
           columns={columns} 
-          dataSource={mockApis}
+          dataSource={filteredApis}
+          loading={loading}
           rowKey="key"
           pagination={{
-            total: mockApis.length,
+            total: filteredApis.length,
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,

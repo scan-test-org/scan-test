@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import api from '../lib/api'
 import aliyunIcon from '../assets/aliyun.png';
 import githubIcon from '../assets/github.png';
@@ -31,30 +30,32 @@ interface UserProfile {
 
 const parseUserProfile = (identity: Identity): UserProfile => {
   if (!identity) return {};
-  let raw: any = {};
+  let raw: Record<string, unknown> = {};
   try {
     raw = JSON.parse(identity.rawInfoJson);
-  } catch {}
+  } catch {
+    // 忽略解析错误
+  }
   // 针对不同provider做兼容
   if (identity.provider === 'github') {
     return {
-      avatar: raw.avatar_url,
-      name: raw.name || raw.login,
-      email: raw.email,
+      avatar: raw.avatar_url as string,
+      name: raw.name as string || raw.login as string,
+      email: raw.email as string,
       provider: 'github',
     };
   } else if (identity.provider === 'google') {
     return {
-      avatar: raw.picture,
-      name: raw.name,
-      email: raw.email,
+      avatar: raw.picture as string,
+      name: raw.name as string,
+      email: raw.email as string,
       provider: 'google',
     };
   } else if (identity.provider === 'aliyun') {
     return {
-      avatar: raw.avatar,
-      name: raw.name,
-      email: raw.email,
+      avatar: raw.avatar as string,
+      name: raw.name as string,
+      email: raw.email as string,
       provider: 'aliyun',
     };
   }

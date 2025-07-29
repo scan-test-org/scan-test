@@ -4,6 +4,8 @@ import { SearchOutlined, EyeOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import api from "../lib/api";
+import { ProductType, ProductStatus, ProductCategory } from "../types";
+import type { Product, ApiResponse, PaginatedResponse } from "../types";
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -19,49 +21,55 @@ interface McpServer {
   category: string;
 }
 
-interface McpMarketItem {
-  id: string;
-  name: string;
-  description: string;
-  version: string;
-  versionDetail: {
-    version: string;
-    release_date: string;
-    is_latest: boolean;
-  };
-  enabled: boolean;
-  protocol: string;
-  frontProtocol: string;
-  capabilities: string[];
-  mcpName: string;
-}
-
 function McpPage() {
   const [loading, setLoading] = useState(false);
   const [mcpServers, setMcpServers] = useState<McpServer[]>([]);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    setLoading(true);
-    api.get("/mcpmarket?pageNo=1&pageSize=10")
-      .then((res: any) => {
-        if (res.code === "SUCCESS" && Array.isArray(res.data)) {
-          const mapped = res.data.map((item: McpMarketItem) => ({
-            key: item.id,
-            name: item.name,
-            description: item.description,
-            status: item.enabled ? "active" : "inactive",
-            version: item.versionDetail?.version || item.version,
-            endpoints: item.capabilities?.length ?? 0,
-            lastUpdated: item.versionDetail?.release_date
-              ? new Date(item.versionDetail.release_date).toISOString().slice(0, 10)
-              : "",
-            category: item.protocol || "",
-          }));
-          setMcpServers(mapped);
-        }
-      })
-      .finally(() => setLoading(false));
+    fetchMcpServers();
   }, []);
+
+  const fetchMcpServers = async () => {
+    setLoading(true);
+    try {
+      const response: ApiResponse<PaginatedResponse<Product>> = await api.get("/products?type=MCP_SERVER&page=0&size=100");
+      if (response.code === "SUCCESS" && response.data) {
+        const mapped = response.data.content
+          .filter((item: Product) => item.type === ProductType.MCP_SERVER)
+          .map((item: Product) => {
+            // 尝试解析MCP配置以获取工具数量
+            let toolCount = 0;
+            try {
+              if (item.mcpSpec) {
+                const mcpConfig = JSON.parse(item.mcpSpec) as Record<string, unknown>;
+                if (mcpConfig.tools && Array.isArray(mcpConfig.tools)) {
+                  toolCount = mcpConfig.tools.length;
+                }
+              }
+            } catch (error) {
+              console.warn('解析MCP配置失败:', error);
+            }
+
+            return {
+              key: item.productId,
+              name: item.name,
+              description: item.description,
+              status: item.status === ProductStatus.ENABLE ? 'active' : 'inactive',
+              version: 'v1.0.0', // 从mcpSpec中解析版本信息
+              endpoints: toolCount,
+              lastUpdated: new Date().toISOString().slice(0, 10), // 暂时使用当前日期
+              category: item.category,
+            };
+          });
+        setMcpServers(mapped);
+      }
+    } catch (error) {
+      console.error('获取MCP服务器列表失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -76,6 +84,24 @@ function McpPage() {
     }
   };
 
+  const getCategoryText = (category: string) => {
+    switch (category) {
+      case ProductCategory.OFFICIAL:
+        return '官方'
+      case ProductCategory.COMMUNITY:
+        return '社区'
+      case ProductCategory.CUSTOM:
+        return '自定义'
+      default:
+        return category
+    }
+  };
+
+  const filteredMcpServers = mcpServers.filter(server => {
+    return server.name.toLowerCase().includes(searchText.toLowerCase()) ||
+           server.description.toLowerCase().includes(searchText.toLowerCase());
+  });
+
   const columns = [
     {
       title: '服务器名称',
@@ -83,7 +109,6 @@ function McpPage() {
       key: 'name',
       render: (name: string, record: McpServer) => (
         <div className="flex items-center space-x-3">
-          {/* <Avatar className="bg-blue-500" /> */}
           <div>
             <div className="font-medium">{name}</div>
             <div className="text-sm text-gray-500">{record.description}</div>
@@ -95,7 +120,7 @@ function McpPage() {
       title: '分类',
       dataIndex: 'category',
       key: 'category',
-      render: (category: string) => <Tag color="blue">{category}</Tag>
+      render: (category: string) => <Tag color="blue">{getCategoryText(category)}</Tag>
     },
     {
       title: '状态',
@@ -133,14 +158,11 @@ function McpPage() {
       key: 'action',
       render: (_: unknown, record: McpServer) => (
         <Space>
-          <Link to={`/mcp/${record.name}`}>
+          <Link to={`/mcp/${record.key}`}>
             <Button type="link" icon={<EyeOutlined />}>
               查看
             </Button>
           </Link>
-          {/* <Button type="link" icon={<SettingOutlined />}>
-            配置
-          </Button> */}
         </Space>
       ),
     },
@@ -163,16 +185,18 @@ function McpPage() {
             placeholder="搜索MCP服务器..."
             prefix={<SearchOutlined />}
             style={{ width: 300 }}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
           />
         </div>
         
         <Table 
           columns={columns} 
-          dataSource={mcpServers}
+          dataSource={filteredMcpServers}
           loading={loading}
           rowKey="key"
           pagination={{
-            total: mcpServers.length,
+            total: filteredMcpServers.length,
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
