@@ -20,7 +20,7 @@ export interface PortalSettingConfig {
   autoApproveDevelopers: boolean;
   autoApproveSubscriptions: boolean;
   frontendRedirectUrl: string;
-  oidcConfigs: OidcConfig[];
+  oidcOptions: OidcConfig[];
 }
 
 export interface PortalUiConfig {
