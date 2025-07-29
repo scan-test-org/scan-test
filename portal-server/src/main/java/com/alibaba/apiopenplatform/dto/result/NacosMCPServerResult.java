@@ -5,6 +5,9 @@ import com.alibaba.nacos.api.ai.model.mcp.McpServerBasicInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Nacos MCP Server结果
  * @author zh
@@ -16,6 +19,16 @@ public class NacosMCPServerResult extends MCPServerResult implements OutputConve
     private String namespace;
 
     private String version;
+    
+    private String protocol;
+    
+    private String description;
+    
+    private Object capabilities;
+    
+    private boolean enabled;
+    
+    private Object backendEndpoints;
 
     @Override
     public NacosMCPServerResult convertFrom(McpServerBasicInfo basicInfo) {
@@ -25,9 +38,14 @@ public class NacosMCPServerResult extends MCPServerResult implements OutputConve
         r.setFromType("NACOS");
         r.setName(basicInfo.getName());
         
-        // 设置命名空间和版本信息（如果有的话）
-        // 注意：这里需要根据McpServerBasicInfo的实际字段来设置
-        // 如果字段不存在，可以注释掉或使用其他方式获取
+        
+        // 设置MCP Server配置信息
+        if (basicInfo.getLocalServerConfig() != null) {
+            r.setMcpServerConfig(basicInfo.getLocalServerConfig().toString());
+        }
+        
+        // 设置domains信息 - Nacos MCP Server没有实际的域名，保持为空
+        r.setDomains(new ArrayList<>());
         
         return r;
     }
