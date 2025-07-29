@@ -75,7 +75,7 @@ export default function Consoles() {
   const handleImportNext = async () => {
     if (importStep === 0) {
       // 校验表单并请求/gateways/apig
-      try {        
+      try {
         const values = await importForm.validateFields();
         setGatewayLoading(true);
         api.post('/gateways/apig', { ...values, gatewayType: 'APIG_API' }).then(res => {
@@ -179,7 +179,7 @@ export default function Consoles() {
           {importStep === 0 && (
             <Form form={importForm} layout="vertical" preserve={false}>
               <Form.Item label="Region" name="region" rules={[{ required: true, message: '请输入region' }]}> <Input /> </Form.Item>
-              <Form.Item label="Access Key" name="accessK ey" rules={[{ required: true, message: '请输入accessKey' }]}> <Input /> </Form.Item>
+              <Form.Item label="Access Key" name="accessKey" rules={[{ required: true, message: '请输入accessKey' }]}> <Input /> </Form.Item>
               <Form.Item label="Secret Key" name="secretKey" rules={[{ required: true, message: '请输入secretKey' }]}> <Input.Password /> </Form.Item>
             </Form>
           )}

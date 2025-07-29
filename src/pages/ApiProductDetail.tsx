@@ -66,7 +66,7 @@ export default function ApiProductDetail() {
       case "overview":
         return <ApiProductOverview apiProduct={apiProduct} />
       case "link-api":
-        return <ApiProductLinkApi apiProduct={apiProduct} />
+        return <ApiProductLinkApi apiProduct={apiProduct} handleRefresh={() => {}} />
       case "api-docs":
         return <ApiProductApiDocs apiProduct={apiProduct} />
       case "usage-guide":
