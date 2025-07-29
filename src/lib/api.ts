@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import { getToken, removeToken } from './utils'
 
 const api: AxiosInstance = axios.create({
   baseURL: (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8080',
@@ -6,24 +7,13 @@ const api: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // 确保跨域请求时携带 cookie
 })
-
-// 获取cookie中的token
-const getTokenFromCookie = (): string | null => {
-  const cookies = document.cookie.split(';')
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split('=')
-    if (name === 'token') {
-      return value
-    }
-  }
-  return null
-}
 
 // 请求拦截器
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getTokenFromCookie()
+    const token = getToken()
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -34,11 +24,6 @@ api.interceptors.request.use(
   }
 )
 
-// 删除cookie中的token
-const removeTokenFromCookie = (): void => {
-  document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-}
-
 // 响应拦截器
 api.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -46,7 +31,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      removeTokenFromCookie()
+      removeToken()
       window.location.href = '/login'
     }
     return Promise.reject(error)

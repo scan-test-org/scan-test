@@ -12,7 +12,6 @@
     "serve": "npm run build && npm start"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.2.1",
     "antd": "^5.15.7",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",

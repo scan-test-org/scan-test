@@ -23,7 +23,7 @@ const Register: React.FC = () => {
     }
     setLoading(true)
     try {
-      await api.post('/api/developer/register', { username: values.username, password: values.password, portalId })
+      await api.post('/admins/init', { username: values.username, password: values.password })
       navigate('/login')
     } catch {
       setError('注册失败')

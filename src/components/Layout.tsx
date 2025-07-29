@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { HomeOutlined, GlobalOutlined, AppstoreOutlined, DesktopOutlined, UserOutlined, MenuOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
+import { isAuthenticated, removeToken } from '../lib/utils'
 
 interface NavigationItem {
   name: string
@@ -14,6 +15,23 @@ const Layout: React.FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+
+  useEffect(() => {
+    // 检查 cookie 中的 token 来判断登录状态
+    const checkAuthStatus = () => {
+      const hasToken = isAuthenticated()
+      setIsLoggedIn(hasToken)
+    }
+    
+    checkAuthStatus()
+    // 监听 storage 变化（当其他标签页登录/登出时）
+    window.addEventListener('storage', checkAuthStatus)
+    
+    return () => {
+      window.removeEventListener('storage', checkAuthStatus)
+    }
+  }, [])
 
   useEffect(() => {
     // 进入详情页自动折叠侧边栏
@@ -34,6 +52,12 @@ const Layout: React.FC = () => {
     setSidebarCollapsed(!sidebarCollapsed)
   }
 
+  const handleLogout = () => {
+    removeToken()
+    setIsLoggedIn(false)
+    navigate('/login')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* 顶部导航栏 */}
@@ -50,12 +74,12 @@ const Layout: React.FC = () => {
           <span className="text-2xl font-bold">API Portal</span>
         </div>
         {/* 顶部右侧用户信息或登录按钮 */}
-        {true ? ( // mock: true 表示已登录，false 表示未登录
+        {isLoggedIn ? (
           <div className="flex items-center space-x-2">
             <UserOutlined className="mr-2 text-lg" />
             <span>admin</span>
             <button
-              onClick={() => alert('已退出登录（mock）')}
+              onClick={handleLogout}
               className="ml-2 px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
             >
               退出
