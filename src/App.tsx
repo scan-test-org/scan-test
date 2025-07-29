@@ -1,8 +1,10 @@
-import { RouterProvider } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
-import { router } from './routes';
-import aliyunThemeToken from './aliyunThemeToken';
+import React from 'react'
+import { BrowserRouter } from 'react-router-dom'
+import { ConfigProvider } from 'antd'
+import zhCN from 'antd/locale/zh_CN'
+import AppRoutes from './routes'
+import aliyunThemeToken from './aliyunThemeToken'
+import './App.css'
 
 function App() {
   return (
@@ -12,9 +14,11 @@ function App() {
         token: aliyunThemeToken,
       }}
     >
-      <RouterProvider router={router}/>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </ConfigProvider>
-  );
+  )
 }
 
-export default App;
+export default App

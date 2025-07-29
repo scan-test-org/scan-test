@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import aliyunIcon from "../assets/aliyun.png";
 import githubIcon from "../assets/github.png";
@@ -19,6 +19,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const portalId = searchParams.get("portalId") || "";
 
@@ -35,15 +36,16 @@ const Login: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await api.post("/api/developer/login", {
+      const res = await api.post("/admins/login", {
         username: values.username,
         password: values.password,
       });
-      // 登录成功后跳转到首页并携带token
-      if (res && res.data && res.data.token) {
-        window.location.href = `/?token=${res.data.token}`;
+      // 登录成功后跳转到首页（token 由后端通过 Set-Cookie 设置）
+      if (res && res.data) {
+        // 跳转到首页
+        navigate('/');
       } else {
-        setError("登录失败，未获取到token");
+        setError("登录失败");
       }
     } catch {
       setError("账号或密码错误");
