@@ -12,9 +12,7 @@ import java.util.Optional;
  */
 public interface ProductPublicationRepository extends BaseRepository<ProductPublication, Long> {
 
-    @EntityGraph("product.properties")
     Page<ProductPublication> findByPortalId(String portalId, Pageable pageable);
 
-    @EntityGraph("product.properties")
     Optional<ProductPublication> findByPortalIdAndProductId(String portalId, String productId);
 }
