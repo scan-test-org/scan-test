@@ -35,11 +35,15 @@ api.interceptors.response.use(
     switch (status) {
       case 401:
         // message.error('未登录或登录已过期，请重新登录');
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         break;
       case 403:
         // message.error('无权限访问该资源，请重新登录');
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         break;
       case 404:
         message.error('请求的资源不存在');
