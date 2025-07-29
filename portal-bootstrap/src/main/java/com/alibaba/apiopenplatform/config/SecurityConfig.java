@@ -72,20 +72,24 @@ public class SecurityConfig {
                 .antMatchers("/developers", "/developers/login").permitAll()
                 // OAuth2相关接口（无需认证）
                 .antMatchers("/developers/authorize", "/developers/callback").permitAll()
-                // 获取OIDC提供商列表（无需认证，登录前需要）
-                .antMatchers("/developers/providers").permitAll()
-                .antMatchers("/login/oauth2/**", "/oauth2/**").permitAll()
-                .antMatchers("/bind-callback").permitAll()
+                // 获取OIDC提供商列表（需要认证，管理员和开发者都可以访问）
+                .antMatchers("/developers/providers").authenticated()
                 // 管理员接口（需要ADMIN角色）
                 .antMatchers("/admins/**").hasRole("ADMIN")
                 // 开发者接口（需要DEVELOPER角色）
-                .antMatchers("/developers/**").hasRole("DEVELOPER")
+                .antMatchers("/developers/profile", "/developers/password", "/developers/list-identities").hasRole("DEVELOPER")
                 // 门户管理接口（需要ADMIN角色）
                 .antMatchers("/portals/**").hasRole("ADMIN")
-                // 产品管理接口（需要ADMIN角色）
-                .antMatchers("/products/**").hasRole("ADMIN")
-                // 消费者管理接口（需要ADMIN角色）
-                .antMatchers("/consumers/**").hasRole("ADMIN")
+                // 产品管理接口（需要认证，但开发者和管理员都可以访问）
+                .antMatchers("/products").authenticated()  // GET /products 需要认证，开发者和管理员都可以访问
+                .antMatchers("/products/*").authenticated()  // GET /products/{productId} 需要认证，开发者和管理员都可以访问
+                .antMatchers("/products/**").hasRole("ADMIN")  // 其他产品管理接口需要ADMIN角色
+                // 消费者管理接口
+                .antMatchers(HttpMethod.GET, "/consumers").authenticated()  // GET /consumers 需要认证，开发者和管理员都可以访问
+                .antMatchers(HttpMethod.GET, "/consumers/*").authenticated()  // GET /consumers/{consumerId} 需要认证，开发者和管理员都可以访问
+                .antMatchers(HttpMethod.POST, "/consumers").authenticated()  // POST /consumers 需要认证，开发者和管理员都可以访问
+                .antMatchers(HttpMethod.DELETE, "/consumers/*").authenticated()  // DELETE /consumers/{consumerId} 需要认证，开发者和管理员都可以访问
+                .antMatchers("/consumers/**").hasRole("ADMIN")  // 其他消费者管理接口需要ADMIN角色（审批等）
                 // Nacos管理接口（需要ADMIN角色）
                 .antMatchers("/nacos/**").hasRole("ADMIN")
                 // 网关管理接口（需要ADMIN角色）
