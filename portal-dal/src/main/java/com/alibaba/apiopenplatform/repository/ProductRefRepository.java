@@ -33,19 +33,9 @@ public interface ProductRefRepository extends JpaRepository<ProductRef, Long>, J
     List<ProductRef> findByGatewayId(String gatewayId);
 
     /**
-     * 根据Nacos ID查找API引用列表
-     */
-    List<ProductRef> findByNacosId(String nacosId);
-
-    /**
      * 根据产品ID和网关ID查找API引用列表
      */
     List<ProductRef> findByProductIdAndGatewayId(String productId, String gatewayId);
-
-    /**
-     * 根据产品ID和Nacos ID查找API引用列表
-     */
-    List<ProductRef> findByProductIdAndNacosId(String productId, String nacosId);
 
     Optional<ProductRef> findByProductIdAndApiId(String productId, String apiId);
 }
