@@ -36,13 +36,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        // 对于登录和注册接口，跳过JWT验证
+        // 对于公开接口，跳过JWT验证
         String requestURI = request.getRequestURI();
         if (requestURI.equals("/admins/login") || 
             requestURI.equals("/developers/login") || 
             requestURI.equals("/developers") ||
             requestURI.equals("/admins/init") ||
-            requestURI.equals("/admins/need-init")) {
+            requestURI.equals("/admins/need-init") ||
+            requestURI.equals("/developers/authorize") ||
+            requestURI.equals("/developers/callback") ||
+            requestURI.equals("/developers/providers") ||
+            requestURI.equals("/favicon.ico") ||
+            requestURI.equals("/error") ||
+            requestURI.startsWith("/swagger-ui") ||
+            requestURI.startsWith("/v3/api-docs") ||
+            requestURI.startsWith("/portal/swagger-ui") ||
+            requestURI.startsWith("/portal/v3/api-docs")) {
             chain.doFilter(request, response);
             return;
         }
@@ -56,6 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null) {
             if (tokenBlacklistService.isBlacklisted(token)) {
                 log.warn("Token已被列入黑名单");
+                SecurityContextHolder.clearContext();
                 unauthorized(response, "Token已失效");
                 return;
             }
@@ -65,6 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Object userTypeObj = claims.get("userType");
                 if (!(userIdObj instanceof String) || !(userTypeObj instanceof String)) {
                     log.warn("JWT缺少userId或userType或类型错误");
+                    SecurityContextHolder.clearContext();
                     unauthorized(response, "Token无效：缺少userId或userType");
                     return;
                 }
@@ -81,6 +92,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 unauthorized(response, "Token无效或已过期");
                 return;
             }
+        } else {
+            // 没有token时，清除SecurityContext，确保用户是匿名状态
+            SecurityContextHolder.clearContext();
         }
         chain.doFilter(request, response);
     }
