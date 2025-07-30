@@ -6,23 +6,19 @@ package com.alibaba.apiopenplatform.support.enums;
 public enum ProductStatus {
 
     /**
-     * 未配置API
+     * 未配置API和MCP Server
      */
     PENDING,
 
     /**
-     * API可用
+     * 已配置API或MCP Server
      */
-    ENABLE,
+    READY,
 
     /**
-     * API不可用
+     * 已发布
      */
-    DISABLE,
+    PUBLISHED,
 
     ;
-
-    public boolean isReady() {
-        return this != PENDING;
-    }
 }

@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.ProductPublicationResult;
 import com.alibaba.apiopenplatform.dto.result.ProductRefResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
 import org.springframework.data.domain.Pageable;
@@ -49,19 +50,28 @@ public interface ProductService {
      * 发布API产品
      *
      * @param productId
-     * @param param
+     * @param portalId
      * @return
      */
-    void publishProduct(String productId, PublishProductParam param);
+    void publishProduct(String productId, String portalId);
+
+    /**
+     * 获取API产品的发布信息
+     *
+     * @param productId
+     * @param pageable
+     * @return
+     */
+    PageResult<ProductPublicationResult> getPublications(String productId, Pageable pageable);
 
     /**
      * 下线产品
      *
      * @param productId
-     * @param param
+     * @param portalId
      * @return
      */
-    void unpublishProduct(String productId, UnPublishProductParam param);
+    void unpublishProduct(String productId, String portalId);
 
     /**
      * 删除产品

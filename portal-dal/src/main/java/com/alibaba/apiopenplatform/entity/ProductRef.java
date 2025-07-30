@@ -55,4 +55,7 @@ public class ProductRef extends BaseEntity {
 
     @Column(name = "mcp_spec", columnDefinition = "text")
     private String mcpSpec;
+
+    @Column(name = "enabled")
+    private Boolean enabled;
 }

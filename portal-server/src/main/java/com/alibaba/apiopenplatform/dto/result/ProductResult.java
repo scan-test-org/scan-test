@@ -18,7 +18,7 @@ public class ProductResult implements OutputConverter<ProductResult, Product> {
 
     private String description;
 
-    private ProductStatus status;
+    private ProductStatus status = ProductStatus.PENDING;
 
     private Boolean enableConsumerAuth;
 
@@ -33,4 +33,6 @@ public class ProductResult implements OutputConverter<ProductResult, Product> {
     private String apiSpec;
 
     private String mcpSpec;
+
+    private Boolean enabled;
 }

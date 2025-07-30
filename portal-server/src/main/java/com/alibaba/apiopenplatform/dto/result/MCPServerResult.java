@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.dto.result;
 
+import com.alibaba.apiopenplatform.support.enums.SourceType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -26,8 +27,7 @@ public class MCPServerResult {
     @Schema(hidden = true)
     protected String fromType;
 
-    @Schema(hidden = true)
-    protected String fromGateway;
+    protected String fromGatewayType;
 
     @Schema(hidden = true)
     protected List<Domain> domains;

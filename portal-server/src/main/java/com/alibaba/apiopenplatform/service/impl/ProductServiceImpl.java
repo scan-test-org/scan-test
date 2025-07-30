@@ -18,6 +18,7 @@ import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.service.ProductService;
 import com.alibaba.apiopenplatform.service.NacosService;
+import com.alibaba.apiopenplatform.support.enums.ProductStatus;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
@@ -83,8 +84,8 @@ public class ProductServiceImpl implements ProductService {
 
         ProductResult result = new ProductResult().convertFrom(product);
 
-        // 补充Spec信息
-        fullFillSpec(result);
+        // 补充Product信息
+        fullFillProduct(result);
         return result;
     }
 
@@ -98,7 +99,7 @@ public class ProductServiceImpl implements ProductService {
         return new PageResult<ProductResult>().convertFrom(
                 products, product -> {
                     ProductResult result = new ProductResult().convertFrom(product);
-                    fullFillSpec(result);
+                    fullFillProduct(result);
                     return result;
                 });
     }
@@ -124,22 +125,40 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void publishProduct(String productId, PublishProductParam param) {
-        portalService.hasPortal(param.getPortalId());
-        if (publicationRepository.findByPortalIdAndProductId(param.getPortalId(), productId).isPresent()) {
+    public void publishProduct(String productId, String portalId) {
+        portalService.hasPortal(portalId);
+        if (publicationRepository.findByPortalIdAndProductId(portalId, productId).isPresent()) {
             return;
         }
 
-        ProductPublication productPublication = param.convertTo();
+        ProductPublication productPublication = new ProductPublication();
+        productPublication.setPortalId(portalId);
+        productPublication.setProductId(productId);
 
         publicationRepository.save(productPublication);
     }
 
     @Override
-    public void unpublishProduct(String productId, UnPublishProductParam param) {
-        portalService.hasPortal(param.getPortalId());
+    public PageResult<ProductPublicationResult> getPublications(String productId, Pageable pageable) {
+        Page<ProductPublication> publications = publicationRepository.findByProductId(productId, pageable);
 
-        publicationRepository.findByPortalIdAndProductId(param.getPortalId(), productId)
+        return new PageResult<ProductPublicationResult>().convertFrom(
+                publications, publication -> {
+                    ProductPublicationResult publicationResult = new ProductPublicationResult().convertFrom(publication);
+                    PortalResult portal = portalService.getPortal(publication.getPortalId());
+
+                    publicationResult.setPortalName(portal.getName());
+                    publicationResult.setAutoApproveSubscription(portal.getPortalSettingConfig().getAutoApproveSubscriptions());
+
+                    return publicationResult;
+                });
+    }
+
+    @Override
+    public void unpublishProduct(String productId, String portalId) {
+        portalService.hasPortal(portalId);
+
+        publicationRepository.findByPortalIdAndProductId(portalId, productId)
                 .ifPresent(publicationRepository::delete);
     }
 
@@ -303,9 +322,9 @@ public class ProductServiceImpl implements ProductService {
                     String version = nacosRefConfig.getVersion();
 
                     // 获取MCP Server详情
-                    com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam detailParam = 
+                    com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam detailParam =
                         nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
-                    
+
                     // 将详情转换为JSON字符串
                     String mcpSpec = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(detailParam);
                     productRef.setMcpSpec(mcpSpec);
@@ -316,14 +335,21 @@ public class ProductServiceImpl implements ProductService {
                 }
             }
         }
+        productRef.setEnabled(true);
     }
 
-    private void fullFillSpec(ProductResult product) {
+    private void fullFillProduct(ProductResult product) {
         productRefRepository.findFirstByProductId(product.getProductId())
                 .ifPresent(productRef -> {
+                    product.setEnabled(productRef.getEnabled());
                     product.setApiSpec(productRef.getApiSpec());
                     product.setMcpSpec(productRef.getMcpSpec());
+                    product.setStatus(ProductStatus.READY);
                 });
+
+        if (publicationRepository.existsByProductId(product.getProductId())) {
+            product.setStatus(ProductStatus.PUBLISHED);
+        }
     }
 
     private Product findPublishedProduct(String portalId, String productId) {

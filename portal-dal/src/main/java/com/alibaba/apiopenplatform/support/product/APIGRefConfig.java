@@ -11,6 +11,8 @@ public class APIGRefConfig {
 
     private String apiId;
 
+    private String apiName;
+
     /**
      * MCP标识信息
      */
