@@ -20,6 +20,7 @@ import com.alibaba.apiopenplatform.service.ProductService;
 import com.alibaba.apiopenplatform.service.NacosService;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
+import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -70,40 +71,6 @@ public class ProductServiceImpl implements ProductService {
         product.setAdminId("admin");
         productRepository.save(product);
 
-        // 如果是MCP_SERVER类型，自动创建ProductRef关联数据源
-//        if (param.getType() == ProductType.MCP_SERVER) {
-//            if (param.getSourceType() == null || param.getMcpServerName() == null) {
-//                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "MCP_SERVER类型必须指定sourceType和mcpServerName");
-//            }
-//
-//            // 验证数据源配置
-//            if (param.getSourceType() == SourceType.GATEWAY && param.getGatewayId() == null) {
-//                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "GATEWAY类型必须指定gatewayId");
-//            }
-//            if (param.getSourceType() == SourceType.NACOS && param.getNacosId() == null) {
-//                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "NACOS类型必须指定nacosId");
-//            }
-//
-//            CreateProductRefParam refParam = new CreateProductRefParam();
-//            refParam.setApiId(param.getMcpServerName()); // 使用MCP Server名称作为apiId
-//            refParam.setSourceType(param.getSourceType());
-//
-//            // 根据数据源类型设置相应的ID
-//            if (param.getSourceType() == SourceType.GATEWAY) {
-//                refParam.setGatewayId(param.getGatewayId());
-//            } else if (param.getSourceType() == SourceType.NACOS) {
-//                refParam.setNacosId(param.getNacosId());
-//            }
-//
-//            // 创建路由配置
-//            RouteOption routeOption = new RouteOption();
-//            routeOption.setRouteId(param.getMcpServerName());
-//            routeOption.setName(param.getMcpServerName());
-//            refParam.setRoutes(java.util.Arrays.asList(routeOption));
-//
-//            addProductRef(productId, refParam);
-//        }
-
         return getProduct(productId);
     }
 
@@ -129,7 +96,11 @@ public class ProductServiceImpl implements ProductService {
 
         Page<Product> products = productRepository.findAll(buildSpecification(param), pageable);
         return new PageResult<ProductResult>().convertFrom(
-                products, product -> new ProductResult().convertFrom(product));
+                products, product -> {
+                    ProductResult result = new ProductResult().convertFrom(product);
+                    fullFillSpec(result);
+                    return result;
+                });
     }
 
     @Override
@@ -322,10 +293,29 @@ public class ProductServiceImpl implements ProductService {
                 String mcpSpec = gatewayService.fetchMcpSpec(gateway.getGatewayId(), config);
                 productRef.setMcpSpec(mcpSpec);
             }
-        } else {
+        } else if (sourceType.isNacos()) {
+            // 从Nacos获取MCP Server详情
+            NacosRefConfig nacosRefConfig = productRef.getNacosRefConfig();
+            if (nacosRefConfig != null) {
+                try {
+                    String mcpServerName = nacosRefConfig.getMcpServerName();
+                    String namespaceId = nacosRefConfig.getNamespaceId() != null ? nacosRefConfig.getNamespaceId() : "public";
+                    String version = nacosRefConfig.getVersion();
 
+                    // 获取MCP Server详情
+                    com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam detailParam = 
+                        nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
+                    
+                    // 将详情转换为JSON字符串
+                    String mcpSpec = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(detailParam);
+                    productRef.setMcpSpec(mcpSpec);
+                } catch (Exception e) {
+                    log.error("Failed to fetch MCP spec from Nacos for product: {}, nacosId: {}, mcpServerName: {}",
+                            product.getProductId(), productRef.getNacosId(), nacosRefConfig.getMcpServerName(), e);
+                    // 不抛出异常，让流程继续，只是不设置mcpSpec
+                }
+            }
         }
-
     }
 
     private void fullFillSpec(ProductResult product) {
