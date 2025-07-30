@@ -265,8 +265,8 @@ public class DeveloperOauth2Controller {
             Optional<AuthResponseResult> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
                 String token = loginResult.get().getToken();
-                // 设置到 cookie（非 HttpOnly），设置SameSite属性，避免浏览器警告
-                response.setHeader("Set-Cookie", "token=" + token + "; Path=/; Max-Age=3600; SameSite=Lax; HttpOnly=false");
+                // 设置到 cookie（非 HttpOnly），支持跨域访问
+                response.setHeader("Set-Cookie", "token=" + token + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
                 // 跳转到前端首页或指定页面
                 if (frontendRedirectUrl != null) {
                     response.sendRedirect(frontendRedirectUrl);

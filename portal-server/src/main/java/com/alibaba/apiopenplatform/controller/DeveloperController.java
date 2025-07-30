@@ -76,8 +76,8 @@ public class DeveloperController {
         if (autoApprove) {
             // 如果自动审批，则自动登录
             AuthResponseResult authResult = developerService.generateAuthResult(developer);
-            // 设置SameSite属性，避免浏览器警告
-            response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=Lax; HttpOnly=false");
+            // 设置SameSite属性，支持跨域访问
+            response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
         }
         // 如果不自动审批，则注册成功但不登录，需要等待管理员审批
     }
@@ -87,8 +87,8 @@ public class DeveloperController {
     public void login(@Valid @RequestBody DeveloperLoginParam param, HttpServletResponse response) {
         AuthResponseResult authResult = developerService.loginWithPassword(param.getUsername(), param.getPassword());
         
-        // 设置cookie而不是返回token，设置SameSite属性，避免浏览器警告
-        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=Lax; HttpOnly=false");
+        // 设置cookie而不是返回token，支持跨域访问
+        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
     }
 
     @Operation(summary = "开发者登出", description = "登出")
