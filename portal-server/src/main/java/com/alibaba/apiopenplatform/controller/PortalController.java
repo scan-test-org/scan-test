@@ -55,7 +55,7 @@ public class PortalController {
 //        return portalService.getPortalSetting(portalId);
 //    }
 
-    @Operation(summary = "更新门户的基础信息")
+    @Operation(summary = "更新门户信息")
     @PutMapping("/{portalId}")
     public PortalResult updatePortal(@PathVariable String portalId, @Valid @RequestBody UpdatePortalParam param) {
         return portalService.updatePortal(portalId, param);

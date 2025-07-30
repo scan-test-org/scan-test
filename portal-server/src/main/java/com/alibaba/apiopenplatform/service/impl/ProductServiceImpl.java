@@ -7,7 +7,6 @@ import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.product.*;
-import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Product;
 import com.alibaba.apiopenplatform.entity.ProductRef;
@@ -19,10 +18,8 @@ import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.service.ProductService;
 import com.alibaba.apiopenplatform.service.NacosService;
-import com.alibaba.apiopenplatform.support.enums.ProductStatus;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
-import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -119,8 +116,8 @@ public class ProductServiceImpl implements ProductService {
 
         ProductResult result = new ProductResult().convertFrom(product);
 
-        // 补充API Spec信息
-        fullFillAPISpec(result);
+        // 补充Spec信息
+        fullFillSpec(result);
         return result;
     }
 
@@ -178,6 +175,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void deleteProduct(String productId) {
         Product Product = findProduct(productId);
+
+        // 下线后删除
+        publicationRepository.deleteByProductId(productId);
         productRepository.delete(Product);
     }
 
@@ -230,6 +230,8 @@ public class ProductServiceImpl implements ProductService {
 
         ProductRef productRef = param.convertTo();
         productRef.setProductId(productId);
+        syncSpec(product, productRef);
+
         productRefRepository.save(productRef);
     }
 
@@ -307,7 +309,7 @@ public class ProductServiceImpl implements ProductService {
 //                });
     }
 
-    private void fullFillSpec(Product product, ProductRef productRef) {
+    private void syncSpec(Product product, ProductRef productRef) {
         SourceType sourceType = productRef.getSourceType();
 
         if (sourceType.isGateway()) {
@@ -324,6 +326,14 @@ public class ProductServiceImpl implements ProductService {
 
         }
 
+    }
+
+    private void fullFillSpec(ProductResult product) {
+        productRefRepository.findFirstByProductId(product.getProductId())
+                .ifPresent(productRef -> {
+                    product.setApiSpec(productRef.getApiSpec());
+                    product.setMcpSpec(productRef.getMcpSpec());
+                });
     }
 
     private Product findPublishedProduct(String portalId, String productId) {
