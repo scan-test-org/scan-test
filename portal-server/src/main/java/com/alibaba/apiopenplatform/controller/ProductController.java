@@ -4,6 +4,7 @@ import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
 import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.params.product.CreateProductRefParam;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.ProductPublicationResult;
 import com.alibaba.apiopenplatform.dto.result.ProductRefResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
 import com.alibaba.apiopenplatform.service.ProductService;
@@ -56,17 +57,24 @@ public class ProductController {
     }
 
     @Operation(summary = "发布API产品")
-    @PostMapping("/{productId}/publish")
+    @PostMapping("/{productId}/publications/{portalId}")
     @AdminAuth
-    public void publishProduct(@PathVariable String productId, @RequestBody @Valid PublishProductParam param) {
-        productService.publishProduct(productId, param);
+    public void publishProduct(@PathVariable String productId, @PathVariable String portalId) {
+        productService.publishProduct(productId, portalId);
+    }
+
+    @Operation(summary = "获取API产品的发布信息")
+    @GetMapping("/{productId}/publications")
+    @AdminAuth
+    public PageResult<ProductPublicationResult> getPublications(@PathVariable String productId, Pageable pageable) {
+        return productService.getPublications(productId, pageable);
     }
 
     @Operation(summary = "下线API产品")
-    @PostMapping("/{productId}/offline")
+    @DeleteMapping("/{productId}/publications/{portalId}")
     @AdminAuth
-    public void unpublishProduct(@PathVariable String productId, @RequestBody @Valid UnPublishProductParam param) {
-        productService.unpublishProduct(productId, param);
+    public void unpublishProduct(@PathVariable String productId, @PathVariable String portalId) {
+        productService.unpublishProduct(productId, portalId);
     }
 
     @Operation(summary = "删除API产品")

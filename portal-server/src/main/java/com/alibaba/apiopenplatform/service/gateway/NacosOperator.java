@@ -59,7 +59,7 @@ public class NacosOperator {
             for (McpServerBasicInfo basicInfo : page.getPageItems()) {
                 NacosMCPServerResult result = new NacosMCPServerResult().convertFrom(basicInfo);
                 // 设置来源Gateway信息
-                result.setFromGateway(nacosInstance.getNacosId());
+//                result.setFromGateway(nacosInstance.getNacosId());
                 
                 // 获取详细信息来获取完整信息
                 try {
