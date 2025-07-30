@@ -1,25 +1,21 @@
 package com.alibaba.apiopenplatform.entity;
 
-import com.alibaba.apiopenplatform.support.converter.RouteConfigListConverter;
-import com.alibaba.apiopenplatform.support.converter.StringListConverter;
-import com.alibaba.apiopenplatform.support.enums.ProductType;
+import com.alibaba.apiopenplatform.converter.APIGRefConfigConverter;
+import com.alibaba.apiopenplatform.converter.HigressRefConfigConverter;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
-import com.alibaba.apiopenplatform.support.product.RouteConfig;
+import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
+import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
-import java.util.List;
 
 /**
  * @author zh
  */
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "product_ref",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"api_id"}, name = "uk_api_id")
-        })
+@Table(name = "product_ref")
 @Data
 public class ProductRef extends BaseEntity {
 
@@ -27,30 +23,30 @@ public class ProductRef extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "api_id", length = 32, nullable = false)
-    private String apiId;
+    @Column(name = "product_id", length = 32, nullable = false)
+    private String productId;
 
     @Column(name = "gateway_id", length = 32)
     private String gatewayId;
 
+    @Column(name = "apig_ref_config", columnDefinition = "text")
+    @Convert(converter = APIGRefConfigConverter.class)
+    private APIGRefConfig apigRefConfig;
+
+    @Column(name = "higress_ref_config", columnDefinition = "text")
+    @Convert(converter = HigressRefConfigConverter.class)
+    private HigressRefConfig higressRefConfig;
+
     @Column(name = "nacos_id", length = 32)
     private String nacosId;
-
-    @Column(name = "product_id", length = 32, nullable = false)
-    private String productId;
 
     @Column(name = "source_type", length = 32)
     @Enumerated(EnumType.STRING)
     private SourceType sourceType;
 
-    @Column(name = "routes", columnDefinition = "text")
-    @Convert(converter = RouteConfigListConverter.class)
-    private List<RouteConfig> routes;
+    @Column(name = "api_spec", columnDefinition = "text")
+    private String apiSpec;
 
-    @Column(name = "operations", columnDefinition = "text")
-    @Convert(converter = StringListConverter.class)
-    private List<String> operations;
-
-    @Column(name = "type", length = 32, nullable = false)
-    private ProductType type;
+    @Column(name = "mcp_spec", columnDefinition = "text")
+    private String mcpSpec;
 }

@@ -56,6 +56,13 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
+    public GatewayResult getGateway(String gatewayId) {
+        Gateway gateway = findGateway(gatewayId);
+
+        return new GatewayResult().convertFrom(gateway);
+    }
+
+    @Override
     public PageResult<GatewayResult> listGateways(Pageable pageable) {
         Page<Gateway> gateways = gatewayRepository.findByAdminId("admin", pageable);
 
@@ -116,15 +123,15 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public String fetchAPISpec(String gatewayId, String apiId) {
+    public String fetchAPISpec(String gatewayId, Object config) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchAPISpec(gateway, apiId);
+        return getOperator(gateway).fetchAPISpec(gateway, config);
     }
 
     @Override
-    public String fetchMcpSpec(String gatewayId, String apiId, String routeId, String name) {
+    public String fetchMcpSpec(String gatewayId, Object conf) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchMcpSpec(gateway, apiId, routeId, name);
+        return getOperator(gateway).fetchMcpSpec(gateway, conf);
     }
 
     @Override

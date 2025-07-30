@@ -1,4 +1,4 @@
-package com.alibaba.apiopenplatform.support.converter;
+package com.alibaba.apiopenplatform.converter;
 
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import com.fasterxml.jackson.core.type.TypeReference;

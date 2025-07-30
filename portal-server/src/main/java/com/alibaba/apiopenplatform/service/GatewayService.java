@@ -27,6 +27,9 @@ public interface GatewayService {
      */
     void importGateway(ImportGatewayParam param);
 
+
+    GatewayResult getGateway(String gatewayId);
+
     /**
      * 获取导入的Gateway列表
      *
@@ -60,9 +63,9 @@ public interface GatewayService {
 
     PageResult<MCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable);
 
-    String fetchAPISpec(String gatewayId, String apiId);
+    String fetchAPISpec(String gatewayId, Object config);
 
-    String fetchMcpSpec(String gatewayId, String apiId, String routeId, String name);
+    String fetchMcpSpec(String gatewayId, Object conf);
 
     void createConsumer(Consumer consumer);
 

@@ -9,6 +9,7 @@ import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
 import com.aliyun.sdk.service.apig20240327.models.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -50,14 +51,17 @@ public class AIGatewayOperator extends APIGOperator {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId, String name) {
-        HttpRoute httpRoute = fetchHTTPRoute(gateway, apiId, routeId);
+    public String fetchMcpSpec(Gateway gateway, Object conf) {
+        APIGRefConfig config = (APIGRefConfig) conf;
+
+        HttpRoute httpRoute = fetchHTTPRoute(gateway, config.getApiId(), config.getMcpRouteId());
 
         APIGMCPServerResult mcpServerResult = new APIGMCPServerResult().convertFrom(httpRoute);
 
+        // HTTP转MCP类型需解析插件信息
         if (StrUtil.isBlank(mcpServerResult.getMcpServerConfig())
                 && StrUtil.equalsIgnoreCase("ApiGatewayHttpToMCP", mcpServerResult.getFromType())) {
-            mcpServerResult.setMcpServerConfig(fetchMcpPlugin(gateway, routeId));
+            mcpServerResult.setMcpServerConfig(fetchMcpPlugin(gateway, config.getMcpRouteId()));
         }
         return JSONUtil.toJsonStr(mcpServerResult);
     }

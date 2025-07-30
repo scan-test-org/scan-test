@@ -3,7 +3,6 @@ package com.alibaba.apiopenplatform.service;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
-import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -52,23 +51,23 @@ public interface PortalService {
      */
     PortalResult updatePortal(String portalId, UpdatePortalParam param);
 
-    /**
-     * 更新门户设置
-     *
-     * @param portalId
-     * @param param
-     * @return
-     */
-    PortalResult updatePortalSetting(String portalId, UpdatePortalSettingParam param);
-
-    /**
-     * 更新门户UI
-     *
-     * @param portalId
-     * @param param
-     * @return
-     */
-    PortalResult updatePortalUi(String portalId, UpdatePortalUiParam param);
+//    /**
+//     * 更新门户设置
+//     *
+//     * @param portalId
+//     * @param param
+//     * @return
+//     */
+//    PortalResult updatePortalSetting(String portalId, UpdatePortalSettingParam param);
+//
+//    /**
+//     * 更新门户UI
+//     *
+//     * @param portalId
+//     * @param param
+//     * @return
+//     */
+//    PortalResult updatePortalUi(String portalId, UpdatePortalUiParam param);
 
     /**
      * 删除门户
@@ -77,13 +76,13 @@ public interface PortalService {
      */
     void deletePortal(String portalId);
 
-    /**
-     * 获取门户配置信息（PortalSetting）
-     *
-     * @param portalId
-     * @return
-     */
-    PortalSettingConfig getPortalSetting(String portalId);
+//    /**
+//     * 获取门户配置信息（PortalSetting）
+//     *
+//     * @param portalId
+//     * @return
+//     */
+//    PortalSettingConfig getPortalSetting(String portalId);
 
     /**
      * 根据请求域名解析门户

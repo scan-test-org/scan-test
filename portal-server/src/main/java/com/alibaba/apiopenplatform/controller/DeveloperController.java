@@ -1,19 +1,15 @@
 package com.alibaba.apiopenplatform.controller;
 
+import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.apiopenplatform.dto.params.developer.*;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
-import com.alibaba.apiopenplatform.core.response.Response;
-import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
-import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.entity.Developer;
-import com.alibaba.apiopenplatform.entity.PortalSetting;
-import com.alibaba.apiopenplatform.entity.Portal;
-import com.alibaba.apiopenplatform.repository.PortalRepository;
 
+import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,18 +20,16 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import io.swagger.v3.oas.annotations.Parameter;
 
 import javax.validation.Valid;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.util.Collections;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
-import org.springframework.http.ResponseEntity;
+
 import com.alibaba.apiopenplatform.dto.params.admin.ChangePasswordParam;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -54,7 +48,7 @@ public class DeveloperController {
     private final DeveloperService developerService;
     private final TokenBlacklistService tokenBlacklistService;
     private final ContextHolder contextHolder;
-    private final PortalRepository portalRepository;
+    private final PortalService portalService;
 
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
@@ -64,14 +58,9 @@ public class DeveloperController {
         
         // 根据门户配置决定是否自动登录
         String portalId = contextHolder.getPortal();
-        // 通过portalId查询对应的Portal，然后获取PortalSetting
-        Optional<Portal> portalOpt = portalRepository.findByPortalId(portalId);
-        PortalSetting setting = null;
-        if (portalOpt.isPresent()) {
-            Portal portal = portalOpt.get();
-            setting = portal.getPortalSetting();
-        }
-        boolean autoApprove = setting != null && Boolean.TRUE.equals(setting.getAutoApproveDevelopers());
+        PortalResult portal = portalService.getPortal(portalId);
+        boolean autoApprove = portal.getPortalSettingConfig() != null
+                && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveDevelopers());
         
         if (autoApprove) {
             // 如果自动审批，则自动登录

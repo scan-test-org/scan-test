@@ -20,6 +20,7 @@ public class HigressMCPServerResult extends MCPServerResult implements OutputCon
     public HigressMCPServerResult convertFrom(McpServer mcpServer) {
         HigressMCPServerResult r = OutputConverter.super.convertFrom(mcpServer);
 
+        r.setMcpServerName(mcpServer.getName());
         r.setFromType(mcpServer.getType().name());
         r.setMcpServerConfig(mcpServer.getRawConfigurations());
         r.setFromGateway(GatewayType.HIGRESS.getType());

@@ -9,6 +9,7 @@ import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
 import com.aliyun.sdk.service.apig20240327.models.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,13 +45,14 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public String fetchAPISpec(Gateway gateway, String apiId) {
+    public String fetchAPISpec(Gateway gateway, Object config) {
         APIGClient client = getClient(gateway);
 
         try {
+            APIGRefConfig apigRefConfig = (APIGRefConfig) config;
             ExportHttpApiResponse response = client.execute(c -> {
                 ExportHttpApiRequest request = ExportHttpApiRequest.builder()
-                        .httpApiId(apiId)
+                        .httpApiId(apigRefConfig.getApiId())
                         .build();
                 try {
                     return c.exportHttpApi(request).get();
@@ -73,7 +75,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId, String name) {
+    public String fetchMcpSpec(Gateway gateway, Object conf) {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
     }
 

@@ -4,7 +4,6 @@ import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
-import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,11 +49,11 @@ public class PortalController {
         return portalService.listPortals(pageable);
     }
 
-    @Operation(summary = "获取门户配置信息")
-    @GetMapping("/{portalId}/setting")
-    public PortalSettingConfig getPortalSetting(@PathVariable String portalId) {
-        return portalService.getPortalSetting(portalId);
-    }
+//    @Operation(summary = "获取门户配置信息")
+//    @GetMapping("/{portalId}/setting")
+//    public PortalSettingConfig getPortalSetting(@PathVariable String portalId) {
+//        return portalService.getPortalSetting(portalId);
+//    }
 
     @Operation(summary = "更新门户的基础信息")
     @PutMapping("/{portalId}")
@@ -62,17 +61,17 @@ public class PortalController {
         return portalService.updatePortal(portalId, param);
     }
 
-    @Operation(summary = "更新门户的配置信息")
-    @PutMapping("/{portalId}/setting")
-    public PortalResult updatePortalSetting(@PathVariable String portalId, @Valid @RequestBody UpdatePortalSettingParam param) {
-        return portalService.updatePortalSetting(portalId, param);
-    }
+//    @Operation(summary = "更新门户的配置信息")
+//    @PutMapping("/{portalId}/setting")
+//    public PortalResult updatePortalSetting(@PathVariable String portalId, @Valid @RequestBody UpdatePortalSettingParam param) {
+//        return portalService.updatePortalSetting(portalId, param);
+//    }
 
-    @Operation(summary = "更新门户的UI配置")
-    @PutMapping("/{portalId}/ui")
-    public PortalResult updatePortalUi(@PathVariable String portalId, @Valid @RequestBody UpdatePortalUiParam param) {
-        return portalService.updatePortalUi(portalId, param);
-    }
+//    @Operation(summary = "更新门户的UI配置")
+//    @PutMapping("/{portalId}/ui")
+//    public PortalResult updatePortalUi(@PathVariable String portalId, @Valid @RequestBody UpdatePortalUiParam param) {
+//        return portalService.updatePortalUi(portalId, param);
+//    }
 
     @Operation(summary = "删除门户")
     @DeleteMapping("/{portalId}")

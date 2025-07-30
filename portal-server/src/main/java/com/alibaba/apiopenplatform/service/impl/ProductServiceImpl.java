@@ -22,7 +22,7 @@ import com.alibaba.apiopenplatform.service.NacosService;
 import com.alibaba.apiopenplatform.support.enums.ProductStatus;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
-import com.alibaba.apiopenplatform.support.product.RouteConfig;
+import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -74,38 +74,38 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
 
         // 如果是MCP_SERVER类型，自动创建ProductRef关联数据源
-        if (param.getType() == ProductType.MCP_SERVER) {
-            if (param.getSourceType() == null || param.getMcpServerName() == null) {
-                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "MCP_SERVER类型必须指定sourceType和mcpServerName");
-            }
-            
-            // 验证数据源配置
-            if (param.getSourceType() == SourceType.GATEWAY && param.getGatewayId() == null) {
-                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "GATEWAY类型必须指定gatewayId");
-            }
-            if (param.getSourceType() == SourceType.NACOS && param.getNacosId() == null) {
-                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "NACOS类型必须指定nacosId");
-            }
-            
-            CreateProductRefParam refParam = new CreateProductRefParam();
-            refParam.setApiId(param.getMcpServerName()); // 使用MCP Server名称作为apiId
-            refParam.setSourceType(param.getSourceType());
-
-            // 根据数据源类型设置相应的ID
-            if (param.getSourceType() == SourceType.GATEWAY) {
-                refParam.setGatewayId(param.getGatewayId());
-            } else if (param.getSourceType() == SourceType.NACOS) {
-                refParam.setNacosId(param.getNacosId());
-            }
-            
-            // 创建路由配置
-            RouteOption routeOption = new RouteOption();
-            routeOption.setRouteId(param.getMcpServerName());
-            routeOption.setName(param.getMcpServerName());
-            refParam.setRoutes(java.util.Arrays.asList(routeOption));
-            
-            addProductRef(productId, refParam);
-        }
+//        if (param.getType() == ProductType.MCP_SERVER) {
+//            if (param.getSourceType() == null || param.getMcpServerName() == null) {
+//                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "MCP_SERVER类型必须指定sourceType和mcpServerName");
+//            }
+//
+//            // 验证数据源配置
+//            if (param.getSourceType() == SourceType.GATEWAY && param.getGatewayId() == null) {
+//                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "GATEWAY类型必须指定gatewayId");
+//            }
+//            if (param.getSourceType() == SourceType.NACOS && param.getNacosId() == null) {
+//                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "NACOS类型必须指定nacosId");
+//            }
+//
+//            CreateProductRefParam refParam = new CreateProductRefParam();
+//            refParam.setApiId(param.getMcpServerName()); // 使用MCP Server名称作为apiId
+//            refParam.setSourceType(param.getSourceType());
+//
+//            // 根据数据源类型设置相应的ID
+//            if (param.getSourceType() == SourceType.GATEWAY) {
+//                refParam.setGatewayId(param.getGatewayId());
+//            } else if (param.getSourceType() == SourceType.NACOS) {
+//                refParam.setNacosId(param.getNacosId());
+//            }
+//
+//            // 创建路由配置
+//            RouteOption routeOption = new RouteOption();
+//            routeOption.setRouteId(param.getMcpServerName());
+//            routeOption.setName(param.getMcpServerName());
+//            refParam.setRoutes(java.util.Arrays.asList(routeOption));
+//
+//            addProductRef(productId, refParam);
+//        }
 
         return getProduct(productId);
     }
@@ -223,7 +223,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = findProduct(productId);
 
         // 是否已存在API引用
-        productRefRepository.findByProductIdAndApiId(product.getProductId(), param.getApiId())
+        productRefRepository.findByProductId(product.getProductId())
                 .ifPresent(productRef -> {
                     throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT_REF, product.getProductId());
                 });
@@ -234,6 +234,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public ProductRefResult getProductRef(String productId) {
+        return productRefRepository.findFirstByProductId(productId)
+                .map(productRef -> new ProductRefResult().convertFrom(productRef))
+                .orElse(null);
+    }
+
+
+    @Override
     public void deleteProductRef(String productId) {
         ProductRef productRef = productRefRepository.findFirstByProductId(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId));
@@ -242,45 +250,80 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void fullFillAPISpec(ProductResult product) {
-        productRefRepository.findFirstByProductId(product.getProductId())
-                .map(productRef -> {
-                    try {
-                        ProductType type = product.getType();
-                        if (type == ProductType.REST_API) {
-                            String apiSpec = gatewayService.fetchAPISpec(productRef.getGatewayId(), productRef.getApiId());
-                            product.setApiSpec(apiSpec);
-                        } else if (type == ProductType.MCP_SERVER) {
-                            String mcpSpec;
-                            if (productRef.getSourceType() == SourceType.GATEWAY) {
-                                RouteConfig routeConfig = productRef.getRoutes().get(0);
-                                mcpSpec = gatewayService.fetchMcpSpec(productRef.getGatewayId(), productRef.getApiId(), routeConfig.getRouteId(), routeConfig.getName());
-                            } else if (productRef.getSourceType() == SourceType.NACOS) {
-                                // 从Nacos获取MCP Server详情
-                                // 对于Nacos，apiId字段存储的是mcpServerName
-                                String mcpServerName = productRef.getApiId();
-                                String namespaceId = "public"; // 暂时使用默认namespace
-                                String version = null; // 暂时使用最新版本
-                                
-                                McpMarketDetailParam detailParam = nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
-                                // 将详情转换为JSON字符串
-                                mcpSpec = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(detailParam);
-                            } else {
-                                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "不支持的数据源类型: " + productRef.getSourceType());
-                            }
-                            product.setMcpSpec(mcpSpec);
-                        }
-                        product.setStatus(ProductStatus.ENABLE);
-                    } catch (Exception e) {
-                        log.error("Failed to fetch API spec for product: {}, sourceType: {}, apiId: {}",
-                                product.getProductId(), productRef.getSourceType(), productRef.getApiId(), e);
-                        product.setStatus(ProductStatus.DISABLE);
-                    }
-                    return product;
-                })
-                .orElseGet(() -> {
-                    product.setStatus(ProductStatus.PENDING);
-                    return product;
-                });
+//        productRefRepository.findFirstByProductId(product.getProductId())
+//                .map(productRef -> {
+//                    try {
+//
+//                        // 来源于网关
+//                        if (productRef.getSourceType().isGateway()) {
+//                            GatewayResult gateway = gatewayService.getGateway(productRef.getGatewayId());
+//                            ProductType type = product.getType();
+//
+//                            APIGRefConfig apigRefConfig = productRef.getApigRefConfig();
+//
+//                            if (type == ProductType.REST_API) {
+//                                String apiSpec = gatewayService.fetchAPISpec(productRef.getGatewayId(), , apigRefConfig.getApiId());
+//                                product.setApiSpec(apiSpec);
+//                            }
+//                        }
+//
+//
+//                        APIGRefConfig apigRefConfig = productRef.getApigRefConfig();
+//
+//                        ProductType type = product.getType();
+//                        if (type == ProductType.REST_API) {
+//                            String apiSpec = gatewayService.fetchAPISpec(productRef.getGatewayId(), , apigRefConfig.getApiId());
+//                            product.setApiSpec(apiSpec);
+//                        } else if (type == ProductType.MCP_SERVER) {
+//                            String mcpSpec;
+//                            if (productRef.getSourceType() == SourceType.GATEWAY) {
+//                                mcpSpec = gatewayService.fetchMcpSpec(productRef.getGatewayId(), apigRefConfig.getApiId(), apigRefConfig.getMcpRouteId(), routeConfig.getName());
+//                            } else if (productRef.getSourceType() == SourceType.NACOS) {
+//                                // 从Nacos获取MCP Server详情
+//                                // 对于Nacos，apiId字段存储的是mcpServerName
+//                                String mcpServerName = productRef.getApiId();
+//                                String namespaceId = "public"; // 暂时使用默认namespace
+//                                String version = null; // 暂时使用最新版本
+//
+//                                McpMarketDetailParam detailParam = nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
+//                                // 将详情转换为JSON字符串
+//                                mcpSpec = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(detailParam);
+//                            } else {
+//                                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "不支持的数据源类型: " + productRef.getSourceType());
+//                            }
+//                            product.setMcpSpec(mcpSpec);
+//                        }
+//                        product.setStatus(ProductStatus.ENABLE);
+//                    } catch (Exception e) {
+//                        log.error("Failed to fetch API spec for product: {}, sourceType: {}, apiId: {}",
+//                                product.getProductId(), productRef.getSourceType(), productRef.getApiId(), e);
+//                        product.setStatus(ProductStatus.DISABLE);
+//                    }
+//                    return product;
+//                })
+//                .orElseGet(() -> {
+//                    product.setStatus(ProductStatus.PENDING);
+//                    return product;
+//                });
+    }
+
+    private void fullFillSpec(Product product, ProductRef productRef) {
+        SourceType sourceType = productRef.getSourceType();
+
+        if (sourceType.isGateway()) {
+            GatewayResult gateway = gatewayService.getGateway(productRef.getGatewayId());
+            Object config = gateway.getGatewayType().isHigress() ? productRef.getHigressRefConfig() : productRef.getApigRefConfig();
+            if (product.getType() == ProductType.REST_API) {
+                String apiSpec = gatewayService.fetchAPISpec(gateway.getGatewayId(), config);
+                productRef.setApiSpec(apiSpec);
+            } else {
+                String mcpSpec = gatewayService.fetchMcpSpec(gateway.getGatewayId(), config);
+                productRef.setMcpSpec(mcpSpec);
+            }
+        } else {
+
+        }
+
     }
 
     private Product findPublishedProduct(String portalId, String productId) {

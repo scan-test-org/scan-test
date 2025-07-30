@@ -6,6 +6,7 @@ import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
 import com.alibaba.higress.sdk.model.PaginatedResult;
 import com.alibaba.higress.sdk.model.mcp.McpServer;
 import com.alibaba.higress.sdk.model.mcp.McpServerPageQuery;
@@ -53,17 +54,18 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public String fetchAPISpec(Gateway gateway, String apiId) {
+    public String fetchAPISpec(Gateway gateway, Object config) {
 
         return null;
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, String apiId, String routeId, String name) {
+    public String fetchMcpSpec(Gateway gateway, Object conf) {
         HigressClient client = getClient(gateway);
+        HigressRefConfig config  = (HigressRefConfig) conf;
 
         HigressMCPServerResult mcpServerResult = client.execute(c -> {
-            McpServer mcpServer = c.mcpServerService().query(name);
+            McpServer mcpServer = c.mcpServerService().query(config.getMcpServerName());
             return new HigressMCPServerResult().convertFrom(mcpServer);
         });
 

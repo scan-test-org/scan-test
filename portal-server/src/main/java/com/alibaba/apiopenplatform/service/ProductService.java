@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.ProductRefResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
 import org.springframework.data.domain.Pageable;
 
@@ -76,6 +77,14 @@ public interface ProductService {
      * @param param
      */
     void addProductRef(String productId, CreateProductRefParam param);
+
+    /**
+     * 查询API产品引用的资源
+     *
+     * @param productId
+     * @return
+     */
+    ProductRefResult getProductRef(String productId);
 
     /**
      * 删除API产品的引用
