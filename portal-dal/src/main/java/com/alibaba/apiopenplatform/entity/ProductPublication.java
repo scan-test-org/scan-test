@@ -11,7 +11,7 @@ import javax.persistence.*;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "product_publishment")
+@Table(name = "publication")
 @Data
 public class ProductPublication extends BaseEntity {
     @Id
