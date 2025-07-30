@@ -140,26 +140,26 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">内置认证</span>
-                <Tag color={portal.portalSettingConfig.builtinAuthEnabled ? "green" : "default"}>
-                  {portal.portalSettingConfig.builtinAuthEnabled ? "已启用" : "已禁用"}
+                <Tag color={portal.portalSettingConfig?.builtinAuthEnabled ? "green" : "default"}>
+                  {portal.portalSettingConfig?.builtinAuthEnabled ? "已启用" : "已禁用"}
                 </Tag>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">OIDC认证</span>
-                <Tag color={portal.portalSettingConfig.oidcAuthEnabled ? "green" : "default"}>
-                  {portal.portalSettingConfig.oidcAuthEnabled ? "已启用" : "已禁用"}
+                <Tag color={portal.portalSettingConfig?.oidcAuthEnabled ? "green" : "default"}>
+                  {portal.portalSettingConfig?.oidcAuthEnabled ? "已启用" : "已禁用"}
                 </Tag>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">开发者自动审批</span>
-                <Tag color={portal.portalSettingConfig.autoApproveDevelopers ? "green" : "default"}>
-                  {portal.portalSettingConfig.autoApproveDevelopers ? "已启用" : "已禁用"}
+                <Tag color={portal.portalSettingConfig?.autoApproveDevelopers ? "green" : "default"}>
+                  {portal.portalSettingConfig?.autoApproveDevelopers ? "已启用" : "已禁用"}
                 </Tag>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">订阅自动审批</span>
-                <Tag color={portal.portalSettingConfig.autoApproveSubscriptions ? "green" : "default"}>
-                  {portal.portalSettingConfig.autoApproveSubscriptions ? "已启用" : "已禁用"}
+                <Tag color={portal.portalSettingConfig?.autoApproveSubscriptions ? "green" : "default"}>
+                  {portal.portalSettingConfig?.autoApproveSubscriptions ? "已启用" : "已禁用"}
                 </Tag>
               </div>
             </div>
@@ -195,10 +195,10 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
       </Row>
 
       {/* OIDC配置 */}
-      {portal.portalSettingConfig.oidcConfigs.length > 0 && (
+      {portal.portalSettingConfig?.oidcConfigs.length > 0 && (
         <Card title="OIDC认证配置">
           <div className="space-y-4">
-            {portal.portalSettingConfig.oidcConfigs.map((config) => (
+            {portal.portalSettingConfig?.oidcConfigs.map((config) => (
               <div key={config.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium">{config.name}</h4>

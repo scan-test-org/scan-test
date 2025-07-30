@@ -1,8 +1,12 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { getToken, removeToken } from './utils'
 
+const baseURL = 'http://47.117.149.200:8080'
+const localBaseURL = 'http://localhost:8080'
+
 const api: AxiosInstance = axios.create({
-  baseURL: (import.meta as any).env.VITE_API_BASE_URL || 'http://47.117.149.200:8080',
+  // baseURL: (import.meta as any).env.VITE_API_BASE_URL || localBaseURL,
+  baseURL: localBaseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -30,7 +34,7 @@ api.interceptors.response.use(
     return response.data
   },
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 403 || error.response?.status === 401) {
       removeToken()
       window.location.href = '/login'
     }

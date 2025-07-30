@@ -87,7 +87,7 @@ export default function PortalDetail() {
 
   useEffect(() => {
     fetchPortalData()
-  }, [searchParams])
+  }, [])
 
   // 当URL中的tab参数变化时，更新activeTab
   useEffect(() => {
@@ -144,13 +144,6 @@ export default function PortalDetail() {
     },
   ]
 
-  if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Spin size="large" />
-      </div>
-    )
-  }
 
   if (error || !portal) {
     return (
@@ -165,6 +158,7 @@ export default function PortalDetail() {
 
   return (
     <div className="flex h-full">
+      <Spin fullscreen spinning={loading} />
       {/* Portal详情侧边栏 */}
       <div className="w-64 border-r bg-white flex flex-col">
         {/* 返回按钮 */}
