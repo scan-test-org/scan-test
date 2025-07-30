@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
 
 interface UserInfo {
   name: string
   email: string
-  avatar?: string
+  avatar: string
   role: string
 }
 
@@ -40,29 +40,32 @@ export function useAuth() {
     setIsLoading(true)
     
     try {
-      // 模拟密码验证
-      await new Promise(resolve => setTimeout(resolve, 800))
-      
-      // 简单的模拟验证逻辑
-      if (username === 'admin' && password === 'admin123') {
-        setUserInfo({
-          name: '管理员',
-          email: 'admin@portal.com',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
-          role: '管理员'
-        })
-        setIsLoggedIn(true)
-      } else if (username === 'user' && password === 'user123') {
-        setUserInfo({
-          name: '用户',
-          email: 'user@portal.com',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
-          role: '普通用户'
-        })
-        setIsLoggedIn(true)
-      } else {
-        throw new Error('用户名或密码错误')
+      // 调用后端登录API
+      const response = await fetch('/admins/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include' // 包含cookies
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('用户名或密码错误')
+        } else {
+          throw new Error('登录失败，请重试')
+        }
       }
+
+      // 登录成功，设置用户信息
+      setUserInfo({
+        name: '管理员',
+        email: `${username}@portal.com`,
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+        role: '管理员'
+      })
+      setIsLoggedIn(true)
     } catch (error) {
       console.error('Login failed:', error)
       throw error
@@ -71,11 +74,21 @@ export function useAuth() {
     }
   }
 
-  const logout = () => {
-    setIsLoggedIn(false)
-    setUserInfo(null)
-    // 清除localStorage
-    localStorage.removeItem('auth-storage')
+  const logout = async () => {
+    try {
+      // 调用后端登出API
+      await fetch('/admins/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+    } catch (error) {
+      console.error('Logout failed:', error)
+    } finally {
+      setIsLoggedIn(false)
+      setUserInfo(null)
+      // 清除localStorage
+      localStorage.removeItem('auth-storage')
+    }
   }
 
   return {

@@ -53,8 +53,8 @@ public class AdministratorController {
         AuthResponseResult authResult = administratorService.loginWithPassword(param.getUsername(), param.getPassword())
                 .orElseThrow(() -> new RuntimeException("AUTH_FAILED"));
         
-        // 设置cookie而不是返回token，设置SameSite属性，避免浏览器警告
-        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=Lax; HttpOnly=false");
+        // 设置cookie而不是返回token，支持跨域访问
+        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
     }
 
     // @Operation(summary = "管理员受保护接口", description = "仅测试用，返回管理员受保护信息")
