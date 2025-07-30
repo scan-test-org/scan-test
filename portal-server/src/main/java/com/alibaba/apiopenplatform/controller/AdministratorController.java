@@ -49,12 +49,14 @@ public class AdministratorController {
 
     @Operation(summary = "管理员登录", description = "管理员登录，只需用户名和密码。前端只需传username和password，后端自动校验。")
     @PostMapping("/login")
-    public void login(@Valid @RequestBody AdminLoginParam param, HttpServletResponse response) {
+    public Response<AuthResponseResult> login(@Valid @RequestBody AdminLoginParam param) {
         AuthResponseResult authResult = administratorService.loginWithPassword(param.getUsername(), param.getPassword())
                 .orElseThrow(() -> new RuntimeException("AUTH_FAILED"));
         
-        // 设置cookie而不是返回token，支持跨域访问
-        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
+         //返回token到响应体，前端保存到localStorage
+        return Response.ok(authResult);
+        // 设置到 cookie（非 HttpOnly），支持跨域访问
+//        response.setHeader("Set-Cookie", "token=" + token + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
     }
 
     // @Operation(summary = "管理员受保护接口", description = "仅测试用，返回管理员受保护信息")
@@ -63,24 +65,18 @@ public class AdministratorController {
     //     return Response.ok("管理员受保护信息");
     // }
 
-    @Operation(summary = "管理员登出", description = "将 token 加入黑名单，前端自动传递Authorization请求头。")
+    @Operation(summary = "管理员登出",
+            description = "管理员登出，将当前token加入黑名单。前端需要清除localStorage中的token。")
     @PostMapping("/logout")
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        // 从cookie中获取token并加入黑名单
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("token".equals(cookie.getName())) {
-                    String token = cookie.getValue();
-                    long expireAt = System.currentTimeMillis() + 3600_000L;
-                    tokenBlacklistService.add(token, expireAt);
-                    break;
-                }
-            }
+    public Response<Void> logout(HttpServletRequest request) {
+        // 从Authorization头获取token并加入黑名单
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            long expireAt = System.currentTimeMillis() + 3600_000L;
+            tokenBlacklistService.add(token, expireAt);
         }
-        
-        // 清除cookie
-        response.setHeader("Set-Cookie", "token=; Path=/; Max-Age=0; SameSite=Lax");
+        return Response.ok(null);
     }
 
     @Operation(summary = "检查是否需要初始化管理员", description = "检查系统是否需要初始化管理员（全表无记录时返回true）。")
