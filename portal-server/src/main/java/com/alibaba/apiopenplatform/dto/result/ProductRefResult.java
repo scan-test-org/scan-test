@@ -5,6 +5,7 @@ import com.alibaba.apiopenplatform.entity.ProductRef;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
 import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
+import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import lombok.Data;
 
 /**
@@ -24,4 +25,6 @@ public class ProductRefResult implements OutputConverter<ProductRefResult, Produ
     private HigressRefConfig higressRefConfig;
 
     private String nacosId;
+
+    private NacosRefConfig nacosRefConfig;
 }

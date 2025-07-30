@@ -6,6 +6,7 @@ import com.alibaba.apiopenplatform.entity.ProductRef;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
 import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
+import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import lombok.Data;
 
 import javax.validation.constraints.AssertTrue;
@@ -28,12 +29,14 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
 
     private HigressRefConfig higressRefConfig;
 
+    private NacosRefConfig nacosRefConfig;
+
     @AssertTrue(message = "数据源配置无效")
     private boolean isSourceValid() {
         if (sourceType == SourceType.GATEWAY) {
             return StrUtil.isNotBlank(gatewayId) && (apigRefConfig != null || higressRefConfig != null);
         } else if (sourceType == SourceType.NACOS) {
-            return StrUtil.isNotBlank(nacosId);
+            return StrUtil.isNotBlank(nacosId) && nacosRefConfig != null;
         }
         return false;
     }

@@ -2,9 +2,11 @@ package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.converter.APIGRefConfigConverter;
 import com.alibaba.apiopenplatform.converter.HigressRefConfigConverter;
+import com.alibaba.apiopenplatform.converter.NacosRefConfigConverter;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
 import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
+import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -39,6 +41,10 @@ public class ProductRef extends BaseEntity {
 
     @Column(name = "nacos_id", length = 32)
     private String nacosId;
+
+    @Column(name = "nacos_ref_config", columnDefinition = "text")
+    @Convert(converter = NacosRefConfigConverter.class)
+    private NacosRefConfig nacosRefConfig;
 
     @Column(name = "source_type", length = 32)
     @Enumerated(EnumType.STRING)
