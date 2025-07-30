@@ -265,14 +265,9 @@ public class DeveloperOauth2Controller {
             Optional<AuthResponseResult> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
                 String token = loginResult.get().getToken();
-                // 设置到 cookie（非 HttpOnly），支持跨域访问
-                response.setHeader("Set-Cookie", "token=" + token + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
-                // 跳转到前端首页或指定页面
-                if (frontendRedirectUrl != null) {
-                    response.sendRedirect(frontendRedirectUrl);
-                } else {
-                    response.sendRedirect("/");
-                }
+                // 返回token到响应体，前端保存到localStorage
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":\"SUCCESS\",\"data\":" + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(loginResult.get()) + "}");
                 return;
             } else {
                 response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("三方登录失败", "UTF-8"));

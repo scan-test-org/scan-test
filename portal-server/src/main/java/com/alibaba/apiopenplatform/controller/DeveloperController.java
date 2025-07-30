@@ -58,7 +58,7 @@ public class DeveloperController {
 
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
-    public void register(@Valid @RequestBody DeveloperCreateParam param, HttpServletResponse response) {
+    public Response<AuthResponseResult> register(@Valid @RequestBody DeveloperCreateParam param, HttpServletResponse response) {
         // 注册开发者
         Developer developer = developerService.createDeveloper(param);
         
@@ -76,39 +76,33 @@ public class DeveloperController {
         if (autoApprove) {
             // 如果自动审批，则自动登录
             AuthResponseResult authResult = developerService.generateAuthResult(developer);
-            // 设置SameSite属性，支持跨域访问
-            response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
+            // 返回token到响应体，前端保存到localStorage
+            return Response.ok(authResult);
         }
         // 如果不自动审批，则注册成功但不登录，需要等待管理员审批
+        return Response.ok(null); // 返回一个空的AuthResponseResult，表示注册成功但未自动登录
     }
 
     @Operation(summary = "开发者登录", description = "开发者账号密码登录")
     @PostMapping("/login")
-    public void login(@Valid @RequestBody DeveloperLoginParam param, HttpServletResponse response) {
+    public Response<AuthResponseResult> login(@Valid @RequestBody DeveloperLoginParam param) {
         AuthResponseResult authResult = developerService.loginWithPassword(param.getUsername(), param.getPassword());
         
-        // 设置cookie而不是返回token，支持跨域访问
-        response.setHeader("Set-Cookie", "token=" + authResult.getToken() + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
+        // 返回token到响应体，前端保存到localStorage
+        return Response.ok(authResult);
     }
 
     @Operation(summary = "开发者登出", description = "登出")
     @PostMapping("/logout")
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        // 从cookie中获取token并加入黑名单
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("token".equals(cookie.getName())) {
-                    String token = cookie.getValue();
-                    long expireAt = System.currentTimeMillis() + 3600_000L;
-                    tokenBlacklistService.add(token, expireAt);
-                    break;
-                }
-            }
+    public Response<Void> logout(HttpServletRequest request) {
+        // 从Authorization头获取token并加入黑名单
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            long expireAt = System.currentTimeMillis() + 3600_000L;
+            tokenBlacklistService.add(token, expireAt);
         }
-        
-        // 清除cookie
-        response.setHeader("Set-Cookie", "token=; Path=/; Max-Age=0; SameSite=Lax");
+        return Response.ok(null);
     }
 
     // @Operation(summary = "开发者个人信息", description = "受保护接口示例，仅测试用")
