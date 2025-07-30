@@ -4,6 +4,7 @@ import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
 import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.params.product.CreateProductRefParam;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.ProductRefResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
 import com.alibaba.apiopenplatform.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,6 +81,12 @@ public class ProductController {
     @AdminAuth
     public void addProductRef(@PathVariable String productId, @RequestBody @Valid CreateProductRefParam param) {
         productService.addProductRef(productId, param);
+    }
+
+    @Operation(summary = "获取API产品关联的API或MCP Server")
+    @GetMapping("/{productId}/ref")
+    public ProductRefResult getProductRef(@PathVariable String productId) {
+        return productService.getProductRef(productId);
     }
 
     @Operation(summary = "删除API产品关联的API或MCP Server")

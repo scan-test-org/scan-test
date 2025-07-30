@@ -15,4 +15,6 @@ public interface ProductPublicationRepository extends BaseRepository<ProductPubl
     Page<ProductPublication> findByPortalId(String portalId, Pageable pageable);
 
     Optional<ProductPublication> findByPortalIdAndProductId(String portalId, String productId);
+
+    void deleteByProductId(String productId);
 }
