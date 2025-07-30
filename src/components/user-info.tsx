@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button, Avatar, Spin } from "antd";
 import { UserOutlined } from "@ant-design/icons";
 import api from "../lib/api";
-import { getTokenFromCookie } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 
 interface UserInfo {
@@ -16,28 +15,18 @@ export function UserInfo() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = getTokenFromCookie();
-    if (token) {
       setLoadingUser(true);
-      api.post("/developers/list-identities")
+      api.get("/developers/profile")
         .then((response) => {
-          const data = response.data as { displayName: string; rawInfoJson: string }[];
-          if (Array.isArray(data) && data.length > 0) {
-            const info = data[0];
-            let raw: { picture?: string } = {};
-            try {
-              raw = JSON.parse(info.rawInfoJson);
-            } catch {
-              // 忽略解析错误
-            }
+          const data = response.data;
+          if (data) {
             setUserInfo({
-              displayName: info.displayName,
-              avatar: raw.picture,
+              displayName: data.username || data.email || "未命名用户",
+              avatar: data.avatarUrl || undefined,
             });
           }
         })
         .finally(() => setLoadingUser(false));
-    }
   }, []);
 
   if (loadingUser) {

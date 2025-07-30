@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Card, Divider, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import api from "../lib/api";
@@ -21,9 +21,7 @@ const oidcIcons: Record<string, React.ReactNode> = {
 const Login: React.FC = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(false);
-  // const location = useLocation();
-  // const searchParams = new URLSearchParams(location.search);
-  // const portalId = searchParams.get("portalId") || "";
+  const navigate = useNavigate();
 
   useEffect(() => {
     api
@@ -36,14 +34,15 @@ const Login: React.FC = () => {
   const handlePasswordLogin = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
-      const res = await api.post("/api/developer/login", {
+      const res = await api.post("/developers/login", {
         username: values.username,
         password: values.password,
       });
       // 登录成功后跳转到首页并携带token
       if (res && res.data && res.data.token) {
         message.success('登录成功！');
-        window.location.href = `/?token=${res.data.token}`;
+        localStorage.setItem('token', res.data.token)
+        navigate('/')
       } else {
         message.error("登录失败，未获取到token");
       }
