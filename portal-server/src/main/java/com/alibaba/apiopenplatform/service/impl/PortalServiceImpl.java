@@ -8,11 +8,11 @@ import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
-import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
+//import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.entity.PortalDomain;
-import com.alibaba.apiopenplatform.entity.PortalSetting;
-import com.alibaba.apiopenplatform.entity.PortalUi;
+//import com.alibaba.apiopenplatform.entity.PortalSetting;
+//import com.alibaba.apiopenplatform.entity.PortalUi;
 import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
@@ -52,14 +52,14 @@ public class PortalServiceImpl implements PortalService {
         portal.setPortalId(portalId);
         portal.setAdminId("admin");
 
-        // Setting
-        PortalSetting portalSetting = new PortalSetting();
-        portalSetting.setPortal(portal);
-        // Ui
-        PortalUi portalUi = new PortalUi();
-        portalUi.setPortal(portal);
-        portal.setPortalSetting(portalSetting);
-        portal.setPortalUi(portalUi);
+//        // Setting
+//        PortalSetting portalSetting = new PortalSetting();
+//        portalSetting.setPortal(portal);
+//        // Ui
+//        PortalUi portalUi = new PortalUi();
+//        portalUi.setPortal(portal);
+//        portal.setPortalSetting(portalSetting);
+//        portal.setPortalUi(portalUi);
         // Domain
         PortalDomain portalDomain = new PortalDomain();
         portalDomain.setDomain(String.format(domainFormat, portalId));
@@ -84,7 +84,7 @@ public class PortalServiceImpl implements PortalService {
 
     @Override
     public PageResult<PortalResult> listPortals(Pageable pageable) {
-        Page<Portal> portals = portalRepository.findByAdminId("admin", pageable);
+        Page<Portal> portals = portalRepository.findAll(pageable);
 
         return new PageResult<PortalResult>().convertFrom(portals, portal -> new PortalResult().convertFrom(portal));
     }
@@ -99,50 +99,30 @@ public class PortalServiceImpl implements PortalService {
         return getPortal(portal.getPortalId());
     }
 
-    @Override
-    public PortalResult updatePortalSetting(String portalId, UpdatePortalSettingParam param) {
-        Portal portal = findPortal(portalId);
-        PortalSetting portalSetting = portal.getPortalSetting();
+//    @Override
+//    public PortalResult updatePortalSetting(String portalId, UpdatePortalSettingParam param) {
+//        Portal portal = findPortal(portalId);
+//        PortalSetting portalSetting = portal.getPortalSetting();
+//        param.update(portalSetting);
+//
+//        portalRepository.saveAndFlush(portal);
+//        return getPortal(portal.getPortalId());
+//    }
 
-        Optional.ofNullable(param.getBuiltinAuthEnabled())
-                .ifPresent(portalSetting::setBuiltinAuthEnabled);
-        Optional.ofNullable(param.getOidcAuthEnabled())
-                .ifPresent(portalSetting::setOidcAuthEnabled);
-
-        Optional.ofNullable(param.getAutoApproveDevelopers())
-                .ifPresent(portalSetting::setAutoApproveDevelopers);
-        Optional.ofNullable(param.getAutoApproveSubscriptions())
-                .ifPresent(portalSetting::setAutoApproveSubscriptions);
-        Optional.ofNullable(param.getFrontendRedirectUrl())
-                .ifPresent(portalSetting::setFrontendRedirectUrl);
-        // 批量配置OIDC provider
-        if (param.getOidcOptions() != null) {
-            List<OidcConfig> configs = new java.util.ArrayList<>();
-            for (OidcOption p : param.getOidcOptions()) {
-                OidcConfig config = p.convertTo();
-                config.setProvider(p.getProvider());
-                configs.add(config);
-            }
-            portalSetting.setOidcConfigs(configs);
-        }
-        portalRepository.saveAndFlush(portal);
-        return getPortal(portal.getPortalId());
-    }
-
-    @Override
-    public PortalResult updatePortalUi(String portalId, UpdatePortalUiParam param) {
-        Portal portal = findPortal(portalId);
-
-        PortalUi portalUi = portal.getPortalUi();
-        Optional.ofNullable(param.getLogo())
-                .ifPresent(portalUi::setLogo);
-
-        Optional.ofNullable(param.getIcon())
-                .ifPresent(portalUi::setIcon);
-
-        portalRepository.saveAndFlush(portal);
-        return getPortal(portal.getPortalId());
-    }
+//    @Override
+//    public PortalResult updatePortalUi(String portalId, UpdatePortalUiParam param) {
+//        Portal portal = findPortal(portalId);
+//
+//        PortalUi portalUi = portal.getPortalUi();
+//        Optional.ofNullable(param.getLogo())
+//                .ifPresent(portalUi::setLogo);
+//
+//        Optional.ofNullable(param.getIcon())
+//                .ifPresent(portalUi::setIcon);
+//
+//        portalRepository.saveAndFlush(portal);
+//        return getPortal(portal.getPortalId());
+//    }
 
     @Override
     public void deletePortal(String portalId) {
@@ -186,14 +166,14 @@ public class PortalServiceImpl implements PortalService {
         return getPortal(portalId);
     }
 
-    @Override
-    public PortalSettingConfig getPortalSetting(String portalId) {
-        Portal portal = findPortal(portalId);
-        if (portal.getPortalSetting() == null) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId + ": setting not found");
-        }
-        return new PortalSettingConfig().convertFrom(portal.getPortalSetting());
-    }
+//    @Override
+//    public PortalSettingConfig getPortalSetting(String portalId) {
+//        Portal portal = findPortal(portalId);
+//        if (portal.getPortalSetting() == null) {
+//            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId + ": setting not found");
+//        }
+//        return new PortalSettingConfig().convertFrom(portal.getPortalSetting());
+//    }
 
     private Portal findPortal(String portalId) {
         return portalRepository.findByPortalId(portalId)

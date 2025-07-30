@@ -1,7 +1,10 @@
 package com.alibaba.apiopenplatform.dto.result;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
 import com.alibaba.apiopenplatform.entity.Portal;
+import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
+import com.alibaba.apiopenplatform.support.portal.PortalUiConfig;
 import lombok.Data;
 
 import java.util.List;
@@ -32,9 +35,9 @@ public class PortalResult implements OutputConverter<PortalResult, Portal> {
     @Override
     public PortalResult convertFrom(Portal source) {
         OutputConverter.super.convertFrom(source);
-        portalSettingConfig = new PortalSettingConfig().convertFrom(source.getPortalSetting());
-        portalUiConfig = new PortalUiConfig().convertFrom(source.getPortalUi());
-        portalDomainConfig = source.getPortalDomains().stream().map(domain -> new PortalDomainConfig().convertFrom(domain)).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(source.getPortalDomains())) {
+            portalDomainConfig = source.getPortalDomains().stream().map(domain -> new PortalDomainConfig().convertFrom(domain)).collect(Collectors.toList());
+        }
         return this;
     }
 }

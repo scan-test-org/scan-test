@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.entity;
 
-import com.alibaba.apiopenplatform.support.converter.APIGConfigConverter;
-import com.alibaba.apiopenplatform.support.converter.HigressConfigConverter;
+import com.alibaba.apiopenplatform.converter.APIGConfigConverter;
+import com.alibaba.apiopenplatform.converter.HigressConfigConverter;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.gateway.APIGConfig;
 import com.alibaba.apiopenplatform.support.gateway.HigressConfig;

@@ -29,9 +29,9 @@ public abstract class GatewayOperator<T> {
 
     abstract public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable);
 
-    abstract public String fetchAPISpec(Gateway gateway, String apiId);
+    abstract public String fetchAPISpec(Gateway gateway, Object config);
 
-    abstract public String fetchMcpSpec(Gateway gateway, String apiId, String routeIdentifier, String name);
+    abstract public String fetchMcpSpec(Gateway gateway, Object conf);
 
     abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
 

@@ -21,7 +21,7 @@ import java.util.List;
 
 public class MCPServerResult {
 
-    protected String name;
+    protected String mcpServerName;
 
     @Schema(hidden = true)
     protected String fromType;

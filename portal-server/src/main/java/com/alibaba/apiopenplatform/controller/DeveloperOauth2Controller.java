@@ -1,11 +1,14 @@
 package com.alibaba.apiopenplatform.controller;
 
+import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
 import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepository;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
 import com.alibaba.apiopenplatform.service.DeveloperService;
+import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
+import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +41,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import com.alibaba.apiopenplatform.auth.JwtService;
 import com.alibaba.apiopenplatform.entity.Portal;
-import com.alibaba.apiopenplatform.entity.PortalSetting;
+//import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -66,7 +69,8 @@ public class DeveloperOauth2Controller {
     private final DeveloperRepository developerRepository;
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     private final DeveloperService developerService;
-    private final PortalRepository portalRepository;
+//    private final PortalRepository portalRepository;
+    private final PortalService portalService;
     private final RestTemplate restTemplate = new RestTemplate();
     private final JwtService jwtService;
     private final ContextHolder contextHolder;
@@ -84,20 +88,15 @@ public class DeveloperOauth2Controller {
         // 不再支持 frontendRedirectUrl 参数，统一从 PortalSetting 读取
         String newState = state;
         // 通过portalId查询对应的Portal，然后获取PortalSetting
-        Optional<Portal> portalOpt = portalRepository.findByPortalId(portalId);
-        if (!portalOpt.isPresent()) {
-            log.error("[Portal不存在] portalId={}", portalId);
-            throw new BusinessException(ErrorCode.PORTAL_NOT_FOUND, portalId);
-        }
-        Portal portal = portalOpt.get();
-        PortalSetting portalSetting = portal.getPortalSetting();
+        PortalResult portal = portalService.getPortal(portalId);
+        PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
         if (portalSetting == null) {
             log.error("[PortalSetting不存在] portalId={}", portalId);
             throw new BusinessException(ErrorCode.PORTAL_SETTING_NOT_FOUND);
         }
-        java.util.List<PortalSetting> settings = java.util.Arrays.asList(portalSetting);
+        java.util.List<PortalSettingConfig> settings = Collections.singletonList(portalSetting);
         OidcConfig config = null;
-        for (PortalSetting setting : settings) {
+        for (PortalSettingConfig setting : settings) {
             if (setting.getOidcConfigs() != null) {
                 for (OidcConfig c : setting.getOidcConfigs()) {
                     log.info("[OIDC配置检查] provider={}, enabled={}, name={}, id={}", c.getProvider(), c.isEnabled(), c.getName(), c.getId());
@@ -174,14 +173,8 @@ public class DeveloperOauth2Controller {
             return;
         }
         // 通过portalId查询对应的Portal，然后获取PortalSetting
-        Optional<Portal> portalOpt = portalRepository.findByPortalId(portalId);
-        if (!portalOpt.isPresent()) {
-            log.error("[Portal不存在] portalId={}", portalId);
-            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("Portal不存在", "UTF-8"));
-            return;
-        }
-        Portal portal = portalOpt.get();
-        PortalSetting portalSetting = portal.getPortalSetting();
+        PortalResult portal = portalService.getPortal(portalId);
+        PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
         if (portalSetting == null) {
             log.error("[PortalSetting不存在] portalId={}", portalId);
             response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("PortalSetting不存在", "UTF-8"));
@@ -194,9 +187,9 @@ public class DeveloperOauth2Controller {
             // 如果数据库没有配置，使用默认值
             frontendRedirectUrl = "/";
         }
-        java.util.List<PortalSetting> settings = java.util.Arrays.asList(portalSetting);
+        java.util.List<PortalSettingConfig> settings = java.util.Arrays.asList(portalSetting);
         OidcConfig config = null;
-        for (PortalSetting setting : settings) {
+        for (PortalSettingConfig setting : settings) {
             if (setting.getOidcConfigs() != null) {
                 for (OidcConfig c : setting.getOidcConfigs()) {
                     log.info("[OIDC配置检查] provider={}, enabled={}, name={}, id={}", c.getProvider(), c.isEnabled(), c.getName(), c.getId());
@@ -310,20 +303,15 @@ public class DeveloperOauth2Controller {
     public List<Map<String, Object>> listOidcProviders() {
         String portalId = contextHolder.getPortal();
         // 通过portalId查询对应的Portal，然后获取PortalSetting
-        Optional<Portal> portalOpt = portalRepository.findByPortalId(portalId);
-        if (!portalOpt.isPresent()) {
-            log.error("[Portal不存在] portalId={}", portalId);
-            return new java.util.ArrayList<>();
-        }
-        Portal portal = portalOpt.get();
-        PortalSetting portalSetting = portal.getPortalSetting();
+        PortalResult portal = portalService.getPortal(portalId);
+        PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
         if (portalSetting == null) {
             log.error("[PortalSetting不存在] portalId={}", portalId);
             return new java.util.ArrayList<>();
         }
-        List<PortalSetting> settings = java.util.Arrays.asList(portalSetting);
+        List<PortalSettingConfig> settings = java.util.Arrays.asList(portalSetting);
         List<Map<String, Object>> result = new java.util.ArrayList<>();
-        for (PortalSetting setting : settings) {
+        for (PortalSettingConfig setting : settings) {
             if (setting.getOidcConfigs() != null) {
                 for (OidcConfig config : setting.getOidcConfigs()) {
                     if (config.isEnabled()) {

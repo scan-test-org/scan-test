@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Nacos MCP Server结果
@@ -36,7 +35,7 @@ public class NacosMCPServerResult extends MCPServerResult implements OutputConve
 
         // 设置来源信息
         r.setFromType("NACOS");
-        r.setName(basicInfo.getName());
+        r.setMcpServerName(basicInfo.getName());
         
         
         // 设置MCP Server配置信息

@@ -6,9 +6,9 @@ import lombok.Data;
  * @author zh
  */
 @Data
-public class RouteConfig {
+public class HigressRefConfig {
 
-    private String routeId;
+    private String routeName;
 
-    private String name;
+    private String mcpServerName;
 }

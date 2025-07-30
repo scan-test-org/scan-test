@@ -1,11 +1,13 @@
 package com.alibaba.apiopenplatform.service.impl;
 
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.EnumUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
 
@@ -17,6 +19,7 @@ import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepositor
 import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
+import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -25,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
-import com.alibaba.apiopenplatform.entity.PortalSetting;
 import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
@@ -77,13 +79,10 @@ public class DeveloperServiceImpl implements DeveloperService {
         developer.setPasswordHash(PasswordHasher.hash(param.getPassword()));
         // 根据门户配置决定是否自动审批
         // 通过portalId查询对应的Portal，然后获取PortalSetting
-        Optional<Portal> portalOpt = portalRepository.findByPortalId(portalId);
-        PortalSetting setting = null;
-        if (portalOpt.isPresent()) {
-            Portal portal = portalOpt.get();
-            setting = portal.getPortalSetting();
-        }
-        boolean autoApprove = setting != null && Boolean.TRUE.equals(setting.getAutoApproveDevelopers());
+        PortalResult portal = portalService.getPortal(portalId);
+
+        boolean autoApprove = portal.getPortalSettingConfig() != null
+                && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveDevelopers());
         developer.setStatus(autoApprove ? DeveloperStatus.APPROVED : DeveloperStatus.PENDING);
         developer.setAuthType("LOCAL");
         return developerRepository.save(developer);
@@ -207,13 +206,8 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Transactional
     public void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson, String portalId) {
         // 通过portalId查询对应的Portal，然后获取PortalSetting
-        Optional<Portal> portalOpt = portalRepository.findByPortalId(portalId);
-        if (!portalOpt.isPresent()) {
-            log.error("[bindExternalIdentity] Portal不存在，portalId={}", portalId);
-            throw new BusinessException(ErrorCode.PORTAL_NOT_FOUND, portalId);
-        }
-        Portal portal = portalOpt.get();
-        PortalSetting portalSetting = portal.getPortalSetting();
+        PortalResult portal = portalService.getPortal(portalId);
+        PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
         if (portalSetting == null) {
             log.error("[bindExternalIdentity] PortalSetting不存在，portalId={}", portalId);
             throw new BusinessException(ErrorCode.PORTAL_SETTING_NOT_FOUND);
@@ -274,13 +268,8 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Transactional
     public void unbindExternalIdentity(String userId, String providerName, String providerSubject, String portalId) {
         // 通过portalId查询对应的Portal，然后获取PortalSetting
-        Optional<Portal> portalOpt = portalRepository.findByPortalId(portalId);
-        if (!portalOpt.isPresent()) {
-            log.error("[unbindExternalIdentity] Portal不存在，portalId={}", portalId);
-            throw new BusinessException(ErrorCode.PORTAL_NOT_FOUND, portalId);
-        }
-        Portal portal = portalOpt.get();
-        PortalSetting portalSetting = portal.getPortalSetting();
+        PortalResult portal = portalService.getPortal(portalId);
+        PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
         if (portalSetting == null) {
             log.error("[unbindExternalIdentity] PortalSetting不存在，portalId={}", portalId);
             throw new BusinessException(ErrorCode.PORTAL_SETTING_NOT_FOUND);

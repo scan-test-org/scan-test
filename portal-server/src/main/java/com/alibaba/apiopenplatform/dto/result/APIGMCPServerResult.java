@@ -25,6 +25,7 @@ public class APIGMCPServerResult extends MCPServerResult implements OutputConver
     public APIGMCPServerResult convertFrom(HttpRoute httpRoute) {
         APIGMCPServerResult r = OutputConverter.super.convertFrom(httpRoute);
 
+        r.setMcpServerName(httpRoute.getName());
         HttpRoute.McpServerInfo mcpServerInfo = httpRoute.getMcpServerInfo();
         r.setFromType(mcpServerInfo.getCreateFromType());
 

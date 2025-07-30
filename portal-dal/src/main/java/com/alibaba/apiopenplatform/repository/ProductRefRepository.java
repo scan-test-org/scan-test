@@ -16,22 +16,9 @@ import java.util.Optional;
 @Repository
 public interface ProductRefRepository extends JpaRepository<ProductRef, Long>, JpaSpecificationExecutor<ProductRef> {
 
-    /**
-     * 根据产品ID查找API引用列表
-     */
-    List<ProductRef> findByProductId(String productId);
+    Optional<ProductRef> findByProductId(String productId);
 
     Optional<ProductRef> findFirstByProductId(String productId);
-
-    /**
-     * 根据API ID查找API引用
-     */
-    ProductRef findByApiId(String apiId);
-
-    /**
-     * 根据网关ID查找API引用列表
-     */
-    List<ProductRef> findByGatewayId(String gatewayId);
 
     /**
      * 根据Nacos ID查找API引用列表
@@ -47,11 +34,6 @@ public interface ProductRefRepository extends JpaRepository<ProductRef, Long>, J
      * 根据产品ID和Nacos ID查找API引用列表
      */
     List<ProductRef> findByProductIdAndNacosId(String productId, String nacosId);
-
-    /**
-     * 根据产品ID和API ID查找API引用
-     */
-    Optional<ProductRef> findByProductIdAndApiId(String productId, String apiId);
 
     /**
      * 根据数据源类型查找API引用列表
