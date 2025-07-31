@@ -24,4 +24,4 @@ app.get('/*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Portal Admin Server is running on port ${PORT}`)
   console.log(`📱 Open http://localhost:${PORT} to view the application`)
-}) 
+})
