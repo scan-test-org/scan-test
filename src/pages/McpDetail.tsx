@@ -190,7 +190,9 @@ function McpDetail() {
           <Descriptions.Item label="消费者认证">{enableConsumerAuth ? '启用' : '禁用'}</Descriptions.Item>
           <Descriptions.Item label="文档">{data.document ?? '无'}</Descriptions.Item>
           <Descriptions.Item label="图标">{data.icon ? <img src={data.icon} alt="icon" style={{ width: 32, height: 32 }} /> : '无'}</Descriptions.Item>
-          <Descriptions.Item label="是否启用">{data.enabled ? '是' : '否'}</Descriptions.Item>
+          <Descriptions.Item label="是否启用">
+            {typeof (data as any).enabled !== 'undefined' ? ((data as any).enabled ? '是' : '否') : '无'}
+          </Descriptions.Item>
           {mcpConfig && (
             <>
               <Descriptions.Item label="fromType">{mcpConfig.fromType ?? '无'}</Descriptions.Item>
@@ -312,7 +314,7 @@ function McpDetail() {
               <div className="text-gray-600 mb-3">请确保您的客户端能够访问以下网关地址：</div>
               <div className="flex items-center justify-between">
                 <span className="font-mono">{mcpConfig.domains[0].domain}</span>
-                <Button type="link" onClick={() => handleCopy(mcpConfig.domains[0].domain)}>
+                <Button type="link" onClick={() => handleCopy(mcpConfig.domains && mcpConfig.domains[0] ? mcpConfig.domains[0].domain : '')}>
                   复制
                 </Button>
               </div>
