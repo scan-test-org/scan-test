@@ -139,7 +139,11 @@ public class ConsumerServiceImpl implements ConsumerService {
             List<Predicate> predicates = new ArrayList<>();
 
             if (contextHolder.isDeveloper()) {
-                predicates.add(cb.equal(root.get("developerId"), contextHolder.getUser()));
+                param.setDeveloperId(contextHolder.getUser());
+            }
+
+            if (StrUtil.isNotBlank(param.getDeveloperId())) {
+                predicates.add(cb.equal(root.get("developerId"), param.getDeveloperId()));
             }
 
             if (StrUtil.isNotBlank(param.getPortalId())) {

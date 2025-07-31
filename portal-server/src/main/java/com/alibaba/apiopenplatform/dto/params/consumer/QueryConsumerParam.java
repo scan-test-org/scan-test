@@ -10,5 +10,7 @@ public class QueryConsumerParam {
 
     private String portalId;
 
+    private String developerId;
+
     private String name;
 }
