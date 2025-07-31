@@ -1,15 +1,13 @@
-# 多阶段构建 - 构建阶段
-FROM hub.docker.alibaba-inc.com/aone-base-global/alios7-nodejs:1.1
+FROM reg.docker.alibaba-inc.com/cnstack/cnstack-alios7u2:1.0-beta
+
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY proxy.conf /etc/nginx/default.d/proxy.conf
+COPY bin /home/admin/bin
+
+RUN mkdir -p /app
 
 WORKDIR /app
 
-COPY . .
+COPY dist/ /app
 
-RUN curl https://anpm.alibaba-inc.com/open/install-node.sh?v=20 | bash
-
-
-RUN npm install
-RUN npm run build
-
-EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["/bin/bash", "/home/admin/bin/start.sh"]
