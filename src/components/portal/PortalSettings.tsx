@@ -1,6 +1,6 @@
 import { Card, Form, Input, Select, Switch, Button, Divider, Space, Tag, Table, Modal, message, Tabs } from 'antd'
-import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { useState, useEffect } from 'react'
+import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { useState, useEffect, useMemo } from 'react'
 import { Portal, OidcConfig } from '@/types'
 import { portalApi } from '@/lib/api'
 
@@ -23,21 +23,10 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
   const [editingOidc, setEditingOidc] = useState<OidcConfig | null>(null)
   
   // 本地OIDC配置状态，避免频繁刷新
-  const [localOidcConfigs, setLocalOidcConfigs] = useState<OidcConfig[]>(
-    portal.portalSettingConfig?.oidcConfigs || []
-  )
-  
-  // 本地域名配置状态，避免频繁刷新
-  const [localDomainConfigs, setLocalDomainConfigs] = useState<any[]>(
-    portal.portalDomainConfig || []
-  )
+  // local的有点问题，一切tab就坏了
+ 
 
-  // 当portal数据更新时，同步本地配置
-  useEffect(() => {
-    setLocalOidcConfigs(portal.portalSettingConfig?.oidcConfigs || [])
-    setLocalDomainConfigs(portal.portalDomainConfig || [])
-  }, [portal.portalSettingConfig?.oidcConfigs, portal.portalDomainConfig])
-
+ 
   // 通用的设置更新方法 - 仅更新表单值，不立即保存
   const handleSettingUpdate = (fieldName: string, value: any) => {
     form.setFieldsValue({ [fieldName]: value })
@@ -47,16 +36,23 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     setLoading(true)
     try {
       const values = await form.validateFields()
+      const { builtinAuthEnabled, oidcAuthEnabled, autoApproveDevelopers, autoApproveSubscriptions, frontendRedirectUrl, ...rest } = values
       console.log('保存设置:', values)
       
       // 调用API保存设置
       const updateData = {
-        ...values,
-        // 保持现有的OIDC配置
-        oidcOptions: portal.portalSettingConfig?.oidcConfigs || []
+        ...rest,
+        portalSettingConfig: {
+          builtinAuthEnabled,
+          oidcAuthEnabled,
+          autoApproveDevelopers,
+          autoApproveSubscriptions,
+          frontendRedirectUrl,
+          oidcConfigs: portal.portalSettingConfig?.oidcConfigs || []
+        }
       }
       
-      await portalApi.updatePortalSettings(portal.portalId, updateData)
+      await portalApi.updatePortal(portal.portalId, updateData)
       message.success('设置保存成功')
       onRefresh?.()
     } catch (error) {
@@ -88,19 +84,14 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
         type: 'CUSTOM'
       }
       
-      // 立即更新本地状态
-      setLocalDomainConfigs([...localDomainConfigs, newDomain])
-      
       await portalApi.bindDomain(portal.portalId, newDomain)
       message.success('域名绑定成功')
+      onRefresh?.()
       setDomainModalVisible(false)
       
-      // 不再调用onRefresh，因为我们已经更新了本地状态
     } catch (error) {
       console.error('绑定域名失败:', error)
       message.error('绑定域名失败')
-      // 如果绑定失败，回滚本地状态
-      setLocalDomainConfigs(portal.portalDomainConfig || [])
     } finally {
       setDomainLoading(false)
     }
@@ -112,21 +103,24 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
   }
 
   const handleDeleteDomain = async (domain: string) => {
-    try {
-      // 立即更新本地状态
-      const updatedDomains = localDomainConfigs.filter(d => d.domain !== domain)
-      setLocalDomainConfigs(updatedDomains)
-      
-      await portalApi.unbindDomain(portal.portalId, domain)
-      message.success('域名解绑成功')
-      
-      // 不再调用onRefresh，因为我们已经更新了本地状态
-    } catch (error) {
-      console.error('解绑域名失败:', error)
-      message.error('解绑域名失败')
-      // 如果解绑失败，回滚本地状态
-      setLocalDomainConfigs(portal.portalDomainConfig || [])
-    }
+    Modal.confirm({
+      title: '确认解绑',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要解绑域名 "${domain}" 吗？此操作不可恢复。`,
+      okText: '确认解绑',
+      okType: 'danger',
+      cancelText: '取消',
+      async onOk() {
+        try {
+          await portalApi.unbindDomain(portal.portalId, domain)
+          message.success('域名解绑成功')
+          onRefresh?.()
+        } catch (error) {
+          console.error('解绑域名失败:', error)
+          message.error('解绑域名失败')
+        }
+      },
+    })
   }
 
   // OIDC 配置管理相关函数
@@ -140,7 +134,13 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     setEditingOidc(oidc)
     setOidcModalVisible(true)
     oidcForm.setFieldsValue(oidc)
+    
   }
+
+  const oidcConfigs = useMemo(() => {
+    return portal.portalSettingConfig?.oidcConfigs || []
+  }, [portal.portalSettingConfig?.oidcConfigs])
+
 
   const handleOidcModalOk = async () => {
     try {
@@ -151,34 +151,33 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       
       if (editingOidc) {
         // 编辑现有配置
-        updatedOidcConfigs = localOidcConfigs.map(config => 
+        updatedOidcConfigs = oidcConfigs?.map(config => 
           config.id === editingOidc.id ? { ...values, id: editingOidc.id } : config
         )
       } else {
         // 添加新配置
         const newId = `${values.provider}_${Date.now()}`
-        updatedOidcConfigs = [...localOidcConfigs, { ...values, id: newId }]
+        updatedOidcConfigs = [...oidcConfigs, { ...values, id: newId }]
       }
       
-      // 立即更新本地状态，提供即时反馈
-      setLocalOidcConfigs(updatedOidcConfigs)
       
       // 更新设置
-      await portalApi.updatePortalSettings(portal.portalId, {
-        ...form.getFieldsValue(),
-        oidcOptions: updatedOidcConfigs
+      await portalApi.updatePortal(portal.portalId, {
+        ...portal,
+        portalSettingConfig: {
+          ...portal.portalSettingConfig,
+          oidcConfigs: updatedOidcConfigs
+        }
       })
       
       message.success(editingOidc ? 'OIDC配置更新成功' : 'OIDC配置添加成功')
       setOidcModalVisible(false)
       
-      // 不再调用onRefresh，因为我们已经更新了本地状态
-      // 这样可以避免不必要的页面刷新，提供更好的用户体验
+      onRefresh?.()
     } catch (error) {
       console.error('保存OIDC配置失败:', error)
       message.error('保存OIDC配置失败')
       // 如果保存失败，回滚本地状态
-      setLocalOidcConfigs(portal.portalSettingConfig?.oidcConfigs || [])
     } finally {
       setOidcLoading(false)
     }
@@ -190,28 +189,34 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     oidcForm.resetFields()
   }
 
-  const handleDeleteOidc = async (oidcId: string) => {
-    try {
-      const updatedOidcConfigs = localOidcConfigs.filter(config => config.id !== oidcId)
-      
-      // 立即更新本地状态
-      setLocalOidcConfigs(updatedOidcConfigs)
-      
-      await portalApi.updatePortalSettings(portal.portalId, {
-        ...form.getFieldsValue(),
-        oidcOptions: updatedOidcConfigs
-      })
-      
-      message.success('OIDC配置删除成功')
-      
-      // 不再调用onRefresh，因为我们已经更新了本地状态
-      // 这样可以避免不必要的页面刷新，提供更好的用户体验
-    } catch (error) {
-      console.error('删除OIDC配置失败:', error)
-      message.error('删除OIDC配置失败')
-      // 如果删除失败，回滚本地状态
-      setLocalOidcConfigs(portal.portalSettingConfig?.oidcConfigs || [])
-    }
+  const handleDeleteOidc = async (oidcId: string, oidcName: string) => {
+    Modal.confirm({
+      title: '确认删除',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要删除OIDC配置 "${oidcName}" 吗？此操作不可恢复。`,
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      async onOk() {
+        try {
+          const updatedOidcConfigs = oidcConfigs.filter(config => config.id !== oidcId)
+          
+          await portalApi.updatePortal(portal.portalId, {
+            ...portal,
+            portalSettingConfig: {
+              ...portal.portalSettingConfig,
+              oidcConfigs: updatedOidcConfigs
+            }
+          })
+          
+          message.success('OIDC配置删除成功')
+          onRefresh?.()
+        } catch (error) {
+          console.error('删除OIDC配置失败:', error)
+          message.error('删除OIDC配置失败')
+        }
+      },
+    })
   }
 
   // 域名表格列定义
@@ -305,7 +310,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
             type="link" 
             danger 
             icon={<DeleteOutlined />}
-            onClick={() => handleDeleteOidc(record.id)}
+            onClick={() => handleDeleteOidc(record.id, record.name)}
           >
             删除
           </Button>
@@ -414,7 +419,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
             </div>
             <Table 
               columns={oidcColumns} 
-              dataSource={localOidcConfigs}
+              dataSource={oidcConfigs}
               rowKey="id"
               pagination={false}
               size="small"
@@ -443,7 +448,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           </div>
           <Table 
             columns={domainColumns} 
-            dataSource={localDomainConfigs}
+            dataSource={portal.portalDomainConfig}
             rowKey="domain"
             pagination={false}
             size="small"
@@ -451,139 +456,109 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
         </div>
       )
     },
-    {
-      key: 'visibility',
-      label: '可见性设置',
-      children: (
-        <div className="grid grid-cols-2 gap-6">
-          <Form.Item
-            name="apiVisibility"
-            label="默认API可见性"
-            rules={[{ required: true, message: '请选择API可见性' }]}
-          >
-            <Select placeholder="请选择API可见性">
-              <Select.Option value="Public">公开</Select.Option>
-              <Select.Option value="Private">私有</Select.Option>
-              <Select.Option value="Authenticated">需要认证</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="pageVisibility"
-            label="默认页面可见性"
-            rules={[{ required: true, message: '请选择页面可见性' }]}
-          >
-            <Select placeholder="请选择页面可见性">
-              <Select.Option value="Public">公开</Select.Option>
-              <Select.Option value="Private">私有</Select.Option>
-              <Select.Option value="Authenticated">需要认证</Select.Option>
-            </Select>
-          </Form.Item>
-        </div>
-      )
-    },
-    {
-      key: 'features',
-      label: '功能开关',
-      children: (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">分析统计</div>
-              <div className="text-sm text-gray-500">启用访问统计和分析功能</div>
-            </div>
-            <Form.Item name="enableAnalytics" valuePropName="checked" noStyle>
-              <Switch 
-                onChange={(checked) => handleSettingUpdate('enableAnalytics', checked)}
-              />
-            </Form.Item>
-          </div>
-          <Divider />
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">通知系统</div>
-              <div className="text-sm text-gray-500">启用邮件和Webhook通知</div>
-            </div>
-            <Form.Item name="enableNotifications" valuePropName="checked" noStyle>
-              <Switch 
-                onChange={(checked) => handleSettingUpdate('enableNotifications', checked)}
-              />
-            </Form.Item>
-          </div>
-          <Divider />
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">审计日志</div>
-              <div className="text-sm text-gray-500">记录用户操作和系统事件</div>
-            </div>
-            <Form.Item name="enableAuditLog" valuePropName="checked" noStyle>
-              <Switch 
-                onChange={(checked) => handleSettingUpdate('enableAuditLog', checked)}
-              />
-            </Form.Item>
-          </div>
-          <Divider />
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">限流控制</div>
-              <div className="text-sm text-gray-500">启用API调用频率限制</div>
-            </div>
-            <Form.Item name="enableRateLimiting" valuePropName="checked" noStyle>
-              <Switch 
-                onChange={(checked) => handleSettingUpdate('enableRateLimiting', checked)}
-              />
-            </Form.Item>
-          </div>
-          <Divider />
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">缓存</div>
-              <div className="text-sm text-gray-500">启用响应缓存以提高性能</div>
-            </div>
-            <Form.Item name="enableCaching" valuePropName="checked" noStyle>
-              <Switch 
-                onChange={(checked) => handleSettingUpdate('enableCaching', checked)}
-              />
-            </Form.Item>
-          </div>
-          <Divider />
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">压缩</div>
-              <div className="text-sm text-gray-500">启用响应压缩以减少带宽</div>
-            </div>
-            <Form.Item name="enableCompression" valuePropName="checked" noStyle>
-              <Switch 
-                onChange={(checked) => handleSettingUpdate('enableCompression', checked)}
-              />
-            </Form.Item>
-          </div>
-          <Divider />
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">SSL/TLS</div>
-              <div className="text-sm text-gray-500">强制使用HTTPS连接</div>
-            </div>
-            <Form.Item name="enableSSL" valuePropName="checked" noStyle>
-              <Switch 
-                onChange={(checked) => handleSettingUpdate('enableSSL', checked)}
-              />
-            </Form.Item>
-          </div>
-          <Divider />
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">CORS</div>
-              <div className="text-sm text-gray-500">启用跨域资源共享</div>
-            </div>
-            <Form.Item name="enableCORS" valuePropName="checked" noStyle>
-              <Switch 
-                onChange={(checked) => handleSettingUpdate('enableCORS', checked)}
-              />
-            </Form.Item>
-          </div>
-        </div>
-      )
-    }
+    // {
+    //   key: 'features',
+    //   label: '功能开关',
+    //   children: (
+    //     <div className="space-y-4">
+    //       <div className="flex justify-between items-center">
+    //         <div>
+    //           <div className="font-medium">分析统计</div>
+    //           <div className="text-sm text-gray-500">启用访问统计和分析功能</div>
+    //         </div>
+    //         <Form.Item name="enableAnalytics" valuePropName="checked" noStyle>
+    //           <Switch 
+    //             onChange={(checked) => handleSettingUpdate('enableAnalytics', checked)}
+    //           />
+    //         </Form.Item>
+    //       </div>
+    //       <Divider />
+    //       <div className="flex justify-between items-center">
+    //         <div>
+    //           <div className="font-medium">通知系统</div>
+    //           <div className="text-sm text-gray-500">启用邮件和Webhook通知</div>
+    //         </div>
+    //         <Form.Item name="enableNotifications" valuePropName="checked" noStyle>
+    //           <Switch 
+    //             onChange={(checked) => handleSettingUpdate('enableNotifications', checked)}
+    //           />
+    //         </Form.Item>
+    //       </div>
+    //       <Divider />
+    //       <div className="flex justify-between items-center">
+    //         <div>
+    //           <div className="font-medium">审计日志</div>
+    //           <div className="text-sm text-gray-500">记录用户操作和系统事件</div>
+    //         </div>
+    //         <Form.Item name="enableAuditLog" valuePropName="checked" noStyle>
+    //           <Switch 
+    //             onChange={(checked) => handleSettingUpdate('enableAuditLog', checked)}
+    //           />
+    //         </Form.Item>
+    //       </div>
+    //       <Divider />
+    //       <div className="flex justify-between items-center">
+    //         <div>
+    //           <div className="font-medium">限流控制</div>
+    //           <div className="text-sm text-gray-500">启用API调用频率限制</div>
+    //         </div>
+    //         <Form.Item name="enableRateLimiting" valuePropName="checked" noStyle>
+    //           <Switch 
+    //             onChange={(checked) => handleSettingUpdate('enableRateLimiting', checked)}
+    //           />
+    //         </Form.Item>
+    //       </div>
+    //       <Divider />
+    //       <div className="flex justify-between items-center">
+    //         <div>
+    //           <div className="font-medium">缓存</div>
+    //           <div className="text-sm text-gray-500">启用响应缓存以提高性能</div>
+    //         </div>
+    //         <Form.Item name="enableCaching" valuePropName="checked" noStyle>
+    //           <Switch 
+    //             onChange={(checked) => handleSettingUpdate('enableCaching', checked)}
+    //           />
+    //         </Form.Item>
+    //       </div>
+    //       <Divider />
+    //       <div className="flex justify-between items-center">
+    //         <div>
+    //           <div className="font-medium">压缩</div>
+    //           <div className="text-sm text-gray-500">启用响应压缩以减少带宽</div>
+    //         </div>
+    //         <Form.Item name="enableCompression" valuePropName="checked" noStyle>
+    //           <Switch 
+    //             onChange={(checked) => handleSettingUpdate('enableCompression', checked)}
+    //           />
+    //         </Form.Item>
+    //       </div>
+    //       <Divider />
+    //       <div className="flex justify-between items-center">
+    //         <div>
+    //           <div className="font-medium">SSL/TLS</div>
+    //           <div className="text-sm text-gray-500">强制使用HTTPS连接</div>
+    //         </div>
+    //         <Form.Item name="enableSSL" valuePropName="checked" noStyle>
+    //           <Switch 
+    //             onChange={(checked) => handleSettingUpdate('enableSSL', checked)}
+    //           />
+    //         </Form.Item>
+    //       </div>
+    //       <Divider />
+    //       <div className="flex justify-between items-center">
+    //         <div>
+    //           <div className="font-medium">CORS</div>
+    //           <div className="text-sm text-gray-500">启用跨域资源共享</div>
+    //         </div>
+    //         <Form.Item name="enableCORS" valuePropName="checked" noStyle>
+    //           <Switch 
+    //             onChange={(checked) => handleSettingUpdate('enableCORS', checked)}
+    //           />
+    //         </Form.Item>
+    //       </div>
+    //     </div>
+    //   )
+    // }
   ]
 
   return (
@@ -610,20 +585,13 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           name: portal.name,
           title: portal.title,
           description: portal.description,
-          domain: portal.portalDomainConfig[0]?.domain || '',
+          portalSettingConfig: portal.portalSettingConfig,
           builtinAuthEnabled: portal.portalSettingConfig?.builtinAuthEnabled,
           oidcAuthEnabled: portal.portalSettingConfig?.oidcAuthEnabled,
           autoApproveDevelopers: portal.portalSettingConfig?.autoApproveDevelopers,
           autoApproveSubscriptions: portal.portalSettingConfig?.autoApproveSubscriptions,
           frontendRedirectUrl: portal.portalSettingConfig?.frontendRedirectUrl,
-          enableAnalytics: true,
-          enableNotifications: true,
-          enableAuditLog: true,
-          enableRateLimiting: true,
-          enableCaching: false,
-          enableCompression: true,
-          enableSSL: true,
-          enableCORS: true
+          portalDomainConfig: portal.portalDomainConfig,
         }}
       >
         <Card>

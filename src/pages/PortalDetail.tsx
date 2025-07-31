@@ -42,12 +42,12 @@ const menuItems = [
     icon: TeamOutlined,
     description: "开发者管理"
   },
-  {
-    key: "consumers",
-    label: "Consumers",
-    icon: UserOutlined,
-    description: "消费者管理"
-  },
+  // {
+  //   key: "consumers",
+  //   label: "Consumers",
+  //   icon: UserOutlined,
+  //   description: "消费者管理"
+  // },
   {
     key: "settings",
     label: "Settings",
@@ -71,7 +71,7 @@ export default function PortalDetail() {
     try {
       setLoading(true)
       const portalId = searchParams.get('id') || 'portal-6882e06f4fd0c963020e3485'
-      const response = await portalApi.getPortalDetail(portalId) as ApiResponse<Portal>
+      const response = await portalApi.getPortalDetail(portalId) as any
       if (response && response.code === 'SUCCESS') {
         setPortal(response.data)
       } else {
@@ -149,8 +149,9 @@ export default function PortalDetail() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{error || 'Portal信息不存在'}</p>
-          <Button onClick={() => navigate('/portals')}>返回Portal列表</Button>
+          {error && <><p className=" mb-4">{error || 'Portal信息不存在'}</p>
+          <Button onClick={() => navigate('/portals')}>返回Portal列表</Button></>}
+          {!error && <Spin fullscreen spinning={loading} />}
         </div>
       </div>
     )

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Button, Table, Modal, Steps, Form, Input, message } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
-import api from '@/lib/api.ts';
+import { gatewayApi } from '@/lib/api';
 
 interface Gateway {
   gatewayId: string
   gatewayName: string
-  gatewayType: 'APIG_API' | 'HIGRESS'
+  gatewayType: 'APIG_API' | 'HIGRESS' | 'APIG_AI'
   createAt: string
 }
 
@@ -28,7 +28,7 @@ export default function Consoles() {
   const [selectedApi, setSelectedApi] = useState<any | null>(null);
 
   useEffect(() => {
-    api.get('/gateways').then(res => {      
+    gatewayApi.getGateways().then((res: any) => {      
       setGateways(res.data?.content || [])
     })
   }, [])
@@ -78,7 +78,7 @@ export default function Consoles() {
       try {
         const values = await importForm.validateFields();
         setGatewayLoading(true);
-        api.post('/gateways/apig', { ...values, gatewayType: 'APIG_API' }).then(res => {
+        gatewayApi.createApigGateway(values).then((res: any) => {
           setGatewayList(res.data?.content || []);
           setImportStep(1);
         }).finally(() => setGatewayLoading(false));
@@ -95,14 +95,14 @@ export default function Consoles() {
       const { gatewayId, gatewayType } = selectedGateway;
       if (gatewayType === 'APIG_API') {
         Promise.all([
-          api.get(`/gateways/${gatewayId}/rest-apis`),
-          api.get(`/gateways/${gatewayId}/mcp-servers`)
+          gatewayApi.getGatewayRestApis(gatewayId),
+          gatewayApi.getGatewayMcpServers(gatewayId)
         ]).then(([restRes, mcpRes]) => {
           setApiList([...(restRes.data?.content || []), ...(mcpRes.data?.content || [])]);
           setImportStep(2);
         }).finally(() => setApiLoading(false));
       } else if (gatewayType === 'HIGRESS') {
-        api.get(`/gateways/${gatewayId}/mcp-servers`).then(res => {
+        gatewayApi.getGatewayMcpServers(gatewayId).then((res: any) => {
           setApiList(res.data?.content || []);
           setImportStep(2);
         }).finally(() => setApiLoading(false));

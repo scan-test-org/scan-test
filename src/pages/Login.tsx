@@ -81,12 +81,12 @@ const Login: React.FC = () => {
           </Form.Item>
         </Form>
 
-        <div className="mt-6 text-gray-400 text-sm text-center w-full">
+        {/* <div className="mt-6 text-gray-400 text-sm text-center w-full">
           没有账号？
           <Link to="/register" className="text-indigo-500 hover:underline ml-1">
             注册
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-import { Card, Button, Table, Tag, Space, Modal, Form, Input, Select, Switch } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons'
+import { Card, Button, Table, Tag, Space, Modal, Form, Input, Select, Switch, message } from 'antd'
+import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import type { ApiProduct } from '@/types/api-product';
 
@@ -119,7 +119,7 @@ export function ApiProductPolicy({ apiProduct }: ApiProductPolicyProps) {
             type="link" 
             danger 
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
+            onClick={() => handleDelete(record.id, record.name)}
           >
             删除
           </Button>
@@ -144,8 +144,19 @@ export function ApiProductPolicy({ apiProduct }: ApiProductPolicyProps) {
     setIsModalVisible(true)
   }
 
-  const handleDelete = (id: string) => {
-    setPolicies(policies.filter(policy => policy.id !== id))
+  const handleDelete = (id: string, policyName: string) => {
+    Modal.confirm({
+      title: '确认删除',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要删除策略 "${policyName}" 吗？此操作不可恢复。`,
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk() {
+        setPolicies(policies.filter(policy => policy.id !== id))
+        message.success('策略删除成功')
+      },
+    })
   }
 
   const handleModalOk = () => {

@@ -11,54 +11,8 @@ import { Portal } from '@/types'
 interface PortalOverviewProps {
   portal: Portal
 }
-
-const mockRecentActivity = [
-  {
-    key: '1',
-    action: 'API访问',
-    description: 'Payment API被访问了1250次',
-    time: '2小时前',
-    user: 'developer@example.com'
-  },
-  {
-    key: '2',
-    action: '新用户注册',
-    description: '新开发者注册了账户',
-    time: '4小时前',
-    user: 'newuser@example.com'
-  },
-  {
-    key: '3',
-    action: 'API订阅',
-    description: '用户订阅了User API',
-    time: '6小时前',
-    user: 'existing@example.com'
-  }
-]
-
 export function PortalOverview({ portal }: PortalOverviewProps) {
-  const activityColumns = [
-    {
-      title: '操作',
-      dataIndex: 'action',
-      key: 'action',
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-    },
-    {
-      title: '用户',
-      dataIndex: 'user',
-      key: 'user',
-    },
-    {
-      title: '时间',
-      dataIndex: 'time',
-      key: 'time',
-    },
-  ]
+  
 
   return (
     <div className="p-6 space-y-6">
@@ -234,21 +188,7 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
         </Card>
       )}
 
-      {/* 最近活动 */}
-      <Card title="最近活动">
-        <Table 
-          columns={activityColumns} 
-          dataSource={mockRecentActivity}
-          rowKey="key"
-          pagination={false}
-          size="small"
-        />
-      </Card>
-
-      {/* 描述 */}
-      <Card title="Portal描述">
-        <p className="text-gray-700">{portal.description}</p>
-      </Card>
+     
     </div>
   )
 } 

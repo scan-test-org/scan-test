@@ -1,23 +1,39 @@
 import { Card, Button, Table, Tag, Space, Modal, Form, Input, Select, message } from 'antd'
-import { PlusOutlined, LinkOutlined, DeleteOutlined } from '@ant-design/icons'
+import { PlusOutlined, LinkOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useState, useEffect } from 'react'
 import type { ApiProduct } from '@/types/api-product'
-import api from '@/lib/api'
+import { apiProductApi, gatewayApi } from '@/lib/api'
 
 interface ApiProductLinkApiProps {
   apiProduct: ApiProduct
   handleRefresh: () => void
 }
 
+interface RestAPIItem {
+  apiId: string
+  apiName: string
+}
+
+interface HigressMCPItem {
+  mcpServerName: string
+  fromGatewayType: 'HIGRESS'
+}
+
+interface APIGAIMCPItem {
+  mcpServerName: string
+  fromGatewayType: 'APIG_AI'
+  mcpRouteId: string
+  apiId: string
+}
+
+type ApiItem = RestAPIItem | HigressMCPItem | APIGAIMCPItem;
+
 interface LinkedService {
-  apiId?: string
+  productId: string
   gatewayId: string
-  routes?: {
-    routeId?: string
-    name: string
-  }[]
-  name: string
-  createdAt: string
+  sourceType: 'GATEWAY' | 'NACOS'
+  apigRefConfig?: RestAPIItem | APIGAIMCPItem
+  higressRefConfig?: HigressMCPItem
 }
 
 interface Gateway {
@@ -27,17 +43,10 @@ interface Gateway {
   createAt: string
 }
 
-interface ApiItem {
-  apiId?: string
-  id?: string
-  name: string
-  type: string
-  endpoint?: string
-}
 
 
 export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkApiProps) {
-  const [services, setServices] = useState<LinkedService[]>([])
+  const [linkedService, setLinkedService] = useState<LinkedService | null>(null)
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [form] = Form.useForm()
   const [gateways, setGateways] = useState<Gateway[]>([])
@@ -47,14 +56,35 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
   const [apiLoading, setApiLoading] = useState(false)
 
   useEffect(() => {
+    console.log('123');
+    
     fetchGateways()
   }, [])
+
+  useEffect(() => {
+    if (apiProduct.productId) {
+      fetchLinkedService()
+    }
+  }, [apiProduct.productId])
+
+  const fetchLinkedService = async () => {
+    try {
+      const res = await apiProductApi.getApiProductRef(apiProduct.productId)
+      setLinkedService(res.data || null)
+    } catch (error) {
+      console.error('获取关联服务失败:', error)
+      setLinkedService(null)
+    }
+  }
 
   const fetchGateways = async () => {
     setGatewayLoading(true)
     try {
-      const res = await api.get('/gateways')
-      setGateways(res.data?.content || [])
+      const res = await gatewayApi.getGateways()
+      const result = apiProduct.type === 'REST_API' ?
+       res.data?.content?.filter?.((item: Gateway) => item.gatewayType === 'APIG_API') :
+       res.data?.content?.filter?.((item: Gateway) => item.gatewayType === 'HIGRESS' || item.gatewayType === 'APIG_AI')
+      setGateways(result || [])
     } catch (error) {
       console.error('获取网关列表失败:', error)
     } finally {
@@ -73,18 +103,31 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     setApiLoading(true)
     try {
       if (gateway.gatewayType === 'APIG_API') {
-        // APIG_API类型：同时获取REST API和MCP Server列表
-        const restRes = await api.get(`/gateways/${gatewayId}/rest-apis`)
+        // APIG_API类型：获取REST API列表
+        const restRes = await gatewayApi.getGatewayRestApis(gatewayId)
         const restApis = (restRes.data?.content || []).map((api: any) => ({
-          ...api,
+          apiId: api.apiId,
+          apiName: api.apiName,
           type: 'REST API'
         }))
-        setApiList([...restApis])
-      } else if (gateway.gatewayType === 'HIGRESS' || gateway.gatewayType === 'APIG_AI') {
-        // HIGRESS类型：只获取MCP Server列表
-        const res = await api.get(`/gateways/${gatewayId}/mcp-servers`)
+        setApiList(restApis)
+      } else if (gateway.gatewayType === 'HIGRESS') {
+        // HIGRESS类型：获取MCP Server列表
+        const res = await gatewayApi.getGatewayMcpServers(gatewayId)
         const mcpServers = (res.data?.content || []).map((api: any) => ({
-          ...api,
+          mcpServerName: api.mcpServerName,
+          fromGatewayType: 'HIGRESS' as const,
+          type: 'MCP Server'
+        }))
+        setApiList(mcpServers)
+      } else if (gateway.gatewayType === 'APIG_AI') {
+        // APIG_AI类型：获取MCP Server列表
+        const res = await gatewayApi.getGatewayMcpServers(gatewayId)
+        const mcpServers = (res.data?.content || []).map((api: any) => ({
+          mcpServerName: api.mcpServerName,
+          fromGatewayType: 'APIG_AI' as const,
+          mcpRouteId: api.mcpRouteId,
+          apiId: api.apiId,
           type: 'MCP Server'
         }))
         setApiList(mcpServers)
@@ -96,61 +139,107 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     }
   }
 
-  const columns = [
-    {
-      title: '服务名称',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: '类型',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: string) => <Tag color="blue">{type}</Tag>
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString()
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 300,
-      render: (_: any, record: LinkedService) => (
-        <Space size="middle">
-          <Button type="link" icon={<LinkOutlined />}>
-            查看详情
-          </Button>
+  const renderServiceDetails = () => {
+    if (!linkedService) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <p>暂未关联任何服务</p>
+        </div>
+      )
+    }
+
+    const getServiceName = () => {      
+      if (linkedService.apigRefConfig) {
+        if ('apiName' in linkedService.apigRefConfig && linkedService.apigRefConfig.apiName) {
+          return linkedService.apigRefConfig.apiName
+        }
+        if ('mcpServerName' in linkedService.apigRefConfig) {
+          return linkedService.apigRefConfig.mcpServerName
+        }
+      }
+      if (linkedService.higressRefConfig) {
+        return linkedService.higressRefConfig.mcpServerName
+      }
+      return '未知服务'
+    }
+
+    const getServiceType = () => {
+      if (linkedService.apigRefConfig) {
+        if ('apiName' in linkedService.apigRefConfig) {
+          return 'REST API'
+        }
+        return 'MCP Server (APIG_AI)'
+      }
+      if (linkedService.higressRefConfig) {
+        return 'MCP Server (HIGRESS)'
+      }
+      return '未知类型'
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-medium">{getServiceName()}</h3>
+            <p className="text-sm text-gray-500">{getServiceType()}</p>
+          </div>
           <Button 
-            type="link" 
+            type="primary" 
             danger 
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
+            onClick={handleDelete}
           >
             解除关联
           </Button>
-        </Space>
-      ),
-    },
-  ]
-
-  const handleAdd = () => {
-    setIsModalVisible(true)
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="font-medium">网关ID:</span>
+            <span className="ml-2">{linkedService.gatewayId}</span>
+          </div>
+          <div>
+            <span className="font-medium">来源类型:</span>
+            <span className="ml-2">{linkedService.sourceType}</span>
+          </div>
+          
+        </div>
+      </div>
+    )
   }
 
-  const handleDelete = (id: string) => {
+  const handleAdd = () => {
+    if (linkedService) {
+      Modal.confirm({
+        title: '重新关联',
+        content: '重新关联将删除现有的关联关系，确定继续吗？',
+        onOk: () => {
+          apiProductApi.deleteApiProductRef(apiProduct.productId).then(() => {
+            setLinkedService(null)
+            setIsModalVisible(true)
+          }).catch((err: any) => {
+            message.error('删除现有关联失败')
+          })
+        }
+      })
+    } else {
+      setIsModalVisible(true)
+    }
+  }
+
+  const handleDelete = () => {
     Modal.confirm({
-      title: '解除关联',
-      content: '确定要解除关联吗？',
+      title: '确认解除关联',
+      icon: <ExclamationCircleOutlined />,
+      content: '确定要解除服务关联吗？此操作不可恢复。',
+      okText: '确认解除',
+      okType: 'danger',
+      cancelText: '取消',
       onOk: () => {
-        api.delete(`/products/${apiProduct.productId}/ref}`, {
-          // product
-        }).then(res => {
+        apiProductApi.deleteApiProductRef(apiProduct.productId).then((res: any) => {
           message.success('解除关联成功')
-          handleRefresh()
-        }).catch(err => {
+          fetchLinkedService()
+        }).catch((err: any) => {
           message.error('解除关联失败')
         })
       }
@@ -159,19 +248,33 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
 
   const handleModalOk = () => {
     form.validateFields().then((values) => {
+      const { sourceType, gatewayId, apiId } = values
+      const selectedApi = apiList.find(item => {
+        if ('apiId' in item) {
+          return item.apiId === apiId
+        } else if ('mcpServerName' in item) {
+          return item.mcpServerName === apiId
+        }
+        return false
+      })
+      
       const newService: LinkedService = {
-        
+        gatewayId,
+        sourceType,
+        productId: apiProduct.productId,
+        apigRefConfig: selectedApi && 'apiId' in selectedApi ? selectedApi as RestAPIItem | APIGAIMCPItem : undefined,
+        higressRefConfig: selectedApi && 'mcpServerName' in selectedApi && 'fromGatewayType' in selectedApi && selectedApi.fromGatewayType === 'HIGRESS' ? selectedApi as HigressMCPItem : undefined,
       }
-      api.post(`/products/${apiProduct.productId}/ref`, newService).then(res => {
+      
+      apiProductApi.createApiProductRef(apiProduct.productId, newService).then((res: any) => {
         message.success('关联成功')
         setIsModalVisible(false)
-        handleRefresh()
-      }).catch(err => {
-        message.error('关联失败')
-      }).finally(() => {
+        fetchLinkedService()
         form.resetFields()
         setSelectedGateway(null)
         setApiList([])
+      }).catch((err: any) => {
+        message.error('关联失败')
       })
     })
   }
@@ -187,25 +290,25 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold mb-2">关联API</h1>
-          <p className="text-gray-600">管理与此API产品关联的网关服务</p>
+          <h1 className="text-2xl font-bold mb-2">关联服务</h1>
+          <p className="text-gray-600">
+            {apiProduct.type === 'REST_API' 
+              ? '关联REST API服务到此产品' 
+              : '关联MCP Server服务到此产品'
+            }
+          </p>
         </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          关联服务
+          {linkedService ? '重新关联' : '关联服务'}
         </Button>
       </div>
 
       <Card>
-        <Table 
-          columns={columns} 
-          dataSource={services}
-          rowKey="id"
-          pagination={false}
-        />
+        {renderServiceDetails()}
       </Card>
 
       <Modal
-        title="关联新服务"
+        title={linkedService ? '重新关联服务' : '关联新服务'}
         open={isModalVisible}
         onOk={handleModalOk}
         onCancel={handleModalCancel}
@@ -214,6 +317,18 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         width={600}
       >
         <Form form={form} layout="vertical">
+          <Form.Item
+            name="sourceType"
+            label="来源类型"
+            initialValue="GATEWAY"
+            rules={[{ required: true, message: '请选择来源类型' }]}
+          >
+            <Select placeholder="请选择来源类型">
+              <Select.Option value="GATEWAY">网关</Select.Option>
+              <Select.Option value="NACOS">Nacos</Select.Option>
+            </Select>
+          </Form.Item>
+
           <Form.Item
             name="gatewayId"
             label="网关实例"
@@ -249,28 +364,28 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
           {selectedGateway && (
             <Form.Item
               name="apiId"
-              label="选择API"
-              rules={[{ required: true, message: '请选择API' }]}
+              label={apiProduct.type === 'REST_API' ? '选择REST API' : '选择MCP Server'}
+              rules={[{ required: true, message: apiProduct.type === 'REST_API' ? '请选择REST API' : '请选择MCP Server' }]}
             >
-              <Select 
-                placeholder="请选择API" 
-                loading={apiLoading}
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-                }
-                optionLabelProp="label"
-              >
-                {apiList.map(api => (
+                              <Select 
+                  placeholder={apiProduct.type === 'REST_API' ? '请选择REST API' : '请选择MCP Server'} 
+                  loading={apiLoading}
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                  }
+                  optionLabelProp="label"
+                >
+                {apiList.map((api: any) => (
                   <Select.Option 
-                    key={api.apiId || api.id} 
-                    value={api.apiId || api.id}
-                    label={api.name}
+                    key={api.apiId || api.mcpServerName} 
+                    value={api.apiId || api.mcpServerName}
+                    label={api.apiName || api.mcpServerName}
                   >
                     <div>
-                      <div className="font-medium">{api.name}</div>
+                      <div className="font-medium">{api.apiName || api.mcpServerName}</div>
                       <div className="text-sm text-gray-500">
-                        {api.type} - {api.apiId || api.id}
+                        {api.type} - {api.apiId || api.mcpServerName}
                       </div>
                     </div>
                   </Select.Option>

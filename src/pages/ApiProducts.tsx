@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 import { Badge, Button, Card, Col, Dropdown, Modal, Row, Select, Statistic, Form, Input, message } from 'antd';
 import type { ApiProduct } from '@/types/api-product';
-import { ApiOutlined, ClockCircleOutlined, MoreOutlined, PlusOutlined } from '@ant-design/icons';
-import api from '@/lib/api.ts';
+import { ApiOutlined, ClockCircleOutlined, MoreOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { apiProductApi } from '@/lib/api';
 import { getStatusBadgeVariant } from '@/lib/utils';
 
 
@@ -29,11 +29,21 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh }: {
 
 
 
-  const handleDelete = useCallback((productId: string, e?: React.MouseEvent | any) => {
+  const handleDelete = useCallback((productId: string, productName: string, e?: React.MouseEvent | any) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    api.delete(`/products/${productId}`).then(res => {
-      message.success('API Product 删除成功');
-      handleRefresh();
+    Modal.confirm({
+      title: '确认删除',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要删除API产品 "${productName}" 吗？此操作不可恢复。`,
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk() {
+        apiProductApi.deleteApiProduct(productId).then((res: any) => {
+          message.success('API Product 删除成功');
+          handleRefresh();
+        });
+      },
     });
   }, [handleRefresh]);
 
@@ -49,7 +59,7 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh }: {
       key: 'delete',
       label: '删除',
       danger: true,
-      onClick: (info: any) => handleDelete(product.productId, info?.domEvent),
+      onClick: (info: any) => handleDelete(product.productId, product.name, info?.domEvent),
     },
   ]
 
@@ -67,7 +77,7 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh }: {
           <div>
             <h3 className="text-lg font-semibold">{product.name}</h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <Badge color="green" text={product.category} />
+              {product.category && <Badge color="green" text={product.category} />}
               <Badge color={getTypeBadgeVariant(product.type)} text={product.type === "REST_API" ? "REST API" : "MCP Server"} />
               <Badge color={getStatusBadgeVariant(product.status)} text={product.status === "PENDING" ? "待关联" : product.status === "READY" ? "已关联" : "已发布"} />
             </div>
@@ -137,7 +147,7 @@ export default function ApiProducts() {
   }, []);
 
   const fetchApiProducts = useCallback(() => {
-    api.get('/products').then(res => {
+    apiProductApi.getApiProducts().then((res: any) => {
       setApiProducts(res.data.content);
     });
   }, []);
@@ -183,7 +193,7 @@ export default function ApiProducts() {
   const handleCreate = async () => {
     try {
       const values = await form.validateFields();
-      api.post('/products', values).then(res => {
+      apiProductApi.createApiProduct(values).then((res: any) => {
         form.resetFields();
         message.success('API Product 创建成功');
         fetchApiProducts();
