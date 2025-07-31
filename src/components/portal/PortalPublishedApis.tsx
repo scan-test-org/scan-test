@@ -1,118 +1,122 @@
-import { Card, Table, Badge, Button, Space, Tag } from 'antd'
-import { EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
-import { Portal } from '@/types'
+import { useState, useEffect } from 'react'
+import { Card, Table, Modal, Form, Button, Space, Select, message } from 'antd'
+import { EyeOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { Portal, ApiProduct } from '@/types'
+import { apiProductApi } from '@/lib/api'
+import { useNavigate } from 'react-router-dom'
 
-interface PortalPublishedApisProps {
+interface PortalApiProductsProps {
   portal: Portal
 }
 
-interface PublishedApi {
-  id: string
-  name: string
-  version: string
-  status: string
-  subscribers: number
-  requests: number
-  publishedAt: string
-  category: string
-}
+export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
+  const navigate = useNavigate()
+  const [apiProducts, setApiProducts] = useState<ApiProduct[]>([])
+  const [apiProductsOptions, setApiProductsOptions] = useState<ApiProduct[]>([])
+  const [isModalVisible, setIsModalVisible] = useState(false)
 
-const mockPublishedApis: PublishedApi[] = [
-  {
-    id: "1",
-    name: "Payment API",
-    version: "v1.2.0",
-    status: "published",
-    subscribers: 25,
-    requests: 15420,
-    publishedAt: "2025-01-01T10:00:00Z",
-    category: "Finance"
-  },
-  {
-    id: "2",
-    name: "User API",
-    version: "v1.1.0",
-    status: "published",
-    subscribers: 18,
-    requests: 8765,
-    publishedAt: "2025-01-02T11:00:00Z",
-    category: "Authentication"
-  },
-  {
-    id: "3",
-    name: "Notification API",
-    version: "v1.0.0",
-    status: "draft",
-    subscribers: 0,
-    requests: 0,
-    publishedAt: "2025-01-03T12:00:00Z",
-    category: "Communication"
+  const [form] = Form.useForm()
+  useEffect(() => {
+    if (portal.portalId) {
+      fetchApiProducts()
+    }
+  }, [portal.portalId])
+
+  const fetchApiProducts = () => {
+    apiProductApi.getApiProducts({
+      portalId: portal.portalId
+    }).then((res) => {
+      setApiProducts(res.data.content)
+    })
   }
-]
 
-export function PortalPublishedApis({ portal }: PortalPublishedApisProps) {
+  useEffect(() => {
+    if (isModalVisible) {
+      apiProductApi.getApiProducts({}).then((res) => {
+        // 过滤掉已发布在该门户里的api
+        setApiProductsOptions(res.data.content.filter((api: ApiProduct) => !apiProducts.some((a: ApiProduct) => a.productId === api.productId)))
+      })
+    }
+  }, [isModalVisible, apiProducts])
+
+
   const columns = [
     {
-      title: 'API名称',
+      title: '名称',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string, record: PublishedApi) => (
-        <div>
-          <div className="font-medium">{name}</div>
-          <div className="text-sm text-gray-500">{record.category}</div>
-        </div>
-      ),
     },
     {
-      title: '版本',
-      dataIndex: 'version',
-      key: 'version',
-      render: (version: string) => <Tag color="blue">{version}</Tag>
+      title: 'ID',
+      dataIndex: 'productId',
+      key: 'productId',
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Badge status={status === 'published' ? 'success' : 'default'} text={status === 'published' ? '已发布' : '草稿'} />
-      )
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
     },
     {
-      title: '订阅者',
-      dataIndex: 'subscribers',
-      key: 'subscribers',
-      render: (subscribers: number) => subscribers.toLocaleString()
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
     },
     {
-      title: '请求数',
-      dataIndex: 'requests',
-      key: 'requests',
-      render: (requests: number) => requests.toLocaleString()
-    },
-    {
-      title: '发布时间',
-      dataIndex: 'publishedAt',
-      key: 'publishedAt',
-      render: (date: string) => new Date(date).toLocaleDateString()
+      title: '分类',
+      dataIndex: 'category',
+      key: 'category',
     },
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: PublishedApi) => (
+      render: (_: any, record: ApiProduct) => (
         <Space size="middle">
-          <Button type="link" icon={<EyeOutlined />}>
+          <Button
+            onClick={() => {
+              navigate(`/api-products/detail?productId=${record.productId}`)
+            }}
+            type="link" icon={<EyeOutlined />}>
             查看
           </Button>
-          <Button type="link" icon={<EditOutlined />}>
-            编辑
-          </Button>
-          <Button type="link" danger icon={<DeleteOutlined />}>
+          
+          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.productId, record.name)}>
             移除
           </Button>
         </Space>
       ),
     },
   ]
+
+  const handleDelete = (productId: string, productName: string) => {
+    Modal.confirm({
+      title: '确认移除',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要从门户中移除API产品 "${productName}" 吗？此操作不可恢复。`,
+      okText: '确认移除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk() {
+        apiProductApi.cancelPublishToPortal(productId, portal.portalId).then((res) => {
+          message.success('移除成功')
+          fetchApiProducts()
+          setIsModalVisible(false)
+        }).catch((error) => {
+          message.error('移除失败')
+        })
+      },
+    })
+  }
+
+  const handlePublish = async () => {
+    const values = await form.validateFields()
+    apiProductApi.publishToPortal(values.productId, portal.portalId).then((res) => {
+      message.success('发布成功')
+      fetchApiProducts()
+      setIsModalVisible(false)
+    }).catch((error) => {
+      message.error('发布失败')
+    })
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -121,7 +125,7 @@ export function PortalPublishedApis({ portal }: PortalPublishedApisProps) {
           <h1 className="text-2xl font-bold mb-2">API管理</h1>
           <p className="text-gray-600">管理在此Portal中发布的API</p>
         </div>
-        <Button type="primary">
+        <Button type="primary" onClick={() => setIsModalVisible(true)}>
           发布新API
         </Button>
       </div>
@@ -129,28 +133,39 @@ export function PortalPublishedApis({ portal }: PortalPublishedApisProps) {
       <Card>
         <Table 
           columns={columns} 
-          dataSource={mockPublishedApis}
+          dataSource={apiProducts}
           rowKey="id"
           pagination={false}
         />
       </Card>
 
-      {/* <Card title="发布设置">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span>自动发布</span>
-            <Badge status="success" text="启用" />
-          </div>
-          <div className="flex justify-between items-center">
-            <span>版本控制</span>
-            <Badge status="success" text="启用" />
-          </div>
-          <div className="flex justify-between items-center">
-            <span>访问统计</span>
-            <Badge status="success" text="启用" />
-          </div>
-        </div>
-      </Card> */}
+      <Modal
+        title="发布新API"
+        open={isModalVisible}
+        onOk={handlePublish}
+        onCancel={() => setIsModalVisible(false)}
+      >
+        <Form
+          layout="vertical"
+          form={form}
+          onFinish={handlePublish}
+        >
+          {/* 选择API */}
+          <Form.Item
+            label="API ID"
+            name="productId"
+            rules={[{ required: true, message: '请输入API ID' }]}
+          >
+            <Select
+              options={apiProductsOptions.map((api) => ({
+                label: api.name,
+                value: api.productId
+              }))}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
     </div>
   )
 } 

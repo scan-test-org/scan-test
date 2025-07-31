@@ -44,3 +44,12 @@ export interface Portal {
   portalUiConfig: PortalUiConfig;
   portalDomainConfig: PortalDomainConfig[];
 } 
+
+export interface Developer {
+  portalId: string;
+  developerId: string;
+  username: string;
+  status: string;
+  avatarUrl?: string;
+  createAt: string;
+}

@@ -10,7 +10,7 @@ import { ApiProductLinkApi } from '@/components/api-product/ApiProductLinkApi'
 import { ApiProductApiDocs } from '@/components/api-product/ApiProductApiDocs'
 import { ApiProductUsageGuide } from '@/components/api-product/ApiProductUsageGuide'
 import { ApiProductPortal } from '@/components/api-product/ApiProductPortal'
-import api from '@/lib/api.ts';
+import { apiProductApi } from '@/lib/api';
 import type { ApiProduct } from '@/types/api-product';
 
 
@@ -44,21 +44,39 @@ const menuItems = [
 
 export default function ApiProductDetail() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const [activeTab, setActiveTab] = useState("overview")
+  const [searchParams, setSearchParams] = useSearchParams()
   const [apiProduct, setApiProduct] = useState<ApiProduct>({} as ApiProduct)
+  
+  // 从URL query参数获取当前tab，默认为overview
+  const currentTab = searchParams.get('tab') || 'overview'
+  // 验证tab值是否有效，如果无效则使用默认值
+  const validTab = menuItems.some(item => item.key === currentTab) ? currentTab : 'overview'
+  const [activeTab, setActiveTab] = useState(validTab)
 
   useEffect(() => {
     const productId = searchParams.get('productId')
     if (productId) {
-      api.get(`/products/${productId}`).then(res => {
+      apiProductApi.getApiProductDetail(productId).then((res: any) => {
         setApiProduct(res.data)
       })
     }
   }, [])
 
+  // 同步URL参数和activeTab状态
+  useEffect(() => {
+    setActiveTab(validTab)
+  }, [validTab, searchParams])
+
   const handleBackToApiProducts = () => {
     navigate('/api-products')
+  }
+
+  const handleTabChange = (tabKey: string) => {
+    setActiveTab(tabKey)
+    // 更新URL query参数
+    const newSearchParams = new URLSearchParams(searchParams)
+    newSearchParams.set('tab', tabKey)
+    setSearchParams(newSearchParams)
   }
 
   const renderContent = () => {
@@ -141,7 +159,7 @@ export default function ApiProductDetail() {
           {menuItems.map((item) => (
             <button
               key={item.key}
-              onClick={() => setActiveTab(item.key)}
+              onClick={() => handleTabChange(item.key)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
                 activeTab === item.key
                   ? "bg-blue-500 text-white"
