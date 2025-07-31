@@ -14,7 +14,7 @@ function APIsPage() {
   const [products, setProducts] = useState<ApiProduct[]>([]);
 
   useEffect(() => {
-    api.get('/products').then((res) => {
+    api.get('/products?type=REST_API&page=0&size=100').then((res) => {
       setProducts(res.data?.content || []);
     });
   }, []);

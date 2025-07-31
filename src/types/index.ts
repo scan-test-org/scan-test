@@ -82,6 +82,14 @@ export interface PaginatedResponse<T> {
 
 // MCP 配置解析后的结构
 export interface McpServerConfig {
+  mcpRouteId?: string;
+  mcpServerName?: string;
+  fromType?: string;
+  fromGatewayType?: string;
+  domains?: Array<{
+    domain: string;
+    protocol: string;
+  }>;
   server: {
     name: string;
     config: Record<string, unknown>;
