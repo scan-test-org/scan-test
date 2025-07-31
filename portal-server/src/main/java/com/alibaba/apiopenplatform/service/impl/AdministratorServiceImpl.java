@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.HashMap;
+import com.alibaba.apiopenplatform.service.DeveloperService;
 
 /**
  * 管理员服务实现类，负责管理员的注册、登录、查询等核心业务逻辑
@@ -29,6 +30,7 @@ import java.util.HashMap;
 public class AdministratorServiceImpl implements AdministratorService {
     private final AdministratorRepository administratorRepository;
     private final JwtService jwtService;
+    private final DeveloperService developerService;
 
     @Override
     public Optional<Administrator> findByUsername(String username) {
@@ -79,6 +81,12 @@ public class AdministratorServiceImpl implements AdministratorService {
         dto.setUsername(admin.getUsername());
         dto.setUserType("admin");
         return Optional.of(dto);
+    }
+
+    @Override
+    public void deleteDeveloper(String developerId) {
+        // 调用开发者服务删除开发者账号
+        developerService.deleteDeveloperAccount(developerId);
     }
 
     @Override

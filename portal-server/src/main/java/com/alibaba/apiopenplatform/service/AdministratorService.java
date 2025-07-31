@@ -17,9 +17,19 @@ public interface AdministratorService {
     Optional<Administrator> findByUsername(String username);
 
     /**
-     * 根据adminId查找管理员
+     * 根据管理员ID查询管理员
+     *
+     * @param adminId
+     * @return
      */
     Optional<Administrator> findByAdminId(String adminId);
+
+    /**
+     * 管理员删除开发者
+     *
+     * @param developerId 开发者ID
+     */
+    void deleteDeveloper(String developerId);
 
     /**
      * 创建管理员

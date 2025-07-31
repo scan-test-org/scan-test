@@ -128,4 +128,11 @@ public class AdministratorController {
         result.put("updatedAt", admin.getUpdatedAt());
         return result;
     }
+
+    @Operation(summary = "管理员删除开发者", description = "管理员删除指定开发者账号")
+    @DeleteMapping("/{developerId}")
+    public String deleteDeveloper(@PathVariable("developerId") String developerId) {
+        administratorService.deleteDeveloper(developerId);
+        return "删除开发者成功";
+    }
 } 
