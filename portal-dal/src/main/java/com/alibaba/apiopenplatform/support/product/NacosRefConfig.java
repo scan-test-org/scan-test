@@ -8,19 +8,10 @@ import lombok.Data;
  */
 @Data
 public class NacosRefConfig {
-    
-    /**
-     * MCP Server 名称
-     */
+
     private String mcpServerName;
-    
-    /**
-     * 命名空间ID
-     */
+
     private String namespaceId;
-    
-    /**
-     * 版本号
-     */
+
     private String version;
 } 
