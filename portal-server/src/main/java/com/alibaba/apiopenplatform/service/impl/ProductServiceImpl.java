@@ -1,6 +1,7 @@
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -343,7 +344,11 @@ public class ProductServiceImpl implements ProductService {
                 .ifPresent(productRef -> {
                     product.setEnabled(productRef.getEnabled());
                     product.setApiSpec(productRef.getApiSpec());
-                    product.setMcpSpec(productRef.getMcpSpec());
+
+                    // Spec
+                    if (StrUtil.isNotBlank(productRef.getMcpSpec())) {
+                        product.setMcpSpec(JSONUtil.toBean(productRef.getMcpSpec(), MCPServerResult.class));
+                    }
                     product.setStatus(ProductStatus.READY);
                 });
 

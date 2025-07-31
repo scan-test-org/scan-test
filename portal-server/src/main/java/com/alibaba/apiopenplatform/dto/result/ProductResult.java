@@ -32,7 +32,7 @@ public class ProductResult implements OutputConverter<ProductResult, Product> {
 
     private String apiSpec;
 
-    private String mcpSpec;
+    private MCPServerResult mcpSpec;
 
     private Boolean enabled;
 }
