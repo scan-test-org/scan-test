@@ -147,7 +147,6 @@ public class DeveloperOauth2Controller {
         String provider = null;
         String tokenParam = null;
         String mode = null;
-        String frontendRedirectUrl = null;
         String decodedState = URLDecoder.decode(state, "UTF-8");
         String[] stateParts = decodedState.split("\\|");
         if (decodedState.startsWith("BINDING|")) {
@@ -181,12 +180,7 @@ public class DeveloperOauth2Controller {
             return;
         }
         
-        // 从数据库配置中获取frontendRedirectUrl
-        frontendRedirectUrl = portalSetting.getFrontendRedirectUrl();
-        if (frontendRedirectUrl == null || frontendRedirectUrl.isEmpty()) {
-            // 如果数据库没有配置，使用默认值
-            frontendRedirectUrl = "/";
-        }
+
         java.util.List<PortalSettingConfig> settings = java.util.Arrays.asList(portalSetting);
         OidcConfig config = null;
         for (PortalSettingConfig setting : settings) {
@@ -204,7 +198,7 @@ public class DeveloperOauth2Controller {
         }
         if (config == null || !config.isEnabled()) {
             log.error("[OIDC配置未启用] provider={}, configs={}", provider, settings);
-            response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("OIDC配置未启用", "UTF-8"));
+            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("OIDC配置未启用", "UTF-8"));
             return;
         }
         // --- 获取三方用户信息 ---
@@ -223,13 +217,13 @@ public class DeveloperOauth2Controller {
             displayName = nameObj != null ? String.valueOf(nameObj) : null;
             rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
         } catch (Exception e) {
-            response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("获取三方用户信息失败", "UTF-8"));
+            response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("获取三方用户信息失败", "UTF-8"));
             return;
         }
         if ("BINDING".equals(mode)) {
             Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(provider, providerSubject);
             if (extOpt.isPresent()) {
-                response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("该外部账号已被其他用户绑定", "UTF-8"));
+                response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("该外部账号已被其他用户绑定", "UTF-8"));
                 return;
             }
             String userId = null;
@@ -238,17 +232,17 @@ public class DeveloperOauth2Controller {
                     Map<String, Object> claims = jwtService.parseAndValidateClaims(tokenParam);
                     userId = (String) claims.get("userId");
                 } catch (Exception e) {
-                    response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("token无效或已过期", "UTF-8"));
+                    response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("token无效或已过期", "UTF-8"));
                     return;
                 }
             }
             if (userId == null || userId.isEmpty()) {
-                response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("未登录，无法绑定", "UTF-8"));
+                response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("未登录，无法绑定", "UTF-8"));
                 return;
             }
             Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
             if (!devOpt.isPresent()) {
-                response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("用户不存在", "UTF-8"));
+                response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("用户不存在", "UTF-8"));
                 return;
             }
             developerService.bindExternalIdentity(userId, provider, providerSubject, displayName, rawInfoJson, portalId);
@@ -263,7 +257,7 @@ public class DeveloperOauth2Controller {
                 response.getWriter().write("{\"code\":\"SUCCESS\",\"data\":" + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(loginResult.get()) + "}");
                 return;
             } else {
-                response.sendRedirect(frontendRedirectUrl + "?login=fail&msg=" + java.net.URLEncoder.encode("三方登录失败", "UTF-8"));
+                response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("三方登录失败", "UTF-8"));
                 return;
             }
         }

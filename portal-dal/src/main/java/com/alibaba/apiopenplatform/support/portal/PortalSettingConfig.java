@@ -20,5 +20,5 @@ public class PortalSettingConfig {
 
     private Boolean autoApproveSubscriptions = false;
 
-    private String frontendRedirectUrl;
+
 }
