@@ -5,8 +5,8 @@ const baseURL = 'http://47.117.149.200:8080'
 const localBaseURL = 'http://localhost:8080'
 
 const api: AxiosInstance = axios.create({
-  // baseURL: (import.meta as any).env.VITE_API_BASE_URL || localBaseURL,
-  baseURL: localBaseURL,
+  baseURL: (import.meta as any).env.VITE_API_BASE_URL || localBaseURL,
+  // baseURL: localBaseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

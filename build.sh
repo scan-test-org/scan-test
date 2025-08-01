@@ -10,7 +10,7 @@ npm i
 npm run build
 
 # 构建镜像
-docker buildx build --platform linux/amd64 -t registry.cn-shanghai.aliyuncs.com/daofeng/api-portal-admin:latest .
+docker build -t registry.cn-shanghai.aliyuncs.com/daofeng/api-portal-admin:latest .
 
 # 推送镜像
 docker push registry.cn-shanghai.aliyuncs.com/daofeng/api-portal-admin:latest
