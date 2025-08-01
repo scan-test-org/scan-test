@@ -31,16 +31,4 @@ public class CreateProductParam implements InputConverter<Product> {
     private String icon;
 
     private String category;
-
-    // 当type为MCP_SERVER时，用于指定数据源类型
-    private SourceType sourceType;
-
-    // 当type为MCP_SERVER且sourceType为GATEWAY时，用于指定Gateway ID
-    private String gatewayId;
-
-    // 当type为MCP_SERVER且sourceType为NACOS时，用于指定Nacos ID
-    private String nacosId;
-
-    // 当type为MCP_SERVER时，用于指定MCP Server名称
-    private String mcpServerName;
 }

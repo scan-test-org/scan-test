@@ -14,6 +14,8 @@ import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DomainType;
+import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
+import com.alibaba.apiopenplatform.support.portal.PortalUiConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,6 +48,10 @@ public class PortalServiceImpl implements PortalService {
         Portal portal = param.convertTo();
         portal.setPortalId(portalId);
         portal.setAdminId("admin");
+
+        // Setting & Ui
+        portal.setPortalSettingConfig(new PortalSettingConfig());
+        portal.setPortalUiConfig(new PortalUiConfig());
 
         // Domain
         PortalDomain portalDomain = new PortalDomain();

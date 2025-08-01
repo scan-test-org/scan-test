@@ -242,64 +242,6 @@ public class ProductServiceImpl implements ProductService {
         productRefRepository.delete(productRef);
     }
 
-    private void fullFillAPISpec(ProductResult product) {
-//        productRefRepository.findFirstByProductId(product.getProductId())
-//                .map(productRef -> {
-//                    try {
-//
-//                        // 来源于网关
-//                        if (productRef.getSourceType().isGateway()) {
-//                            GatewayResult gateway = gatewayService.getGateway(productRef.getGatewayId());
-//                            ProductType type = product.getType();
-//
-//                            APIGRefConfig apigRefConfig = productRef.getApigRefConfig();
-//
-//                            if (type == ProductType.REST_API) {
-//                                String apiSpec = gatewayService.fetchAPISpec(productRef.getGatewayId(), , apigRefConfig.getApiId());
-//                                product.setApiSpec(apiSpec);
-//                            }
-//                        }
-//
-//
-//                        APIGRefConfig apigRefConfig = productRef.getApigRefConfig();
-//
-//                        ProductType type = product.getType();
-//                        if (type == ProductType.REST_API) {
-//                            String apiSpec = gatewayService.fetchAPISpec(productRef.getGatewayId(), , apigRefConfig.getApiId());
-//                            product.setApiSpec(apiSpec);
-//                        } else if (type == ProductType.MCP_SERVER) {
-//                            String mcpSpec;
-//                            if (productRef.getSourceType() == SourceType.GATEWAY) {
-//                                mcpSpec = gatewayService.fetchMcpSpec(productRef.getGatewayId(), apigRefConfig.getApiId(), apigRefConfig.getMcpRouteId(), routeConfig.getName());
-//                            } else if (productRef.getSourceType() == SourceType.NACOS) {
-//                                // 从Nacos获取MCP Server详情
-//                                // 对于Nacos，apiId字段存储的是mcpServerName
-//                                String mcpServerName = productRef.getApiId();
-//                                String namespaceId = "public"; // 暂时使用默认namespace
-//                                String version = null; // 暂时使用最新版本
-//
-//                                McpMarketDetailParam detailParam = nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
-//                                // 将详情转换为JSON字符串
-//                                mcpSpec = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(detailParam);
-//                            } else {
-//                                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "不支持的数据源类型: " + productRef.getSourceType());
-//                            }
-//                            product.setMcpSpec(mcpSpec);
-//                        }
-//                        product.setStatus(ProductStatus.ENABLE);
-//                    } catch (Exception e) {
-//                        log.error("Failed to fetch API spec for product: {}, sourceType: {}, apiId: {}",
-//                                product.getProductId(), productRef.getSourceType(), productRef.getApiId(), e);
-//                        product.setStatus(ProductStatus.DISABLE);
-//                    }
-//                    return product;
-//                })
-//                .orElseGet(() -> {
-//                    product.setStatus(ProductStatus.PENDING);
-//                    return product;
-//                });
-    }
-
     private void syncSpec(Product product, ProductRef productRef) {
         SourceType sourceType = productRef.getSourceType();
 
