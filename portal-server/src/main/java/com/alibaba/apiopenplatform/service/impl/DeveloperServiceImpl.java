@@ -2,8 +2,10 @@ package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.EnumUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
+import com.alibaba.apiopenplatform.dto.params.developer.QueryDeveloperParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -32,9 +35,8 @@ import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import javax.persistence.criteria.Predicate;
+import java.util.*;
 
 /**
  * 开发者服务实现类，负责开发者的注册、登录、查询等核心业务逻辑
@@ -70,11 +72,11 @@ public class DeveloperServiceImpl implements DeveloperService {
         }
         Developer developer = param.convertTo();
         developer.setDeveloperId(generateDeveloperId());
-        
+
         // 从当前请求上下文中获取portalId
         String portalId = contextHolder.getPortal();
         developer.setPortalId(portalId);
-        
+
         developer.setAvatarUrl(param.getAvatarUrl());
         developer.setPasswordHash(PasswordHasher.hash(param.getPassword()));
         // 根据门户配置决定是否自动审批
@@ -212,7 +214,7 @@ public class DeveloperServiceImpl implements DeveloperService {
             log.error("[bindExternalIdentity] PortalSetting不存在，portalId={}", portalId);
             throw new BusinessException(ErrorCode.PORTAL_SETTING_NOT_FOUND);
         }
-        
+
         // 查库校验 providerName 是否为有效 provider
         boolean valid = false;
         if (portalSetting.getOidcConfigs() != null) {
@@ -274,7 +276,7 @@ public class DeveloperServiceImpl implements DeveloperService {
             log.error("[unbindExternalIdentity] PortalSetting不存在，portalId={}", portalId);
             throw new BusinessException(ErrorCode.PORTAL_SETTING_NOT_FOUND);
         }
-        
+
         // 新增：查库校验 providerName 是否为有效 provider
         boolean valid = false;
         if (portalSetting.getOidcConfigs() != null) {
@@ -330,14 +332,16 @@ public class DeveloperServiceImpl implements DeveloperService {
     }
 
     @Override
-    public PageResult<DeveloperResult> listDevelopers(String portalId, Pageable pageable) {
-        Page<Developer> developers;
-        if (portalId == null) {
-            developers = developerRepository.findAll(pageable); // 查全部
-        } else {
-            developers = developerRepository.findByPortalId(portalId, pageable); // 查指定portal
+    public PageResult<DeveloperResult> listDevelopers(QueryDeveloperParam param, Pageable pageable) {
+        if (contextHolder.isDeveloper()) {
+            param.setPortalId(contextHolder.getPortal());
         }
-        return new PageResult<DeveloperResult>().convertFrom(developers, developer -> new DeveloperResult().convertFrom(developer));
+        Page<Developer> developers = developerRepository.findAll(buildSpecification(param), pageable);
+
+        return new PageResult<DeveloperResult>().convertFrom(
+                developers,
+                developer -> new DeveloperResult().convertFrom(developer)
+        );
     }
 
     @Override
@@ -388,7 +392,7 @@ public class DeveloperServiceImpl implements DeveloperService {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", developerId);
         }
         Developer developer = devOpt.get();
-        
+
         // 检查用户名唯一性（如果修改了用户名）
         if (username != null && !username.equals(developer.getUsername())) {
             if (developerRepository.findByUsername(username).isPresent()) {
@@ -396,18 +400,39 @@ public class DeveloperServiceImpl implements DeveloperService {
             }
             developer.setUsername(username);
         }
-        
+
         // 更新邮箱
         if (email != null) {
             developer.setEmail(email);
         }
-        
+
         // 更新头像
         if (avatarUrl != null) {
             developer.setAvatarUrl(avatarUrl);
         }
-        
+
         developerRepository.save(developer);
         return true;
+    }
+
+    private Specification<Developer> buildSpecification(QueryDeveloperParam param) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (StrUtil.isNotBlank(param.getPortalId())) {
+                predicates.add(cb.equal(root.get("portalId"), param.getPortalId()));
+            }
+
+            if (StrUtil.isNotBlank(param.getUsername())) {
+                String likePattern = "%" + param.getUsername() + "%";
+                predicates.add(cb.like(root.get("username"), likePattern));
+            }
+
+            if (param.getStatus() != null) {
+                predicates.add(cb.equal(root.get("status"), param.getStatus()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 } 

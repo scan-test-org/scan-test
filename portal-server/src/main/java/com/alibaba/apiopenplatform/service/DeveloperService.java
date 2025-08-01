@@ -1,6 +1,7 @@
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
+import com.alibaba.apiopenplatform.dto.params.developer.QueryDeveloperParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
@@ -87,12 +88,11 @@ public interface DeveloperService {
     /**
      * 查询门户下的开发者列表
      *
-     * @param portalId
+     * @param param
      * @param pageable
      * @return
      */
-    PageResult<DeveloperResult> listDevelopers(String portalId, Pageable pageable);
-
+    PageResult<DeveloperResult> listDevelopers(QueryDeveloperParam param, Pageable pageable);
 
     /**
      * 设置开发者状态
