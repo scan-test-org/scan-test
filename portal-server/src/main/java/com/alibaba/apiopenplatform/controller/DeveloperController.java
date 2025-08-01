@@ -57,13 +57,13 @@ public class DeveloperController {
     public Response<AuthResponseResult> register(@Valid @RequestBody DeveloperCreateParam param, HttpServletResponse response) {
         // 注册开发者
         Developer developer = developerService.createDeveloper(param);
-        
+
         // 根据门户配置决定是否自动登录
         String portalId = contextHolder.getPortal();
         PortalResult portal = portalService.getPortal(portalId);
         boolean autoApprove = portal.getPortalSettingConfig() != null
                 && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveDevelopers());
-        
+
         if (autoApprove) {
             // 如果自动审批，则自动登录
             AuthResponseResult authResult = developerService.generateAuthResult(developer);
@@ -78,7 +78,7 @@ public class DeveloperController {
     @PostMapping("/login")
     public Response<AuthResponseResult> login(@Valid @RequestBody DeveloperLoginParam param) {
         AuthResponseResult authResult = developerService.loginWithPassword(param.getUsername(), param.getPassword());
-        
+
         // 返回token到响应体，前端保存到localStorage
         return Response.ok(authResult);
     }
@@ -118,18 +118,8 @@ public class DeveloperController {
 
     @Operation(summary = "获取门户的开发者列表", description = "管理员功能：获取当前门户下所有开发者的分页列表")
     @GetMapping
-    public PageResult<DeveloperResult> listDevelopers(@PageableDefault(sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        String portalId = contextHolder.getPortal();
-        if (contextHolder.isDeveloper()) {
-            // 开发者必须有 portalId
-            if (portalId == null) {
-                return new PageResult<>();
-            }
-            return developerService.listDevelopers(portalId, pageable);
-        } else {
-            // 管理员可以查全部
-            return developerService.listDevelopers(null, pageable);
-        }
+    public PageResult<DeveloperResult> listDevelopers(QueryDeveloperParam param, Pageable pageable) {
+        return developerService.listDevelopers(param, pageable);
     }
 
     @Operation(summary = "设置开发者状态", description = "管理员审核开发者账号，status为APPROVED/PENDING等")
@@ -148,12 +138,12 @@ public class DeveloperController {
         if (currentUserId == null) {
             throw new BusinessException(ErrorCode.AUTH_REQUIRED);
         }
-        
+
         Optional<Developer> devOpt = developerService.findByDeveloperId(currentUserId);
         if (!devOpt.isPresent()) {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", currentUserId);
         }
-        
+
         Developer developer = devOpt.get();
         Map<String, Object> result = new HashMap<>();
         result.put("developerId", developer.getDeveloperId());
