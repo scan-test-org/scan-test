@@ -15,15 +15,14 @@ const Register: React.FC = () => {
     setLoading(true)
     try {
       // 这里需要根据实际API调整
-      const res = await api.post('/developers', { 
+      await api.post('/developers', { 
         username: values.username, 
         password: values.password, 
       })
-      localStorage.setItem('token', res.data.token)
       message.success('注册成功！')
       // 注册成功后跳转到登录页
       navigate('/login')
-    } catch (error) {
+    } catch {
       message.error('注册失败，请重试')
     } finally {
       setLoading(false)
