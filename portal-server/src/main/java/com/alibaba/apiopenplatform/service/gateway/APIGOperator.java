@@ -288,6 +288,35 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching HTTP Roues，Cause：" + e.getMessage());
         }
     }
+
+    public List<HttpApiOperationInfo> fetchRESTOperations(Gateway gateway, String apiId) {
+        APIGClient client = getClient(gateway);
+
+        try {
+            ListHttpApiOperationsResponse response = client.execute(c -> {
+                ListHttpApiOperationsRequest request = ListHttpApiOperationsRequest.builder()
+                        .gatewayId(gateway.getGatewayId())
+                        .httpApiId(apiId)
+                        .pageNumber(1)
+                        .pageSize(10086)
+                        .build();
+                try {
+                    return c.listHttpApiOperations(request).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+
+            return response.getBody().getData().getItems();
+        } catch (Exception e) {
+            log.error("Error fetching REST operations", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching REST operations，Cause：" + e.getMessage());
+        }
+    }
 }
 
 
