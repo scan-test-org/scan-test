@@ -39,21 +39,7 @@ function McpPage() {
         const mapped = response.data.content
           .filter((item: Product) => item.type === ProductType.MCP_SERVER)
           .map((item: Product) => {
-            // 处理 mcpSpec 中的换行符转义
-            const processedItem = processProductSpecs(item);
             
-            // 尝试解析MCP配置以获取工具数量
-            let toolCount = 0;
-            try {
-              if (processedItem.mcpSpec) {
-                const mcpConfig = JSON.parse(processedItem.mcpSpec) as Record<string, unknown>;
-                if (mcpConfig.tools && Array.isArray(mcpConfig.tools)) {
-                  toolCount = mcpConfig.tools.length;
-                }
-              }
-            } catch (error) {
-              console.warn('解析MCP配置失败:', error);
-            }
 
             return {
               key: item.productId,
@@ -61,7 +47,7 @@ function McpPage() {
               description: item.description,
               status: item.status === ProductStatus.ENABLE ? 'active' : 'inactive',
               version: 'v1.0.0', // 从mcpSpec中解析版本信息
-              endpoints: toolCount,
+              endpoints: 0,
               lastUpdated: new Date().toISOString().slice(0, 10), // 暂时使用当前日期
               category: item.category,
             };
