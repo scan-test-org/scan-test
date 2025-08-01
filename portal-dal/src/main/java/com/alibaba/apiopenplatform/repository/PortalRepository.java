@@ -18,5 +18,7 @@ public interface PortalRepository extends BaseRepository<Portal, Long> {
 
     Optional<Portal> findByNameAndAdminId(String name, String adminId);
 
+    Optional<Portal> findByName(String name);
+
     Page<Portal> findByAdminId(String adminId, Pageable pageable);
 }
