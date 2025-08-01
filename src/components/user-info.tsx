@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Avatar, Spin, Dropdown, Menu } from "antd";
+import { Button, Avatar, Spin, Dropdown } from "antd";
 import { UserOutlined, LogoutOutlined, AppstoreOutlined } from "@ant-design/icons";
 import api from "../lib/api";
 import { useNavigate } from "react-router-dom";
