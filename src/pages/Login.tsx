@@ -6,6 +6,7 @@ import api from "../lib/api";
 import aliyunIcon from "../assets/aliyun.png";
 import githubIcon from "../assets/github.png";
 import googleIcon from "../assets/google.png";
+import { AxiosError } from "axios";
 
 interface Provider {
   provider: string;
@@ -46,8 +47,12 @@ const Login: React.FC = () => {
       } else {
         message.error("登录失败，未获取到token");
       }
-    } catch {
-      message.error("账号或密码错误");
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        message.error(error.response?.data.message || "登录失败，请检查账号密码是否正确");
+      } else {
+        message.error("登录失败");
+      }
     } finally {
       setLoading(false);
     }
