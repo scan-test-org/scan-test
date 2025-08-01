@@ -8,23 +8,18 @@ import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
-//import com.alibaba.apiopenplatform.dto.result.PortalSettingConfig;
 import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.entity.PortalDomain;
-//import com.alibaba.apiopenplatform.entity.PortalSetting;
-//import com.alibaba.apiopenplatform.entity.PortalUi;
 import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DomainType;
-import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -39,10 +34,10 @@ public class PortalServiceImpl implements PortalService {
 
     private final PortalDomainRepository portalDomainRepository;
 
-    private final String domainFormat = "%s.api.portal.io";
+    private final String domainFormat = "%s.api.portal.local";
 
     public PortalResult createPortal(CreatePortalParam param) {
-        portalRepository.findByNameAndAdminId(param.getName(), "admin")
+        portalRepository.findByName(param.getName())
                 .ifPresent(portal -> {
                     throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, portal.getName());
                 });
@@ -52,14 +47,6 @@ public class PortalServiceImpl implements PortalService {
         portal.setPortalId(portalId);
         portal.setAdminId("admin");
 
-//        // Setting
-//        PortalSetting portalSetting = new PortalSetting();
-//        portalSetting.setPortal(portal);
-//        // Ui
-//        PortalUi portalUi = new PortalUi();
-//        portalUi.setPortal(portal);
-//        portal.setPortalSetting(portalSetting);
-//        portal.setPortalUi(portalUi);
         // Domain
         PortalDomain portalDomain = new PortalDomain();
         portalDomain.setDomain(String.format(domainFormat, portalId));
@@ -92,6 +79,13 @@ public class PortalServiceImpl implements PortalService {
     @Override
     public PortalResult updatePortal(String portalId, UpdatePortalParam param) {
         Portal portal = findPortal(portalId);
+
+        Optional.ofNullable(param.getName())
+                .filter(name -> !name.equals(portal.getName()))
+                .flatMap(portalRepository::findByName)
+                .ifPresent(p -> {
+                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, p.getName());
+                });
 
         param.update(portal);
         portalRepository.saveAndFlush(portal);

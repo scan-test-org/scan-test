@@ -1,6 +1,7 @@
 package com.alibaba.apiopenplatform.dto.converter;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -66,6 +67,6 @@ public interface InputConverter<D> {
      * @param domain
      */
     default void update(D domain) {
-        BeanUtil.copyProperties(this, domain);
+        BeanUtil.copyProperties(this, domain, CopyOptions.create().setIgnoreNullValue(true));
     }
 }
