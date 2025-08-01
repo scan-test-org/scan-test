@@ -37,3 +37,34 @@
 .read-the-docs {
   color: #888;
 }
+
+/* 用户下拉菜单样式 */
+.user-dropdown .ant-dropdown-menu {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f0f0f0;
+  min-width: 200px;
+}
+
+.user-dropdown .ant-dropdown-menu-item {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.user-dropdown .ant-dropdown-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.user-dropdown .ant-dropdown-menu-item-disabled {
+  cursor: default;
+  color: inherit;
+  background-color: transparent;
+}
+
+.user-dropdown .ant-dropdown-menu-item-disabled:hover {
+  background-color: transparent;
+}
+
+.user-dropdown .ant-dropdown-menu-divider {
+  margin: 4px 0;
+}
