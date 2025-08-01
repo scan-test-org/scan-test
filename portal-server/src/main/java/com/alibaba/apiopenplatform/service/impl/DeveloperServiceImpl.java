@@ -331,9 +331,12 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     public PageResult<DeveloperResult> listDevelopers(String portalId, Pageable pageable) {
-        portalService.hasPortal(portalId);
-        Page<Developer> developers = developerRepository.findByPortalId(portalId, pageable);
-
+        Page<Developer> developers;
+        if (portalId == null) {
+            developers = developerRepository.findAll(pageable); // 查全部
+        } else {
+            developers = developerRepository.findByPortalId(portalId, pageable); // 查指定portal
+        }
         return new PageResult<DeveloperResult>().convertFrom(developers, developer -> new DeveloperResult().convertFrom(developer));
     }
 

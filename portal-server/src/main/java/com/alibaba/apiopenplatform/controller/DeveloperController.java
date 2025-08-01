@@ -120,7 +120,16 @@ public class DeveloperController {
     @GetMapping
     public PageResult<DeveloperResult> listDevelopers(@PageableDefault(sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
         String portalId = contextHolder.getPortal();
-        return developerService.listDevelopers(portalId, pageable);
+        if (contextHolder.isDeveloper()) {
+            // 开发者必须有 portalId
+            if (portalId == null) {
+                return new PageResult<>();
+            }
+            return developerService.listDevelopers(portalId, pageable);
+        } else {
+            // 管理员可以查全部
+            return developerService.listDevelopers(null, pageable);
+        }
     }
 
     @Operation(summary = "设置开发者状态", description = "管理员审核开发者账号，status为APPROVED/PENDING等")
