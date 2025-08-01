@@ -5,8 +5,9 @@ import { Layout } from '../components/Layout';
 import { Card, Typography, Tag, Space, Badge, Descriptions, Spin, Alert, Collapse, Button, message, Tabs } from 'antd';
 import MonacoEditor from 'react-monaco-editor';
 import { ProductType, ProductStatus, ProductCategory } from '../types';
-import type { Product, McpServerConfig, McpServerProduct } from '../types';
+import type { Product, McpServerConfig, McpServerProduct, ApiResponse } from '../types';
 import { processProductSpecs } from '../lib/utils';
+import * as yaml from 'js-yaml';
 
 const { Title, Paragraph } = Typography;
 
@@ -23,10 +24,60 @@ function McpDetail() {
   const [error, setError] = useState('');
   const [data, setData] = useState<Product | null>(null);
   const [mcpConfig, setMcpConfig] = useState<McpServerConfig | null>(null);
+  const [parsedTools, setParsedTools] = useState<Array<{
+    name: string;
+    description: string;
+    args?: Array<{
+      name: string;
+      description: string;
+      type: string;
+      required: boolean;
+      position: string;
+      default?: string;
+      enum?: string[];
+    }>;
+  }>>([]);
   const [httpJson, setHttpJson] = useState('');
   const [sseJson, setSseJson] = useState('');
 
-  console.log('McpDetail 组件渲染，mcpName:', mcpName);
+  // 解析YAML配置的函数
+  const parseYamlConfig = (yamlString: string): {
+    tools?: Array<{
+      name: string;
+      description: string;
+      args?: Array<{
+        name: string;
+        description: string;
+        type: string;
+        required: boolean;
+        position: string;
+        default?: string;
+        enum?: string[];
+      }>;
+    }>;
+  } | null => {
+    try {
+      const parsed = yaml.load(yamlString) as {
+        tools?: Array<{
+          name: string;
+          description: string;
+          args?: Array<{
+            name: string;
+            description: string;
+            type: string;
+            required: boolean;
+            position: string;
+            default?: string;
+            enum?: string[];
+          }>;
+        }>;
+      };
+      return parsed;
+    } catch (error) {
+      console.warn('解析YAML配置失败:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     console.log('useEffect 触发，mcpName:', mcpName);
@@ -36,25 +87,28 @@ function McpDetail() {
     }
     setLoading(true);
     setError('');
-    console.log('开始请求 API:', `/products/${mcpName}`);
     api.get(`/products/${mcpName}`)
-      .then((response: any) => {
-        console.log('API 响应:', response);
+      .then((response: ApiResponse<Product>) => {
         if (response.code === "SUCCESS" && response.data) {
-          console.log('设置数据:', response.data);
           
           // 处理 mcpSpec 和 apiSpec 中的换行符转义
-          const processedData = processProductSpecs(response.data);
+          // const processedData = processProductSpecs(response.data);
           
-          setData(processedData);
+          setData(response.data);
           
           // 解析MCP配置
-          if (processedData.type === ProductType.MCP_SERVER && (processedData as McpServerProduct).mcpSpec) {
+          if (response.data.type === ProductType.MCP_SERVER && (response.data as McpServerProduct).mcpSpec) {
             try {
-              // 先处理转义字符，将 \" 替换为 "
-              // const cleanedMcpSpec = (processedData as McpServerProduct).mcpSpec.replace(/\\"/g, '"');
-              const config = processedData.mcpSpec as McpServerConfig;
+              const config = (response.data as McpServerProduct).mcpSpec;
               setMcpConfig(config);
+              
+              // 解析YAML配置中的工具信息
+              if (config.mcpServerConfig) {
+                const parsedConfig = parseYamlConfig(config.mcpServerConfig);
+                if (parsedConfig && parsedConfig.tools) {
+                  setParsedTools(parsedConfig.tools);
+                }
+              }
               
               // 生成连接配置
               if (config.domains && config.domains.length > 0) {
@@ -112,7 +166,7 @@ function McpDetail() {
         document.body.removeChild(textarea);
       }
       message.success('已复制到剪贴板');
-    } catch (e) {
+    } catch {
       message.error('复制失败，请手动复制');
     }
   };
@@ -143,11 +197,13 @@ function McpDetail() {
 
   const { name, description, status, category, productId, enableConsumerAuth } = data;
 
-  const getStatusText = (status: ProductStatus) => {
+  const getStatusText = (status: ProductStatus | string) => {
     switch (status) {
       case ProductStatus.ENABLE:
+      case 'PUBLISHED':
         return '已启用'
       case ProductStatus.DISABLE:
+      case 'PENDING':
         return '未启用'
       default:
         return status
@@ -172,7 +228,7 @@ function McpDetail() {
       <div className="mb-8">
         <Title level={1} className="mb-2">{name}</Title>
         <Space className="mb-4">
-          <Badge status={status === ProductStatus.ENABLE ? 'success' : 'default'} text={getStatusText(status)} />
+          <Badge status={status === ProductStatus.ENABLE || status === 'PUBLISHED' ? 'success' : 'default'} text={getStatusText(status)} />
           <Tag color="blue">{getCategoryText(category)}</Tag>
           <Tag color="purple">v1.0.0</Tag>
         </Space>
@@ -191,7 +247,7 @@ function McpDetail() {
           <Descriptions.Item label="文档">{data.document ?? '无'}</Descriptions.Item>
           <Descriptions.Item label="图标">{data.icon ? <img src={data.icon} alt="icon" style={{ width: 32, height: 32 }} /> : '无'}</Descriptions.Item>
           <Descriptions.Item label="是否启用">
-            {typeof (data as any).enabled !== 'undefined' ? ((data as any).enabled ? '是' : '否') : '无'}
+            {typeof (data as McpServerProduct).enabled !== 'undefined' ? ((data as McpServerProduct).enabled ? '是' : '否') : '无'}
           </Descriptions.Item>
           {mcpConfig && (
             <>
@@ -324,15 +380,23 @@ function McpDetail() {
       )}
 
       {/* 工具列表折叠展示 */}
-      {mcpConfig?.tools && mcpConfig.tools.length > 0 && (
+      {parsedTools.length > 0 && (
         <Card title="工具列表" className="mb-6">
           <Collapse accordion>
-            {mcpConfig!.tools?.map((tool, idx) => (
+            {parsedTools.map((tool, idx) => (
               <Collapse.Panel header={tool.name} key={idx}>
                 <div className="mb-2 text-gray-600">{tool.description}</div>
                 <div className="mb-2 font-bold">输入参数：</div>
                 <div className="space-y-2">
-                  {tool.args?.map((arg, argIdx) => (
+                  {tool.args?.map((arg: {
+                    name: string;
+                    description: string;
+                    type: string;
+                    required: boolean;
+                    position: string;
+                    default?: string;
+                    enum?: string[];
+                  }, argIdx: number) => (
                     <div key={argIdx} className="flex flex-col mb-2">
                       <div className="flex items-center mb-1">
                         <span className="font-medium mr-2">{arg.name}</span>
@@ -351,19 +415,19 @@ function McpDetail() {
         </Card>
       )}
 
-      {/* {(data as McpServerProduct).mcpSpec && (
-        <Card title="MCP Server 配置" className="mb-6">
+      {/* 原始 YAML 配置 */}
+      {mcpConfig?.mcpServerConfig && (
+        <Card title="原始 YAML 配置" className="mb-6">
           <div className="mb-2 flex justify-end">
-            <Button size="small" onClick={() => {
-              navigator.clipboard.writeText((data as McpServerProduct).mcpSpec);
-              message.success('已复制到剪贴板');
-            }}>复制</Button>
+            <Button size="small" onClick={() => handleCopy(mcpConfig.mcpServerConfig || '')}>
+              复制
+            </Button>
           </div>
           <div style={{ width: '100%', overflowX: 'auto', height: '300px' }}>
             <MonacoEditor
-              language="json"
+              language="yaml"
               theme="vs"
-              value={(data as McpServerProduct).mcpSpec}
+              value={mcpConfig.mcpServerConfig}
               options={{
                 readOnly: true,
                 minimap: { enabled: false },
@@ -377,7 +441,7 @@ function McpDetail() {
             />
           </div>
         </Card>
-      )} */}
+      )}
     </Layout>
   );
 }

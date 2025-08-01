@@ -56,7 +56,8 @@ export interface RestApiProduct extends BaseProduct {
 export interface McpServerProduct extends BaseProduct {
   type: typeof ProductType.MCP_SERVER;
   apiSpec: null;
-  mcpSpec: string;
+  mcpSpec: McpServerConfig;
+  enabled?: boolean;
 }
 
 // 联合类型
@@ -90,12 +91,14 @@ export interface McpServerConfig {
     domain: string;
     protocol: string;
   }>;
-  server: {
+  mcpServerConfig?: string; // YAML配置字符串
+  enabled?: boolean;
+  server?: {
     name: string;
     config: Record<string, unknown>;
     allowTools: string[];
   };
-  tools: Array<{
+  tools?: Array<{
     name: string;
     description: string;
     args: Array<{
