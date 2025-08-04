@@ -6,7 +6,6 @@ import com.alibaba.apiopenplatform.support.enums.NacosStatus;
 import com.alibaba.nacos.maintainer.client.ai.AiMaintainerFactory;
 import com.alibaba.nacos.maintainer.client.ai.McpMaintainerService;
 import com.alibaba.nacos.api.ai.model.mcp.McpServerBasicInfo;
-import com.alibaba.nacos.api.ai.model.mcp.McpServerDetailInfo;
 import com.alibaba.nacos.api.model.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -58,28 +57,6 @@ public class NacosOperator {
             List<NacosMCPServerResult> results = new ArrayList<>();
             for (McpServerBasicInfo basicInfo : page.getPageItems()) {
                 NacosMCPServerResult result = new NacosMCPServerResult().convertFrom(basicInfo);
-
-                // 获取详细信息来获取完整信息
-                try {
-                    McpServerDetailInfo detailInfo = service.getMcpServerDetail(namespace, basicInfo.getName(), basicInfo.getVersion());
-                    if (detailInfo != null) {
-//                        if (detailInfo.getLocalServerConfig() != null) {
-//                            result.setMcpServerConfig(detailInfo.getLocalServerConfig().toString());
-//                        }
-                        // 设置协议信息到result中，供后续使用
-                        result.setProtocol(detailInfo.getProtocol());
-                        result.setVersion(detailInfo.getVersion());
-                        
-                        // 设置其他详情信息
-                        result.setDescription(detailInfo.getDescription());
-                        result.setCapabilities(detailInfo.getCapabilities());
-                        result.setEnabled(detailInfo.isEnabled());
-                        result.setBackendEndpoints(detailInfo.getBackendEndpoints());
-                    }
-                } catch (Exception e) {
-                    log.warn("获取MCP Server详情失败: {}, 错误: {}", basicInfo.getName(), e.getMessage());
-                }
-                
                 results.add(result);
             }
             
