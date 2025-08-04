@@ -2,16 +2,18 @@ import { Button, Card, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import { useEffect } from "react";
+import { getTokenFromCookie } from "../lib/utils";
 
 const { Title, Paragraph } = Typography;
 
 function HomePage() {
   useEffect(() => {
-    // const params = new URLSearchParams(window.location.search);
-    // const token = params.get("token");
-    // if (!token) {
-    //   window.location.href = `/login?portalId=test_portal`;
-    // }
+    const params = new URLSearchParams(window.location.search);
+    const fromCookie = params.get("fromCookie");
+    const token = getTokenFromCookie();
+    if (fromCookie && token) {
+      localStorage.setItem("token", token);
+    }
   }, []);
 
   return (
