@@ -4,7 +4,7 @@ export function fetcher(url: string) {
 }
 
 export function getTokenFromCookie(): string | null {
-  const match = document.cookie.match(/(?:^|;\s*)token=([^;]*)/);
+  const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
   return match ? decodeURIComponent(match[1]) : null;
 }
 

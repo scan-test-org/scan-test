@@ -579,13 +579,15 @@ function McpDetail() {
                                     minimap: { enabled: false },
                                     scrollBeyondLastLine: false,
                                     scrollbar: {
-                                      vertical: "hidden",
-                                      horizontal: "hidden",
+                                      vertical: "visible",
+                                      horizontal: "visible",
                                     },
-                                    wordWrap: "on",
+                                    wordWrap: "off",
                                     lineNumbers: "on",
                                     automaticLayout: true,
                                     fontSize: 12,
+                                    copyWithSyntaxHighlighting: true,
+                                    contextmenu: true,
                                   }}
                                   height="200"
                                 />
@@ -624,13 +626,15 @@ function McpDetail() {
                               minimap: { enabled: false },
                               scrollBeyondLastLine: false,
                               scrollbar: {
-                                vertical: "hidden",
-                                horizontal: "hidden",
+                                vertical: "visible",
+                                horizontal: "visible",
                               },
-                              wordWrap: "on",
+                              wordWrap: "off",
                               lineNumbers: "on",
                               automaticLayout: true,
                               fontSize: 12,
+                              copyWithSyntaxHighlighting: true,
+                              contextmenu: true,
                             }}
                             height="200"
                           />
@@ -667,13 +671,15 @@ function McpDetail() {
                               minimap: { enabled: false },
                               scrollBeyondLastLine: false,
                               scrollbar: {
-                                vertical: "hidden",
-                                horizontal: "hidden",
+                                vertical: "visible",
+                                horizontal: "visible",
                               },
-                              wordWrap: "on",
+                              wordWrap: "off",
                               lineNumbers: "on",
                               automaticLayout: true,
                               fontSize: 12,
+                              copyWithSyntaxHighlighting: true,
+                              contextmenu: true,
                             }}
                             height="200"
                           />
