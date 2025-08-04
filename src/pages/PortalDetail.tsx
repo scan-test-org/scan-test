@@ -186,12 +186,12 @@ export default function PortalDetail() {
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <LinkOutlined className="h-3 w-3" />
             <a 
-              href={`http://${portal.portalDomainConfig[0]?.domain}`} 
+              href={`http://${portal.portalDomainConfig?.[0]?.domain}`} 
               target="_blank" 
               rel="noopener noreferrer"
               className="hover:underline truncate text-blue-600"
             >
-              {portal.portalDomainConfig[0]?.domain}
+              {portal.portalDomainConfig?.[0]?.domain}
             </a>
           </div>
         </div>

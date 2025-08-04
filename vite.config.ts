@@ -16,6 +16,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: 'index.js',
+        chunkFileNames: 'chunk-[name].js',
+        assetFileNames: 'assets/[name].[ext]'
+      }
+    }
+  },
   define: {
     'process.env': {}
   }

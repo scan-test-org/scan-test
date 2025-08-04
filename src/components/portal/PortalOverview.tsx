@@ -87,8 +87,8 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
                 <span className="text-gray-600">域名</span>
                 <div className="flex items-center gap-2">
                   <LinkOutlined />
-                  <a href={`http://${portal.portalDomainConfig[0]?.domain}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                    {portal.portalDomainConfig[0]?.domain}
+                  <a href={`http://${portal.portalDomainConfig?.[0]?.domain}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    {portal.portalDomainConfig?.[0]?.domain}
                   </a>
                 </div>
               </div>
@@ -149,7 +149,7 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
       </Row>
 
       {/* OIDC配置 */}
-      {portal.portalSettingConfig?.oidcConfigs.length > 0 && (
+      {portal.portalSettingConfig?.oidcConfigs?.length > 0 && (
         <Card title="OIDC认证配置">
           <div className="space-y-4">
             {portal.portalSettingConfig?.oidcConfigs.map((config) => (

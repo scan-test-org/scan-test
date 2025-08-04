@@ -13,7 +13,7 @@ import {
 } from "antd";
 import { PlusOutlined, MoreOutlined, LinkOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import api from "../lib/api";
+import { portalApi } from "../lib/api";
 
 import { Portal } from '@/types'
 
@@ -22,9 +22,11 @@ const PortalCard = memo(
   ({
     portal,
     onNavigate,
+    fetchPortals,
   }: {
     portal: Portal;
     onNavigate: (id: string) => void;
+    fetchPortals: () => void;
   }) => {
     const handleCardClick = useCallback(() => {
       onNavigate(portal.portalId);
@@ -35,28 +37,34 @@ const PortalCard = memo(
     }, []);
 
     const dropdownItems: MenuProps["items"] = [
-      {
-        key: "edit",
-        label: "编辑",
-      },
-      {
-        key: "copy",
-        label: "复制",
-      },
-      {
-        type: "divider",
-      },
+     
       {
         key: "delete",
         label: "删除",
         danger: true,
+        onClick: () => {
+          Modal.confirm({
+            title: "删除Portal",
+            content: "确定要删除该Portal吗？",
+            onOk: () => {
+              handleDeletePortal(portal.portalId);
+            },
+          });
+        },
       },
     ];
+
+    const handleDeletePortal = useCallback((portalId: string) => {
+      portalApi.deletePortal(portalId).then(() => {
+        message.success("Portal删除成功");
+        fetchPortals()
+      });
+    }, [portal.portalId, fetchPortals]);
 
     return (
       <Card
         className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-blue-300 bg-gradient-to-br from-white to-gray-50/30"
-        onClick={handleCardClick}
+       
         bodyStyle={{ padding: "20px" }}
       >
         <div className="flex items-center justify-between mb-6">
@@ -92,12 +100,12 @@ const PortalCard = memo(
           <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
             <LinkOutlined className="h-4 w-4 text-blue-500" />
             <Tooltip
-              title={portal.portalDomainConfig[0].domain}
+              title={portal.portalDomainConfig?.[0].domain}
               placement="top"
               color="#000"
             >
               <a
-                href={`http://${portal.portalDomainConfig[0].domain}`}
+                href={`http://${portal.portalDomainConfig?.[0].domain}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-700 font-medium text-sm"
@@ -112,7 +120,7 @@ const PortalCard = memo(
                   cursor: "pointer",
                 }}
               >
-                {portal.portalDomainConfig[0].domain}
+                {portal.portalDomainConfig?.[0].domain}
               </a>
             </Tooltip>
           </div>
@@ -211,7 +219,7 @@ const PortalCard = memo(
 
           <div className="text-center pt-4 border-t border-gray-100">
             <div className="inline-flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600 transition-colors">
-              <span>点击查看详情</span>
+              <span onClick={handleCardClick}>点击查看详情</span>
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -243,30 +251,32 @@ export default function Portals() {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [form] = Form.useForm();
 
-  useEffect(() => {
+  const fetchPortals = useCallback(() => {
+
     setLoading(true);
+    portalApi.getPortals().then((res: any) => {
+      const list = res?.data?.content || [];
+      const portals: Portal[] = list.map((item: any) => ({
+        portalId: item.portalId,
+        name: item.name,
+        title: item.name,
+        description: item.description,
+        adminId: item.adminId,
+        portalSettingConfig: item.portalSettingConfig,
+        portalUiConfig: item.portalUiConfig,
+        portalDomainConfig: item.portalDomainConfig || [],
+      }));
+      setPortals(portals);
+    }).catch((err: any) => {
+      setError(err?.message || "加载失败");
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
     setError(null);
-    api
-      .get("/portals")
-      .then((res: any) => {
-        // 兼容后端返回结构
-        const list = res?.data?.content || [];
-        const portals: Portal[] = list.map((item: any) => ({
-          portalId: item.portalId,
-          name: item.name,
-          title: item.name,
-          description: item.description,
-          adminId: item.adminId,
-          portalSettingConfig: item.portalSettingConfig,
-          portalUiConfig: item.portalUiConfig,
-          portalDomainConfig: item.portalDomainConfig || [],
-        }));
-        setPortals(portals);
-      })
-      .catch((err: any) => {
-        setError(err?.message || "加载失败");
-      })
-      .finally(() => setLoading(false));
+    fetchPortals()
   }, []);
 
   const handleCreatePortal = useCallback(() => {
@@ -284,32 +294,12 @@ export default function Portals() {
         description: values.description,
       };
 
-      const response = await api.post("/portals", newPortal);
+      await portalApi.createPortal(newPortal);
       message.success("Portal创建成功");
       setIsModalVisible(false);
       form.resetFields();
 
-      // 重新加载Portal列表
-      const res = await api.get("/portals");
-      const list = res?.data?.content || [];
-      const portals: Portal[] = list.map((item: any) => ({
-        id: item.portalId,
-        name: item.name,
-        description: item.description,
-        title: item.name,
-        url: "",
-        userAuth: item.portalSettingConfig?.builtinAuthEnabled
-          ? "内置认证"
-          : item.portalSettingConfig?.oidcAuthEnabled
-          ? "OIDC"
-          : "未知",
-        rbac: item.portalSettingConfig?.rbacEnabled ? "Enabled" : "Disabled",
-        authStrategy: item.portalSettingConfig?.authStrategy || "-",
-        apiVisibility: item.portalSettingConfig?.apiVisibility || "-",
-        pageVisibility: item.portalSettingConfig?.pageVisibility || "-",
-        logo: item.portalUiConfig?.logo || undefined,
-      }));
-      setPortals(portals);
+      fetchPortals()
     } catch (error: any) {
       message.error(error?.message || "创建失败");
     } finally {
@@ -352,6 +342,7 @@ export default function Portals() {
             key={portal.portalId}
             portal={portal}
             onNavigate={handlePortalClick}
+            fetchPortals={fetchPortals}
           />
         ))}
       </div>

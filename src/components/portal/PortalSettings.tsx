@@ -392,13 +392,13 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
                 onChange={(checked) => handleSettingUpdate('autoApproveSubscriptions', checked)}
               />
             </Form.Item>
-            <Form.Item
+            {/* <Form.Item
               name="frontendRedirectUrl"
               label="前端重定向URL"
               className="col-span-2"
             >
               <Input placeholder="http://portal.example.com/callback" />
-            </Form.Item>
+            </Form.Item> */}
           </div>
 
           {/* OIDC 配置管理 */}
