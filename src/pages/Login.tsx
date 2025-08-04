@@ -62,7 +62,7 @@ const Login: React.FC = () => {
   const handleOidcLogin = (provider: string) => {
     const stateRaw = `LOGIN|${provider}|FRONTENDURL=http://${window.location.host}`;
     const state = encodeURIComponent(stateRaw);
-    window.location.href = `${api.defaults.baseURL}developers/authorize?provider=${provider}&state=${state}`;
+    window.location.href = `${api.defaults.baseURL}/developers/authorize?provider=${provider}&state=${state}`;
   };
 
   return (
