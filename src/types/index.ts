@@ -56,7 +56,8 @@ export interface RestApiProduct extends BaseProduct {
 export interface McpServerProduct extends BaseProduct {
   type: typeof ProductType.MCP_SERVER;
   apiSpec: null;
-  mcpSpec: McpServerConfig;
+  mcpSpec?: McpServerConfig; // 保持向后兼容
+  mcpConfig?: McpConfig; // 新的nacos格式
   enabled?: boolean;
 }
 
@@ -81,7 +82,7 @@ export interface PaginatedResponse<T> {
   last: boolean;
 }
 
-// MCP 配置解析后的结构
+// MCP 配置解析后的结构 (旧格式，保持向后兼容)
 export interface McpServerConfig {
   mcpRouteId?: string;
   mcpServerName?: string;
@@ -122,4 +123,22 @@ export interface McpServerConfig {
       body: string;
     };
   }>;
+}
+
+// 新的nacos格式MCP配置
+export interface McpConfig {
+  mcpServerName: string;
+  mcpServerConfig: {
+    path: string;
+    domains: Array<{
+      domain: string;
+      protocol: string;
+    }>;
+    localConfig?: any;
+  };
+  tools: string; // YAML格式的tools配置字符串
+  meta: {
+    source: string;
+    fromType: string;
+  };
 }

@@ -5,8 +5,7 @@ import { Layout } from '../components/Layout';
 import { Card, Typography, Tag, Space, Badge, Descriptions, Spin, Alert, Collapse, Button, message, Tabs } from 'antd';
 import MonacoEditor from 'react-monaco-editor';
 import { ProductType, ProductStatus, ProductCategory } from '../types';
-import type { Product, McpServerConfig, McpServerProduct, ApiResponse } from '../types';
-import { processProductSpecs } from '../lib/utils';
+import type { Product, McpServerConfig, McpServerProduct, McpConfig } from '../types';
 import * as yaml from 'js-yaml';
 
 const { Title, Paragraph } = Typography;
@@ -24,6 +23,7 @@ function McpDetail() {
   const [error, setError] = useState('');
   const [data, setData] = useState<Product | null>(null);
   const [mcpConfig, setMcpConfig] = useState<McpServerConfig | null>(null);
+  const [nacosMcpConfig, setNacosMcpConfig] = useState<McpConfig | null>(null);
   const [parsedTools, setParsedTools] = useState<Array<{
     name: string;
     description: string;
@@ -79,6 +79,32 @@ function McpDetail() {
     }
   };
 
+  // 生成连接配置的函数
+  const generateConnectionConfig = (domains: Array<{domain: string; protocol: string}>, path: string, serverName: string) => {
+    if (domains && domains.length > 0) {
+      const domain = domains[0];
+      const baseUrl = `${domain.protocol}://${domain.domain}`;
+      const endpoint = `${baseUrl}${path}`;
+      
+      const httpConfig = `{
+  "mcpServers": {
+    "${serverName}": {
+      "url": "${endpoint}"
+    }
+  }
+}`;
+      const sseConfig = `{
+  "mcpServers": {
+    "${serverName}": {
+      "url": "${endpoint}/sse"
+    }
+  }
+}`;
+      setHttpJson(httpConfig);
+      setSseJson(sseConfig);
+    }
+  };
+
   useEffect(() => {
     console.log('useEffect 触发，mcpName:', mcpName);
     if (!mcpName) {
@@ -88,31 +114,49 @@ function McpDetail() {
     setLoading(true);
     setError('');
     api.get(`/products/${mcpName}`)
-      .then((response: ApiResponse<Product>) => {
+      .then((response: any) => {
         if (response.code === "SUCCESS" && response.data) {
-          
-          // 处理 mcpSpec 和 apiSpec 中的换行符转义
-          // const processedData = processProductSpecs(response.data);
           
           setData(response.data);
           
-          // 解析MCP配置
-          if (response.data.type === ProductType.MCP_SERVER && (response.data as McpServerProduct).mcpSpec) {
-            try {
-              const config = (response.data as McpServerProduct).mcpSpec;
-              setMcpConfig(config);
+          // 处理MCP配置 - 支持新旧两种格式
+          if (response.data.type === ProductType.MCP_SERVER) {
+            const mcpProduct = response.data as McpServerProduct;
+            
+            // 优先处理新的nacos格式
+            if (mcpProduct.mcpConfig) {
+              setNacosMcpConfig(mcpProduct.mcpConfig);
               
-              // 解析YAML配置中的工具信息
-              if (config.mcpServerConfig) {
-                const parsedConfig = parseYamlConfig(config.mcpServerConfig);
+              // 解析tools配置
+              if (mcpProduct.mcpConfig.tools) {
+                const parsedConfig = parseYamlConfig(mcpProduct.mcpConfig.tools);
                 if (parsedConfig && parsedConfig.tools) {
                   setParsedTools(parsedConfig.tools);
                 }
               }
               
               // 生成连接配置
-              if (config.domains && config.domains.length > 0) {
-                const domain = config.domains[0];
+              generateConnectionConfig(
+                mcpProduct.mcpConfig.mcpServerConfig.domains,
+                mcpProduct.mcpConfig.mcpServerConfig.path,
+                mcpProduct.mcpConfig.mcpServerName
+              );
+            }
+            // 兼容旧格式
+            else if (mcpProduct.mcpSpec) {
+              setMcpConfig(mcpProduct.mcpSpec);
+              
+              // 解析YAML配置中的工具信息
+              if (mcpProduct.mcpSpec.mcpServerConfig) {
+                const parsedConfig = parseYamlConfig(mcpProduct.mcpSpec.mcpServerConfig);
+                if (parsedConfig && parsedConfig.tools) {
+                  setParsedTools(parsedConfig.tools);
+                }
+              }
+              
+              // 生成连接配置
+              if (mcpProduct.mcpSpec.domains && mcpProduct.mcpSpec.domains.length > 0) {
+                const domain = mcpProduct.mcpSpec.domains[0];
                 const baseUrl = `${domain.protocol}://${domain.domain}`;
                 const httpConfig = `{
   "mcpServers": {
@@ -131,8 +175,6 @@ function McpDetail() {
                 setHttpJson(httpConfig);
                 setSseJson(sseConfig);
               }
-            } catch (error) {
-              console.warn('解析MCP配置失败:', error);
             }
           }
         } else {
@@ -228,7 +270,7 @@ function McpDetail() {
       <div className="mb-8">
         <Title level={1} className="mb-2">{name}</Title>
         <Space className="mb-4">
-          <Badge status={status === ProductStatus.ENABLE || status === 'PUBLISHED' ? 'success' : 'default'} text={getStatusText(status)} />
+          <Badge status={status === ProductStatus.ENABLE || (status as string) === 'PUBLISHED' ? 'success' : 'default'} text={getStatusText(status)} />
           <Tag color="blue">{getCategoryText(category)}</Tag>
           <Tag color="purple">v1.0.0</Tag>
         </Space>
@@ -264,40 +306,82 @@ function McpDetail() {
               </Descriptions.Item>
             </>
           )}
+          {nacosMcpConfig && (
+            <>
+              <Descriptions.Item label="MCP Server Name">{nacosMcpConfig.mcpServerName}</Descriptions.Item>
+              <Descriptions.Item label="来源类型">{nacosMcpConfig.meta.fromType}</Descriptions.Item>
+              <Descriptions.Item label="来源">{nacosMcpConfig.meta.source}</Descriptions.Item>
+              <Descriptions.Item label="路径">{nacosMcpConfig.mcpServerConfig.path}</Descriptions.Item>
+              <Descriptions.Item label="domains">
+                {nacosMcpConfig.mcpServerConfig.domains && nacosMcpConfig.mcpServerConfig.domains.length > 0
+                  ? nacosMcpConfig.mcpServerConfig.domains.map((d, i) => (
+                      <div key={i}>{d.domain} ({d.protocol})</div>
+                    ))
+                  : '无'}
+              </Descriptions.Item>
+            </>
+          )}
         </Descriptions>
       </Card>
 
       {/* MCP 配置信息 */}
-      {mcpConfig && (
+      {(mcpConfig || nacosMcpConfig) && (
         <Card title="MCP 配置信息" className="mb-6">
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="MCP Route ID">{mcpConfig.mcpRouteId ?? '无'}</Descriptions.Item>
-            <Descriptions.Item label="MCP Server Name">{mcpConfig.mcpServerName ?? '无'}</Descriptions.Item>
-            <Descriptions.Item label="来源类型">{mcpConfig.fromType ?? '无'}</Descriptions.Item>
-            <Descriptions.Item label="网关类型">
-              {GatewayTypeMap[mcpConfig.fromGatewayType ?? ''] || mcpConfig.fromGatewayType || '无'}
-            </Descriptions.Item>
-            <Descriptions.Item label="域名配置">
-              {mcpConfig.domains && mcpConfig.domains.length > 0
-                ? mcpConfig.domains.map((d, i) => (
-                    <div key={i} className="mb-2">
-                      <div><strong>域名:</strong> {d.domain}</div>
-                      <div><strong>协议:</strong> {d.protocol}</div>
-                    </div>
-                  ))
-                : '无'}
-            </Descriptions.Item>
+            {mcpConfig && (
+              <>
+                <Descriptions.Item label="MCP Route ID">{mcpConfig.mcpRouteId ?? '无'}</Descriptions.Item>
+                <Descriptions.Item label="MCP Server Name">{mcpConfig.mcpServerName ?? '无'}</Descriptions.Item>
+                <Descriptions.Item label="来源类型">{mcpConfig.fromType ?? '无'}</Descriptions.Item>
+                <Descriptions.Item label="网关类型">
+                  {GatewayTypeMap[mcpConfig.fromGatewayType ?? ''] || mcpConfig.fromGatewayType || '无'}
+                </Descriptions.Item>
+                <Descriptions.Item label="域名配置">
+                  {mcpConfig.domains && mcpConfig.domains.length > 0
+                    ? mcpConfig.domains.map((d, i) => (
+                        <div key={i} className="mb-2">
+                          <div><strong>域名:</strong> {d.domain}</div>
+                          <div><strong>协议:</strong> {d.protocol}</div>
+                        </div>
+                      ))
+                    : '无'}
+                </Descriptions.Item>
+              </>
+            )}
+            {nacosMcpConfig && (
+              <>
+                <Descriptions.Item label="MCP Server Name">{nacosMcpConfig.mcpServerName}</Descriptions.Item>
+                <Descriptions.Item label="来源类型">{nacosMcpConfig.meta.fromType}</Descriptions.Item>
+                <Descriptions.Item label="来源">{nacosMcpConfig.meta.source}</Descriptions.Item>
+                <Descriptions.Item label="路径">{nacosMcpConfig.mcpServerConfig.path}</Descriptions.Item>
+                <Descriptions.Item label="域名配置">
+                  {nacosMcpConfig.mcpServerConfig.domains && nacosMcpConfig.mcpServerConfig.domains.length > 0
+                    ? nacosMcpConfig.mcpServerConfig.domains.map((d, i) => (
+                        <div key={i} className="mb-2">
+                          <div><strong>域名:</strong> {d.domain}</div>
+                          <div><strong>协议:</strong> {d.protocol}</div>
+                        </div>
+                      ))
+                    : '无'}
+                </Descriptions.Item>
+              </>
+            )}
           </Descriptions>
         </Card>
       )}
 
       {/* 连接 MCP 服务 */}
-      {mcpConfig && mcpConfig.domains && mcpConfig.domains.length > 0 && (
+      {((mcpConfig && mcpConfig.domains && mcpConfig.domains.length > 0) || 
+        (nacosMcpConfig && nacosMcpConfig.mcpServerConfig.domains && nacosMcpConfig.mcpServerConfig.domains.length > 0)) && (
         <Card title="连接 MCP 服务" className="mb-6">
           <div className="mb-4">
             <div className="font-bold mb-2">● Step 1. 生成 URL</div>
             <div className="mb-2">
-              <strong>域名:</strong> {mcpConfig.domains[0].protocol}://{mcpConfig.domains[0].domain}
+              <strong>域名:</strong> {
+                mcpConfig ? 
+                  `${mcpConfig.domains[0].protocol}://${mcpConfig.domains[0].domain}` :
+                  `${nacosMcpConfig!.mcpServerConfig.domains[0].protocol}://${nacosMcpConfig!.mcpServerConfig.domains[0].domain}`
+              }
             </div>
             <Tabs
               defaultActiveKey="sse"
@@ -369,8 +453,16 @@ function McpDetail() {
             <div className="bg-gray-50 p-4 rounded">
               <div className="text-gray-600 mb-3">请确保您的客户端能够访问以下网关地址：</div>
               <div className="flex items-center justify-between">
-                <span className="font-mono">{mcpConfig.domains[0].domain}</span>
-                <Button type="link" onClick={() => handleCopy(mcpConfig.domains && mcpConfig.domains[0] ? mcpConfig.domains[0].domain : '')}>
+                <span className="font-mono">{
+                  mcpConfig ? 
+                    mcpConfig.domains[0].domain :
+                    nacosMcpConfig!.mcpServerConfig.domains[0].domain
+                }</span>
+                <Button type="link" onClick={() => handleCopy(
+                  mcpConfig ? 
+                    (mcpConfig.domains && mcpConfig.domains[0] ? mcpConfig.domains[0].domain : '') :
+                    (nacosMcpConfig!.mcpServerConfig.domains && nacosMcpConfig!.mcpServerConfig.domains[0] ? nacosMcpConfig!.mcpServerConfig.domains[0].domain : '')
+                )}>
                   复制
                 </Button>
               </div>
@@ -416,10 +508,10 @@ function McpDetail() {
       )}
 
       {/* 原始 YAML 配置 */}
-      {mcpConfig?.mcpServerConfig && (
+      {(mcpConfig?.mcpServerConfig || nacosMcpConfig?.tools) && (
         <Card title="原始 YAML 配置" className="mb-6">
           <div className="mb-2 flex justify-end">
-            <Button size="small" onClick={() => handleCopy(mcpConfig.mcpServerConfig || '')}>
+            <Button size="small" onClick={() => handleCopy(mcpConfig?.mcpServerConfig || nacosMcpConfig?.tools || '')}>
               复制
             </Button>
           </div>
@@ -427,7 +519,7 @@ function McpDetail() {
             <MonacoEditor
               language="yaml"
               theme="vs"
-              value={mcpConfig.mcpServerConfig}
+              value={mcpConfig?.mcpServerConfig || nacosMcpConfig?.tools || ''}
               options={{
                 readOnly: true,
                 minimap: { enabled: false },
