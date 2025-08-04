@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Table, Modal, Steps, Form, Input, message } from 'antd'
+import { Button, Table, Modal, Form, Input, message, Select, Divider } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { gatewayApi } from '@/lib/api';
 
@@ -15,8 +15,6 @@ export default function Consoles() {
 
   // 导入实例弹窗相关
   const [importVisible, setImportVisible] = useState(false);
-
-  const [importStep, setImportStep] = useState(0);
   const [importForm] = Form.useForm();
 
   const [gatewayLoading, setGatewayLoading] = useState(false);
@@ -33,7 +31,73 @@ export default function Consoles() {
     })
   }, [])
 
+  // 获取网关列表
+  const fetchGateways = async (values: any) => {
+    setGatewayLoading(true);
+    try {
+      const res = await gatewayApi.createApigGateway(values);
+      setGatewayList(res.data?.content || []);
+    } catch (error) {
+      message.error('获取网关列表失败');
+    } finally {
+      setGatewayLoading(false);
+    }
+  };
 
+  // 获取API列表
+  const fetchApis = async (gateway: Gateway) => {
+    setApiLoading(true);
+    try {
+      const { gatewayId, gatewayType } = gateway;
+      if (gatewayType === 'APIG_API') {
+        const [restRes, mcpRes] = await Promise.all([
+          gatewayApi.getGatewayRestApis(gatewayId),
+          gatewayApi.getGatewayMcpServers(gatewayId)
+        ]);
+        setApiList([...(restRes.data?.content || []), ...(mcpRes.data?.content || [])]);
+      } else if (gatewayType === 'HIGRESS') {
+        const res = await gatewayApi.getGatewayMcpServers(gatewayId);
+        setApiList(res.data?.content || []);
+      }
+    } catch (error) {
+      message.error('获取API列表失败');
+    } finally {
+      setApiLoading(false);
+    }
+  };
+
+  // 处理网关选择
+  const handleGatewaySelect = (gateway: Gateway) => {
+    setSelectedGateway(gateway);
+    setSelectedApi(null);
+    fetchApis(gateway);
+  };
+
+  // 处理导入
+  const handleImport = () => {
+    if (!selectedApi) {
+      message.warning('请选择一个API');
+      return;
+    }
+    // 这里可以处理导入逻辑
+    message.success('导入成功！');
+    setImportVisible(false);
+    setSelectedGateway(null);
+    setSelectedApi(null);
+    setGatewayList([]);
+    setApiList([]);
+    importForm.resetFields();
+  };
+
+  // 重置弹窗状态
+  const handleCancel = () => {
+    setImportVisible(false);
+    setSelectedGateway(null);
+    setSelectedApi(null);
+    setGatewayList([]);
+    setApiList([]);
+    importForm.resetFields();
+  };
 
   const columns = [
     {
@@ -71,65 +135,6 @@ export default function Consoles() {
     },
   ]
 
-  // 步骤切换
-  const handleImportNext = async () => {
-    if (importStep === 0) {
-      // 校验表单并请求/gateways/apig
-      try {
-        const values = await importForm.validateFields();
-        setGatewayLoading(true);
-        gatewayApi.createApigGateway(values).then((res: any) => {
-          setGatewayList(res.data?.content || []);
-          setImportStep(1);
-        }).finally(() => setGatewayLoading(false));
-      } catch (err) {
-        console.log('表单校验错误', err);
-      }
-    } else if (importStep === 1) {
-      if (!selectedGateway) {
-        message.warning('请选择一个网关实例');
-        return;
-      }
-      // 根据网关类型请求API列表
-      setApiLoading(true);
-      const { gatewayId, gatewayType } = selectedGateway;
-      if (gatewayType === 'APIG_API') {
-        Promise.all([
-          gatewayApi.getGatewayRestApis(gatewayId),
-          gatewayApi.getGatewayMcpServers(gatewayId)
-        ]).then(([restRes, mcpRes]) => {
-          setApiList([...(restRes.data?.content || []), ...(mcpRes.data?.content || [])]);
-          setImportStep(2);
-        }).finally(() => setApiLoading(false));
-      } else if (gatewayType === 'HIGRESS') {
-        gatewayApi.getGatewayMcpServers(gatewayId).then((res: any) => {
-          setApiList(res.data?.content || []);
-          setImportStep(2);
-        }).finally(() => setApiLoading(false));
-      }
-    }
-  };
-
-  const handleImportPrev = () => {
-    setImportStep(importStep - 1);
-  };
-
-  const handleImportOk = () => {
-    if (!selectedApi) {
-      message.warning('请选择一个API');
-      return;
-    }
-    // 这里可以处理导入逻辑
-    message.success('导入成功！');
-    setImportVisible(false);
-    setImportStep(0);
-    setSelectedGateway(null);
-    setSelectedApi(null);
-    setGatewayList([]);
-    setApiList([]);
-    importForm.resetFields();
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -158,89 +163,90 @@ export default function Consoles() {
       <Modal
         title="导入网关实例"
         open={importVisible}
-        onCancel={() => {
-          setImportVisible(false);
-          setImportStep(0);
-          setSelectedGateway(null);
-          setSelectedApi(null);
-          setGatewayList([]);
-          setApiList([]);
-          importForm.resetFields();
-        }}
+        onCancel={handleCancel}
         footer={null}
         width={800}
       >
-        <Steps current={importStep} style={{ marginBottom: 24 }}>
-          <Steps.Step title="填写认证信息" />
-          <Steps.Step title="选择网关实例" />
-          <Steps.Step title="选择API" />
-        </Steps>
-        <div style={{ minHeight: 300 }}>
-          {importStep === 0 && (
-            <Form form={importForm} layout="vertical" preserve={false}>
-              <Form.Item label="Region" name="region" rules={[{ required: true, message: '请输入region' }]}> <Input /> </Form.Item>
-              <Form.Item label="Access Key" name="accessKey" rules={[{ required: true, message: '请输入accessKey' }]}> <Input /> </Form.Item>
-              <Form.Item label="Secret Key" name="secretKey" rules={[{ required: true, message: '请输入secretKey' }]}> <Input.Password /> </Form.Item>
-            </Form>
-          )}
-          {importStep === 1 && (
-            <Table
-              rowKey="gatewayId"
+        <Form form={importForm} layout="vertical" preserve={false}>
+          <div className="mb-4">
+            <h3 className="text-lg font-medium mb-3">认证信息</h3>
+            <Form.Item label="Region" name="region" rules={[{ required: true, message: '请输入region' }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item label="Access Key" name="accessKey" rules={[{ required: true, message: '请输入accessKey' }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item label="Secret Key" name="secretKey" rules={[{ required: true, message: '请输入secretKey' }]}>
+              <Input.Password />
+            </Form.Item>
+            <Button 
+              type="primary" 
+              onClick={() => importForm.validateFields().then(fetchGateways)}
               loading={gatewayLoading}
-              columns={[
-                { title: 'ID', dataIndex: 'gatewayId' },
-                { title: '类型', dataIndex: 'gatewayType' },
-                { title: '名称', dataIndex: 'gatewayName' },
-              ]}
-              dataSource={gatewayList}
-              rowSelection={{
-                type: 'radio',
-                selectedRowKeys: selectedGateway ? [selectedGateway.gatewayId] : [],
-                onChange: (selectedRowKeys, selectedRows) => {
-                  setSelectedGateway(selectedRows[0]);
-                },
-              }}
-              pagination={false}
-            />
-          )}
-          {importStep === 2 && (
-            <Table
-              rowKey={record => record.apiId || record.id}
-              loading={apiLoading}
-              columns={[
-                { title: 'API ID', dataIndex: 'apiId' },
-                { title: '名称', dataIndex: 'name' },
-                { title: '类型', dataIndex: 'type' },
-              ]}
-              dataSource={apiList}
-              rowSelection={{
-                type: 'radio',
-                selectedRowKeys: selectedApi ? [selectedApi.apiId || selectedApi.id] : [],
-                onChange: (selectedRowKeys, selectedRows) => {
-                  setSelectedApi(selectedRows[0]);
-                },
-              }}
-              pagination={false}
-            />
-          )}
-        </div>
-        <div style={{ marginTop: 24, textAlign: 'right' }}>
-          {importStep > 0 && (
-            <Button style={{ marginRight: 8 }} onClick={handleImportPrev}>
-              上一步
+            >
+              获取网关列表
             </Button>
+          </div>
+
+          {gatewayList.length > 0 && (
+            <div className="mb-4">
+              <Divider />
+              <h3 className="text-lg font-medium mb-3">选择网关实例</h3>
+              <Table
+                rowKey="gatewayId"
+                columns={[
+                  { title: 'ID', dataIndex: 'gatewayId' },
+                  { title: '类型', dataIndex: 'gatewayType' },
+                  { title: '名称', dataIndex: 'gatewayName' },
+                ]}
+                dataSource={gatewayList}
+                rowSelection={{
+                  type: 'radio',
+                  selectedRowKeys: selectedGateway ? [selectedGateway.gatewayId] : [],
+                  onChange: (selectedRowKeys, selectedRows) => {
+                    handleGatewaySelect(selectedRows[0]);
+                  },
+                }}
+                pagination={false}
+                size="small"
+              />
+            </div>
           )}
-          {importStep < 2 && (
-            <Button type="primary" onClick={handleImportNext}>
-              下一步
-            </Button>
+
+          {selectedGateway && apiList.length > 0 && (
+            <div className="mb-4">
+              <Divider />
+              <h3 className="text-lg font-medium mb-3">选择API</h3>
+              <Table
+                rowKey={record => record.apiId || record.id}
+                loading={apiLoading}
+                columns={[
+                  { title: 'API ID', dataIndex: 'apiId' },
+                  { title: '名称', dataIndex: 'name' },
+                  { title: '类型', dataIndex: 'type' },
+                ]}
+                dataSource={apiList}
+                rowSelection={{
+                  type: 'radio',
+                  selectedRowKeys: selectedApi ? [selectedApi.apiId || selectedApi.id] : [],
+                  onChange: (selectedRowKeys, selectedRows) => {
+                    setSelectedApi(selectedRows[0]);
+                  },
+                }}
+                pagination={false}
+                size="small"
+              />
+            </div>
           )}
-          {importStep === 2 && (
-            <Button type="primary" onClick={handleImportOk}>
-              完成导入
-            </Button>
+
+          {selectedApi && (
+            <div className="text-right">
+              <Button type="primary" onClick={handleImport}>
+                完成导入
+              </Button>
+            </div>
           )}
-        </div>
+        </Form>
       </Modal>
     </div>
   )

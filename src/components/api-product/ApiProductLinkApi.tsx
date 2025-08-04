@@ -153,7 +153,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         if ('apiName' in linkedService.apigRefConfig && linkedService.apigRefConfig.apiName) {
           return linkedService.apigRefConfig.apiName
         }
-        if ('mcpServerName' in linkedService.apigRefConfig) {
+        if ('mcpServerName' in linkedService.apigRefConfig && linkedService.apigRefConfig.mcpServerName) {
           return linkedService.apigRefConfig.mcpServerName
         }
       }
@@ -164,8 +164,9 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     }
 
     const getServiceType = () => {
+      
       if (linkedService.apigRefConfig) {
-        if ('apiName' in linkedService.apigRefConfig) {
+        if ('apiName' in linkedService.apigRefConfig && linkedService.apigRefConfig.apiName) {
           return 'REST API'
         }
         return 'MCP Server (APIG_AI)'
