@@ -114,7 +114,7 @@ function McpPage() {
       {/* Header Section */}
       <div className="text-center mb-8">
         <Title level={1} className="mb-4">
-          Nacos MCP Registry
+          API Portal MCP Registry
         </Title>
         <Paragraph className="text-gray-600 text-lg max-w-4xl mx-auto">
           支持私有化部署,共建和兼容 MCP Registry 官方协议,具备更多管理能力,支持自动注册、智能路由的MCP Registry
@@ -186,6 +186,8 @@ function McpPage() {
                   创建者: {server.creator}
                 </div>
 
+                </div>
+              </div>
                 <Paragraph className="text-sm text-gray-600 mb-3 line-clamp-2">
                   {server.description}
                 </Paragraph>
@@ -210,8 +212,6 @@ function McpPage() {
                       查看详情
                     </Button>
                   </Link>
-                </div>
-              </div>
             </div>
           </Card>
         ))}
