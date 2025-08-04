@@ -25,7 +25,6 @@ import type {
   McpServerConfig,
   McpServerProduct,
   McpConfig,
-  ApiResponse,
 } from "../types";
 import * as yaml from "js-yaml";
 
@@ -183,7 +182,7 @@ function McpDetail() {
     setError("");
     api
       .get(`/products/${mcpName}`)
-      .then((response: ApiResponse<Product>) => {
+      .then((response: any) => {
         if (response.code === "SUCCESS" && response.data) {
           setData(response.data);
 
