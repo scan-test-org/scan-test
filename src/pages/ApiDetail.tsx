@@ -5,7 +5,6 @@ import { Layout } from "../components/Layout";
 import api from "../lib/api";
 import { ProductStatus, ProductCategory } from "../types";
 import type { Product, ApiResponse } from "../types";
-import { processProductSpecs } from "../lib/utils";
 
 const { Title, Paragraph } = Typography;
 
@@ -35,14 +34,13 @@ function ApiDetailPage() {
       const response: ApiResponse<Product> = await api.get(`/products/${id}`);
       if (response.code === "SUCCESS" && response.data) {
         // 处理 apiSpec 中的换行符转义
-        const processedData = processProductSpecs(response.data);
         
-        setApiData(processedData);
+        setApiData(response.data);
         
         // 尝试从apiSpec中解析端点信息
-        if (processedData.apiSpec) {
+        if (response.data.apiSpec) {
           try {
-            const spec = JSON.parse(processedData.apiSpec) as Record<string, unknown>;
+            const spec = JSON.parse(response.data.apiSpec) as Record<string, unknown>;
             if (spec.paths) {
               const endpointList: ApiEndpoint[] = [];
               Object.entries(spec.paths).forEach(([path, methods]: [string, unknown]) => {
