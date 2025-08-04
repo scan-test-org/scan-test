@@ -30,6 +30,11 @@ public class PortalResolvingFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String origin = request.getHeader("Origin");
+            String host = request.getHeader("Host");
+            String xForwardedHost = request.getHeader("X-Forwarded-Host");
+            String xRealIp = request.getHeader("X-Real-IP");
+            String xForwardedFor = request.getHeader("X-Forwarded-For");
+            
             String domain = null;
             if (origin != null) {
                 try {
@@ -40,11 +45,17 @@ public class PortalResolvingFilter extends OncePerRequestFilter {
                     domain = null;
                 }
             }
-            log.info("zhao-origin-domain: {}, request domina:{}", domain, request.getServerName()
-            );
+            
+            log.info("域名解析调试 - Origin: {}, Host: {}, X-Forwarded-Host: {}, ServerName: {}, X-Real-IP: {}, X-Forwarded-For: {}", 
+                    origin, host, xForwardedHost, request.getServerName(), xRealIp, xForwardedFor);
+            
             if (domain == null) {
-                // 降级处理，比如用 getServerName()
-                domain = request.getServerName();
+                // 优先使用Host头，如果没有则使用ServerName
+                if (host != null && !host.isEmpty()) {
+                    domain = host.split(":")[0]; // 去掉端口号
+                } else {
+                    domain = request.getServerName();
+                }
             }
             String portalId = portalService.resolvePortal(domain);
 
