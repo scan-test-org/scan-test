@@ -63,9 +63,9 @@ public interface GatewayService {
 
     PageResult<MCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable);
 
-    String fetchAPISpec(String gatewayId, Object config);
+    String fetchAPIConfig(String gatewayId, Object config);
 
-    String fetchMcpSpec(String gatewayId, Object conf);
+    String fetchMcpConfig(String gatewayId, Object conf);
 
     void createConsumer(Consumer consumer);
 

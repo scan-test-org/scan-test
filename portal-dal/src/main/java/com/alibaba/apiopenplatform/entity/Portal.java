@@ -6,8 +6,6 @@ import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import com.alibaba.apiopenplatform.support.portal.PortalUiConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -23,14 +21,6 @@ import java.util.List;
                 @UniqueConstraint(columnNames = {"portal_id"}, name = "uk_portal_id"),
                 @UniqueConstraint(columnNames = {"name", "admin_id"}, name = "uk_name_admin_id")
         })
-//@NamedEntityGraph(
-//        name = "portal.properties",
-//        attributeNodes = {
-//                @NamedAttributeNode("portalSetting"),
-//                @NamedAttributeNode("portalUi"),
-//                @NamedAttributeNode("portalDomains")
-//        }
-//)
 @Data
 public class Portal extends BaseEntity {
     @Id
@@ -52,7 +42,6 @@ public class Portal extends BaseEntity {
     @Column(name = "admin_id", length = 32)
     private String adminId;
 
-    //    @OneToOne(mappedBy = "portal", cascade = CascadeType.ALL, orphanRemoval = true)
     @Column(name = "portal_setting_config", columnDefinition = "text")
     @Convert(converter = PortalSettingConfigConverter.class)
     private PortalSettingConfig portalSettingConfig;
@@ -61,9 +50,7 @@ public class Portal extends BaseEntity {
     @Convert(converter = PortalUiConfigConverter.class)
     private PortalUiConfig portalUiConfig;
 
-//    @OneToOne(mappedBy = "portal", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private PortalUi portalUi;
-
-    @OneToMany(mappedBy = "portal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "portal_id", referencedColumnName = "portal_id")
     private List<PortalDomain> portalDomains = new ArrayList<>();
 }

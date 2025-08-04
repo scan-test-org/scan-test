@@ -82,6 +82,10 @@
                     <artifactId>bcprov-jdk18on</artifactId>
                     <groupId>org.bouncycastle</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>swagger-core</artifactId>
+                    <groupId>io.swagger.core.v3</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 

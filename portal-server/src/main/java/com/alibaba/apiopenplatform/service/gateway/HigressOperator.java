@@ -54,22 +54,41 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public String fetchAPISpec(Gateway gateway, Object config) {
+    public String fetchAPIConfig(Gateway gateway, Object config) {
 
         return null;
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, Object conf) {
+    public String fetchMcpConfig(Gateway gateway, Object conf) {
         HigressClient client = getClient(gateway);
-        HigressRefConfig config  = (HigressRefConfig) conf;
+        HigressRefConfig config = (HigressRefConfig) conf;
 
-        HigressMCPServerResult mcpServerResult = client.execute(c -> {
-            McpServer mcpServer = c.mcpServerService().query(config.getMcpServerName());
-            return new HigressMCPServerResult().convertFrom(mcpServer);
-        });
+        McpServer mcpServer = client.execute(c -> c.mcpServerService().query(config.getMcpServerName()));
 
-        return JSONUtil.toJsonStr(mcpServerResult);
+        MCPConfigResult m = new MCPConfigResult();
+        m.setMcpServerName(mcpServer.getName());
+
+        // mcpServer config
+        MCPConfigResult.MCPServerConfig c = new MCPConfigResult.MCPServerConfig();
+        c.setPath("/" + mcpServer.getName());
+        c.setDomains(mcpServer.getDomains().stream().map(domain -> MCPConfigResult.Domain.builder()
+                        .domain(domain)
+                        .protocol("HTTPS")
+                        .build())
+                .collect(Collectors.toList()));
+        m.setMcpServerConfig(c);
+
+        // tools
+        m.setTools(mcpServer.getRawConfigurations());
+
+        // meta
+        MCPConfigResult.McpMetadata meta = new MCPConfigResult.McpMetadata();
+        meta.setSource(GatewayType.APIG_AI.name());
+        meta.setFromType(mcpServer.getType().name());
+        m.setMeta(meta);
+
+        return JSONUtil.toJsonStr(m);
     }
 
     @Override
@@ -88,11 +107,6 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
 
     @Override
     public APIResult fetchAPI(Gateway gateway, String apiId) {
-        return null;
-    }
-
-    @Override
-    public PageResult<PluginAttachmentResult> fetchPluginAttachment(Gateway gateway, String resourceType, String resourceId, Pageable pageable) {
         return null;
     }
 

@@ -32,20 +32,7 @@ public class NacosMCPServerResult extends MCPServerResult implements OutputConve
     @Override
     public NacosMCPServerResult convertFrom(McpServerBasicInfo basicInfo) {
         NacosMCPServerResult r = OutputConverter.super.convertFrom(basicInfo);
-
-        // 设置来源信息
-        r.setFromType("NACOS");
         r.setMcpServerName(basicInfo.getName());
-        
-        
-        // 设置MCP Server配置信息
-        if (basicInfo.getLocalServerConfig() != null) {
-            r.setMcpServerConfig(basicInfo.getLocalServerConfig().toString());
-        }
-        
-        // 设置domains信息 - Nacos MCP Server没有实际的域名，保持为空
-        r.setDomains(new ArrayList<>());
-        
         return r;
     }
 } 

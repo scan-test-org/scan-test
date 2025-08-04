@@ -3,6 +3,7 @@ package com.alibaba.apiopenplatform.service.impl;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
+import com.alibaba.apiopenplatform.core.event.DeveloperDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
@@ -13,18 +14,22 @@ import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.repository.ConsumerRepository;
+import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.ConsumerService;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.ConsumerStatus;
 import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Predicate;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -37,6 +42,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ConsumerServiceImpl implements ConsumerService {
 
     private final PortalService portalService;
@@ -51,8 +57,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     public ConsumerResult registerConsumer(CreateConsumerParam param) {
         PortalResult portal = portalService.getPortal(contextHolder.getPortal());
         Consumer consumer = param.convertTo();
-//        consumer.setDeveloperId(contextHolder.getUser());
-        consumer.setDeveloperId("developer");
+        consumer.setDeveloperId(contextHolder.getUser());
 
         // 审批策略
         PortalSettingConfig portalSettingConfig = portal.getPortalSettingConfig();
@@ -134,6 +139,10 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     }
 
+    private void deleteDevConsumers(String developerId) {
+        consumerRepository.deleteAllByDeveloperId(developerId);
+    }
+
     public Specification<Consumer> buildSpecification(QueryConsumerParam param) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -157,5 +166,19 @@ public class ConsumerServiceImpl implements ConsumerService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    @EventListener
+    @Async("taskExecutor")
+    public void handleDeveloperDeletion(DeveloperDeletingEvent event) {
+        String developerId = event.getDeveloperId();
+        try {
+            log.info("Cleaning consumers for developer {}", developerId);
+
+            List<Consumer> consumers = consumerRepository.findAllByDeveloperId(developerId);
+            consumers.forEach(gatewayService::deleteConsumer);
+        } catch (Exception e) {
+            log.error("Failed to clean consumers for developer {}", developerId, e);
+        }
     }
 }

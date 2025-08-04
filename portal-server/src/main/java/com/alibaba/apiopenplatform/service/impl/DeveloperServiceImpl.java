@@ -1,9 +1,10 @@
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.BooleanUtil;
-import cn.hutool.core.util.EnumUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
+import com.alibaba.apiopenplatform.core.event.DeveloperDeletingEvent;
+import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
 import com.alibaba.apiopenplatform.dto.params.developer.QueryDeveloperParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
@@ -24,9 +25,12 @@ import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -54,6 +58,8 @@ public class DeveloperServiceImpl implements DeveloperService {
     private final PortalService portalService;
     private final ContextHolder contextHolder;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     @Override
     public Optional<Developer> findByUsername(String username) {
         return developerRepository.findByUsername(username);
@@ -67,9 +73,10 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     @Transactional
     public Developer createDeveloper(DeveloperCreateParam param) {
-        if (developerRepository.findByUsername(param.getUsername()).isPresent()) {
+        developerRepository.findByUsername(param.getUsername()).ifPresent(developer -> {
             throw new BusinessException(ErrorCode.DEVELOPER_USERNAME_EXISTS, param.getUsername());
-        }
+        });
+
         Developer developer = param.convertTo();
         developer.setDeveloperId(generateDeveloperId());
 
@@ -77,10 +84,8 @@ public class DeveloperServiceImpl implements DeveloperService {
         String portalId = contextHolder.getPortal();
         developer.setPortalId(portalId);
 
-        developer.setAvatarUrl(param.getAvatarUrl());
         developer.setPasswordHash(PasswordHasher.hash(param.getPassword()));
         // 根据门户配置决定是否自动审批
-        // 通过portalId查询对应的Portal，然后获取PortalSetting
         PortalResult portal = portalService.getPortal(portalId);
 
         boolean autoApprove = portal.getPortalSettingConfig() != null
@@ -120,7 +125,6 @@ public class DeveloperServiceImpl implements DeveloperService {
         dto.setToken(token);
         dto.setUserId(developer.getDeveloperId());
         dto.setUsername(developer.getUsername());
-//        dto.setStatus(developer.getStatus());
         dto.setUserType("developer");
         return dto;
     }
@@ -313,6 +317,8 @@ public class DeveloperServiceImpl implements DeveloperService {
      */
     @Transactional
     public void deleteDeveloperAccount(String userId) {
+        eventPublisher.publishEvent(new DeveloperDeletingEvent(userId));
+
         // 删除所有外部身份
         developerExternalIdentityRepository.deleteByDeveloper_DeveloperId(userId);
         // 删除开发者主表
@@ -434,5 +440,23 @@ public class DeveloperServiceImpl implements DeveloperService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    @EventListener
+    @Async("taskExecutor")
+    public void handlePortalDeletion(PortalDeletingEvent event) {
+        String portalId = event.getPortalId();
+        try {
+            log.info("Starting to cleanup developers for portal {}", portalId);
+            List<Developer> developers = developerRepository.findByPortalId(portalId);
+
+            for (Developer developer : developers) {
+                deleteDeveloperAccount(developer.getDeveloperId());
+            }
+
+            log.info("Completed cleanup of {} developers for portal {}", developers.size(), portalId);
+        } catch (Exception e) {
+            log.error("Failed to cleanup developers for portal {}: {}", portalId, e.getMessage());
+        }
     }
 } 

@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
+import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
@@ -18,6 +19,7 @@ import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import com.alibaba.apiopenplatform.support.portal.PortalUiConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,8 @@ public class PortalServiceImpl implements PortalService {
     private final PortalRepository portalRepository;
 
     private final PortalDomainRepository portalDomainRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     private final String domainFormat = "%s.api.portal.local";
 
@@ -56,7 +60,7 @@ public class PortalServiceImpl implements PortalService {
         // Domain
         PortalDomain portalDomain = new PortalDomain();
         portalDomain.setDomain(String.format(domainFormat, portalId));
-        portalDomain.setPortal(portal);
+        portalDomain.setPortalId(portalId);
         portal.getPortalDomains().add(portalDomain);
 
         portalRepository.save(portal);
@@ -99,49 +103,32 @@ public class PortalServiceImpl implements PortalService {
         return getPortal(portal.getPortalId());
     }
 
-//    @Override
-//    public PortalResult updatePortalSetting(String portalId, UpdatePortalSettingParam param) {
-//        Portal portal = findPortal(portalId);
-//        PortalSetting portalSetting = portal.getPortalSetting();
-//        param.update(portalSetting);
-//
-//        portalRepository.saveAndFlush(portal);
-//        return getPortal(portal.getPortalId());
-//    }
-
-//    @Override
-//    public PortalResult updatePortalUi(String portalId, UpdatePortalUiParam param) {
-//        Portal portal = findPortal(portalId);
-//
-//        PortalUi portalUi = portal.getPortalUi();
-//        Optional.ofNullable(param.getLogo())
-//                .ifPresent(portalUi::setLogo);
-//
-//        Optional.ofNullable(param.getIcon())
-//                .ifPresent(portalUi::setIcon);
-//
-//        portalRepository.saveAndFlush(portal);
-//        return getPortal(portal.getPortalId());
-//    }
-
     @Override
     public void deletePortal(String portalId) {
         Portal portal = findPortal(portalId);
+
+        // 异步清理门户资源
+        eventPublisher.publishEvent(new PortalDeletingEvent(portalId));
         portalRepository.delete(portal);
     }
 
     @Override
     public String resolvePortal(String domain) {
         return portalDomainRepository.findByDomain(domain)
-                .map(portalDomain -> portalDomain.getPortal().getPortalId())
+                .map(PortalDomain::getPortalId)
                 .orElse(null);
     }
 
     @Override
     public PortalResult bindDomain(String portalId, BindDomainParam param) {
         Portal portal = findPortal(portalId);
+        portalDomainRepository.findByPortalIdAndDomain(portalId, param.getDomain())
+                .ifPresent(portalDomain -> {
+                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL_DOMAIN, param.getDomain());
+                });
+
         PortalDomain portalDomain = param.convertTo();
-        portalDomain.setPortal(portal);
+        portalDomain.setPortalId(portalId);
         portal.getPortalDomains().add(portalDomain);
 
         portalRepository.saveAndFlush(portal);
@@ -150,30 +137,16 @@ public class PortalServiceImpl implements PortalService {
 
     @Override
     public PortalResult unbindDomain(String portalId, String domain) {
-        Portal portal = findPortal(portalId);
-        PortalDomain portalDomain = portal.getPortalDomains().stream()
-                .filter(pd -> StrUtil.equals(pd.getDomain(), domain))
-                .findFirst()
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL_DOMAIN, domain));
-
-        // 默认域名不允许解绑
-        if (portalDomain.getType() == DomainType.DEFAULT) {
-            throw new BusinessException(ErrorCode.DOMAIN_NOT_ALLOWED_UNBIND, domain);
-        }
-
-        portal.getPortalDomains().remove(portalDomain);
-        portalRepository.save(portal);
+        portalDomainRepository.findByPortalIdAndDomain(portalId, domain)
+                .ifPresent(portalDomain -> {
+                    // 默认域名不允许解绑
+                    if (portalDomain.getType() == DomainType.DEFAULT) {
+                        throw new BusinessException(ErrorCode.DOMAIN_NOT_ALLOWED_UNBIND, domain);
+                    }
+                    portalDomainRepository.delete(portalDomain);
+                });
         return getPortal(portalId);
     }
-
-//    @Override
-//    public PortalSettingConfig getPortalSetting(String portalId) {
-//        Portal portal = findPortal(portalId);
-//        if (portal.getPortalSetting() == null) {
-//            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId + ": setting not found");
-//        }
-//        return new PortalSettingConfig().convertFrom(portal.getPortalSetting());
-//    }
 
     private Portal findPortal(String portalId) {
         return portalRepository.findByPortalId(portalId)

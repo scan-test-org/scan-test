@@ -58,16 +58,14 @@ public class NacosOperator {
             List<NacosMCPServerResult> results = new ArrayList<>();
             for (McpServerBasicInfo basicInfo : page.getPageItems()) {
                 NacosMCPServerResult result = new NacosMCPServerResult().convertFrom(basicInfo);
-                // 设置来源Gateway信息
-//                result.setFromGateway(nacosInstance.getNacosId());
-                
+
                 // 获取详细信息来获取完整信息
                 try {
                     McpServerDetailInfo detailInfo = service.getMcpServerDetail(namespace, basicInfo.getName(), basicInfo.getVersion());
                     if (detailInfo != null) {
-                        if (detailInfo.getLocalServerConfig() != null) {
-                            result.setMcpServerConfig(detailInfo.getLocalServerConfig().toString());
-                        }
+//                        if (detailInfo.getLocalServerConfig() != null) {
+//                            result.setMcpServerConfig(detailInfo.getLocalServerConfig().toString());
+//                        }
                         // 设置协议信息到result中，供后续使用
                         result.setProtocol(detailInfo.getProtocol());
                         result.setVersion(detailInfo.getVersion());

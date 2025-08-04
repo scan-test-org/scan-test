@@ -123,15 +123,15 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public String fetchAPISpec(String gatewayId, Object config) {
+    public String fetchAPIConfig(String gatewayId, Object config) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchAPISpec(gateway, config);
+        return getOperator(gateway).fetchAPIConfig(gateway, config);
     }
 
     @Override
-    public String fetchMcpSpec(String gatewayId, Object conf) {
+    public String fetchMcpConfig(String gatewayId, Object conf) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchMcpSpec(gateway, conf);
+        return getOperator(gateway).fetchMcpConfig(gateway, conf);
     }
 
     @Override
