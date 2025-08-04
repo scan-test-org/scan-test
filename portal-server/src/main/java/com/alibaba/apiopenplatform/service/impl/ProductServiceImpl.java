@@ -30,6 +30,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 
 import javax.persistence.criteria.*;
+import javax.transaction.Transactional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -46,6 +47,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class ProductServiceImpl implements ProductService {
 
     private final ContextHolder contextHolder;
@@ -149,8 +151,13 @@ public class ProductServiceImpl implements ProductService {
         return new PageResult<ProductPublicationResult>().convertFrom(
                 publications, publication -> {
                     ProductPublicationResult publicationResult = new ProductPublicationResult().convertFrom(publication);
-                    PortalResult portal = portalService.getPortal(publication.getPortalId());
-
+                    PortalResult portal;
+                    try {
+                        portal = portalService.getPortal(publication.getPortalId());
+                    } catch (Exception e) {
+                        log.error("Failed to get portal: {}", publication.getPortalId(), e);
+                        return null;
+                    }
 
                     publicationResult.setPortalName(portal.getName());
                     publicationResult.setAutoApproveSubscription(portal.getPortalSettingConfig().getAutoApproveSubscriptions());
