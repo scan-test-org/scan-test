@@ -6,6 +6,8 @@ import com.alibaba.apiopenplatform.support.enums.ProductStatus;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @author zh
  */
@@ -30,9 +32,11 @@ public class ProductResult implements OutputConverter<ProductResult, Product> {
 
     private String category;
 
-    private String apiSpec;
+    private LocalDateTime createAt;
 
-    private MCPServerResult mcpSpec;
+    private APIConfigResult apiConfig;
+
+    private MCPConfigResult mcpConfig;
 
     private Boolean enabled;
 }

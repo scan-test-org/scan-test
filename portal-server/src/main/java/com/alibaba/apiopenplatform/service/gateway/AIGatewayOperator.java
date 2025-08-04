@@ -7,6 +7,7 @@ import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
+import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
@@ -16,12 +17,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
 /**
  * @author zh
  */
 @Service
 @Slf4j
 public class AIGatewayOperator extends APIGOperator {
+
+    private static final String SSE_FORMAT =
+            "{\"mcpServers\":{\"%s\":{\"type\":\"sse\",\"url\":\"http://%s%s/sse\"}}}";
+
+    private static final String STREAMABLE_FORMAT =
+            "{\"mcpServers\":{\"%s\":{\"url\":\"http://%s%s\"}}}";
 
     @Override
     public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
@@ -51,19 +61,46 @@ public class AIGatewayOperator extends APIGOperator {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, Object conf) {
+    public String fetchMcpConfig(Gateway gateway, Object conf) {
         APIGRefConfig config = (APIGRefConfig) conf;
-
         HttpRoute httpRoute = fetchHTTPRoute(gateway, config.getApiId(), config.getMcpRouteId());
 
-        APIGMCPServerResult mcpServerResult = new APIGMCPServerResult().convertFrom(httpRoute);
+        MCPConfigResult m = new MCPConfigResult();
+        m.setMcpServerName(httpRoute.getName());
 
-        // HTTP转MCP类型需解析插件信息
-        if (StrUtil.isBlank(mcpServerResult.getMcpServerConfig())
-                && StrUtil.equalsIgnoreCase("ApiGatewayHttpToMCP", mcpServerResult.getFromType())) {
-            mcpServerResult.setMcpServerConfig(fetchMcpPlugin(gateway, config.getMcpRouteId()));
+        // mcpServer config
+        MCPConfigResult.MCPServerConfig c = new MCPConfigResult.MCPServerConfig();
+        if (httpRoute.getMatch() != null) {
+            c.setPath(httpRoute.getMatch().getPath().getValue());
         }
-        return JSONUtil.toJsonStr(mcpServerResult);
+        if (httpRoute.getDomainInfos() != null) {
+            c.setDomains(httpRoute.getDomainInfos().stream()
+                    .map(domainInfo -> MCPConfigResult.Domain.builder()
+                            .domain(domainInfo.getName())
+                            .protocol(domainInfo.getProtocol())
+                            .build())
+                    .collect(Collectors.toList()));
+        }
+        m.setMcpServerConfig(c);
+
+        // meta
+        MCPConfigResult.McpMetadata meta = new MCPConfigResult.McpMetadata();
+        meta.setSource(GatewayType.APIG_AI.name());
+
+        // tools
+        HttpRoute.McpServerInfo mcpServerInfo = httpRoute.getMcpServerInfo();
+        if (mcpServerInfo.getMcpRouteConfig() != null) {
+            String protocol = mcpServerInfo.getMcpRouteConfig().getProtocol();
+            meta.setFromType(protocol);
+
+            // HTTP转MCP需从插件获取tools配置
+            if (StrUtil.equalsIgnoreCase(protocol, "HTTP")) {
+                m.setTools(fetchMcpTools(gateway, config.getMcpRouteId()));
+            }
+        }
+
+        m.setMeta(meta);
+        return JSONUtil.toJsonStr(m);
     }
 
     @Override
@@ -71,22 +108,44 @@ public class AIGatewayOperator extends APIGOperator {
         return GatewayType.APIG_AI;
     }
 
+    public String fetchMcpTools(Gateway gateway, String routeId) {
+        APIGClient client = getClient(gateway);
 
-    public String fetchMcpPlugin(Gateway gateway, String routeId) {
-        PageResult<PluginAttachmentResult> page = fetchPluginAttachment(gateway, "GatewayRoute", routeId,
-                PageRequest.of(1, 100));
+        try {
+            ListPluginAttachmentsResponse response = client.execute(c -> {
+                ListPluginAttachmentsRequest request = ListPluginAttachmentsRequest.builder()
+                        .gatewayId(gateway.getGatewayId())
+                        .attachResourceId(routeId)
+                        .attachResourceType("GatewayRoute")
+                        .pageNumber(1)
+                        .pageSize(100)
+                        .build();
+                try {
+                    return c.listPluginAttachments(request).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
-        for (PluginAttachmentResult attachment : page.getContent()) {
-            PluginClassInfo pluginClassInfo = attachment.getPluginClassInfo();
-
-            if (!StrUtil.equalsIgnoreCase(pluginClassInfo.getName(), "mcp-server")) {
-                continue;
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
             }
 
-            String pluginConfig = attachment.getPluginConfig();
-            if (StrUtil.isNotBlank(pluginConfig)) {
-                return Base64.decodeStr(pluginConfig);
+            for (ListPluginAttachmentsResponseBody.Items item : response.getBody().getData().getItems()) {
+                PluginClassInfo classInfo = item.getPluginClassInfo();
+
+                if (!StrUtil.equalsIgnoreCase(classInfo.getName(), "mcp-server")) {
+                    continue;
+                }
+
+                String pluginConfig = item.getPluginConfig();
+                if (StrUtil.isNotBlank(pluginConfig)) {
+                    return Base64.decodeStr(pluginConfig);
+                }
             }
+        } catch (Exception e) {
+            log.error("Error fetching Plugin Attachment", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Plugin Attachment，Cause：" + e.getMessage());
         }
         return null;
     }

@@ -1,6 +1,7 @@
 package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.core.codec.Base64;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
@@ -45,7 +46,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public String fetchAPISpec(Gateway gateway, Object config) {
+    public String fetchAPIConfig(Gateway gateway, Object config) {
         APIGClient client = getClient(gateway);
 
         try {
@@ -67,7 +68,18 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
 
             String contentBase64 = response.getBody().getData().getSpecContentBase64();
 
-            return Base64.decodeStr(contentBase64);
+            APIConfigResult configResult = new APIConfigResult();
+            // spec
+            String apiSpec = Base64.decodeStr(contentBase64);
+            configResult.setSpec(apiSpec);
+
+            // meta
+            APIConfigResult.APIMetadata meta = new APIConfigResult.APIMetadata();
+            meta.setSource(GatewayType.APIG_API.name());
+            meta.setType("REST");
+            configResult.setMeta(meta);
+
+            return JSONUtil.toJsonStr(configResult);
         } catch (Exception e) {
             log.error("Error fetching API Spec", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching API Spec，Cause：" + e.getMessage());
@@ -75,7 +87,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public String fetchMcpSpec(Gateway gateway, Object conf) {
+    public String fetchMcpConfig(Gateway gateway, Object conf) {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
     }
 
@@ -153,45 +165,6 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         } catch (Exception e) {
             log.error("Error fetching API", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching API，Cause：" + e.getMessage());
-        }
-    }
-
-    @Override
-    public PageResult<PluginAttachmentResult> fetchPluginAttachment(Gateway gateway, String resourceType, String resourceId, Pageable pageable) {
-        APIGClient client = getClient(gateway);
-
-        List<PluginAttachmentResult> attachments = new ArrayList<>();
-        try {
-            ListPluginAttachmentsResponse response = client.execute(c -> {
-                ListPluginAttachmentsRequest request = ListPluginAttachmentsRequest.builder()
-                        .gatewayId(gateway.getGatewayId())
-                        .attachResourceId(resourceId)
-                        .attachResourceType(resourceType)
-                        .pageNumber(pageable.getPageNumber())
-                        .pageSize(pageable.getPageSize())
-                        .build();
-                try {
-                    return c.listPluginAttachments(request).get();
-                } catch (InterruptedException | ExecutionException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            if (response.getStatusCode() != 200) {
-                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
-            }
-
-            for (ListPluginAttachmentsResponseBody.Items item : response.getBody().getData().getItems()) {
-                attachments.add(PluginAttachmentResult.builder()
-                        .pluginClassInfo(item.getPluginClassInfo())
-                        .pluginConfig(item.getPluginConfig())
-                        .build());
-            }
-
-            int total = response.getBody().getData().getTotalSize();
-            return PageResult.of(attachments, pageable.getPageNumber(), pageable.getPageSize(), total);
-        } catch (Exception e) {
-            log.error("Error fetching Plugin Attachment", e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Plugin Attachment，Cause：" + e.getMessage());
         }
     }
 

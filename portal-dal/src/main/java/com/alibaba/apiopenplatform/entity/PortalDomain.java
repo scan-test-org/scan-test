@@ -25,10 +25,12 @@ public class PortalDomain extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "portal_id", referencedColumnName = "portal_id")
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Portal portal;
+    //    @ManyToOne
+//    @JoinColumn(name = "portal_id", referencedColumnName = "portal_id")
+//    @OnDelete(action = OnDeleteAction.CASCADE)
+//    private Portal portal;
+    @Column(name = "portal_id", length = 32, nullable = false)
+    private String portalId;
 
     @Column(name = "domain", length = 128, nullable = false)
     private String domain;

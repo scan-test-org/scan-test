@@ -49,29 +49,11 @@ public class PortalController {
         return portalService.listPortals(pageable);
     }
 
-//    @Operation(summary = "获取门户配置信息")
-//    @GetMapping("/{portalId}/setting")
-//    public PortalSettingConfig getPortalSetting(@PathVariable String portalId) {
-//        return portalService.getPortalSetting(portalId);
-//    }
-
     @Operation(summary = "更新门户信息")
     @PutMapping("/{portalId}")
     public PortalResult updatePortal(@PathVariable String portalId, @Valid @RequestBody UpdatePortalParam param) {
         return portalService.updatePortal(portalId, param);
     }
-
-//    @Operation(summary = "更新门户的配置信息")
-//    @PutMapping("/{portalId}/setting")
-//    public PortalResult updatePortalSetting(@PathVariable String portalId, @Valid @RequestBody UpdatePortalSettingParam param) {
-//        return portalService.updatePortalSetting(portalId, param);
-//    }
-
-//    @Operation(summary = "更新门户的UI配置")
-//    @PutMapping("/{portalId}/ui")
-//    public PortalResult updatePortalUi(@PathVariable String portalId, @Valid @RequestBody UpdatePortalUiParam param) {
-//        return portalService.updatePortalUi(portalId, param);
-//    }
 
     @Operation(summary = "删除门户")
     @DeleteMapping("/{portalId}")

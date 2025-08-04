@@ -29,9 +29,9 @@ public abstract class GatewayOperator<T> {
 
     abstract public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable);
 
-    abstract public String fetchAPISpec(Gateway gateway, Object config);
+    abstract public String fetchAPIConfig(Gateway gateway, Object config);
 
-    abstract public String fetchMcpSpec(Gateway gateway, Object conf);
+    abstract public String fetchMcpConfig(Gateway gateway, Object conf);
 
     abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
 
@@ -40,8 +40,6 @@ public abstract class GatewayOperator<T> {
     abstract public void deleteConsumer(Gateway gateway);
 
     abstract public APIResult fetchAPI(Gateway gateway, String apiId);
-
-    abstract public PageResult<PluginAttachmentResult> fetchPluginAttachment(Gateway gateway, String resourceType, String resourceId, Pageable pageable);
 
     abstract public GatewayType getGatewayType();
 

@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.service;
 
+import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
 import com.alibaba.apiopenplatform.dto.params.developer.QueryDeveloperParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
@@ -124,4 +125,12 @@ public interface DeveloperService {
      * @return
      */
     boolean updateProfile(String developerId, String username, String email, String avatarUrl);
+
+
+    /**
+     * 清理门户资源
+     *
+     * @param event
+     */
+    void handlePortalDeletion(PortalDeletingEvent event);
 }

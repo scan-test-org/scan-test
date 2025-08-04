@@ -50,11 +50,11 @@ public class ProductRef extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private SourceType sourceType;
 
-    @Column(name = "api_spec", columnDefinition = "text")
-    private String apiSpec;
+    @Column(name = "api_config", columnDefinition = "text")
+    private String apiConfig;
 
-    @Column(name = "mcp_spec", columnDefinition = "text")
-    private String mcpSpec;
+    @Column(name = "mcp_config", columnDefinition = "text")
+    private String mcpConfig;
 
     @Column(name = "enabled")
     private Boolean enabled;

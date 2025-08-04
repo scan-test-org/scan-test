@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.service;
 
+import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.dto.params.product.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.ProductPublicationResult;
@@ -107,4 +108,12 @@ public interface ProductService {
      * 上架MCP Server为Product
      */
     ProductResult addMcpServerProduct(com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam param);
+
+
+    /**
+     * 清理门户资源
+     *
+     * @param event
+     */
+    void handlePortalDeletion(PortalDeletingEvent event);
 }

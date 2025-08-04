@@ -40,6 +40,8 @@ public class PortalResolvingFilter extends OncePerRequestFilter {
                     domain = null;
                 }
             }
+            log.info("zhao-origin-domain: {}, request domina:{}", domain, request.getServerName()
+            );
             if (domain == null) {
                 // 降级处理，比如用 getServerName()
                 domain = request.getServerName();

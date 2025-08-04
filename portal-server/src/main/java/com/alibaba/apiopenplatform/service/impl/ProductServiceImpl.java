@@ -3,6 +3,7 @@ package com.alibaba.apiopenplatform.service.impl;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
+import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
@@ -25,12 +26,14 @@ import com.alibaba.apiopenplatform.support.enums.SourceType;
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 
 import javax.persistence.criteria.*;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -148,6 +151,7 @@ public class ProductServiceImpl implements ProductService {
                     ProductPublicationResult publicationResult = new ProductPublicationResult().convertFrom(publication);
                     PortalResult portal = portalService.getPortal(publication.getPortalId());
 
+
                     publicationResult.setPortalName(portal.getName());
                     publicationResult.setAutoApproveSubscription(portal.getPortalSettingConfig().getAutoApproveSubscriptions());
 
@@ -161,6 +165,10 @@ public class ProductServiceImpl implements ProductService {
 
         publicationRepository.findByPortalIdAndProductId(portalId, productId)
                 .ifPresent(publicationRepository::delete);
+    }
+
+    public void unpublishProduct(String portalId) {
+        publicationRepository.deleteAllByPortalId(portalId);
     }
 
     @Override
@@ -221,7 +229,7 @@ public class ProductServiceImpl implements ProductService {
 
         ProductRef productRef = param.convertTo();
         productRef.setProductId(productId);
-        syncSpec(product, productRef);
+        syncConfig(product, productRef);
 
         productRefRepository.save(productRef);
     }
@@ -242,18 +250,18 @@ public class ProductServiceImpl implements ProductService {
         productRefRepository.delete(productRef);
     }
 
-    private void syncSpec(Product product, ProductRef productRef) {
+    private void syncConfig(Product product, ProductRef productRef) {
         SourceType sourceType = productRef.getSourceType();
 
         if (sourceType.isGateway()) {
             GatewayResult gateway = gatewayService.getGateway(productRef.getGatewayId());
             Object config = gateway.getGatewayType().isHigress() ? productRef.getHigressRefConfig() : productRef.getApigRefConfig();
             if (product.getType() == ProductType.REST_API) {
-                String apiSpec = gatewayService.fetchAPISpec(gateway.getGatewayId(), config);
-                productRef.setApiSpec(apiSpec);
+                String apiConfig = gatewayService.fetchAPIConfig(gateway.getGatewayId(), config);
+                productRef.setApiConfig(apiConfig);
             } else {
-                String mcpSpec = gatewayService.fetchMcpSpec(gateway.getGatewayId(), config);
-                productRef.setMcpSpec(mcpSpec);
+                String mcpConfig = gatewayService.fetchMcpConfig(gateway.getGatewayId(), config);
+                productRef.setMcpConfig(mcpConfig);
             }
         } else if (sourceType.isNacos()) {
             // 从Nacos获取MCP Server详情
@@ -266,11 +274,11 @@ public class ProductServiceImpl implements ProductService {
 
                     // 获取MCP Server详情
                     com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam detailParam =
-                        nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
+                            nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
 
                     // 将详情转换为JSON字符串
                     String mcpSpec = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(detailParam);
-                    productRef.setMcpSpec(mcpSpec);
+                    productRef.setMcpConfig(mcpSpec);
                 } catch (Exception e) {
                     log.error("Failed to fetch MCP spec from Nacos for product: {}, nacosId: {}, mcpServerName: {}",
                             product.getProductId(), productRef.getNacosId(), nacosRefConfig.getMcpServerName(), e);
@@ -285,11 +293,13 @@ public class ProductServiceImpl implements ProductService {
         productRefRepository.findFirstByProductId(product.getProductId())
                 .ifPresent(productRef -> {
                     product.setEnabled(productRef.getEnabled());
-                    product.setApiSpec(productRef.getApiSpec());
+                    if (StrUtil.isNotBlank(productRef.getApiConfig())) {
+                        product.setApiConfig(JSONUtil.toBean(productRef.getApiConfig(), APIConfigResult.class));
+                    }
 
                     // Spec
-                    if (StrUtil.isNotBlank(productRef.getMcpSpec())) {
-                        product.setMcpSpec(JSONUtil.toBean(productRef.getMcpSpec(), MCPServerResult.class));
+                    if (StrUtil.isNotBlank(productRef.getMcpConfig())) {
+                        product.setMcpConfig(JSONUtil.toBean(productRef.getMcpConfig(), MCPConfigResult.class));
                     }
                     product.setStatus(ProductStatus.READY);
                 });
@@ -333,5 +343,20 @@ public class ProductServiceImpl implements ProductService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    @EventListener
+    @Async("taskExecutor")
+    @Override
+    public void handlePortalDeletion(PortalDeletingEvent event) {
+        String portalId = event.getPortalId();
+        try {
+            log.info("Starting to cleanup publications for portal {}", portalId);
+            publicationRepository.deleteAllByPortalId(portalId);
+
+            log.info("Completed cleanup publications for portal {}", portalId);
+        } catch (Exception e) {
+            log.error("Failed to cleanup developers for portal {}: {}", portalId, e.getMessage());
+        }
     }
 }
