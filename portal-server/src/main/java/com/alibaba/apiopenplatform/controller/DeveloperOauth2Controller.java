@@ -116,6 +116,38 @@ public class DeveloperOauth2Controller {
         // 动态生成redirectUri，基于当前请求的域名
         String redirectUri = generateRedirectUri(request);
         
+        // 如果state中包含API_PREFIX，使用它来构建回调URL
+        String decodedState = URLDecoder.decode(newState, "UTF-8");
+        log.info("[OIDCAuthorize] 解析state: {}", decodedState);
+        if (decodedState.contains("API_PREFIX=")) {
+            log.info("[OIDCAuthorize] 发现API_PREFIX参数");
+            String[] parts = decodedState.split("\\|");
+            for (String part : parts) {
+                if (part.startsWith("API_PREFIX=")) {
+                    String apiPrefix = part.substring("API_PREFIX=".length());
+                    log.info("[OIDCAuthorize] 提取到API_PREFIX: {}", apiPrefix);
+                    if (apiPrefix.startsWith("/")) {
+                        // 构建完整的前端URL作为回调地址
+                        String protocol = request.getScheme();
+                        // 优先使用Host头，如果没有则使用ServerName
+                        String serverName = request.getHeader("Host");
+                        if (serverName == null || serverName.isEmpty()) {
+                            serverName = request.getServerName();
+                        }
+                        // 如果Host头包含端口，去掉端口号
+                        if (serverName.contains(":")) {
+                            serverName = serverName.split(":")[0];
+                        }
+                        redirectUri = protocol + "://" + serverName + apiPrefix + "/developers/callback";
+                        log.info("[OIDCAuthorize] 构建的回调URL: {}", redirectUri);
+                    }
+                    break;
+                }
+            }
+        } else {
+            log.info("[OIDCAuthorize] 未发现API_PREFIX参数");
+        }
+        
         String url = config.getAuthorizationEndpoint()
                 + "?client_id=" + config.getClientId()
                 + "&redirect_uri=" + URLEncoder.encode(redirectUri, "UTF-8")
@@ -147,6 +179,7 @@ public class DeveloperOauth2Controller {
         String provider = null;
         String tokenParam = null;
         String mode = null;
+        String apiPrefix = null; // 提升到方法级别
         String decodedState = URLDecoder.decode(state, "UTF-8");
         String[] stateParts = decodedState.split("\\|");
         if (decodedState.startsWith("BINDING|")) {
@@ -161,6 +194,15 @@ public class DeveloperOauth2Controller {
             if (arr.length >= 2) {
                 provider = arr[1]; // 第二段为provider
                 mode = "LOGIN";
+                
+                // 解析API_PREFIX参数
+                for (String part : arr) {
+                    if (part.startsWith("API_PREFIX=")) {
+                        apiPrefix = part.substring("API_PREFIX=".length());
+                        log.info("[OIDCCallback] 解析到API_PREFIX: {}", apiPrefix);
+                        break;
+                    }
+                }
             }
         }
         if (portalId == null) {
@@ -252,9 +294,32 @@ public class DeveloperOauth2Controller {
             Optional<AuthResponseResult> loginResult = developerService.handleExternalLogin(provider, providerSubject, null, displayName, rawInfoJson);
             if (loginResult.isPresent()) {
                 String token = loginResult.get().getToken();
-                // 返回token到响应体，前端保存到localStorage
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"code\":\"SUCCESS\",\"data\":" + new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(loginResult.get()) + "}");
+                // 将token设置到Cookie中
+                Cookie tokenCookie = new Cookie("auth_token", token);
+                tokenCookie.setPath("/");
+                tokenCookie.setHttpOnly(false); // 允许JavaScript访问
+                tokenCookie.setMaxAge(3600); // 1小时过期
+                response.addCookie(tokenCookie);
+                
+                // 使用API_PREFIX构建重定向URL
+                String redirectUrl;
+                if (apiPrefix != null && apiPrefix.startsWith("/")) {
+                    // 如果是相对路径，构建完整的前端URL
+                    String protocol = request.getScheme();
+                    String serverName = request.getHeader("Host");
+                    if (serverName == null || serverName.isEmpty()) {
+                        serverName = request.getServerName();
+                    }
+                    if (serverName.contains(":")) {
+                        serverName = serverName.split(":")[0];
+                    }
+                    redirectUrl = protocol + "://" + serverName + apiPrefix + "/?login=success&fromCookie=true";
+                    log.info("[OIDCCallback] 重定向到: {}", redirectUrl);
+                } else {
+                    // 如果没有API_PREFIX，使用默认路径
+                    redirectUrl = "/?login=success&fromCookie=true";
+                }
+                response.sendRedirect(redirectUrl);
                 return;
             } else {
                 response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("三方登录失败", "UTF-8"));

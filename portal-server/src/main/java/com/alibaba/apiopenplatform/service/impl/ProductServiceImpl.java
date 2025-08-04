@@ -264,25 +264,16 @@ public class ProductServiceImpl implements ProductService {
                 productRef.setMcpConfig(mcpConfig);
             }
         } else if (sourceType.isNacos()) {
-            // 从Nacos获取MCP Server详情
+            // 从Nacos获取MCP Server配置
             NacosRefConfig nacosRefConfig = productRef.getNacosRefConfig();
             if (nacosRefConfig != null) {
                 try {
-                    String mcpServerName = nacosRefConfig.getMcpServerName();
-                    String namespaceId = nacosRefConfig.getNamespaceId() != null ? nacosRefConfig.getNamespaceId() : "public";
-                    String version = nacosRefConfig.getVersion();
-
-                    // 获取MCP Server详情
-                    com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam detailParam =
-                            nacosService.getMcpServerDetail(productRef.getNacosId(), mcpServerName, namespaceId, version);
-
-                    // 将详情转换为JSON字符串
-                    String mcpSpec = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(detailParam);
-                    productRef.setMcpConfig(mcpSpec);
+                    String mcpConfig = nacosService.fetchMcpConfig(productRef.getNacosId(), nacosRefConfig);
+                    productRef.setMcpConfig(mcpConfig);
                 } catch (Exception e) {
-                    log.error("Failed to fetch MCP spec from Nacos for product: {}, nacosId: {}, mcpServerName: {}",
+                    log.error("Failed to fetch MCP config from Nacos for product: {}, nacosId: {}, mcpServerName: {}",
                             product.getProductId(), productRef.getNacosId(), nacosRefConfig.getMcpServerName(), e);
-                    // 不抛出异常，让流程继续，只是不设置mcpSpec
+                    // 不抛出异常，让流程继续，只是不设置mcpConfig
                 }
             }
         }

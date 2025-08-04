@@ -56,6 +56,11 @@ public interface NacosService {
     PageResult<NacosMCPServerResult> fetchMcpServers(String nacosId, Pageable pageable);
 
     /**
+     * 获取Nacos MCP Server配置
+     */
+    String fetchMcpConfig(String nacosId, Object conf);
+
+    /**
      * 查找Nacos实例
      */
     NacosInstance findNacosInstance(String nacosId);

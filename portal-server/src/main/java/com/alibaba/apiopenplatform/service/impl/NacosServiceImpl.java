@@ -10,11 +10,14 @@ import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
 import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.MCPConfigResult;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
 import com.alibaba.apiopenplatform.repository.NacosInstanceRepository;
 import com.alibaba.apiopenplatform.service.NacosService;
 import com.alibaba.apiopenplatform.service.gateway.NacosOperator;
 import com.alibaba.apiopenplatform.support.enums.NacosStatus;
+import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
+import cn.hutool.json.JSONUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -202,6 +205,49 @@ public class NacosServiceImpl implements NacosService {
         List<NacosMCPServerResult> pageContent = mcpServers.subList(start, end);
         
         return PageResult.of(pageContent, pageable.getPageNumber(), pageable.getPageSize(), mcpServers.size());
+    }
+
+    @Override
+    public String fetchMcpConfig(String nacosId, Object conf) {
+        NacosRefConfig config = (NacosRefConfig) conf;
+        NacosInstance nacosInstance = findNacosInstance(nacosId);
+        
+        try {
+            McpMaintainerService service = buildDynamicMcpService(nacosInstance);
+            String namespace = config.getNamespaceId() != null ? config.getNamespaceId() : "public";
+            String version = config.getVersion();
+            
+            McpServerDetailInfo detail = service.getMcpServerDetail(namespace, config.getMcpServerName(), version);
+            if (detail == null) {
+                log.warn("getMcpServerDetail 返回 null，namespace: {}, mcpName: {}, version: {}", namespace, config.getMcpServerName(), version);
+                return null;
+            }
+            
+            MCPConfigResult m = new MCPConfigResult();
+            m.setMcpServerName(detail.getName());
+            
+            // mcpServer config
+            MCPConfigResult.MCPServerConfig c = new MCPConfigResult.MCPServerConfig();
+            if (detail.getLocalServerConfig() != null) {
+                c.setLocalConfig(detail.getLocalServerConfig().toString());
+            }
+            m.setMcpServerConfig(c);
+            
+            // tools
+            if (detail.getToolSpec() != null) {
+                m.setTools(detail.getToolSpec().toString());
+            }
+            
+            // meta
+            MCPConfigResult.McpMetadata meta = new MCPConfigResult.McpMetadata();
+            meta.setSource("nacos");
+            m.setMeta(meta);
+            
+            return JSONUtil.toJsonStr(m);
+        } catch (Exception e) {
+            log.error("获取Nacos MCP配置失败: {}", e.getMessage(), e);
+            return null;
+        }
     }
 
     @Override
