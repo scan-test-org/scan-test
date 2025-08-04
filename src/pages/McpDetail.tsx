@@ -378,9 +378,11 @@ function McpDetail() {
             <div className="font-bold mb-2">● Step 1. 生成 URL</div>
             <div className="mb-2">
               <strong>域名:</strong> {
-                mcpConfig ? 
+                mcpConfig && mcpConfig.domains && mcpConfig.domains.length > 0 ? 
                   `${mcpConfig.domains[0].protocol}://${mcpConfig.domains[0].domain}` :
-                  `${nacosMcpConfig!.mcpServerConfig.domains[0].protocol}://${nacosMcpConfig!.mcpServerConfig.domains[0].domain}`
+                  nacosMcpConfig && nacosMcpConfig.mcpServerConfig.domains && nacosMcpConfig.mcpServerConfig.domains.length > 0 ?
+                    `${nacosMcpConfig.mcpServerConfig.domains[0].protocol}://${nacosMcpConfig.mcpServerConfig.domains[0].domain}` :
+                    '无可用域名'
               }
             </div>
             <Tabs
@@ -454,9 +456,11 @@ function McpDetail() {
               <div className="text-gray-600 mb-3">请确保您的客户端能够访问以下网关地址：</div>
               <div className="flex items-center justify-between">
                 <span className="font-mono">{
-                  mcpConfig ? 
+                  mcpConfig && mcpConfig.domains && mcpConfig.domains.length > 0 ? 
                     mcpConfig.domains[0].domain :
-                    nacosMcpConfig!.mcpServerConfig.domains[0].domain
+                    nacosMcpConfig && nacosMcpConfig.mcpServerConfig.domains && nacosMcpConfig.mcpServerConfig.domains.length > 0 ?
+                      nacosMcpConfig.mcpServerConfig.domains[0].domain :
+                      '无可用域名'
                 }</span>
                 <Button type="link" onClick={() => handleCopy(
                   mcpConfig ? 
