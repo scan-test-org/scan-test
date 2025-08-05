@@ -3,6 +3,7 @@ import { PlusOutlined, LinkOutlined, DeleteOutlined, ExclamationCircleOutlined }
 import { useState, useEffect } from 'react'
 import type { ApiProduct } from '@/types/api-product'
 import { apiProductApi, gatewayApi } from '@/lib/api'
+import { getServiceName } from '@/lib/utils'
 
 interface ApiProductLinkApiProps {
   apiProduct: ApiProduct
@@ -55,9 +56,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
   const [apiList, setApiList] = useState<ApiItem[]>([])
   const [apiLoading, setApiLoading] = useState(false)
 
-  useEffect(() => {
-    console.log('123');
-    
+  useEffect(() => {    
     fetchGateways()
   }, [])
 
@@ -148,21 +147,6 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       )
     }
 
-    const getServiceName = () => {      
-      if (linkedService.apigRefConfig) {
-        if ('apiName' in linkedService.apigRefConfig && linkedService.apigRefConfig.apiName) {
-          return linkedService.apigRefConfig.apiName
-        }
-        if ('mcpServerName' in linkedService.apigRefConfig && linkedService.apigRefConfig.mcpServerName) {
-          return linkedService.apigRefConfig.mcpServerName
-        }
-      }
-      if (linkedService.higressRefConfig) {
-        return linkedService.higressRefConfig.mcpServerName
-      }
-      return '未知服务'
-    }
-
     const getServiceType = () => {
       
       if (linkedService.apigRefConfig) {
@@ -181,7 +165,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       <div className="space-y-4">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-medium">{getServiceName()}</h3>
+            <h3 className="text-lg font-medium">{getServiceName(linkedService)}</h3>
             <p className="text-sm text-gray-500">{getServiceType()}</p>
           </div>
           <Button 

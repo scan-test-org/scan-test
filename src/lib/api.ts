@@ -45,8 +45,8 @@ export default api
 // Portal相关API
 export const portalApi = {
   // 获取portal列表
-  getPortals: () => {
-    return api.get(`/portals`)
+  getPortals: (params?: { page?: number; size?: number }) => {
+    return api.get(`/portals`, { params })
   },
   deletePortal: (portalId: string) => {
     return api.delete(`/portals/${portalId}`)
@@ -127,6 +127,10 @@ export const apiProductApi = {
   deleteApiProduct: (productId: string) => {
     return api.delete(`/products/${productId}`)
   },
+  // 更新API产品
+  updateApiProduct: (productId: string, data: any) => {
+    return api.put(`/products/${productId}`, data)
+  },
   // 获取API产品关联的服务
   getApiProductRef: (productId: string) => {
     return api.get(`/products/${productId}/ref`)
@@ -156,19 +160,34 @@ export const apiProductApi = {
 // Gateway相关API
 export const gatewayApi = {
   // 获取网关列表
-  getGateways: () => {
-    return api.get(`/gateways`)
+  getGateways: (params?: any) => {
+    return api.get(`/gateways`, { params })
   },
-  // 创建APIG网关
-  createApigGateway: (data: any) => {
-    return api.post(`/gateways/apig`, { ...data, gatewayType: 'APIG_API' })
+  // 获取APIG网关
+  getApigGateway: (data: any) => {
+    return api.get(`/gateways/apig`, { params: {
+      ...data,
+      gatewayType: 'APIG_API'
+    } })
+  },
+  // 删除网关
+  deleteGateway: (gatewayId: string) => {
+    return api.delete(`/gateways/${gatewayId}`)
+  },
+  // 导入网关
+  importGateway: (data: any) => {
+    return api.post(`/gateways`, { ...data })
   },
   // 获取网关的REST API列表
-  getGatewayRestApis: (gatewayId: string) => {
-    return api.get(`/gateways/${gatewayId}/rest-apis`)
+  getGatewayRestApis: (gatewayId: string, data: any) => {
+    return api.get(`/gateways/${gatewayId}/rest-apis`, {
+      params: data
+    })
   },
   // 获取网关的MCP Server列表
-  getGatewayMcpServers: (gatewayId: string) => {
-    return api.get(`/gateways/${gatewayId}/mcp-servers`)
+  getGatewayMcpServers: (gatewayId: string, data: any) => {
+    return api.get(`/gateways/${gatewayId}/mcp-servers`, {
+      params: data
+    })
   }
 } 

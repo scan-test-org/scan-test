@@ -1,3 +1,21 @@
+export interface ApiProductConfig {
+  spec: string;
+  meta: {
+    source: string;
+    type: string;
+  }
+}
+
+export interface ApiProductMcpConfig {
+  tools: string;
+  meta: {
+    source: string;
+    mcpServerName: string;
+    mcpServerConfig: any;
+    fromType: string;
+  }
+}
+
 export interface ApiProduct {
   productId: string;
   name: string;
@@ -7,5 +25,7 @@ export interface ApiProduct {
   status: 'PENDING' | 'READY' | 'PUBLISHED' | string;
   createdAt: string;
   enableConsumerAuth?: boolean;
-  apiSpec: string;
+  apiConfig?: ApiProductConfig;
+  mcpConfig?: ApiProductMcpConfig;
+  document?: string;
 } 

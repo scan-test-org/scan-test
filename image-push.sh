@@ -12,3 +12,4 @@ version=1.0.0
 docker buildx build -t $repository/$namespace/$image:$version --platform linux/amd64 -o type=docker .
 docker login $repository --username $aliyun_user --password $aliyun_password
 docker push $repository/$namespace/$image:$version
+
