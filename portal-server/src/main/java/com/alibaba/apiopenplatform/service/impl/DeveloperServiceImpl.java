@@ -146,7 +146,17 @@ public class DeveloperServiceImpl implements DeveloperService {
             // 自动注册
             developer = new Developer();
             developer.setDeveloperId(generateDeveloperId());
-            developer.setUsername(displayName != null ? displayName : providerName + "_" + providerSubject);
+            
+            // 使用displayName作为用户名，如果为空则使用providerSubject
+            String username = displayName != null ? displayName : providerName + "_" + providerSubject;
+            String originalUsername = username;
+            int suffix = 1;
+            while (developerRepository.findByUsername(username).isPresent()) {
+                username = originalUsername + "_" + suffix;
+                suffix++;
+            }
+            
+            developer.setUsername(username);
             developer.setPasswordHash(null);
             developer.setEmail(email);
             developer.setStatus(DeveloperStatus.APPROVED);

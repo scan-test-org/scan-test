@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim
+FROM docker.m.daocloud.io/openjdk:8-jdk-slim
 
 WORKDIR /app
 
