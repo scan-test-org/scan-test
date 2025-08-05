@@ -1,18 +1,38 @@
 import { Card, Row, Col, Statistic, Progress, Tag, Table, Tooltip } from 'antd'
 import { 
-  EyeOutlined, 
   UserOutlined, 
   ApiOutlined,
-  ClockCircleOutlined,
   LinkOutlined
 } from '@ant-design/icons'
 import { Portal } from '@/types'
+import { useState, useEffect } from 'react'
+import { portalApi, apiProductApi } from '@/lib/api'
+import { useNavigate } from 'react-router-dom'
 
 interface PortalOverviewProps {
   portal: Portal
 }
 export function PortalOverview({ portal }: PortalOverviewProps) {
-  
+  const navigate = useNavigate()
+  const [apiCount, setApiCount] = useState(0)
+  const [developerCount, setDeveloperCount] = useState(0)
+
+  useEffect(() => {
+    portalApi.getDeveloperList(portal.portalId, {
+      page: 0, // 后端从0开始
+      size: 10
+    }).then((res: any) => {
+      setDeveloperCount(res.data.totalElements || 0)
+    })
+    apiProductApi.getApiProducts({
+      portalId: portal.portalId,
+      page: 0,
+      size: 10
+    }).then((res: any) => {
+      setApiCount(res.data.totalElements || 0)
+    })
+
+  }, [portal])
 
   return (
     <div className="p-6 space-y-6">
@@ -23,52 +43,36 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
 
       {/* 统计卡片 */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
+        <Col xs={24} sm={12} lg={12}>
+          <Card onClick={() => {
+            navigate(`/portals/detail?id=${portal.portalId}&tab=developers`)
+          }}>
             <Statistic
-              title="访问量"
-              value={1250}
-              prefix={<EyeOutlined />}
-              valueStyle={{ color: '#3f8600' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="注册用户"
-              value={45}
+              title="注册开发者"
+              value={developerCount}
               prefix={<UserOutlined />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
+        <Col xs={24} sm={12} lg={12}>
+          <Card onClick={() => {
+            navigate(`/portals/detail?id=${portal.portalId}&tab=published-apis`)
+          }}>
             <Statistic
-              title="API调用"
-              value={8765}
+              title="已发布的API"
+              value={apiCount}
               prefix={<ApiOutlined />}
               valueStyle={{ color: '#722ed1' }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="在线时长"
-              value={168}
-              suffix="小时"
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
+        
       </Row>
 
       {/* 详细信息 */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={24}>
           <Card title="基本信息" className="h-full">
             <div className="space-y-4">
               <div className="flex justify-between">
@@ -115,33 +119,6 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
                 <Tag color={portal.portalSettingConfig?.autoApproveSubscriptions ? "green" : "default"}>
                   {portal.portalSettingConfig?.autoApproveSubscriptions ? "已启用" : "已禁用"}
                 </Tag>
-              </div>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} lg={12}>
-          <Card title="使用统计" className="h-full">
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span>页面访问量</span>
-                  <span className="text-blue-600">1250</span>
-                </div>
-                <Progress percent={75} strokeColor="#1890ff" />
-              </div>
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span>API调用成功率</span>
-                  <span className="text-green-600">99.8%</span>
-                </div>
-                <Progress percent={99.8} strokeColor="#52c41a" />
-              </div>
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span>用户活跃度</span>
-                  <span className="text-orange-600">85%</span>
-                </div>
-                <Progress percent={85} strokeColor="#fa8c16" />
               </div>
             </div>
           </Card>
