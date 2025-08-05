@@ -229,7 +229,7 @@ public class NacosServiceImpl implements NacosService {
             // mcpServer config
             MCPConfigResult.MCPServerConfig c = new MCPConfigResult.MCPServerConfig();
             if (detail.getLocalServerConfig() != null) {
-                c.setLocalConfig(detail.getLocalServerConfig().toString());
+                c.setRawConfig(detail.getLocalServerConfig().toString());
             }
             m.setMcpServerConfig(c);
             
