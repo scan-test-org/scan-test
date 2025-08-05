@@ -56,10 +56,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         
+        // 优先从Authorization头获取token，其次从Cookie获取
         String authHeader = request.getHeader("Authorization");
         String token = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+        } else {
+            // 从Cookie中获取auth_token
+            javax.servlet.http.Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (javax.servlet.http.Cookie cookie : cookies) {
+                    if ("auth_token".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        break;
+                    }
+                }
+            }
         }
         
         if (token != null) {
