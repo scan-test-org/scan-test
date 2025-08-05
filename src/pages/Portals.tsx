@@ -10,6 +10,7 @@ import {
   Input,
   message,
   Tooltip,
+  Pagination,
 } from "antd";
 import { PlusOutlined, MoreOutlined, LinkOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
@@ -250,11 +251,15 @@ export default function Portals() {
   const [error, setError] = useState<string | null>(null);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [form] = Form.useForm();
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 12,
+    total: 0,
+  });
 
-  const fetchPortals = useCallback(() => {
-
+  const fetchPortals = useCallback((page = 0, size = 12) => {
     setLoading(true);
-    portalApi.getPortals().then((res: any) => {
+    portalApi.getPortals({ page, size }).then((res: any) => {
       const list = res?.data?.content || [];
       const portals: Portal[] = list.map((item: any) => ({
         portalId: item.portalId,
@@ -267,6 +272,11 @@ export default function Portals() {
         portalDomainConfig: item.portalDomainConfig || [],
       }));
       setPortals(portals);
+      setPagination({
+        current: page + 1,
+        pageSize: size,
+        total: res?.data?.totalElements || 0,
+      });
     }).catch((err: any) => {
       setError(err?.message || "加载失败");
     }).finally(() => {
@@ -276,8 +286,13 @@ export default function Portals() {
 
   useEffect(() => {
     setError(null);
-    fetchPortals()
-  }, []);
+    fetchPortals(0, 12);
+  }, [fetchPortals]);
+
+  // 处理分页变化
+  const handlePaginationChange = (page: number, pageSize: number) => {
+    fetchPortals(page - 1, pageSize);
+  };
 
   const handleCreatePortal = useCallback(() => {
     setIsModalVisible(true);
@@ -342,10 +357,25 @@ export default function Portals() {
             key={portal.portalId}
             portal={portal}
             onNavigate={handlePortalClick}
-            fetchPortals={fetchPortals}
+            fetchPortals={() => fetchPortals(pagination.current - 1, pagination.pageSize)}
           />
         ))}
       </div>
+
+      {pagination.total > 0 && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={handlePaginationChange}
+            showSizeChanger
+            showQuickJumper
+            showTotal={(total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`}
+            pageSizeOptions={['6', '12', '24', '48']}
+          />
+        </div>
+      )}
 
       <Modal
         title="创建Portal"

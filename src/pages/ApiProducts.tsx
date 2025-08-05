@@ -1,18 +1,19 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
-import { Badge, Button, Card, Col, Dropdown, Modal, Row, Select, Statistic, Form, Input, message } from 'antd';
+import { Badge, Button, Card, Col, Dropdown, Modal, Row, Select, Statistic, Form, Input, message, Pagination } from 'antd';
 import type { ApiProduct } from '@/types/api-product';
 import { ApiOutlined, ClockCircleOutlined, MoreOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { apiProductApi } from '@/lib/api';
 import { getStatusBadgeVariant } from '@/lib/utils';
-
+import ApiProductFormModal from '@/components/api-product/ApiProductFormModal';
 
 // 优化的产品卡片组件
-const ProductCard = memo(({ product, onNavigate, handleRefresh }: {
+const ProductCard = memo(({ product, onNavigate, handleRefresh, onEdit }: {
   product: ApiProduct;
   onNavigate: (productId: string) => void;
   handleRefresh: () => void;
+  onEdit: (product: ApiProduct) => void;
 }) => {
   const getTypeIcon = (type: string) => {
     return type === "REST_API" ? <ApiOutlined className="h-4 w-4" /> : <ClockCircleOutlined className="h-4 w-4" />
@@ -22,12 +23,9 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh }: {
     return type === "REST_API" ? "blue" : "purple"
   }
 
-
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     onNavigate(product.productId)
   }, [product.productId, onNavigate]);
-
-
 
   const handleDelete = useCallback((productId: string, productName: string, e?: React.MouseEvent | any) => {
     if (e && e.stopPropagation) e.stopPropagation();
@@ -47,10 +45,16 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh }: {
     });
   }, [handleRefresh]);
 
+  const handleEdit = useCallback((e?: React.MouseEvent | any) => {
+    if (e && e?.domEvent?.stopPropagation) e.domEvent.stopPropagation();
+    onEdit(product);
+  }, [product, onEdit]);
+
   const dropdownItems: MenuProps['items'] = [
     {
       key: 'edit',
       label: '编辑',
+      onClick: handleEdit,
     },
     {
       type: 'divider',
@@ -97,18 +101,6 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh }: {
           <p className="text-sm text-gray-600">{product.description}</p>
         )}
 
-        {/* <Row gutter={16} className="text-center">
-          <Col span={8}>
-            <Statistic title="Requests" value={product.requests} />
-          </Col>
-          <Col span={8}>
-            <Statistic title="Error Rate" value={product.errorRate} />
-          </Col>
-          <Col span={8}>
-            <Statistic title="Avg. Latency" value={product.avgLatency} />
-          </Col>
-        </Row> */}
-
         <div className="space-y-2 text-sm">
 
           <div className="flex justify-between">
@@ -138,20 +130,38 @@ export default function ApiProducts() {
   const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedType, setSelectedType] = useState<string>('All');
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 12,
+    total: 0,
+  });
 
-  const [createVisible, setCreateVisible] = useState(false);
-  const [form] = Form.useForm();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<ApiProduct | null>(null);
 
-  useEffect(() => {
-    fetchApiProducts();
-  }, []);
-
-  const fetchApiProducts = useCallback(() => {
-    apiProductApi.getApiProducts().then((res: any) => {
+  const fetchApiProducts = useCallback((page = 0, size = 12) => {
+    setLoading(true);
+    apiProductApi.getApiProducts({ page, size }).then((res: any) => {
       setApiProducts(res.data.content);
+      setPagination({
+        current: page + 1,
+        pageSize: size,
+        total: res.data.totalElements || 0,
+      });
+    }).finally(() => {
+      setLoading(false);
     });
   }, []);
-  
+
+  useEffect(() => {
+    fetchApiProducts(0, 12);
+  }, [fetchApiProducts]);
+
+  // 处理分页变化
+  const handlePaginationChange = (page: number, pageSize: number) => {
+    fetchApiProducts(page - 1, pageSize);
+  };
 
   // 优化的过滤器处理函数
   const handleCategoryChange = useCallback((category: string) => {
@@ -190,22 +200,30 @@ export default function ApiProducts() {
     navigate(`/api-products/detail?productId=${productId}`);
   }, [navigate]);
 
-  const handleCreate = async () => {
-    try {
-      const values = await form.validateFields();
-      apiProductApi.createApiProduct(values).then((res: any) => {
-        form.resetFields();
-        message.success('API Product 创建成功');
-        fetchApiProducts();
-      }).finally(() => {
-        setCreateVisible(false);
-      });
-     
-    } catch (e) {
-      // 校验失败
-    }
+  // 处理创建
+  const handleCreate = () => {
+    setEditingProduct(null);
+    setModalVisible(true);
   };
 
+  // 处理编辑
+  const handleEdit = (product: ApiProduct) => {
+    setEditingProduct(product);
+    setModalVisible(true);
+  };
+
+  // 处理模态框成功
+  const handleModalSuccess = () => {
+    setModalVisible(false);
+    setEditingProduct(null);
+    fetchApiProducts(pagination.current - 1, pagination.pageSize);
+  };
+
+  // 处理模态框取消
+  const handleModalCancel = () => {
+    setModalVisible(false);
+    setEditingProduct(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -216,9 +234,7 @@ export default function ApiProducts() {
             管理和配置您的API产品
           </p>
         </div>
-        <Button onClick={() => {
-          setCreateVisible(true);
-        }} type="primary" icon={<PlusOutlined/>}>
+        <Button onClick={handleCreate} type="primary" icon={<PlusOutlined/>}>
           创建 API Product
         </Button>
       </div>
@@ -257,60 +273,34 @@ export default function ApiProducts() {
             key={product.productId}
             product={product}
             onNavigate={handleNavigateToProduct}
-            handleRefresh={fetchApiProducts}
+            handleRefresh={() => fetchApiProducts(pagination.current - 1, pagination.pageSize)}
+            onEdit={handleEdit}
           />
         ))}
       </div>
 
-      <Modal
-        title="创建API Product"
-        open={createVisible}
-        onOk={handleCreate}
-        onCancel={() => {
-          setCreateVisible(false);
-          form.resetFields();
-        }}
-        destroyOnClose
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          preserve={false}
-        >
-          <Form.Item
-            label="名称"
-            name="name"
-            rules={[{ required: true, message: '请输入API Product名称' }]}
-          >
-            <Input placeholder="请输入API Product名称" />
-          </Form.Item>
-          <Form.Item
-            label="描述"
-            name="description"
-            rules={[{ required: true, message: '请输入描述' }]}
-          >
-            <Input.TextArea placeholder="请输入描述" rows={3} />
-          </Form.Item>
-          <Form.Item
-            label="类型"
-            name="type"
-            rules={[{ required: true, message: '请选择类型' }]}
-          >
-            <Select placeholder="请选择类型">
-              <Select.Option value="REST_API">REST API</Select.Option>
-              <Select.Option value="MCP_SERVER">MCP Server</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="分类"
-            name="category"
-            rules={[{ required: true, message: '请输入分类' }]}
-          >
-            <Input placeholder="请输入分类" />
-          </Form.Item>
-        </Form>
-        
-      </Modal>
+      {pagination.total > 0 && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={handlePaginationChange}
+            showSizeChanger
+            showQuickJumper
+            showTotal={(total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`}
+            pageSizeOptions={['6', '12', '24', '48']}
+          />
+        </div>
+      )}
+
+      <ApiProductFormModal
+        visible={modalVisible}
+        onCancel={handleModalCancel}
+        onSuccess={handleModalSuccess}
+        productId={editingProduct?.productId}
+        initialData={editingProduct || undefined}
+      />
     </div>
   )
 }

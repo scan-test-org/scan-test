@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, Row, Col, Statistic, Progress, Tag } from 'antd'
 import { 
   ApiOutlined, 
@@ -7,13 +9,53 @@ import {
   ClockCircleOutlined
 } from '@ant-design/icons'
 import type { ApiProduct } from '@/types/api-product'
-import { getStatusBadgeVariant } from '@/lib/utils'
+import { getStatusBadgeVariant, getServiceName } from '@/lib/utils'
+import { apiProductApi } from '@/lib/api'
+
 
 interface ApiProductOverviewProps {
   apiProduct: ApiProduct
 }
 
 export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
+
+  const [portalCount, setPortalCount] = useState(0)
+  const [linkedService, setLinkedService] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (apiProduct.productId) {
+      Promise.all([
+        fetchLinkedService(),
+        fetchPublishedPortals()
+      ]).finally(() => {
+        setLoading(false)
+      })
+    }
+  }, [apiProduct.productId])
+
+
+  const fetchLinkedService = async () => {
+    try {
+      const res = await apiProductApi.getApiProductRef(apiProduct.productId)
+      setLinkedService(res.data || null)
+    } catch (error) {
+      console.error('获取关联服务失败:', error)
+      setLinkedService(null)
+    }
+  }
+
+  const fetchPublishedPortals = async () => {
+    try {
+      const res = await apiProductApi.getApiProductPublications(apiProduct.productId)
+      setPortalCount(res.data.content?.length || 0)
+    } catch (error) {
+    } finally {
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -23,37 +65,35 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
 
       {/* 统计卡片 */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={8}>
-          <Card>
+        <Col xs={24} sm={12} lg={12}>
+          <Card
+            onClick={() => {
+              navigate(`/api-products/detail?productId=${apiProduct.productId}&tab=portal`)
+            }}
+          >
             <Statistic
               title="关联门户"
-              value={apiProduct.portals}
+              value={portalCount}
               prefix={<EyeOutlined />}
               valueStyle={{ color: '#3f8600' }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={8}>
-          <Card>
+        <Col xs={24} sm={12} lg={12}>
+          <Card
+            onClick={() => {
+              navigate(`/api-products/detail?productId=${apiProduct.productId}&tab=link-api`)
+            }}
+          >
             <Statistic
               title="关联服务"
-              value={apiProduct.linkedServices}
+              value={getServiceName(linkedService)}
               prefix={<ApiOutlined />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>
         </Col>
         
-        <Col xs={24} sm={12} lg={8}>
-          <Card>
-            <Statistic
-              title="用户数量"
-              value={0}
-              prefix={<UserOutlined />}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
       </Row>
 
       {/* 详细信息 */}

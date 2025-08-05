@@ -1,90 +1,66 @@
-import { Card, Button, Input, Space, Tag } from 'antd'
-import { SaveOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons'
-import { useState } from 'react'
+import { Card, Button, Space, Tag, message } from 'antd'
+import { SaveOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons'
+import { useEffect, useState, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm';
+import MdEditor from 'react-markdown-editor-lite'
+import 'react-markdown-editor-lite/lib/index.css'
 import type { ApiProduct } from '@/types/api-product'
-
-const { TextArea } = Input
-
+import { apiProductApi } from '@/lib/api'
 
 interface ApiProductUsageGuideProps {
   apiProduct: ApiProduct
+  handleRefresh: () => void
 }
 
-const mockUsageGuide = `# Payment API 使用指南
-
-## 快速开始
-
-### 1. 获取API密钥
-首先，您需要在开发者门户中注册并获取API密钥。
-
-### 2. 安装SDK
-\`\`\`bash
-npm install payment-api-sdk
-\`\`\`
-
-### 3. 初始化客户端
-\`\`\`javascript
-import { PaymentAPI } from 'payment-api-sdk';
-
-const client = new PaymentAPI({
-  apiKey: 'your-api-key',
-  environment: 'production'
-});
-\`\`\`
-
-## 基本用法
-
-### 创建支付
-\`\`\`javascript
-const payment = await client.payments.create({
-  amount: 100.00,
-  currency: 'USD',
-  payment_method: 'card',
-  description: 'Payment for order #123'
-});
-
-console.log(payment.id); // pay_123456789
-\`\`\`
-
-### 查询支付状态
-\`\`\`javascript
-const payment = await client.payments.retrieve('pay_123456789');
-console.log(payment.status); // succeeded
-\`\`\`
-
-## 错误处理
-\`\`\`javascript
-try {
-  const payment = await client.payments.create({
-    amount: -100.00, // 无效金额
-    currency: 'USD'
-  });
-} catch (error) {
-  console.error('Payment failed:', error.message);
-}
-\`\`\`
-
-## 最佳实践
-1. 始终验证API响应
-2. 实现适当的错误处理
-3. 使用webhook接收支付通知
-4. 定期检查API状态
-
-## 支持
-如有问题，请联系我们的技术支持团队。
-`
-
-export function ApiProductUsageGuide({ apiProduct }: ApiProductUsageGuideProps) {
+export function ApiProductUsageGuide({ apiProduct, handleRefresh }: ApiProductUsageGuideProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [content, setContent] = useState(mockUsageGuide)
+  const [content, setContent] = useState(apiProduct.document || '')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setContent(apiProduct.document || '')
+  }, [apiProduct.document])
 
   const handleSave = () => {
     setIsEditing(false)
-    // 这里可以调用API保存使用指南
+    apiProductApi.updateApiProduct(apiProduct.productId, {
+      document: content
+    }).then(() => {
+      message.success('保存成功')
+      handleRefresh();
+
+    })
   }
 
-  const handlePreview = () => {
-    // 这里可以打开预览模式
+  const handleEditorChange = ({ text }: { text: string }) => {
+    setContent(text)
+  }
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.type !== 'text/markdown' && !file.name.endsWith('.md')) {
+        message.error('请选择 Markdown 文件 (.md)')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const content = e.target?.result as string
+        setContent(content)
+        message.success('文件导入成功')
+      }
+      reader.readAsText(file)
+    }
+    // 清空 input 值，允许重复选择同一文件
+    if (event.target) {
+      event.target.value = ''
+    }
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
   }
 
   return (
@@ -95,9 +71,11 @@ export function ApiProductUsageGuide({ apiProduct }: ApiProductUsageGuideProps) 
           <p className="text-gray-600">编辑和发布API使用指南</p>
         </div>
         <Space>
-          <Button icon={<EyeOutlined />} onClick={handlePreview}>
-            预览
-          </Button>
+          {isEditing && (
+            <Button icon={<UploadOutlined />} onClick={triggerFileInput}>
+              导入文件
+            </Button>
+          )}
           {isEditing ? (
             <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
               保存
@@ -107,6 +85,11 @@ export function ApiProductUsageGuide({ apiProduct }: ApiProductUsageGuideProps) 
               编辑
             </Button>
           )}
+          {isEditing && (
+            <Button onClick={() => setIsEditing(false)}>
+              取消编辑
+            </Button>
+          )}
         </Space>
       </div>
 
@@ -114,49 +97,49 @@ export function ApiProductUsageGuide({ apiProduct }: ApiProductUsageGuideProps) 
         <div className="mb-4">
           <Space>
             <Tag color="blue">Markdown</Tag>
-            <Tag color="green">已发布</Tag>
-            <span className="text-gray-500">最后更新: 2025-01-08 10:30:00</span>
           </Space>
         </div>
 
         {isEditing ? (
           <div>
-            <TextArea
+            <MdEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={20}
+              onChange={handleEditorChange}
+              style={{ height: '500px', minHeight: '300px', width: '100%' }}
               placeholder="请输入使用指南内容..."
-              className="font-mono"
+              renderHTML={(text) => <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>}
+              canView={{ menu: true, md: true, html: true, both: true, fullScreen: false, hideMenu: false }}
+              htmlClass="custom-html-style"
+              markdownClass="custom-markdown-style"
             />
             <div className="mt-4 text-sm text-gray-500">
               支持Markdown格式，可以使用代码块、表格、链接等语法
             </div>
           </div>
         ) : (
-          <div className="prose max-w-none">
-            <pre className="bg-gray-100 p-4 rounded overflow-x-auto">
-              <code>{content}</code>
-            </pre>
+          <div className="prose custom-html-style h-[500px] overflow-auto">
+            {content ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            ) : (
+              <div className="min-h-[300px] flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+                <div className="text-center">
+                  <p className="text-lg">暂无使用指南内容</p>
+                  <p className="text-sm">点击编辑按钮开始编写使用指南</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Card>
 
-      <Card title="指南设置">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <span>指南可见性</span>
-            <Tag color="green">公开</Tag>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>多语言支持</span>
-            <Tag color="blue">中文</Tag>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>版本控制</span>
-            <Tag color="blue">启用</Tag>
-          </div>
-        </div>
-      </Card>
+      {/* 隐藏的文件输入框 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".md,text/markdown"
+        onChange={handleFileImport}
+        style={{ display: 'none' }}
+      />
     </div>
   )
 } 

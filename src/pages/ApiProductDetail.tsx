@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, Badge, Dropdown, MenuProps } from 'antd'
+import { Button, Badge, Dropdown, MenuProps, Modal, message } from 'antd'
 import {
   MoreOutlined,
   LeftOutlined
@@ -12,6 +12,7 @@ import { ApiProductUsageGuide } from '@/components/api-product/ApiProductUsageGu
 import { ApiProductPortal } from '@/components/api-product/ApiProductPortal'
 import { apiProductApi } from '@/lib/api';
 import type { ApiProduct } from '@/types/api-product';
+import ApiProductFormModal from '@/components/api-product/ApiProductFormModal';
 
 
 const menuItems = [
@@ -53,13 +54,21 @@ export default function ApiProductDetail() {
   const validTab = menuItems.some(item => item.key === currentTab) ? currentTab : 'overview'
   const [activeTab, setActiveTab] = useState(validTab)
 
-  useEffect(() => {
+  const [editModalVisible, setEditModalVisible] = useState(false)
+
+  
+  const fetchApiProduct = () => {
     const productId = searchParams.get('productId')
     if (productId) {
       apiProductApi.getApiProductDetail(productId).then((res: any) => {
         setApiProduct(res.data)
       })
+      
     }
+  }
+
+  useEffect(() => {
+    fetchApiProduct()
   }, [])
 
   // 同步URL参数和activeTab状态
@@ -84,11 +93,11 @@ export default function ApiProductDetail() {
       case "overview":
         return <ApiProductOverview apiProduct={apiProduct} />
       case "link-api":
-        return <ApiProductLinkApi apiProduct={apiProduct} handleRefresh={() => {}} />
+        return <ApiProductLinkApi apiProduct={apiProduct} handleRefresh={fetchApiProduct} />
       case "api-docs":
-        return <ApiProductApiDocs apiProduct={apiProduct} />
+        return <ApiProductApiDocs apiProduct={apiProduct} handleRefresh={fetchApiProduct} />
       case "usage-guide":
-        return <ApiProductUsageGuide apiProduct={apiProduct} />
+        return <ApiProductUsageGuide apiProduct={apiProduct} handleRefresh={fetchApiProduct} />
       case "portal":
         return <ApiProductPortal apiProduct={apiProduct} />
       default:
@@ -100,29 +109,48 @@ export default function ApiProductDetail() {
     {
       key: 'edit',
       label: '编辑产品',
-    },
-    {
-      key: 'copy',
-      label: '复制产品',
-    },
-    {
-      key: 'export',
-      label: '导出配置',
-    },
-    {
-      type: 'divider',
+      onClick: () => {
+        setEditModalVisible(true)
+      },
     },
     {
       key: 'delete',
-      label: '删除产品',
+      label: '删除',
+      onClick: () => {
+        Modal.confirm({
+          title: '确认删除',
+          content: '确定要删除该产品吗？',
+          onOk: () => {
+            handleDeleteApiProduct()
+          },
+        })
+      },
       danger: true,
     },
   ]
 
+  const handleDeleteApiProduct = () => {
+    apiProductApi.deleteApiProduct(apiProduct.productId).then(() => {
+      message.success('删除成功')
+      navigate('/api-products')
+    }).catch((error) => {
+      message.error(error.response?.data?.message || '删除失败')
+    })
+  }
+
+  const handleEditSuccess = () => {
+    setEditModalVisible(false)
+    fetchApiProduct()
+  }
+
+  const handleEditCancel = () => {
+    setEditModalVisible(false)
+  }
+
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full overflow-hidden">
       {/* API Product 详情侧边栏 */}
-      <div className="w-64 border-r bg-white flex flex-col">
+      <div className="w-64 border-r bg-white flex flex-col flex-shrink-0">
         {/* 返回按钮 */}
         <div className="pb-4 border-b">
           <Button
@@ -144,12 +172,10 @@ export default function ApiProductDetail() {
             </Dropdown>
           </div>
           <div className="space-y-2">
-            {/* <div className="flex items-center gap-2">
-              <Badge>{apiProduct.version}</Badge>
-              <Badge status={apiProduct.status === "published" ? "success" : "default"}>
-                {apiProduct.status === "published" ? "已发布" : "草稿"}
-              </Badge>
-            </div> */}
+            <div className="flex items-center gap-2">
+              <Badge>{apiProduct.type}</Badge>
+              
+            </div>
             <p className="text-sm text-gray-500">{apiProduct.description}</p>
           </div>
         </div>
@@ -177,9 +203,19 @@ export default function ApiProductDetail() {
       </div>
 
       {/* 主内容区域 */}
-      <div className="flex-1 overflow-auto">
-        {renderContent()}
+      <div className="flex-1 overflow-auto min-w-0">
+        <div className="w-full max-w-full">
+          {renderContent()}
+        </div>
       </div>
+
+      <ApiProductFormModal
+        visible={editModalVisible}
+        onCancel={handleEditCancel}
+        onSuccess={handleEditSuccess}
+        productId={apiProduct.productId}
+        initialData={apiProduct}
+      />
     </div>
   )
 }

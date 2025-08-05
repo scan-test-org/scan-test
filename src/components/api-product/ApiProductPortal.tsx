@@ -90,7 +90,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
       render: (_: any, record: Portal) => (
         <Space size="middle">
           <Button onClick={() => {
-            navigate(`/portals/detail?portalId=${record.portalId}`)
+            navigate(`/portals/detail?id=${record.portalId}`)
           }} type="link" icon={<EyeOutlined />}>
             查看
           </Button>

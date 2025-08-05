@@ -1,6 +1,5 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import Layout from '@/components/Layout'
-import Dashboard from '@/pages/Dashboard'
 import Portals from '@/pages/Portals'
 import ApiProducts from '@/pages/ApiProducts'
 import Consoles from '@/pages/Consoles'
@@ -19,7 +18,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: <Navigate to="/portals" replace />,
       },
       {
         path: 'portals',

@@ -124,9 +124,8 @@ const Layout: React.FC = () => {
         </aside>
 
         {/* 主内容区域 */}
-        <div className="flex-1 min-h-screen">
-
-          <main className="p-8">
+        <div className="flex-1 min-h-screen overflow-hidden">
+          <main className="p-8 w-full max-w-full overflow-x-hidden">
             <Outlet />
           </main>
         </div>
