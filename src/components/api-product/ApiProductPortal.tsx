@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Table, Tag, Space, Switch, Modal, Form, Input, Select, message } from 'antd'
+import { Card, Button, Table, Tag, Space, Switch, Modal, Form, Input, Select, message, Checkbox } from 'antd'
 import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useState, useEffect } from 'react'
 import type { ApiProduct } from '@/types/api-product';
@@ -16,14 +16,20 @@ interface Portal {
   createdAt: string
 }
 
-
 export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
   const [publishedPortals, setPublishedPortals] = useState<Portal[]>([])
   const [allPortals, setAllPortals] = useState<Portal[]>([])
   const [isModalVisible, setIsModalVisible] = useState(false)
+  const [selectedPortalIds, setSelectedPortalIds] = useState<string[]>([])
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [modalLoading, setModalLoading] = useState(false)
+
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [total, setTotal] = useState(0)
 
   const navigate = useNavigate()
 
@@ -32,7 +38,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
     if (apiProduct.productId) {
       fetchPublishedPortals()
     }
-  }, [apiProduct.productId])
+  }, [apiProduct.productId, currentPage, pageSize])
 
   // 获取所有门户列表
   useEffect(() => {
@@ -42,8 +48,12 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
   const fetchPublishedPortals = async () => {
     setLoading(true)
     try {
-      const res = await apiProductApi.getApiProductPublications(apiProduct.productId)
+      const res = await apiProductApi.getApiProductPublications(apiProduct.productId, {
+        page: currentPage - 1,
+        size: pageSize
+      })
       setPublishedPortals(res.data.content || [])
+      setTotal(res.data.totalElements || 0)
     } catch (error) {
       console.error('获取已发布门户失败:', error)
       message.error('获取已发布门户失败')
@@ -55,13 +65,26 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
   const fetchAllPortals = async () => {
     setPortalLoading(true)
     try {
-      const res = await portalApi.getPortals()
-      setAllPortals(res.data.content || [])
+      const res = await portalApi.getPortals({
+        page: 0,
+        size: 1000 // 获取所有门户
+      })
+      setAllPortals(res.data.content?.map((item: any) => ({
+        ...item,
+        portalName: item.name,
+      })) || [])
     } catch (error) {
       console.error('获取门户列表失败:', error)
       message.error('获取门户列表失败')
     } finally {
       setPortalLoading(false)
+    }
+  }
+
+  const handlePageChange = (page: number, size?: number) => {
+    setCurrentPage(page)
+    if (size) {
+      setPageSize(size)
     }
   }
 
@@ -75,14 +98,6 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
       title: '门户ID',
       dataIndex: 'portalId',
       key: 'portalId',
-    },
-    {
-      title: '自动审批订阅',
-      dataIndex: 'autoApproveSubscription',
-      key: 'autoApproveSubscription',
-      render: (autoApproveSubscription: boolean) => (
-        <Switch checked={autoApproveSubscription} disabled />
-      )
     },
     {
       title: '操作',
@@ -105,6 +120,37 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
           </Button>
         </Space>
       ),
+    },
+  ]
+
+  const modalColumns = [
+    {
+      title: '选择',
+      dataIndex: 'select',
+      key: 'select',
+      width: 60,
+      render: (_: any, record: Portal) => (
+        <Checkbox
+          checked={selectedPortalIds.includes(record.portalId)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedPortalIds([...selectedPortalIds, record.portalId])
+            } else {
+              setSelectedPortalIds(selectedPortalIds.filter(id => id !== record.portalId))
+            }
+          }}
+        />
+      ),
+    },
+    {
+      title: '门户名称',
+      dataIndex: 'portalName',
+      key: 'portalName',
+    },
+    {
+      title: '门户ID',
+      dataIndex: 'portalId',
+      key: 'portalId',
     },
   ]
 
@@ -133,25 +179,33 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
   }
 
   const handleModalOk = async () => {
+    if (selectedPortalIds.length === 0) {
+      message.warning('请至少选择一个门户')
+      return
+    }
+
+    setModalLoading(true)
     try {
-      const values = await form.validateFields()
-      const { portalId } = values
-      
-      await apiProductApi.publishToPortal(apiProduct.productId, portalId)
-      message.success('发布成功')
+      // 批量发布到选中的门户
+      for (const portalId of selectedPortalIds) {
+        await apiProductApi.publishToPortal(apiProduct.productId, portalId)
+      }
+      message.success(`成功发布到 ${selectedPortalIds.length} 个门户`)
+      setSelectedPortalIds([])
       setIsModalVisible(false)
-      form.resetFields()
       // 重新获取已发布的门户列表
       fetchPublishedPortals()
     } catch (error) {
       console.error('发布失败:', error)
       message.error('发布失败')
+    } finally {
+      setModalLoading(false)
     }
   }
 
   const handleModalCancel = () => {
     setIsModalVisible(false)
-    form.resetFields()
+    setSelectedPortalIds([])
   }
 
   return (
@@ -177,7 +231,16 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
             dataSource={publishedPortals}
             rowKey="portalId"
             loading={loading}
-            pagination={false}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: total,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+              onChange: handlePageChange,
+              onShowSizeChange: handlePageChange,
+            }}
           />
         )}
       </Card>
@@ -189,42 +252,22 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
         onCancel={handleModalCancel}
         okText="发布"
         cancelText="取消"
-        width={600}
+        width={800}
+        confirmLoading={modalLoading}
       >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="portalId"
-            label="选择门户"
-            rules={[{ required: true, message: '请选择门户' }]}
-          >
-            <Select 
-              placeholder="请选择要发布到的门户" 
-              loading={portalLoading}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-              }
-              optionLabelProp="label"
-            >
-              {allPortals
-                .filter(portal => !publishedPortals.some(published => published.portalId === portal.portalId))
-                .map(portal => (
-                  <Select.Option 
-                    key={portal.portalId} 
-                    value={portal.portalId}
-                    label={portal.name}
-                  >
-                    <div>
-                      <div className="font-medium">{portal.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {portal.portalId} - {portal.description || '无描述'}
-                      </div>
-                    </div>
-                  </Select.Option>
-                ))}
-            </Select>
-          </Form.Item>
-        </Form>
+        <div className="mb-4">
+          <p className="text-gray-600">请选择要发布到的门户：</p>
+        </div>
+        <Table
+          columns={modalColumns}
+          dataSource={allPortals.filter(portal => 
+            !publishedPortals.some(published => published.portalId === portal.portalId)
+          )}
+          rowKey="portalId"
+          loading={portalLoading}
+          pagination={false}
+          scroll={{ y: 400 }}
+        />
       </Modal>
     </div>
   )

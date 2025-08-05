@@ -23,7 +23,7 @@ export interface ApiProduct {
   type: 'REST_API' | 'MCP_SERVER';
   category: string;
   status: 'PENDING' | 'READY' | 'PUBLISHED' | string;
-  createdAt: string;
+  createAt: string;
   enableConsumerAuth?: boolean;
   apiConfig?: ApiProductConfig;
   mcpConfig?: ApiProductMcpConfig;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, Table, Modal, Form, Button, Space, Select, message } from 'antd'
+import { Card, Table, Modal, Form, Button, Space, Select, message, Checkbox } from 'antd'
 import { EyeOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { Portal, ApiProduct } from '@/types'
 import { apiProductApi } from '@/lib/api'
@@ -14,31 +14,60 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
   const [apiProducts, setApiProducts] = useState<ApiProduct[]>([])
   const [apiProductsOptions, setApiProductsOptions] = useState<ApiProduct[]>([])
   const [isModalVisible, setIsModalVisible] = useState(false)
+  const [selectedApiIds, setSelectedApiIds] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const [modalLoading, setModalLoading] = useState(false)
+  
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [total, setTotal] = useState(0)
 
   const [form] = Form.useForm()
+  
   useEffect(() => {
     if (portal.portalId) {
       fetchApiProducts()
     }
-  }, [portal.portalId])
+  }, [portal.portalId, currentPage, pageSize])
 
   const fetchApiProducts = () => {
+    setLoading(true)
     apiProductApi.getApiProducts({
-      portalId: portal.portalId
+      portalId: portal.portalId,
+      page: currentPage - 1,
+      size: pageSize
     }).then((res) => {
       setApiProducts(res.data.content)
+      setTotal(res.data.totalElements || 0)
+    }).finally(() => {
+      setLoading(false)
     })
   }
 
   useEffect(() => {
     if (isModalVisible) {
-      apiProductApi.getApiProducts({}).then((res) => {
+      setModalLoading(true)
+      apiProductApi.getApiProducts({
+        page: 0,
+        size: 1000 // 获取所有可用的API
+      }).then((res) => {
         // 过滤掉已发布在该门户里的api
-        setApiProductsOptions(res.data.content.filter((api: ApiProduct) => !apiProducts.some((a: ApiProduct) => a.productId === api.productId)))
+        setApiProductsOptions(res.data.content.filter((api: ApiProduct) => 
+          !apiProducts.some((a: ApiProduct) => a.productId === api.productId)
+        ))
+      }).finally(() => {
+        setModalLoading(false)
       })
     }
   }, [isModalVisible, apiProducts])
 
+  const handlePageChange = (page: number, size?: number) => {
+    setCurrentPage(page)
+    if (size) {
+      setPageSize(size)
+    }
+  }
 
   const columns = [
     {
@@ -87,6 +116,47 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
     },
   ]
 
+  const modalColumns = [
+    {
+      title: '选择',
+      dataIndex: 'select',
+      key: 'select',
+      width: 60,
+      render: (_: any, record: ApiProduct) => (
+        <Checkbox
+          checked={selectedApiIds.includes(record.productId)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedApiIds([...selectedApiIds, record.productId])
+            } else {
+              setSelectedApiIds(selectedApiIds.filter(id => id !== record.productId))
+            }
+          }}
+        />
+      ),
+    },
+    {
+      title: '名称',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'ID',
+      dataIndex: 'productId',
+      key: 'productId',
+    },
+    {
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
+    },
+  ]
+
   const handleDelete = (productId: string, productName: string) => {
     Modal.confirm({
       title: '确认移除',
@@ -108,14 +178,31 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
   }
 
   const handlePublish = async () => {
-    const values = await form.validateFields()
-    apiProductApi.publishToPortal(values.productId, portal.portalId).then((res) => {
-      message.success('发布成功')
+    if (selectedApiIds.length === 0) {
+      message.warning('请至少选择一个API')
+      return
+    }
+
+    setModalLoading(true)
+    try {
+      // 批量发布选中的API
+      for (const productId of selectedApiIds) {
+        await apiProductApi.publishToPortal(productId, portal.portalId)
+      }
+      message.success(`成功发布 ${selectedApiIds.length} 个API`)
+      setSelectedApiIds([])
       fetchApiProducts()
       setIsModalVisible(false)
-    }).catch((error) => {
+    } catch (error) {
       message.error('发布失败')
-    })
+    } finally {
+      setModalLoading(false)
+    }
+  }
+
+  const handleModalCancel = () => {
+    setIsModalVisible(false)
+    setSelectedApiIds([])
   }
 
   return (
@@ -134,8 +221,18 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
         <Table 
           columns={columns} 
           dataSource={apiProducts}
-          rowKey="id"
-          pagination={false}
+          rowKey="productId"
+          loading={loading}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            onChange: handlePageChange,
+            onShowSizeChange: handlePageChange,
+          }}
         />
       </Card>
 
@@ -143,29 +240,24 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
         title="发布新API"
         open={isModalVisible}
         onOk={handlePublish}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={handleModalCancel}
+        okText="发布"
+        cancelText="取消"
+        width={800}
+        confirmLoading={modalLoading}
       >
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={handlePublish}
-        >
-          {/* 选择API */}
-          <Form.Item
-            label="API ID"
-            name="productId"
-            rules={[{ required: true, message: '请输入API ID' }]}
-          >
-            <Select
-              options={apiProductsOptions.map((api) => ({
-                label: api.name,
-                value: api.productId
-              }))}
-            />
-          </Form.Item>
-        </Form>
+        <div className="mb-4">
+          <p className="text-gray-600">请选择要发布的API产品：</p>
+        </div>
+        <Table
+          columns={modalColumns}
+          dataSource={apiProductsOptions}
+          rowKey="productId"
+          loading={modalLoading}
+          pagination={false}
+          scroll={{ y: 400 }}
+        />
       </Modal>
-
     </div>
   )
 } 

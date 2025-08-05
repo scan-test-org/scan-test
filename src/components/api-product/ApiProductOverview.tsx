@@ -98,7 +98,7 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
 
       {/* 详细信息 */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={24}>
           <Card title="基本信息" className="h-full">
             <div className="space-y-4">
               <div className="flex justify-between">
@@ -113,13 +113,17 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">创建时间</span>
-                <span>{apiProduct.createdAt}</span>
+                <span>{new Date(apiProduct.createAt).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">产品描述</span>
+                <span>{apiProduct.description}</span>
               </div>
               
             </div>
           </Card>
         </Col>
-        <Col xs={24} lg={12}>
+        {/* <Col xs={24} lg={12}>
           <Card title="使用统计" className="h-full">
             <div className="space-y-6">
               <div>
@@ -145,7 +149,7 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
               </div>
             </div>
           </Card>
-        </Col>
+        </Col> */}
       </Row>
     </div>
   )

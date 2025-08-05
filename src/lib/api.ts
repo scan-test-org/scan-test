@@ -144,8 +144,8 @@ export const apiProductApi = {
     return api.delete(`/products/${productId}/ref`)
   },
   // 获取API产品已发布的门户列表
-  getApiProductPublications: (productId: string) => {
-    return api.get(`/products/${productId}/publications`)
+  getApiProductPublications: (productId: string, params?: any) => {
+    return api.get(`/products/${productId}/publications`, { params })
   },
   // 发布API产品到门户
   publishToPortal: (productId: string, portalId: string) => {
