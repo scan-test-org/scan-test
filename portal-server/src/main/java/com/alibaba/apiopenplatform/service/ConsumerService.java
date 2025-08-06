@@ -4,6 +4,9 @@ import com.alibaba.apiopenplatform.dto.params.consumer.QueryConsumerParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateConsumerParam;
 import com.alibaba.apiopenplatform.dto.result.ConsumerResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.dto.result.ConsumerCredentialResult;
+import com.alibaba.apiopenplatform.dto.params.consumer.CreateCredentialParam;
+import com.alibaba.apiopenplatform.dto.params.consumer.UpdateCredentialParam;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -43,4 +46,34 @@ public interface ConsumerService {
      * @param consumerId
      */
     void deleteConsumer(String consumerId);
+
+    // 凭证相关CRUD
+    /**
+     * 创建Consumer凭证
+     * @param consumerId Consumer ID
+     * @param param 创建参数
+     * @return ConsumerCredentialResult
+     */
+    ConsumerCredentialResult createCredential(String consumerId, CreateCredentialParam param);
+
+    /**
+     * 获取Consumer凭证
+     * @param consumerId Consumer ID
+     * @return ConsumerCredentialResult
+     */
+    ConsumerCredentialResult getCredential(String consumerId);
+
+    /**
+     * 更新Consumer凭证
+     * @param consumerId Consumer ID
+     * @param param 更新参数
+     * @return ConsumerCredentialResult
+     */
+    ConsumerCredentialResult updateCredential(String consumerId, UpdateCredentialParam param);
+
+    /**
+     * 删除Consumer凭证
+     * @param consumerId Consumer ID
+     */
+    void deleteCredential(String consumerId);
 }

@@ -75,14 +75,14 @@ public class ConsumerController {
     @DeveloperAuth
     public ConsumerCredentialResult createCredential(@PathVariable String consumerId,
                                                      @RequestBody @Valid CreateCredentialParam param) {
-        return null;
+        return consumerService.createCredential(consumerId, param);
     }
 
     @Operation(summary = "获取Consumer凭证信息")
     @GetMapping("/{consumerId}/credentials")
     @DeveloperAuth
     public ConsumerCredentialResult getCredential(@PathVariable String consumerId) {
-        return null;
+        return consumerService.getCredential(consumerId);
     }
 
     @Operation(summary = "更新Consumer凭证")
@@ -90,14 +90,14 @@ public class ConsumerController {
     @DeveloperAuth
     public ConsumerCredentialResult updateCredential(@PathVariable String consumerId,
                                                      @RequestBody @Valid UpdateCredentialParam param) {
-        return null;
+        return consumerService.updateCredential(consumerId, param);
     }
 
     @Operation(summary = "删除Consumer凭证")
     @DeleteMapping("/{consumerId}/credentials")
     @DeveloperAuth
     public void deleteCredential(@PathVariable String consumerId) {
-
+        consumerService.deleteCredential(consumerId);
     }
 
     @Operation(summary = "订阅API产品")

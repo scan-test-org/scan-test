@@ -9,11 +9,16 @@ import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.consumer.QueryConsumerParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateConsumerParam;
+import com.alibaba.apiopenplatform.dto.params.consumer.CreateCredentialParam;
+import com.alibaba.apiopenplatform.dto.params.consumer.UpdateCredentialParam;
 import com.alibaba.apiopenplatform.dto.result.ConsumerResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
+import com.alibaba.apiopenplatform.dto.result.ConsumerCredentialResult;
 import com.alibaba.apiopenplatform.entity.Consumer;
+import com.alibaba.apiopenplatform.entity.ConsumerCredential;
 import com.alibaba.apiopenplatform.repository.ConsumerRepository;
+import com.alibaba.apiopenplatform.repository.ConsumerCredentialRepository;
 import com.alibaba.apiopenplatform.service.ConsumerService;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
@@ -50,6 +55,8 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private final ContextHolder contextHolder;
 
+    private final ConsumerCredentialRepository consumerCredentialRepository;
+
     @Override
     public ConsumerResult createConsumer(CreateConsumerParam param) {
         PortalResult portal = portalService.getPortal(contextHolder.getPortal());
@@ -82,6 +89,66 @@ public class ConsumerServiceImpl implements ConsumerService {
     public void deleteConsumer(String consumerId) {
         Consumer consumer = contextHolder.isDeveloper() ? findDevConsumer(consumerId) : findConsumer(consumerId);
         consumerRepository.delete(consumer);
+    }
+
+    @Override
+    public ConsumerCredentialResult createCredential(String consumerId, CreateCredentialParam param) {
+        // 校验consumer存在
+        Consumer consumer = contextHolder.isDeveloper() ? findDevConsumer(consumerId) : findConsumer(consumerId);
+        // 检查是否已存在凭证
+        consumerCredentialRepository.findByConsumerId(consumerId).ifPresent(c -> {
+            throw new BusinessException(ErrorCode.RESOURCE_EXIST, "ConsumerCredential", consumerId);
+        });
+        ConsumerCredential credential = new ConsumerCredential();
+        credential.setConsumerId(consumerId);
+        credential.setApiKeyConfig(param.getApiKeyConfig());
+        credential.setHmacConfig(param.getHmacConfig());
+        credential.setJwtConfig(param.getJwtConfig());
+        consumerCredentialRepository.save(credential);
+        ConsumerCredentialResult result = new ConsumerCredentialResult();
+        result.setApiKeyConfig(credential.getApiKeyConfig());
+        result.setHmacConfig(credential.getHmacConfig());
+        result.setJwtConfig(credential.getJwtConfig());
+        return result;
+    }
+
+    @Override
+    public ConsumerCredentialResult getCredential(String consumerId) {
+        ConsumerCredential credential = consumerCredentialRepository.findByConsumerId(consumerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Consumer credential not found"));
+        ConsumerCredentialResult result = new ConsumerCredentialResult();
+        result.setApiKeyConfig(credential.getApiKeyConfig());
+        result.setHmacConfig(credential.getHmacConfig());
+        result.setJwtConfig(credential.getJwtConfig());
+        return result;
+    }
+
+    @Override
+    public ConsumerCredentialResult updateCredential(String consumerId, UpdateCredentialParam param) {
+        ConsumerCredential credential = consumerCredentialRepository.findByConsumerId(consumerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Consumer credential not found"));
+        if (param.getApiKeyConfig() != null) {
+            credential.setApiKeyConfig(param.getApiKeyConfig());
+        }
+        if (param.getHmacConfig() != null) {
+            credential.setHmacConfig(param.getHmacConfig());
+        }
+        if (param.getJwtConfig() != null) {
+            credential.setJwtConfig(param.getJwtConfig());
+        }
+        consumerCredentialRepository.save(credential);
+        ConsumerCredentialResult result = new ConsumerCredentialResult();
+        result.setApiKeyConfig(credential.getApiKeyConfig());
+        result.setHmacConfig(credential.getHmacConfig());
+        result.setJwtConfig(credential.getJwtConfig());
+        return result;
+    }
+
+    @Override
+    public void deleteCredential(String consumerId) {
+        ConsumerCredential credential = consumerCredentialRepository.findByConsumerId(consumerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Consumer credential not found"));
+        consumerCredentialRepository.delete(credential);
     }
 
     private Consumer findConsumer(String consumerId) {
