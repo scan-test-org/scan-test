@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
+import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
@@ -35,7 +36,7 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
         HigressClient client = getClient(gateway);
 
         McpServerPageQuery query = new McpServerPageQuery();

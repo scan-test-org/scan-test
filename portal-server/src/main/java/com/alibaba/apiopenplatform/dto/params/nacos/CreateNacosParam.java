@@ -2,7 +2,7 @@ package com.alibaba.apiopenplatform.dto.params.nacos;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
-import com.alibaba.apiopenplatform.support.enums.NacosStatus;
+
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
@@ -38,7 +38,7 @@ public class CreateNacosParam implements InputConverter<NacosInstance> {
         nacosInstance.setUsername(this.username);
         nacosInstance.setPassword(this.password);
         nacosInstance.setDescription(this.description);
-        nacosInstance.setStatus(NacosStatus.CONNECTING);
+
         return nacosInstance;
     }
 } 

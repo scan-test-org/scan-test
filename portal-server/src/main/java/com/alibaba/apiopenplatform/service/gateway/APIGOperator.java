@@ -3,6 +3,7 @@ package com.alibaba.apiopenplatform.service.gateway;
 import cn.hutool.core.codec.Base64;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
+import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -41,7 +42,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
     }
 

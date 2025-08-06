@@ -3,6 +3,7 @@ package com.alibaba.apiopenplatform.controller;
 import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
+import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -69,7 +70,7 @@ public class GatewayController {
 
     @Operation(summary = "获取MCP Server列表")
     @GetMapping("/{gatewayId}/mcp-servers")
-    public PageResult<MCPServerResult> fetchMcpServers(@PathVariable String gatewayId,
+    public PageResult<GatewayMCPServerResult> fetchMcpServers(@PathVariable String gatewayId,
                                                        Pageable pageable) {
         return gatewayService.fetchMcpServers(gatewayId, pageable);
     }

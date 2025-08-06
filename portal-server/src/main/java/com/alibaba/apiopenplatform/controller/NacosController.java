@@ -65,15 +65,11 @@ public class NacosController {
     @Operation(summary = "获取Nacos中的MCP Server列表")
     @GetMapping("/{nacosId}/mcp-servers")
     public PageResult<NacosMCPServerResult> fetchMcpServers(@PathVariable String nacosId,
-                                                       Pageable pageable) {
+                                                       Pageable pageable) throws Exception {
         return nacosService.fetchMcpServers(nacosId, pageable);
     }
 
-    @Operation(summary = "测试Nacos连接")
-    @PostMapping("/{nacosId}/test-connection")
-    public boolean testConnection(@PathVariable String nacosId) {
-        return nacosService.testConnection(nacosId);
-    }
+
 
     // ----------- MCP Server相关 -----------
     @Operation(summary = "获取指定Nacos实例中的MCP Server详情")

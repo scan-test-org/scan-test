@@ -3,6 +3,7 @@ package com.alibaba.apiopenplatform.service.gateway;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
+import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.service.gateway.client.GatewayClient;
@@ -27,7 +28,7 @@ public abstract class GatewayOperator<T> {
 
     abstract public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, Pageable pageable);
 
-    abstract public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable);
+    abstract public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable);
 
     abstract public String fetchAPIConfig(Gateway gateway, Object config);
 

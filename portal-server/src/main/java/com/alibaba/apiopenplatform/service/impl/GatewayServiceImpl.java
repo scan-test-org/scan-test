@@ -6,6 +6,7 @@ import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
+import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.entity.Gateway;
@@ -117,7 +118,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public PageResult<MCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable) {
+    public PageResult<GatewayMCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable) {
         Gateway gateway = findGateway(gatewayId);
         return getOperator(gateway).fetchMcpServers(gateway, pageable);
     }

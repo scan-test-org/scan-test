@@ -40,16 +40,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import com.alibaba.apiopenplatform.auth.JwtService;
-import com.alibaba.apiopenplatform.entity.Portal;
-//import com.alibaba.apiopenplatform.entity.PortalSetting;
-import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 
 import java.net.URLDecoder;
-import com.alibaba.apiopenplatform.dto.params.developer.OidcTokenRequestParam;
-import com.alibaba.apiopenplatform.dto.params.developer.OidcProvidersRequestParam;
-import com.alibaba.apiopenplatform.dto.params.developer.ListIdentitiesRequestParam;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import javax.servlet.http.Cookie;
 import javax.annotation.PostConstruct;
@@ -70,7 +64,6 @@ public class DeveloperOauth2Controller {
     private final DeveloperRepository developerRepository;
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     private final DeveloperService developerService;
-//    private final PortalRepository portalRepository;
     private final PortalService portalService;
     private final JwtService jwtService;
     private final ContextHolder contextHolder;
@@ -79,7 +72,6 @@ public class DeveloperOauth2Controller {
     
     @PostConstruct
     public void init() {
-        // 配置RestTemplate绕过SSL验证
         this.restTemplate = createRestTemplateWithSSLBypass();
     }
     
@@ -98,18 +90,11 @@ public class DeveloperOauth2Controller {
                 }
             };
 
-            // 创建SSLContext
             javax.net.ssl.SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("TLS");
             sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-
-            // 设置默认SSL配置
             javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
             javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-
-            // 创建简单的RestTemplate
             RestTemplate restTemplate = new RestTemplate();
-            
-            // 设置超时
             org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
                     new org.springframework.http.client.SimpleClientHttpRequestFactory();
             factory.setConnectTimeout(10000);
@@ -118,7 +103,6 @@ public class DeveloperOauth2Controller {
 
             return restTemplate;
         } catch (Exception e) {
-            log.warn("无法配置SSL绕过，使用默认RestTemplate: {}", e.getMessage());
             return new RestTemplate();
         }
     }
@@ -133,9 +117,7 @@ public class DeveloperOauth2Controller {
     @GetMapping("/authorize")
     public void universalAuthorize(@RequestParam String provider, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String portalId = contextHolder.getPortal();
-        // 不再支持 frontendRedirectUrl 参数，统一从 PortalSetting 读取
         String newState = state;
-        // 通过portalId查询对应的Portal，然后获取PortalSetting
         PortalResult portal = portalService.getPortal(portalId);
         PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
         if (portalSetting == null) {
@@ -147,10 +129,8 @@ public class DeveloperOauth2Controller {
         for (PortalSettingConfig setting : settings) {
             if (setting.getOidcConfigs() != null) {
                 for (OidcConfig c : setting.getOidcConfigs()) {
-                    log.info("[OIDC配置检查] provider={}, enabled={}, name={}, id={}", c.getProvider(), c.isEnabled(), c.getName(), c.getId());
                     if (provider.equals(c.getProvider())) {
                         config = c;
-                        log.info("[OIDC配置匹配] 命中 provider={}, enabled={}", c.getProvider(), c.isEnabled());
                         break;
                     }
                 }
@@ -161,39 +141,29 @@ public class DeveloperOauth2Controller {
             log.error("[OIDC配置未启用] provider={}, configs={}", provider, settings);
             throw new BusinessException(ErrorCode.OIDC_CONFIG_DISABLED);
         }
-        // 动态生成redirectUri，基于当前请求的域名
         String redirectUri = generateRedirectUri(request);
         
         // 如果state中包含API_PREFIX，使用它来构建回调URL
         String decodedState = URLDecoder.decode(newState, "UTF-8");
-        log.info("[OIDCAuthorize] 解析state: {}", decodedState);
         if (decodedState.contains("API_PREFIX=")) {
-            log.info("[OIDCAuthorize] 发现API_PREFIX参数");
             String[] parts = decodedState.split("\\|");
             for (String part : parts) {
                 if (part.startsWith("API_PREFIX=")) {
                     String apiPrefix = part.substring("API_PREFIX=".length());
-                    log.info("[OIDCAuthorize] 提取到API_PREFIX: {}", apiPrefix);
                     if (apiPrefix.startsWith("/")) {
-                        // 构建完整的前端URL作为回调地址
                         String protocol = request.getScheme();
-                        // 优先使用Host头，如果没有则使用ServerName
                         String serverName = request.getHeader("Host");
                         if (serverName == null || serverName.isEmpty()) {
                             serverName = request.getServerName();
                         }
-                        // 如果Host头包含端口，去掉端口号
                         if (serverName.contains(":")) {
                             serverName = serverName.split(":")[0];
                         }
                         redirectUri = protocol + "://" + serverName + apiPrefix + "/developers/callback";
-                        log.info("[OIDCAuthorize] 构建的回调URL: {}", redirectUri);
                     }
                     break;
                 }
             }
-        } else {
-            log.info("[OIDCAuthorize] 未发现API_PREFIX参数");
         }
         
         String url = config.getAuthorizationEndpoint()
@@ -205,20 +175,7 @@ public class DeveloperOauth2Controller {
         response.sendRedirect(url);
     }
 
-    /**
-     * OIDC统一回调接口，支持登录和绑定分流
-     * state 推荐格式：BINDING|{随机串}|{provider}|{token} 或 LOGIN|{provider}
-     * <br>前端示例：
-     *   const stateRaw = `BINDING|${Math.random().toString(36).slice(2)}|${provider}|${token}`;
-     *   const state = encodeURIComponent(stateRaw);
-     *   // 跳转参数 ...&state=${state}
-     * 后端解析：
-     *   String decodedState = URLDecoder.decode(state, "UTF-8");
-     *   String[] arr = decodedState.split("\\|");
-     *   String provider = arr[2]; // BINDING模式下
-     *   String token = arr.length > 3 ? arr[3] : null;
-     * @note portalId 已自动根据域名识别，无需传递
-     */
+
     @Operation(summary = "OIDC统一回调", description = "处理第三方登录回调。state参数格式：BINDING|{随机串}|{provider}|{token} 或 LOGIN|{provider}。portalId已自动根据域名识别，无需传递。注意：此接口由第三方平台调用，不能直接测试。")
     @GetMapping("/callback")
     public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -249,7 +206,6 @@ public class DeveloperOauth2Controller {
                     for (String part : arr) {
                         if (part.startsWith("API_PREFIX=")) {
                             apiPrefix = part.substring("API_PREFIX=".length());
-                            log.info("[OIDCCallback] 解析到API_PREFIX: {}", apiPrefix);
                             break;
                         }
                     }
@@ -273,10 +229,8 @@ public class DeveloperOauth2Controller {
             for (PortalSettingConfig setting : settings) {
                 if (setting.getOidcConfigs() != null) {
                     for (OidcConfig c : setting.getOidcConfigs()) {
-                        log.info("[OIDC配置检查] provider={}, enabled={}, name={}, id={}", c.getProvider(), c.isEnabled(), c.getName(), c.getId());
                         if (provider.equals(c.getProvider())) {
                             config = c;
-                            log.info("[OIDC配置匹配] 命中 provider={}, enabled={}", c.getProvider(), c.isEnabled());
                             break;
                         }
                     }
@@ -357,7 +311,6 @@ public class DeveloperOauth2Controller {
                         }
                         // 重定向到前端根路径，而不是API路径
                         redirectUrl = protocol + "://" + serverName + "/?login=success&fromCookie=true";
-                        log.info("[OIDCCallback] 重定向到: {}", redirectUrl);
                     } else {
                         // 如果没有API_PREFIX，使用默认路径
                         redirectUrl = "/?login=success&fromCookie=true";
@@ -437,9 +390,6 @@ public class DeveloperOauth2Controller {
 
     // --- 通用三方用户信息获取 ---
     private Map<String, Object> fetchUserInfoMap(String code, OidcConfig config, HttpServletRequest request) {
-        log.info("[fetchUserInfoMap] 开始获取用户信息，clientId={}, tokenEndpoint={}, userInfoEndpoint={}", 
-                config.getClientId(), config.getTokenEndpoint(), config.getUserInfoEndpoint());
-        
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client_id", config.getClientId());
         params.add("client_secret", config.getClientSecret());
@@ -448,40 +398,28 @@ public class DeveloperOauth2Controller {
         params.add("redirect_uri", redirectUri);
         params.add("grant_type", "authorization_code");
         
-        log.info("[fetchUserInfoMap] 请求参数: client_id={}, redirect_uri={}, code={}", 
-                config.getClientId(), redirectUri, code);
-        
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.set("User-Agent", "Portal-Management/1.0");
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
         
         try {
-            log.info("[fetchUserInfoMap] 发送token请求到: {}", config.getTokenEndpoint());
             ResponseEntity<Map> tokenResp = restTemplate.postForEntity(config.getTokenEndpoint(), entity, Map.class);
-            log.info("[fetchUserInfoMap] token响应状态: {}", tokenResp.getStatusCode());
-            log.info("[fetchUserInfoMap] token响应体: {}", tokenResp.getBody());
             
             String accessToken = (String) tokenResp.getBody().get("access_token");
             if (accessToken == null) {
-                log.error("[fetchUserInfoMap] 未获取到access_token，响应体: {}", tokenResp.getBody());
                 return null;
             }
-            log.info("[fetchUserInfoMap] 获取到access_token，长度: {}", accessToken.length());
             
             HttpHeaders userHeaders = new HttpHeaders();
             userHeaders.setBearerAuth(accessToken);
             userHeaders.set("User-Agent", "Portal-Management/1.0");
             HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
             
-            log.info("[fetchUserInfoMap] 发送用户信息请求到: {}", config.getUserInfoEndpoint());
             ResponseEntity<Map> userResp = restTemplate.exchange(config.getUserInfoEndpoint(), HttpMethod.GET, userEntity, Map.class);
-            log.info("[fetchUserInfoMap] 用户信息响应状态: {}", userResp.getStatusCode());
-            log.info("[fetchUserInfoMap] 用户信息响应体: {}", userResp.getBody());
             
             return userResp.getBody();
         } catch (Exception e) {
-            log.error("[fetchUserInfoMap] 获取用户信息时发生异常", e);
             throw e;
         }
     }
@@ -502,22 +440,18 @@ public class DeveloperOauth2Controller {
         
         // 检查请求路径是否包含API前缀
         String requestURI = request.getRequestURI();
-        log.info("[generateRedirectUri] 请求URI: {}", requestURI);
         
         // 检查是否包含API前缀，或者检查state参数中的API_PREFIX
         String redirectUri;
         if (requestURI.contains("/api/v1/")) {
             redirectUri = baseUrl + "/api/v1/developers/callback";
-            log.info("[generateRedirectUri] 从请求URI检测到API前缀，使用: {}", redirectUri);
         } else {
             // 检查请求参数中的state
             String state = request.getParameter("state");
             if (state != null && state.contains("API_PREFIX=/api/v1")) {
                 redirectUri = baseUrl + "/api/v1/developers/callback";
-                log.info("[generateRedirectUri] 从state参数检测到API前缀，使用: {}", redirectUri);
             } else {
                 redirectUri = baseUrl + "/developers/callback";
-                log.info("[generateRedirectUri] 未检测到API前缀，使用默认: {}", redirectUri);
             }
         }
         

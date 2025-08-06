@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
@@ -34,7 +35,7 @@ public class AIGatewayOperator extends APIGOperator {
             "{\"mcpServers\":{\"%s\":{\"url\":\"http://%s%s\"}}}";
 
     @Override
-    public PageResult<? extends MCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
         PageResult<APIResult> page = fetchAPIs(gateway, APIGAPIType.MCP, PageRequest.of(0, 1));
         if (page.getTotalElements() == 0) {
             return PageResult.empty(pageable.getPageNumber(), pageable.getPageSize());

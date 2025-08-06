@@ -44,26 +44,14 @@ import com.alibaba.apiopenplatform.entity.Administrator;
 public class AdministratorController {
     private final AdministratorService administratorService;
     private final TokenBlacklistService tokenBlacklistService;
-
-
-
     @Operation(summary = "管理员登录", description = "管理员登录，只需用户名和密码。前端只需传username和password，后端自动校验。")
     @PostMapping("/login")
     public Response<AuthResponseResult> login(@Valid @RequestBody AdminLoginParam param) {
         AuthResponseResult authResult = administratorService.loginWithPassword(param.getUsername(), param.getPassword())
                 .orElseThrow(() -> new RuntimeException("AUTH_FAILED"));
-        
-         //返回token到响应体，前端保存到localStorage
         return Response.ok(authResult);
-        // 设置到 cookie（非 HttpOnly），支持跨域访问
-//        response.setHeader("Set-Cookie", "token=" + token + "; Path=/; Max-Age=3600; SameSite=None; HttpOnly=false");
-    }
 
-    // @Operation(summary = "管理员受保护接口", description = "仅测试用，返回管理员受保护信息")
-    // @GetMapping("/profile")
-    // public Response<String> profile() {
-    //     return Response.ok("管理员受保护信息");
-    // }
+    }
 
     @Operation(summary = "管理员登出",
             description = "管理员登出，将当前token加入黑名单。前端需要清除localStorage中的token。")

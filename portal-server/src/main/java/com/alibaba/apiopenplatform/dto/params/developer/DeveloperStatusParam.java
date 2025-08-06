@@ -9,6 +9,8 @@ import lombok.Data;
  */
 @Data
 public class DeveloperStatusParam {
+
     private String portalId;
+
     private String status;
 } 

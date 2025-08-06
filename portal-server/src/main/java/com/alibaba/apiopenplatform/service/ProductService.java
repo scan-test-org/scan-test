@@ -87,7 +87,7 @@ public interface ProductService {
      * @param productId
      * @param param
      */
-    void addProductRef(String productId, CreateProductRefParam param);
+    void addProductRef(String productId, CreateProductRefParam param) throws Exception;
 
     /**
      * 查询API产品引用的资源

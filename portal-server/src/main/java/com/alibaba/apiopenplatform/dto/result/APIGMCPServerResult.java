@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class APIGMCPServerResult extends MCPServerResult implements OutputConverter<APIGMCPServerResult, HttpRoute> {
+public class APIGMCPServerResult extends GatewayMCPServerResult implements OutputConverter<APIGMCPServerResult, HttpRoute> {
 
     private String apiId;
 
