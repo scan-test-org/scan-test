@@ -14,6 +14,8 @@ public class APIGConfig {
 
     private String region;
 
+    private String uid;
+
     public String buildUniqueKey() {
         return String.format("%s:%s:%s", accessKey, secretKey, region);
     }

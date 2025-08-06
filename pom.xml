@@ -26,7 +26,7 @@
         <mysql.version>8.0.33</mysql.version>
         <hutool.version>5.8.23</hutool.version>
         <springdoc.version>1.7.0</springdoc.version>
-        <apigsdk.version>4.0.6</apigsdk.version>
+        <apigsdk.version>4.0.10</apigsdk.version>
         <okhttp.version>4.12.0</okhttp.version>
         <higress-sdk.version>0.0.1-SNAPSHOT</higress-sdk.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>

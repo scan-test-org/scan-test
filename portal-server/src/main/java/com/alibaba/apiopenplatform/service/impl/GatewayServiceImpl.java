@@ -136,11 +136,23 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public void createConsumer(Consumer consumer) {
+    public String createConsumer(Consumer consumer) {
         List<Gateway> gateways = findAllGateways();
+        // 由于可能有多个网关，我们返回第一个网关的Consumer ID
+        // 在实际使用中，应该根据具体的网关类型来决定返回哪个ID
+        String gwConsumerId = null;
         for (Gateway gateway : gateways) {
-            getOperator(gateway).createConsumer(gateway);
+            try {
+                gwConsumerId = getOperator(gateway).createConsumer(gateway, consumer);
+                if (gwConsumerId != null) {
+                    break; // 使用第一个成功创建的Consumer ID
+                }
+            } catch (Exception e) {
+                log.error("Failed to create consumer in gateway {}", gateway.getGatewayId(), e);
+                // 继续尝试其他网关
+            }
         }
+        return gwConsumerId != null ? gwConsumerId : consumer.getConsumerId(); // 如果都失败了，返回原始Consumer ID
     }
 
     @Override
@@ -148,6 +160,14 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
         List<Gateway> gateways = findAllGateways();
         for (Gateway gateway : gateways) {
             getOperator(gateway).deleteConsumer(gateway);
+        }
+    }
+
+    @Override
+    public void authorizationConsumerToApi(Consumer consumer, String apiId) {
+        List<Gateway> gateways = findAllGateways();
+        for (Gateway gateway : gateways) {
+            getOperator(gateway).authorizationConsumerToApi(gateway, consumer.getConsumerId(), apiId);
         }
     }
 

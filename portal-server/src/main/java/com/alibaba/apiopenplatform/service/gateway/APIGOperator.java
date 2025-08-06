@@ -9,6 +9,7 @@ import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.entity.Gateway;
+import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
@@ -131,12 +132,44 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         }
     }
 
-    public void createConsumer(Gateway gateway) {
+    @Override
+    public String createConsumer(Gateway gateway, Consumer consumer) {
+        APIGClient client = getClient(gateway);
+        try {
+            // 创建APIG网关中的Consumer
+            log.info("Creating consumer {} in APIG gateway {}", consumer.getConsumerId(), gateway.getGatewayId());
+            
+            // TODO: 实现具体的APIG Consumer创建逻辑
+            // 例如：调用APIG的创建Consumer API，返回网关中的Consumer ID
+            
+            // 暂时返回原始Consumer ID，实际应该从网关返回真实的Consumer ID
+            return consumer.getConsumerId();
+            
+        } catch (Exception e) {
+            log.error("Error creating consumer {} in APIG gateway {}", consumer.getConsumerId(), gateway.getGatewayId(), e);
+            throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to create consumer in APIG gateway: " + e.getMessage());
+        }
     }
 
     @Override
     public void deleteConsumer(Gateway gateway) {
 
+    }
+
+    @Override
+    public void authorizationConsumerToApi(Gateway gateway, String consumerId, String apiId) {
+        APIGClient client = getClient(gateway);
+        try {
+            // 为消费者授权访问指定的API
+            log.info("Authorizing consumer {} to apiId {} in APIG gateway {}", consumerId, apiId, gateway.getGatewayId());
+            
+            // TODO: 实现具体的APIG授权逻辑
+            // 例如：调用APIG的授权API，创建消费者对API的访问权限等
+            
+        } catch (Exception e) {
+            log.error("Error authorizing consumer {} to apiId {} in APIG gateway {}", consumerId, apiId, gateway.getGatewayId(), e);
+            throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to authorize consumer to apiId in APIG gateway: " + e.getMessage());
+        }
     }
 
     @Override

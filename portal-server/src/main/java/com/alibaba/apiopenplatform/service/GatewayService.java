@@ -68,7 +68,14 @@ public interface GatewayService {
 
     String fetchMcpConfig(String gatewayId, Object conf);
 
-    void createConsumer(Consumer consumer);
+    String createConsumer(Consumer consumer);
 
     void deleteConsumer(Consumer consumer);
+
+    /**
+     * 为消费者授权访问指定的API
+     * @param consumer 消费者
+     * @param apiId API ID
+     */
+    void authorizationConsumerToApi(Consumer consumer, String apiId);
 }
