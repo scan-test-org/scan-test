@@ -217,23 +217,15 @@ public class ConsumerServiceImpl implements ConsumerService {
         
         // 为每个网关处理Consumer创建和授权
         try {
+            // 检查是否已存在该网关的Consumer映射
+            gatewayService.assertGatewayConsumerExist(productRef.getGatewayId(), consumer);
+
             Gateway gateway = gatewayRepository.findByGatewayId(productRef.getGatewayId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Gateway", productRef.getGatewayId()));
-            // 检查是否已存在该网关的Consumer映射
-            Optional<ConsumerRef> existingRef = consumerRefRepository.findByConsumerIdAndUidAndRegionAndGatewayType(consumerId, gateway.getApigConfig().getUid(), gateway.getApigConfig().getRegion(), gateway.getGatewayType().name());
-
-            if (!existingRef.isPresent()) {
-                // 创建网关Consumer
-                createGatewayConsumer(consumer, gateway);
-            }
 
             // 获取API ID并创建授权关系
             String apiId = getApiIdFromProductRef(productRef, gateway);
             if (apiId != null) {
-                // 获取网关Consumer ID
-                ConsumerRef consumerRef = consumerRefRepository.findByConsumerIdAndUidAndRegionAndGatewayType(consumerId, gateway.getApigConfig().getUid(), gateway.getApigConfig().getRegion(), gateway.getGatewayType().name())
-                        .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "ConsumerRef", consumerId + ":" + gateway.getGatewayType()));
-
                 // 创建授权关系
                 gatewayService.authorizationConsumerToApi(consumer, apiId);
 
@@ -343,28 +335,6 @@ public class ConsumerServiceImpl implements ConsumerService {
             });
         } catch (Exception e) {
             log.error("Failed to clean consumers for developer {}", developerId, e);
-        }
-    }
-
-    private void createGatewayConsumer(Consumer consumer, Gateway gateway) {
-        try {
-            // 调用网关创建Consumer，获取返回的网关Consumer ID
-            String gwConsumerId = gatewayService.createConsumer(consumer);
-            
-            // 创建映射关系
-            ConsumerRef consumerRef = new ConsumerRef();
-            consumerRef.setConsumerId(consumer.getConsumerId());
-            consumerRef.setUid(consumer.getDeveloperId()); // 使用developerId作为uid
-            consumerRef.setRegion(gateway.getGatewayId()); // 使用gatewayId作为region
-            consumerRef.setGatewayType(gateway.getGatewayType().name());
-            consumerRef.setGwConsumerId(gwConsumerId); // 使用网关返回的真实Consumer ID
-            
-            consumerRefRepository.save(consumerRef);
-            
-            log.info("Created gateway consumer {} for consumer {} in gateway {}", gwConsumerId, consumer.getConsumerId(), gateway.getGatewayId());
-        } catch (Exception e) {
-            log.error("Failed to create consumer in gateway {}", gateway.getGatewayId(), e);
-            throw e;
         }
     }
 
