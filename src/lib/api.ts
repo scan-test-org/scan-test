@@ -57,4 +57,35 @@ api.interceptors.response.use(
   }
 )
 
+// Consumer相关API
+export interface QueryConsumerParam {
+  name?: string;
+  email?: string;
+  status?: string;
+  company?: string;
+}
+
+export interface Pageable {
+  page: number;
+  size: number;
+}
+
+export function getConsumers(param: QueryConsumerParam, pageable: Pageable) {
+  return api.get('/consumers', {
+    params: {
+      ...param,
+      page: pageable.page,
+      size: pageable.size,
+    },
+  });
+}
+
+export function deleteConsumer(consumerId: string) {
+  return api.delete(`/consumers/${consumerId}`);
+}
+
+export function createConsumer(data: any) {
+  return api.post('/consumers', data);
+}
+
 export default api 
