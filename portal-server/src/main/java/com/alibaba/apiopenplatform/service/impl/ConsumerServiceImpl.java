@@ -15,10 +15,15 @@ import com.alibaba.apiopenplatform.dto.result.ConsumerResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.dto.result.ConsumerCredentialResult;
+import com.alibaba.apiopenplatform.dto.result.SubscriptionResult;
+import com.alibaba.apiopenplatform.dto.params.consumer.CreateSubscriptionParam;
+import com.alibaba.apiopenplatform.dto.params.consumer.QuerySubscriptionParam;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.entity.ConsumerCredential;
+import com.alibaba.apiopenplatform.entity.ProductSubscription;
 import com.alibaba.apiopenplatform.repository.ConsumerRepository;
 import com.alibaba.apiopenplatform.repository.ConsumerCredentialRepository;
+import com.alibaba.apiopenplatform.repository.SubscriptionRepository;
 import com.alibaba.apiopenplatform.service.ConsumerService;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
@@ -37,6 +42,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import com.alibaba.apiopenplatform.support.enums.SubscriptionStatus;
 
 /**
  * @author zh
@@ -51,11 +57,13 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private final ConsumerRepository consumerRepository;
 
-    private final GatewayService gatewayService;
+    private final Gatewaygi tService gatewayService;
 
     private final ContextHolder contextHolder;
 
     private final ConsumerCredentialRepository consumerCredentialRepository;
+
+    private final SubscriptionRepository subscriptionRepository;
 
     @Override
     public ConsumerResult createConsumer(CreateConsumerParam param) {
@@ -94,7 +102,11 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Override
     public ConsumerCredentialResult createCredential(String consumerId, CreateCredentialParam param) {
         // 校验consumer存在
-        Consumer consumer = contextHolder.isDeveloper() ? findDevConsumer(consumerId) : findConsumer(consumerId);
+        if (contextHolder.isDeveloper()) {
+            findDevConsumer(consumerId);
+        } else {
+            findConsumer(consumerId);
+        }
         // 检查是否已存在凭证
         consumerCredentialRepository.findByConsumerId(consumerId).ifPresent(c -> {
             throw new BusinessException(ErrorCode.RESOURCE_EXIST, "ConsumerCredential", consumerId);
@@ -149,6 +161,68 @@ public class ConsumerServiceImpl implements ConsumerService {
         ConsumerCredential credential = consumerCredentialRepository.findByConsumerId(consumerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Consumer credential not found"));
         consumerCredentialRepository.delete(credential);
+    }
+
+    @Override
+    public SubscriptionResult subscribeProduct(String consumerId, CreateSubscriptionParam param) {
+        // 校验consumer存在
+        if (contextHolder.isDeveloper()) {
+            findDevConsumer(consumerId);
+        } else {
+            findConsumer(consumerId);
+        }
+        // 检查是否已订阅
+        subscriptionRepository.findOne((root, query, cb) -> cb.and(
+                cb.equal(root.get("consumerId"), consumerId),
+                cb.equal(root.get("productId"), param.getProductId())
+        )).ifPresent(s -> {
+            throw new BusinessException(ErrorCode.RESOURCE_EXIST, "ProductSubscription", consumerId + ":" + param.getProductId());
+        });
+        ProductSubscription subscription = new ProductSubscription();
+        subscription.setConsumerId(consumerId);
+        subscription.setProductId(param.getProductId());
+        subscription.setDeveloperId(contextHolder.isDeveloper() ? contextHolder.getUser() : findConsumer(consumerId).getDeveloperId());
+        subscription.setPortalId(contextHolder.isDeveloper() ? contextHolder.getPortal() : findConsumer(consumerId).getPortalId());
+        subscription.setStatus(SubscriptionStatus.APPROVED);
+        subscriptionRepository.save(subscription);
+        return new SubscriptionResult().convertFrom(subscription);
+    }
+
+    @Override
+    public PageResult<SubscriptionResult> listSubscriptions(String consumerId, QuerySubscriptionParam param, Pageable pageable) {
+        // 校验consumer存在
+        if (contextHolder.isDeveloper()) {
+            findDevConsumer(consumerId);
+        } else {
+            findConsumer(consumerId);
+        }
+        Specification<ProductSubscription> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("consumerId"), consumerId));
+            if (param.getStatus() != null) {
+                predicates.add(cb.equal(root.get("status"), param.getStatus()));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<ProductSubscription> page = subscriptionRepository.findAll(spec, pageable);
+        return new PageResult<SubscriptionResult>().convertFrom(page, s -> new SubscriptionResult().convertFrom(s));
+    }
+
+    @Override
+    public void deleteSubscription(String consumerId, String productId) {
+        // 校验consumer存在
+        if (contextHolder.isDeveloper()) {
+            findDevConsumer(consumerId);
+        } else {
+            findConsumer(consumerId);
+        }
+        Specification<ProductSubscription> spec = (root, query, cb) -> cb.and(
+                cb.equal(root.get("consumerId"), consumerId),
+                cb.equal(root.get("productId"), productId)
+        );
+        ProductSubscription subscription = subscriptionRepository.findOne(spec)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "ProductSubscription", consumerId + ":" + productId));
+        subscriptionRepository.delete(subscription);
     }
 
     private Consumer findConsumer(String consumerId) {
