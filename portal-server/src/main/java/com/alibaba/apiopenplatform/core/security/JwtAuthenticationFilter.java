@@ -110,7 +110,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
         } else {
-            // 没有token时，清除SecurityContext，确保用户是匿名状态
             SecurityContextHolder.clearContext();
         }
         chain.doFilter(request, response);

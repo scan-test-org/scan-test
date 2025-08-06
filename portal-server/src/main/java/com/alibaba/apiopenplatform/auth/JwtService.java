@@ -75,30 +75,27 @@ public class JwtService {
 
     /**
      * 只解析Token，不校验
+     * （当前未被业务调用，如需可启用）
      */
-    public JWT parse(String token) {
-        return JWTUtil.parseToken(token);
-    }
+    // public JWT parse(String token) {
+    //     return JWTUtil.parseToken(token);
+    // }
 
     /**
      * 生成带自定义过期时间的JWT Token（用于激活邮件等场景）
-     * @param userType 用户类型（如activation）
-     * @param userId 用户唯一标识（如邮箱）
-     * @param extraClaims 额外自定义claims
-     * @param expireMillis 过期毫秒数
-     * @return token字符串
+     * （当前未被业务调用，如需可启用）
      */
-    public String generateTokenWithCustomExpire(String userType, String userId, Map<String, Object> extraClaims, long expireMillis) {
-        long now = System.currentTimeMillis();
-        Map<String, Object> claims = new java.util.HashMap<>();
-        claims.put("userType", userType);
-        claims.put("userId", userId);
-        if (extraClaims != null) claims.putAll(extraClaims);
-        return JWT.create()
-                .addPayloads(claims)
-                .setIssuedAt(new Date(now))
-                .setExpiresAt(new Date(now + expireMillis))
-                .setSigner(JWTSignerUtil.hs256(secret.getBytes()))
-                .sign();
-    }
+    // public String generateTokenWithCustomExpire(String userType, String userId, Map<String, Object> extraClaims, long expireMillis) {
+    //     long now = System.currentTimeMillis();
+    //     Map<String, Object> claims = new java.util.HashMap<>();
+    //     claims.put("userType", userType);
+    //     claims.put("userId", userId);
+    //     if (extraClaims != null) claims.putAll(extraClaims);
+    //     return JWT.create()
+    //             .addPayloads(claims)
+    //             .setIssuedAt(new Date(now))
+    //             .setExpiresAt(new Date(now + expireMillis))
+    //             .setSigner(JWTSignerUtil.hs256(secret.getBytes()))
+    //             .sign();
+    // }
 } 

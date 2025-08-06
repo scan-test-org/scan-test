@@ -53,20 +53,17 @@ public interface NacosService {
     /**
      * 获取指定Nacos实例中的MCP Server列表
      */
-    PageResult<NacosMCPServerResult> fetchMcpServers(String nacosId, Pageable pageable);
+    PageResult<NacosMCPServerResult> fetchMcpServers(String nacosId, Pageable pageable) throws Exception;
 
     /**
      * 获取Nacos MCP Server配置
      */
-    String fetchMcpConfig(String nacosId, Object conf);
+    String fetchMcpConfig(String nacosId, Object conf) throws Exception;
 
     /**
      * 查找Nacos实例
      */
     NacosInstance findNacosInstance(String nacosId);
 
-    /**
-     * 测试Nacos连接
-     */
-    boolean testConnection(String nacosId);
+
 }

@@ -2,7 +2,7 @@ package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
-import com.alibaba.apiopenplatform.support.enums.NacosStatus;
+
 import lombok.Data;
 
 /**
@@ -22,7 +22,7 @@ public class NacosResult implements OutputConverter<NacosResult, NacosInstance> 
 
     private String username;
 
-    private NacosStatus status;
+
 
     private String description;
 
@@ -35,9 +35,16 @@ public class NacosResult implements OutputConverter<NacosResult, NacosInstance> 
         this.serverUrl = nacosInstance.getServerUrl();
         this.namespace = nacosInstance.getNamespace();
         this.username = nacosInstance.getUsername();
-        this.status = nacosInstance.getStatus();
+
         this.description = nacosInstance.getDescription();
         this.adminId = nacosInstance.getAdminId();
         return this;
+    }
+    
+    /**
+     * 从 NacosInstance 创建 NacosResult
+     */
+    public static NacosResult from(NacosInstance nacosInstance) {
+        return new NacosResult().convertFrom(nacosInstance);
     }
 } 

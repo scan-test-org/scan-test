@@ -9,7 +9,10 @@ import lombok.Data;
  */
 @Data
 public class UnbindExternalIdentityParam {
+
     private String providerName;
+
     private String providerSubject;
+
     private String portalId;
 } 

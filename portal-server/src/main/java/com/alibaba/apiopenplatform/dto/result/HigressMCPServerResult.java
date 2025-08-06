@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class HigressMCPServerResult extends MCPServerResult implements OutputConverter<HigressMCPServerResult, McpServer> {
+public class HigressMCPServerResult extends GatewayMCPServerResult implements OutputConverter<HigressMCPServerResult, McpServer> {
 
     @Override
     public HigressMCPServerResult convertFrom(McpServer mcpServer) {

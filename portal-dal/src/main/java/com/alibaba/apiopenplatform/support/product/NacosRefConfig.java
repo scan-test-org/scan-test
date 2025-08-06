@@ -12,6 +12,4 @@ public class NacosRefConfig {
     private String mcpServerName;
 
     private String namespaceId;
-
-    private String version;
 } 

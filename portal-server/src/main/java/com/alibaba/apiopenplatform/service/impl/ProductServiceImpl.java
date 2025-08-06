@@ -225,7 +225,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void addProductRef(String productId, CreateProductRefParam param) {
+    public void addProductRef(String productId, CreateProductRefParam param) throws Exception {
         Product product = findProduct(productId);
 
         // 是否已存在API引用
@@ -257,7 +257,7 @@ public class ProductServiceImpl implements ProductService {
         productRefRepository.delete(productRef);
     }
 
-    private void syncConfig(Product product, ProductRef productRef) {
+    private void syncConfig(Product product, ProductRef productRef) throws Exception {
         SourceType sourceType = productRef.getSourceType();
 
         if (sourceType.isGateway()) {
@@ -274,14 +274,8 @@ public class ProductServiceImpl implements ProductService {
             // 从Nacos获取MCP Server配置
             NacosRefConfig nacosRefConfig = productRef.getNacosRefConfig();
             if (nacosRefConfig != null) {
-                try {
-                    String mcpConfig = nacosService.fetchMcpConfig(productRef.getNacosId(), nacosRefConfig);
-                    productRef.setMcpConfig(mcpConfig);
-                } catch (Exception e) {
-                    log.error("Failed to fetch MCP config from Nacos for product: {}, nacosId: {}, mcpServerName: {}",
-                            product.getProductId(), productRef.getNacosId(), nacosRefConfig.getMcpServerName(), e);
-                    // 不抛出异常，让流程继续，只是不设置mcpConfig
-                }
+                String mcpConfig = nacosService.fetchMcpConfig(productRef.getNacosId(), nacosRefConfig);
+                productRef.setMcpConfig(mcpConfig);
             }
         }
         productRef.setEnabled(true);

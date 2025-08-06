@@ -31,13 +31,4 @@ public class CreateProductRefParam implements InputConverter<ProductRef> {
 
     private NacosRefConfig nacosRefConfig;
 
-    @AssertTrue(message = "数据源配置无效")
-    private boolean isSourceValid() {
-        if (sourceType == SourceType.GATEWAY) {
-            return StrUtil.isNotBlank(gatewayId) && (apigRefConfig != null || higressRefConfig != null);
-        } else if (sourceType == SourceType.NACOS) {
-            return StrUtil.isNotBlank(nacosId) && nacosRefConfig != null;
-        }
-        return false;
-    }
 }

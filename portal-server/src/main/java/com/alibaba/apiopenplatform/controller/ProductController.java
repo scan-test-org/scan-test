@@ -87,7 +87,7 @@ public class ProductController {
     @Operation(summary = "API产品关联API或MCP Server")
     @PostMapping("/{productId}/ref")
     @AdminAuth
-    public void addProductRef(@PathVariable String productId, @RequestBody @Valid CreateProductRefParam param) {
+    public void addProductRef(@PathVariable String productId, @RequestBody @Valid CreateProductRefParam param) throws Exception {
         productService.addProductRef(productId, param);
     }
 

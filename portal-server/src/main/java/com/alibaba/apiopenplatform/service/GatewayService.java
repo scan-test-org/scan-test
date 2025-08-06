@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
+import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import org.springframework.data.domain.Pageable;
@@ -61,7 +62,7 @@ public interface GatewayService {
 
     PageResult<APIResult> fetchRoutes(String gatewayId, Pageable pageable);
 
-    PageResult<MCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable);
+    PageResult<GatewayMCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable);
 
     String fetchAPIConfig(String gatewayId, Object config);
 

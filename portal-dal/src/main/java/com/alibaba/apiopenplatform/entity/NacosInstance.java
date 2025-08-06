@@ -1,6 +1,6 @@
 package com.alibaba.apiopenplatform.entity;
 
-import com.alibaba.apiopenplatform.support.enums.NacosStatus;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -44,9 +44,7 @@ public class NacosInstance extends BaseEntity {
     @Column(name = "password", length = 128)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 32)
-    private NacosStatus status;
+
 
     @Column(name = "description", length = 512)
     private String description;

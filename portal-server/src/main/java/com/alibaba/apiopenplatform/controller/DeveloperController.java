@@ -55,10 +55,7 @@ public class DeveloperController {
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
     public Response<AuthResponseResult> register(@Valid @RequestBody DeveloperCreateParam param, HttpServletResponse response) {
-        // 注册开发者
         Developer developer = developerService.createDeveloper(param);
-
-        // 根据门户配置决定是否自动登录
         String portalId = contextHolder.getPortal();
         PortalResult portal = portalService.getPortal(portalId);
         boolean autoApprove = portal.getPortalSettingConfig() != null
@@ -78,8 +75,6 @@ public class DeveloperController {
     @PostMapping("/login")
     public Response<AuthResponseResult> login(@Valid @RequestBody DeveloperLoginParam param) {
         AuthResponseResult authResult = developerService.loginWithPassword(param.getUsername(), param.getPassword());
-
-        // 返回token到响应体，前端保存到localStorage
         return Response.ok(authResult);
     }
 
@@ -95,12 +90,6 @@ public class DeveloperController {
         }
         return Response.ok(null);
     }
-
-    // @Operation(summary = "开发者个人信息", description = "受保护接口示例，仅测试用")
-    // @GetMapping("/profile")
-    // public Response<String> profile() {
-    //     return Response.ok("开发者受保护信息");
-    // }
 
     @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号。providerName和providerSubject参数建议通过/list-identities接口获取。")
     @DeleteMapping("/{developerId}/identity")
