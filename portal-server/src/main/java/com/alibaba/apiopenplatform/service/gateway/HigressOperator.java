@@ -2,10 +2,10 @@ package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
-import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.entity.Consumer;
+import com.alibaba.apiopenplatform.entity.ConsumerCredential;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
@@ -101,7 +101,7 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public String createConsumer(Gateway gateway, Consumer consumer) {
+    public String createConsumer(Gateway gateway, Consumer consumer, ConsumerCredential credential) {
         HigressClient client = getClient(gateway);
         try {
             // Higress网关的创建消费者逻辑
@@ -109,6 +109,7 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
             
             // TODO: 实现具体的Higress创建消费者逻辑
             // 例如：配置路由规则、权限等
+            // 可以使用credential中的信息进行认证配置
             
             return "gwConsumerId"; // 示例返回值
         } catch (Exception e) {

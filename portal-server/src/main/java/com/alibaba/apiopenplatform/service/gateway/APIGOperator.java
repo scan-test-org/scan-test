@@ -1,15 +1,17 @@
 package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.core.codec.Base64;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
-import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
+import com.alibaba.apiopenplatform.entity.ConsumerRef;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.entity.Consumer;
+import com.alibaba.apiopenplatform.entity.ConsumerCredential;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
@@ -22,6 +24,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -133,22 +137,37 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public String createConsumer(Gateway gateway, Consumer consumer) {
+    public String createConsumer(Gateway gateway, Consumer consumer, ConsumerCredential credential) {
         APIGClient client = getClient(gateway);
-        try {
-            // 创建APIG网关中的Consumer
-            log.info("Creating consumer {} in APIG gateway {}", consumer.getConsumerId(), gateway.getGatewayId());
-            
-            // TODO: 实现具体的APIG Consumer创建逻辑
-            // 例如：调用APIG的创建Consumer API，返回网关中的Consumer ID
-            
-            // 暂时返回原始Consumer ID，实际应该从网关返回真实的Consumer ID
-            return consumer.getConsumerId();
-            
-        } catch (Exception e) {
-            log.error("Error creating consumer {} in APIG gateway {}", consumer.getConsumerId(), gateway.getGatewayId(), e);
-            throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to create consumer in APIG gateway: " + e.getMessage());
+
+        String apiKeyIdentityConfigStr = null;
+
+        if (credential != null) {
+            if (credential.getApiKeyConfig() != null) {
+                apiKeyIdentityConfigStr = JSONUtil.toJsonStr(credential.getApiKeyConfig());
+            }
         }
+
+        CreateConsumerRequest createConsumerRequest = CreateConsumerRequest.builder()
+                .name(consumer.getName())
+                .gatewayType(gateway.getGatewayType().getType())
+                .apikeyIdentityConfig(JSONUtil.toBean(apiKeyIdentityConfigStr, ApiKeyIdentityConfig.class))
+                .build();
+
+        CreateConsumerResponse response = client.execute(c -> {
+            CompletableFuture<CreateConsumerResponse> future = c.createConsumer(createConsumerRequest);
+            try {
+                return future.get(); // 或者根据需要处理返回结果
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        if (response.getStatusCode() != 200) {
+            throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+        }
+
+        return response.getBody().getData().getConsumerId();
     }
 
     @Override

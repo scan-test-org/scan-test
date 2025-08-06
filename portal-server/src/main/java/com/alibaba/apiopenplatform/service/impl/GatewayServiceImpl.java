@@ -6,10 +6,13 @@ import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
-import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Consumer;
+import com.alibaba.apiopenplatform.entity.ConsumerCredential;
+import com.alibaba.apiopenplatform.entity.ConsumerRef;
 import com.alibaba.apiopenplatform.entity.Gateway;
+import com.alibaba.apiopenplatform.repository.ConsumerCredentialRepository;
+import com.alibaba.apiopenplatform.repository.ConsumerRefRepository;
 import com.alibaba.apiopenplatform.repository.GatewayRepository;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.gateway.GatewayOperator;
@@ -26,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +44,10 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     private final GatewayRepository gatewayRepository;
 
     private Map<GatewayType, GatewayOperator> gatewayOperators;
+
+    private ConsumerRefRepository consumerRefRepository;
+
+    private ConsumerCredentialRepository consumerCredentialRepository;
 
     public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable) {
         return gatewayOperators.get(param.getGatewayType()).fetchGateways(param, pageable);
@@ -136,22 +144,19 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public String createConsumer(Consumer consumer) {
-        List<Gateway> gateways = findAllGateways();
-        // 由于可能有多个网关，我们返回第一个网关的Consumer ID
-        // 在实际使用中，应该根据具体的网关类型来决定返回哪个ID
-        String gwConsumerId = null;
-        for (Gateway gateway : gateways) {
-            try {
-                gwConsumerId = getOperator(gateway).createConsumer(gateway, consumer);
-                if (gwConsumerId != null) {
-                    break; // 使用第一个成功创建的Consumer ID
-                }
-            } catch (Exception e) {
-                log.error("Failed to create consumer in gateway {}", gateway.getGatewayId(), e);
-                // 继续尝试其他网关
-            }
+    public String createConsumer(String gatewayId, Consumer consumer, ConsumerCredential credential) {
+        if (gatewayId == null) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Gateway cannot be null");
         }
+        if (consumer == null) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Consumer cannot be null");
+        }
+        if (credential == null) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Credential cannot be null");
+        }
+        Gateway gateway = findGateway(gatewayId);
+        String gwConsumerId = getOperator(gateway).createConsumer(gateway, consumer, credential);
+
         return gwConsumerId != null ? gwConsumerId : consumer.getConsumerId(); // 如果都失败了，返回原始Consumer ID
     }
 
@@ -168,6 +173,42 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
         List<Gateway> gateways = findAllGateways();
         for (Gateway gateway : gateways) {
             getOperator(gateway).authorizationConsumerToApi(gateway, consumer.getConsumerId(), apiId);
+        }
+    }
+
+    @Override
+    public void assertGatewayConsumerExist(String gatewayId, Consumer consumer) {
+        Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Gateway", gatewayId));
+
+        // todo 需要放到 GatewayOperator
+        Optional<ConsumerRef> existingRef = consumerRefRepository.findByConsumerIdAndRegionAndGatewayType(consumer.getConsumerId(), gateway.getApigConfig().getRegion(), gateway.getGatewayType().name());
+
+        if (!existingRef.isPresent()) {
+            // 创建网关Consumer 需要拉到 Consumer 关联的 Credential
+            ConsumerCredential credential = consumerCredentialRepository.findByConsumerId(consumer.getConsumerId()).orElse(null);
+            createGatewayConsumer(consumer, gateway, credential);
+        }
+    }
+
+    private void createGatewayConsumer(Consumer consumer, Gateway gateway, ConsumerCredential credential) {
+        try {
+            // 调用网关创建Consumer，获取返回的网关Consumer ID
+            String gwConsumerId = createConsumer(gateway.getGatewayId(), consumer, credential);
+
+            // 创建映射关系
+            ConsumerRef consumerRef = new ConsumerRef();
+            consumerRef.setConsumerId(consumer.getConsumerId());
+            consumerRef.setRegion(gateway.getGatewayId()); // 使用gatewayId作为region
+            consumerRef.setGatewayType(gateway.getGatewayType().name());
+            consumerRef.setGwConsumerId(gwConsumerId); // 使用网关返回的真实Consumer ID
+
+            consumerRefRepository.save(consumerRef);
+
+            log.info("Created gateway consumer {} for consumer {} in gateway {}", gwConsumerId, consumer.getConsumerId(), gateway.getGatewayId());
+        } catch (Exception e) {
+            log.error("Failed to create consumer in gateway {}", gateway.getGatewayId(), e);
+            throw e;
         }
     }
 

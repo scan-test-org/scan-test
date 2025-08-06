@@ -33,7 +33,7 @@ public interface ConsumerRefRepository extends JpaRepository<ConsumerRef, Long>,
     /**
      * 根据Portal中的Consumer ID、UID、Region、GatewayType查找引用
      */
-    Optional<ConsumerRef> findByConsumerIdAndUidAndRegionAndGatewayType(String consumerId, String uid, String region, String gatewayType);
+    Optional<ConsumerRef> findByConsumerIdAndRegionAndGatewayType(String consumerId, String region, String gatewayType);
 
     /**
      * 根据网关类型查找引用列表

@@ -12,7 +12,7 @@ import javax.persistence.*;
 @Table(name = "consumerRef",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"gw_consumer_id"}, name = "uk_consumer_id"),
-                @UniqueConstraint(columnNames = {"consumer_id", "uid", "region", "gateway_type"},
+                @UniqueConstraint(columnNames = {"consumer_id", "region", "gateway_type"},
                         name = "uk_consumer_relation")
         })
 @Data
@@ -25,9 +25,6 @@ public class ConsumerRef extends BaseEntity {
 
     @Column(name = "consumer_id", length = 32, nullable = false)
     private String consumerId;
-
-    @Column(name = "uid", length = 32, nullable = false)
-    private String uid;
 
     @Column(name = "region", length = 32, nullable = false)
     private String region;

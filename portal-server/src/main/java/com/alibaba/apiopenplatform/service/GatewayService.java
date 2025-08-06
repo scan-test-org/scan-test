@@ -5,6 +5,7 @@ import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Consumer;
+import com.alibaba.apiopenplatform.entity.ConsumerCredential;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -68,7 +69,7 @@ public interface GatewayService {
 
     String fetchMcpConfig(String gatewayId, Object conf);
 
-    String createConsumer(Consumer consumer);
+    String createConsumer(String gatewayId, Consumer consumer, ConsumerCredential credential);
 
     void deleteConsumer(Consumer consumer);
 
@@ -78,4 +79,6 @@ public interface GatewayService {
      * @param apiId API ID
      */
     void authorizationConsumerToApi(Consumer consumer, String apiId);
+
+    void assertGatewayConsumerExist(String gatewayId, Consumer consumer);
 }
