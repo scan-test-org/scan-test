@@ -1,12 +1,12 @@
 package com.alibaba.apiopenplatform.service.impl;
 
-import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.DeveloperDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
+import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.consumer.QueryConsumerParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateConsumerParam;
 import com.alibaba.apiopenplatform.dto.result.ConsumerResult;
@@ -14,12 +14,9 @@ import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.repository.ConsumerRepository;
-import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.ConsumerService;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
-import com.alibaba.apiopenplatform.support.enums.ConsumerStatus;
-import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -54,59 +51,23 @@ public class ConsumerServiceImpl implements ConsumerService {
     private final ContextHolder contextHolder;
 
     @Override
-    public ConsumerResult registerConsumer(CreateConsumerParam param) {
-        PortalResult portal = portalService.getPortal(contextHolder.getPortal());
-        Consumer consumer = param.convertTo();
-        consumer.setDeveloperId(contextHolder.getUser());
-
-        // 审批策略
-        PortalSettingConfig portalSettingConfig = portal.getPortalSettingConfig();
-        ConsumerStatus status = BooleanUtil.isTrue(portalSettingConfig.getAutoApproveDevelopers()) ?
-                ConsumerStatus.APPROVED : ConsumerStatus.PENDING;
-        consumer.setStatus(status);
-        consumerRepository.save(consumer);
-
-        if (status == ConsumerStatus.APPROVED) {
-            gatewayService.createConsumer(consumer);
-        }
-        return null;
-    }
-
-    @Override
-    public void approveConsumer(String consumerId) {
-        Consumer consumer = findConsumer(consumerId);
-
-        gatewayService.createConsumer(consumer);
-
-        consumer.setStatus(ConsumerStatus.APPROVED);
-        consumerRepository.save(consumer);
-    }
-
-    @Override
     public ConsumerResult createConsumer(CreateConsumerParam param) {
-        if (consumerRepository.findByDeveloperIdAndName("developer", param.getName()).isPresent()) {
-            throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.CONSUMER, param.getName());
-        }
-        // OpenAPI调用
+        PortalResult portal = portalService.getPortal(contextHolder.getPortal());
 
-//        gatewayService.createConsumer()
-
+        String consumerId = IdGenerator.genConsumerId();
         Consumer consumer = param.convertTo();
-        consumer.setDeveloperId("developer");
+        consumer.setConsumerId(consumerId);
+        consumer.setDeveloperId(contextHolder.getUser());
+        consumer.setPortalId(portal.getPortalId());
 
         consumerRepository.save(consumer);
-        ConsumerResult consumerResult = new ConsumerResult().convertFrom(consumer);
-
-        // 填充Credential
-        fullFillConsumer(consumerResult);
-        return consumerResult;
+        return getConsumer(consumerId);
     }
 
     @Override
     public PageResult<ConsumerResult> listConsumers(QueryConsumerParam param, Pageable pageable) {
         Page<Consumer> consumers = consumerRepository.findAll(buildSpecification(param), pageable);
 
-        // List默认不返回Credential
         return new PageResult<ConsumerResult>().convertFrom(consumers, consumer -> new ConsumerResult().convertFrom(consumer));
     }
 
@@ -114,9 +75,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     public ConsumerResult getConsumer(String consumerId) {
         Consumer consumer = contextHolder.isDeveloper() ? findDevConsumer(consumerId) : findConsumer(consumerId);
 
-        ConsumerResult consumerResult = new ConsumerResult().convertFrom(consumer);
-        fullFillConsumer(consumerResult);
-        return consumerResult;
+        return new ConsumerResult().convertFrom(consumer);
     }
 
     @Override
@@ -131,16 +90,8 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     private Consumer findDevConsumer(String consumerId) {
-        return consumerRepository.findByDeveloperIdAndConsumerId("developer", consumerId)
+        return consumerRepository.findByDeveloperIdAndConsumerId(contextHolder.getUser(), consumerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER, consumerId));
-    }
-
-    private void fullFillConsumer(ConsumerResult consumerResult) {
-
-    }
-
-    private void deleteDevConsumers(String developerId) {
-        consumerRepository.deleteAllByDeveloperId(developerId);
     }
 
     public Specification<Consumer> buildSpecification(QueryConsumerParam param) {
@@ -176,7 +127,11 @@ public class ConsumerServiceImpl implements ConsumerService {
             log.info("Cleaning consumers for developer {}", developerId);
 
             List<Consumer> consumers = consumerRepository.findAllByDeveloperId(developerId);
-            consumers.forEach(gatewayService::deleteConsumer);
+            consumers.forEach(consumer -> {
+                gatewayService.deleteConsumer(consumer);
+                consumerRepository.delete(consumer);
+                // TODO 清除凭证
+            });
         } catch (Exception e) {
             log.error("Failed to clean consumers for developer {}", developerId, e);
         }

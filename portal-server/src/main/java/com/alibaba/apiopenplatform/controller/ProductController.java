@@ -20,7 +20,7 @@ import javax.validation.Valid;
 /**
  * @author zh
  */
-@Tag(name = "API产品管理", description = "提供API产品的创建、更新、删除、查询等管理功能")
+@Tag(name = "API产品管理", description = "提供API产品的创建、更新、删除、查询、订阅等管理功能")
 @RestController
 @RequestMapping("/products")
 @Slf4j

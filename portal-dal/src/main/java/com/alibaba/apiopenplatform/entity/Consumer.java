@@ -34,9 +34,9 @@ public class Consumer extends BaseEntity {
     @Column(name = "description", length = 256)
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 32, nullable = false)
-    private ConsumerStatus status;
+//    @Enumerated(EnumType.STRING)
+//    @Column(name = "status", length = 32, nullable = false)
+//    private ConsumerStatus status;
 
     @Column(name = "portal_id", length = 32, nullable = false)
     private String portalId;
