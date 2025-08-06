@@ -84,7 +84,7 @@ public class NacosServiceImpl implements NacosService {
                 return null;
             }
             log.info("成功获取到详情数据，id: {}, name: {}", detail.getId(), detail.getName());
-            return McpMarketDetailParam.from(detail);
+            return McpMarketDetailParam.builder().build().convertFrom(detail);
         } catch (Exception e) {
             log.error("获取MCP Server详情时发生异常，nacosId: {}, mcpName: {}, namespaceId: {}, version: {}", 
                     nacosId, mcpName, namespaceId, version, e);
@@ -112,7 +112,7 @@ public class NacosServiceImpl implements NacosService {
     public PageResult<NacosResult> listNacosInstances(Pageable pageable) {
         Page<NacosInstance> nacosInstances = nacosInstanceRepository.findByAdminId("admin", pageable);
         
-        return new PageResult<NacosResult>().convertFrom(nacosInstances, NacosResult::from);
+        return new PageResult<NacosResult>().convertFrom(nacosInstances, nacosInstance -> new NacosResult().convertFrom(nacosInstance));
     }
 
     @Override
@@ -157,7 +157,7 @@ public class NacosServiceImpl implements NacosService {
     @Override
     public NacosResult getNacosInstance(String nacosId) {
         NacosInstance nacosInstance = findNacosInstance(nacosId);
-        return NacosResult.from(nacosInstance);
+        return new NacosResult().convertFrom(nacosInstance);
     }
 
     @Override
@@ -192,7 +192,14 @@ public class NacosServiceImpl implements NacosService {
         
         // tools
         if (detail.getToolSpec() != null) {
-            m.setTools(detail.getToolSpec().toString());
+            String toolJson = JSONUtil.toJsonStr(detail.getToolSpec());
+            if (toolJson == null || toolJson.trim().equals("{}")) {
+                m.setTools(null);
+            } else {
+                m.setTools(toolJson);
+            }
+        } else {
+            m.setTools(null);
         }
         
         // meta

@@ -1,37 +1,24 @@
 package com.alibaba.apiopenplatform.controller;
 
 import cn.hutool.core.util.BooleanUtil;
-import com.alibaba.apiopenplatform.core.response.Response;
 import com.alibaba.apiopenplatform.dto.params.developer.*;
 import com.alibaba.apiopenplatform.dto.result.*;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
-import com.alibaba.apiopenplatform.core.response.Response;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.entity.Developer;
-
 import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import javax.validation.Valid;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import java.util.Optional;
-import java.util.Map;
-import java.util.HashMap;
-
 import com.alibaba.apiopenplatform.dto.params.admin.ChangePasswordParam;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -54,7 +41,7 @@ public class DeveloperController {
 
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
-    public Response<AuthResponseResult> register(@Valid @RequestBody DeveloperCreateParam param, HttpServletResponse response) {
+    public AuthResponseResult register(@Valid @RequestBody DeveloperCreateParam param) {
         Developer developer = developerService.createDeveloper(param);
         String portalId = contextHolder.getPortal();
         PortalResult portal = portalService.getPortal(portalId);
@@ -65,22 +52,22 @@ public class DeveloperController {
             // 如果自动审批，则自动登录
             AuthResponseResult authResult = developerService.generateAuthResult(developer);
             // 返回token到响应体，前端保存到localStorage
-            return Response.ok(authResult);
+            return authResult;
         }
         // 如果不自动审批，则注册成功但不登录，需要等待管理员审批
-        return Response.ok(null); // 返回一个空的AuthResponseResult，表示注册成功但未自动登录
+        return null; // 返回null，表示注册成功但未自动登录
     }
 
     @Operation(summary = "开发者登录", description = "开发者账号密码登录")
     @PostMapping("/login")
-    public Response<AuthResponseResult> login(@Valid @RequestBody DeveloperLoginParam param) {
+    public AuthResponseResult login(@Valid @RequestBody DeveloperLoginParam param) {
         AuthResponseResult authResult = developerService.loginWithPassword(param.getUsername(), param.getPassword());
-        return Response.ok(authResult);
+        return authResult;
     }
 
     @Operation(summary = "开发者登出", description = "登出")
     @PostMapping("/logout")
-    public Response<Void> logout(HttpServletRequest request) {
+    public void logout(HttpServletRequest request) {
         // 从Authorization头获取token并加入黑名单
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -88,7 +75,6 @@ public class DeveloperController {
             long expireAt = System.currentTimeMillis() + 3600_000L;
             tokenBlacklistService.add(token, expireAt);
         }
-        return Response.ok(null);
     }
 
     @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号。providerName和providerSubject参数建议通过/list-identities接口获取。")
@@ -121,29 +107,18 @@ public class DeveloperController {
 
     @Operation(summary = "获取当前开发者信息", description = "开发者功能：获取当前登录开发者的个人信息")
     @GetMapping("/profile")
-    public Map<String, Object> getCurrentDeveloperInfo() {
+    public DeveloperResult getCurrentDeveloperInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserId = authentication != null ? authentication.getName() : null;
         if (currentUserId == null) {
             throw new BusinessException(ErrorCode.AUTH_REQUIRED);
         }
-
         Optional<Developer> devOpt = developerService.findByDeveloperId(currentUserId);
         if (!devOpt.isPresent()) {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", currentUserId);
         }
-
         Developer developer = devOpt.get();
-        Map<String, Object> result = new HashMap<>();
-        result.put("developerId", developer.getDeveloperId());
-        result.put("username", developer.getUsername());
-        result.put("email", developer.getEmail());
-        result.put("avatarUrl", developer.getAvatarUrl());
-        result.put("status", developer.getStatus());
-        result.put("authType", developer.getAuthType());
-        result.put("createAt", developer.getCreateAt());
-        result.put("updatedAt", developer.getUpdatedAt());
-        return result;
+        return new DeveloperResult().convertFrom(developer);
     }
 
     @Operation(summary = "开发者修改密码", description = "修改当前登录开发者的密码")

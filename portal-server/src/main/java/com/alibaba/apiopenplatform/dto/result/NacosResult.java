@@ -22,29 +22,7 @@ public class NacosResult implements OutputConverter<NacosResult, NacosInstance> 
 
     private String username;
 
-
-
     private String description;
 
     private String adminId;
-
-    @Override
-    public NacosResult convertFrom(NacosInstance nacosInstance) {
-        this.nacosId = nacosInstance.getNacosId();
-        this.nacosName = nacosInstance.getNacosName();
-        this.serverUrl = nacosInstance.getServerUrl();
-        this.namespace = nacosInstance.getNamespace();
-        this.username = nacosInstance.getUsername();
-
-        this.description = nacosInstance.getDescription();
-        this.adminId = nacosInstance.getAdminId();
-        return this;
-    }
-    
-    /**
-     * 从 NacosInstance 创建 NacosResult
-     */
-    public static NacosResult from(NacosInstance nacosInstance) {
-        return new NacosResult().convertFrom(nacosInstance);
-    }
 } 

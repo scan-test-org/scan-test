@@ -6,29 +6,19 @@ import com.alibaba.apiopenplatform.dto.params.admin.ChangePasswordParam;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
+import com.alibaba.apiopenplatform.dto.result.AdminResult;
 import com.alibaba.apiopenplatform.service.AdministratorService;
-import com.alibaba.apiopenplatform.core.response.Response;
 import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import javax.validation.Valid;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.Map;
-import org.springframework.http.ResponseEntity;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import com.alibaba.apiopenplatform.entity.Administrator;
 
 /**
@@ -44,19 +34,18 @@ import com.alibaba.apiopenplatform.entity.Administrator;
 public class AdministratorController {
     private final AdministratorService administratorService;
     private final TokenBlacklistService tokenBlacklistService;
+
     @Operation(summary = "管理员登录", description = "管理员登录，只需用户名和密码。前端只需传username和password，后端自动校验。")
     @PostMapping("/login")
-    public Response<AuthResponseResult> login(@Valid @RequestBody AdminLoginParam param) {
-        AuthResponseResult authResult = administratorService.loginWithPassword(param.getUsername(), param.getPassword())
+    public AuthResponseResult login(@Valid @RequestBody AdminLoginParam param) {
+        return administratorService.loginWithPassword(param.getUsername(), param.getPassword())
                 .orElseThrow(() -> new RuntimeException("AUTH_FAILED"));
-        return Response.ok(authResult);
-
     }
 
     @Operation(summary = "管理员登出",
             description = "管理员登出，将当前token加入黑名单。前端需要清除localStorage中的token。")
     @PostMapping("/logout")
-    public Response<Void> logout(HttpServletRequest request) {
+    public void logout(HttpServletRequest request) {
         // 从Authorization头获取token并加入黑名单
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -64,7 +53,6 @@ public class AdministratorController {
             long expireAt = System.currentTimeMillis() + 3600_000L;
             tokenBlacklistService.add(token, expireAt);
         }
-        return Response.ok(null);
     }
 
     @Operation(summary = "检查是否需要初始化管理员", description = "检查系统是否需要初始化管理员（全表无记录时返回true）。")
@@ -92,29 +80,20 @@ public class AdministratorController {
         return "修改密码成功";
     }
 
-
-
     @Operation(summary = "获取当前登录管理员信息", description = "根据token自动获取当前登录管理员的详细信息")
     @GetMapping
-    public Map<String, Object> getCurrentAdminInfo() {
+    public AdminResult getCurrentAdminInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserId = authentication != null ? authentication.getName() : null;
         if (currentUserId == null) {
             throw new BusinessException(ErrorCode.AUTH_REQUIRED);
         }
-        
         Optional<Administrator> adminOpt = administratorService.findByAdminId(currentUserId);
         if (!adminOpt.isPresent()) {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "admin", currentUserId);
         }
-        
         Administrator admin = adminOpt.get();
-        Map<String, Object> result = new HashMap<>();
-        result.put("adminId", admin.getAdminId());
-        result.put("username", admin.getUsername());
-        result.put("createAt", admin.getCreateAt());
-        result.put("updatedAt", admin.getUpdatedAt());
-        return result;
+        return new AdminResult().convertFrom(admin);
     }
 
     @Operation(summary = "管理员删除开发者", description = "管理员删除指定开发者账号")
