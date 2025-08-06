@@ -55,14 +55,6 @@ public class ConsumerController {
         return consumerService.createConsumer(param);
     }
 
-//    @Operation(summary = "审批Consumer")
-//    @PatchMapping("/{consumerId}/status")
-//    @AdminAuth
-//    public void approveConsumer(
-//            @PathVariable @NotBlank(message = "Consumer ID不能为空") String consumerId) {
-//        consumerService.approveConsumer(consumerId);
-//    }
-
     @Operation(summary = "删除Consumer")
     @DeleteMapping("/{consumerId}")
     public void deleteDevConsumer(
@@ -105,22 +97,22 @@ public class ConsumerController {
     @DeveloperAuth
     public SubscriptionResult subscribeProduct(@PathVariable String consumerId,
                                                @RequestBody @Valid CreateSubscriptionParam param) {
-        return null;
+        return consumerService.subscribeProduct(consumerId, param);
     }
 
     @Operation(summary = "获取Consumer的订阅列表")
     @GetMapping("/{consumerId}/subscriptions")
     @DeveloperAuth
     public PageResult<SubscriptionResult> listSubscriptions(@PathVariable String consumerId,
-                                                                   QuerySubscriptionParam param,
-                                                                   Pageable pageable) {
-        return null;
+                                                           QuerySubscriptionParam param,
+                                                           Pageable pageable) {
+        return consumerService.listSubscriptions(consumerId, param, pageable);
     }
 
     @Operation(summary = "取消订阅")
     @DeleteMapping("/{consumerId}/subscriptions/{productId}")
     public void deleteSubscription(@PathVariable String consumerId, @PathVariable String productId) {
-
+        consumerService.deleteSubscription(consumerId, productId);
     }
 
     @Operation(summary = "审批订阅申请")

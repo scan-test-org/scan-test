@@ -7,6 +7,9 @@ import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.ConsumerCredentialResult;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateCredentialParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.UpdateCredentialParam;
+import com.alibaba.apiopenplatform.dto.result.SubscriptionResult;
+import com.alibaba.apiopenplatform.dto.params.consumer.CreateSubscriptionParam;
+import com.alibaba.apiopenplatform.dto.params.consumer.QuerySubscriptionParam;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -76,4 +79,19 @@ public interface ConsumerService {
      * @param consumerId Consumer ID
      */
     void deleteCredential(String consumerId);
+
+    /**
+     * 订阅API产品
+     */
+    SubscriptionResult subscribeProduct(String consumerId, CreateSubscriptionParam param);
+
+    /**
+     * 获取Consumer的订阅列表
+     */
+    PageResult<SubscriptionResult> listSubscriptions(String consumerId, QuerySubscriptionParam param, Pageable pageable);
+
+    /**
+     * 取消订阅
+     */
+    void deleteSubscription(String consumerId, String productId);
 }
