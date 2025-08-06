@@ -174,22 +174,22 @@ public class NacosServiceImpl implements NacosService {
         McpMaintainerService service = buildDynamicMcpService(nacosInstance);
         String namespace = config.getNamespaceId() != null ? config.getNamespaceId() : "public";
         String version = null; // 使用null，因为NacosRefConfig中已删除version字段
-        
+
         McpServerDetailInfo detail = service.getMcpServerDetail(namespace, config.getMcpServerName(), version);
         if (detail == null) {
             return null;
         }
-        
+
         MCPConfigResult m = new MCPConfigResult();
         m.setMcpServerName(detail.getName());
-        
+
         // mcpServer config
         MCPConfigResult.MCPServerConfig c = new MCPConfigResult.MCPServerConfig();
         if (detail.getLocalServerConfig() != null) {
             c.setRawConfig(detail.getLocalServerConfig().toString());
         }
         m.setMcpServerConfig(c);
-        
+
         // tools
         if (detail.getToolSpec() != null) {
             String toolJson = JSONUtil.toJsonStr(detail.getToolSpec());
@@ -201,12 +201,12 @@ public class NacosServiceImpl implements NacosService {
         } else {
             m.setTools(null);
         }
-        
+
         // meta
         MCPConfigResult.McpMetadata meta = new MCPConfigResult.McpMetadata();
         meta.setSource("nacos");
         m.setMeta(meta);
-        
+
         return JSONUtil.toJsonStr(m);
     }
 

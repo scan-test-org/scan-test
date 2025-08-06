@@ -4,10 +4,12 @@ import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
+import com.alibaba.apiopenplatform.dto.result.SubscriptionResult;
 import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -71,5 +73,11 @@ public class PortalController {
     @DeleteMapping("/{portalId}/domains/{domain}")
     public PortalResult unbindDomain(@PathVariable String portalId, @PathVariable String domain) {
         return portalService.unbindDomain(portalId, domain);
+    }
+
+    @Operation(summary = "获取门户上的API产品订阅列表")
+    @GetMapping("/{portalId}/subscriptions")
+    public Page<SubscriptionResult> listSubscriptions(@PathVariable String portalId, Pageable pageable) {
+        return null;
     }
 }

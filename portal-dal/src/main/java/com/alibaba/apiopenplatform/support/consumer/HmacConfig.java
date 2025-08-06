@@ -6,11 +6,7 @@ import lombok.Data;
  * @author zh
  */
 @Data
-class HmacIdentityConfig {
-
-    private String type;
-
-    private String generateMode;
+public class HmacConfig {
 
     private String ak;
 

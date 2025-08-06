@@ -12,23 +12,6 @@ import org.springframework.data.domain.Pageable;
 public interface ConsumerService {
 
     /**
-     * 注册Consumer
-     *
-     * @param param
-     * @return
-     */
-    ConsumerResult registerConsumer(CreateConsumerParam param);
-
-
-    /**
-     * 审核Consumer
-     *
-     * @param consumerId
-     * @return
-     */
-    void approveConsumer(String consumerId);
-
-    /**
      * 创建Consumer
      *
      * @param param
