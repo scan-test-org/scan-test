@@ -1,5 +1,7 @@
 package com.alibaba.apiopenplatform.dto.params.mcp;
 
+import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
+import com.alibaba.nacos.api.ai.model.mcp.McpServerBasicInfo;
 import lombok.Data;
 import java.util.List;
 
@@ -8,7 +10,7 @@ import java.util.List;
  * @author zxd
  */
 @Data
-public class McpMarketCardParam {
+public class McpMarketCardParam implements OutputConverter<McpMarketCardParam, McpServerBasicInfo> {
     private String id;
     private String name;
     private String protocol;

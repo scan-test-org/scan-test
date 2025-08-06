@@ -1,7 +1,6 @@
 package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
-import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam;
 import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.CreateNacosParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 /**
  * Nacos实例管理与能力市场统一控制器
@@ -69,15 +67,4 @@ public class NacosController {
         return nacosService.fetchMcpServers(nacosId, pageable);
     }
 
-
-
-    // ----------- MCP Server相关 -----------
-    @Operation(summary = "获取指定Nacos实例中的MCP Server详情")
-    @GetMapping("/{nacosId}/mcp-servers/{mcpName}")
-    public McpMarketDetailParam getMcpServerDetail(@PathVariable String nacosId,
-                                                   @PathVariable String mcpName,
-                                                   @RequestParam(defaultValue = "public") String namespaceId,
-                                                   @RequestParam(required = false) String version) {
-        return nacosService.getMcpServerDetail(nacosId, mcpName, namespaceId, version);
-    }
 } 

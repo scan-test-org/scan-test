@@ -1,5 +1,7 @@
 package com.alibaba.apiopenplatform.dto.params.developer;
 
+import com.alibaba.apiopenplatform.dto.converter.InputConverter;
+import com.alibaba.apiopenplatform.entity.Developer;
 import lombok.Data;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
@@ -10,7 +12,7 @@ import javax.validation.constraints.Size;
  * @author zxd
  */
 @Data
-public class UpdateDeveloperProfileParam {
+public class UpdateDeveloperProfileParam implements InputConverter<Developer> {
     
     @Size(max = 64, message = "用户名长度不能超过64个字符")
     private String username;

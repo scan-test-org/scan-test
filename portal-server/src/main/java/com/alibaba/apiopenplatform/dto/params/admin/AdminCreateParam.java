@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
  * @author zxd
  */
 @Data
-public class AdminCreateParam {
+public class AdminCreateParam implements InputConverter<Administrator> {
 
     @NotBlank(message = "用户名不能为空")
     private String username;
