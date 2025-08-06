@@ -57,7 +57,7 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private final ConsumerRepository consumerRepository;
 
-    private final Gatewaygi tService gatewayService;
+    private final GatewayService gatewayService;
 
     private final ContextHolder contextHolder;
 
