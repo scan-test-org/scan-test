@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import com.alibaba.apiopenplatform.entity.Consumer;
 
 /**
  * @author zh
@@ -36,9 +37,11 @@ public abstract class GatewayOperator<T> {
 
     abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
 
-    abstract public void createConsumer(Gateway gateway);
+    abstract public String createConsumer(Gateway gateway, Consumer consumer);
 
     abstract public void deleteConsumer(Gateway gateway);
+
+    abstract public void authorizationConsumerToApi(Gateway gateway, String consumerId, String apiId);
 
     abstract public APIResult fetchAPI(Gateway gateway, String apiId);
 

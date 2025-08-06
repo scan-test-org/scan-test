@@ -5,6 +5,7 @@ import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
+import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.alibaba.apiopenplatform.core.exception.BusinessException;
+import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 
 /**
  * @author zh
@@ -98,12 +101,41 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public void createConsumer(Gateway gateway) {
+    public String createConsumer(Gateway gateway, Consumer consumer) {
+        HigressClient client = getClient(gateway);
+        try {
+            // Higress网关的创建消费者逻辑
+            log.info("Creating consumer {} in Higress gateway {}", consumer.getConsumerId(), gateway.getGatewayId());
+            
+            // TODO: 实现具体的Higress创建消费者逻辑
+            // 例如：配置路由规则、权限等
+            
+            return "gwConsumerId"; // 示例返回值
+        } catch (Exception e) {
+            log.error("Error creating consumer {} in Higress gateway {}", consumer.getConsumerId(), gateway.getGatewayId(), e);
+            throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to create consumer in Higress gateway: " + e.getMessage());
+        }
     }
 
     @Override
     public void deleteConsumer(Gateway gateway) {
 
+    }
+
+    @Override
+    public void authorizationConsumerToApi(Gateway gateway, String consumerId, String apiId) {
+        HigressClient client = getClient(gateway);
+        try {
+            // Higress网关的授权逻辑
+            log.info("Authorizing consumer {} to apiId {} in Higress gateway {}", consumerId, apiId, gateway.getGatewayId());
+            
+            // TODO: 实现具体的Higress授权逻辑
+            // 例如：配置路由规则、权限等
+            
+        } catch (Exception e) {
+            log.error("Error authorizing consumer {} to apiId {} in Higress gateway {}", consumerId, apiId, gateway.getGatewayId(), e);
+            throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to authorize consumer to apiId in Higress gateway: " + e.getMessage());
+        }
     }
 
     @Override
