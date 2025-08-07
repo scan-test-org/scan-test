@@ -115,7 +115,7 @@ public class DeveloperController {
         }
         Optional<Developer> devOpt = developerService.findByDeveloperId(currentUserId);
         if (!devOpt.isPresent()) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", currentUserId);
+            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
         }
         Developer developer = devOpt.get();
         return new DeveloperResult().convertFrom(developer);
