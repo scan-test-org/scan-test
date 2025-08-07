@@ -25,34 +25,19 @@ public class DeveloperExternalIdentity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * 关联开发者主键（developerId），类型为 varchar(64)
-     */
     @ManyToOne
     @JoinColumn(name = "developer_id", referencedColumnName = "developerId", nullable = false)
     private Developer developer;
 
-    /**
-     * 外部身份提供方（如 github、google、aliyun）
-     */
     @Column(nullable = false, length = 32)
     private String provider;
 
-    /**
-     * 外部身份唯一标识（如sub、id等）
-     */
     @Column(nullable = false, length = 128)
     private String subject;
 
-    /**
-     * 统一存储第三方返回的"用户名/昵称/显示名"
-     */
     @Column(nullable = true, length = 128)
     private String displayName;
 
-    /**
-     * 第三方原始信息，JSON字符串
-     */
     @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String rawInfoJson;

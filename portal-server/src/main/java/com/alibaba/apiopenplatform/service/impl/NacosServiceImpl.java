@@ -15,7 +15,6 @@ import com.alibaba.apiopenplatform.entity.NacosInstance;
 import com.alibaba.apiopenplatform.repository.NacosInstanceRepository;
 import com.alibaba.apiopenplatform.service.NacosService;
 import com.alibaba.apiopenplatform.service.gateway.NacosOperator;
-
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import cn.hutool.json.JSONUtil;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +40,9 @@ import javax.annotation.PostConstruct;
 @RequiredArgsConstructor
 public class NacosServiceImpl implements NacosService {
 
+    private static final String DEFAULT_ADMIN_ID = "admin";
+    private static final String DEFAULT_CONTEXT_PATH = "nacos";
+
     private final NacosInstanceRepository nacosInstanceRepository;
     private final NacosOperator nacosOperator;
 
@@ -56,77 +58,67 @@ public class NacosServiceImpl implements NacosService {
     @PostConstruct
     public void init() {
         try {
-            Properties properties = new Properties();
-            properties.setProperty("serverAddr", serverAddr);
-            properties.setProperty("username", username);
-            properties.setProperty("password", password);
-            properties.setProperty("contextPath", "nacos");
+            Properties properties = buildProperties(serverAddr, username, password);
             mcpMaintainerService = (McpMaintainerService) AiMaintainerFactory.createAiMaintainerService(properties);
         } catch (Exception e) {
-            log.error("Failed to init McpMaintainerService", e);
+            // Failed to init McpMaintainerService
         }
     }
 
-
-
     @Override
     public McpMarketDetailParam getMcpServerDetail(String nacosId, String mcpName, String namespaceId, String version) {
-        log.info("开始获取MCP Server详情，nacosId: {}, mcpName: {}, namespaceId: {}, version: {}", 
-                nacosId, mcpName, namespaceId, version);
         try {
-            // 根据nacosId查找Nacos实例并构建McpMaintainerService
             NacosInstance nacosInstance = findNacosInstance(nacosId);
             McpMaintainerService serviceToUse = buildDynamicMcpService(nacosInstance);
             
             McpServerDetailInfo detail = serviceToUse.getMcpServerDetail(namespaceId, mcpName, version);
-            if (detail == null) {
-                log.warn("getMcpServerDetail 返回 null，namespaceId: {}, mcpName: {}, version: {}", namespaceId, mcpName, version);
-                return null;
-            }
-            log.info("成功获取到详情数据，id: {}, name: {}", detail.getId(), detail.getName());
-            return McpMarketDetailParam.builder().build().convertFrom(detail);
+            return detail != null ? McpMarketDetailParam.builder().build().convertFrom(detail) : null;
         } catch (Exception e) {
-            log.error("获取MCP Server详情时发生异常，nacosId: {}, mcpName: {}, namespaceId: {}, version: {}", 
-                    nacosId, mcpName, namespaceId, version, e);
             return null;
         }
     }
 
     private McpMaintainerService buildDynamicMcpService(NacosInstance nacosInstance) throws Exception {
-        Properties properties = new Properties();
-        properties.setProperty("serverAddr", nacosInstance.getServerUrl());
-        if (nacosInstance.getUsername() != null) {
-            properties.setProperty("username", nacosInstance.getUsername());
-        }
-        if (nacosInstance.getPassword() != null) {
-            properties.setProperty("password", nacosInstance.getPassword());
-        }
+        Properties properties = buildProperties(
+                nacosInstance.getServerUrl(),
+                nacosInstance.getUsername(),
+                nacosInstance.getPassword()
+        );
         if (nacosInstance.getNamespace() != null) {
             properties.setProperty("namespace", nacosInstance.getNamespace());
         }
-        properties.setProperty("contextPath", "nacos");
         return (McpMaintainerService) AiMaintainerFactory.createAiMaintainerService(properties);
+    }
+
+    private Properties buildProperties(String serverAddr, String username, String password) {
+        Properties properties = new Properties();
+        properties.setProperty("serverAddr", serverAddr);
+        if (username != null) {
+            properties.setProperty("username", username);
+        }
+        if (password != null) {
+            properties.setProperty("password", password);
+        }
+        properties.setProperty("contextPath", DEFAULT_CONTEXT_PATH);
+        return properties;
     }
 
     @Override
     public PageResult<NacosResult> listNacosInstances(Pageable pageable) {
-        Page<NacosInstance> nacosInstances = nacosInstanceRepository.findByAdminId("admin", pageable);
-        
+        Page<NacosInstance> nacosInstances = nacosInstanceRepository.findByAdminId(DEFAULT_ADMIN_ID, pageable);
         return new PageResult<NacosResult>().convertFrom(nacosInstances, nacosInstance -> new NacosResult().convertFrom(nacosInstance));
     }
 
     @Override
     public void createNacosInstance(CreateNacosParam param) {
-        // 检查名称是否已存在
-        nacosInstanceRepository.findByNacosNameAndAdminId(param.getNacosName(), "admin")
+        nacosInstanceRepository.findByNacosNameAndAdminId(param.getNacosName(), DEFAULT_ADMIN_ID)
             .ifPresent(nacos -> {
                 throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.NACOS_INSTANCE, nacos.getNacosName());
             });
 
         NacosInstance nacosInstance = param.convertTo();
         nacosInstance.setNacosId(IdGenerator.genNacosId());
-        nacosInstance.setAdminId("admin");
-
+        nacosInstance.setAdminId(DEFAULT_ADMIN_ID);
         nacosInstanceRepository.save(nacosInstance);
     }
 
@@ -134,17 +126,14 @@ public class NacosServiceImpl implements NacosService {
     public void updateNacosInstance(String nacosId, UpdateNacosParam param) {
         NacosInstance existingInstance = findNacosInstance(nacosId);
         
-        // 检查名称是否已被其他实例使用
-        nacosInstanceRepository.findByNacosNameAndAdminId(param.getNacosName(), "admin")
+        nacosInstanceRepository.findByNacosNameAndAdminId(param.getNacosName(), DEFAULT_ADMIN_ID)
             .ifPresent(nacos -> {
                 if (!nacos.getNacosId().equals(nacosId)) {
                     throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.NACOS_INSTANCE, nacos.getNacosName());
                 }
             });
 
-        // 更新字段
         param.update(existingInstance);
-
         nacosInstanceRepository.save(existingInstance);
     }
 
@@ -173,41 +162,42 @@ public class NacosServiceImpl implements NacosService {
         
         McpMaintainerService service = buildDynamicMcpService(nacosInstance);
         String namespace = config.getNamespaceId() != null ? config.getNamespaceId() : "public";
-        String version = null; // 使用null，因为NacosRefConfig中已删除version字段
+        String version = null;
 
         McpServerDetailInfo detail = service.getMcpServerDetail(namespace, config.getMcpServerName(), version);
         if (detail == null) {
             return null;
         }
 
-        MCPConfigResult m = new MCPConfigResult();
-        m.setMcpServerName(detail.getName());
+        MCPConfigResult mcpConfig = buildMCPConfigResult(detail);
+        return JSONUtil.toJsonStr(mcpConfig);
+    }
+
+    private MCPConfigResult buildMCPConfigResult(McpServerDetailInfo detail) {
+        MCPConfigResult mcpConfig = new MCPConfigResult();
+        mcpConfig.setMcpServerName(detail.getName());
 
         // mcpServer config
-        MCPConfigResult.MCPServerConfig c = new MCPConfigResult.MCPServerConfig();
+        MCPConfigResult.MCPServerConfig serverConfig = new MCPConfigResult.MCPServerConfig();
         if (detail.getLocalServerConfig() != null) {
-            c.setRawConfig(detail.getLocalServerConfig().toString());
+            serverConfig.setRawConfig(detail.getLocalServerConfig().toString());
         }
-        m.setMcpServerConfig(c);
+        mcpConfig.setMcpServerConfig(serverConfig);
 
         // tools
         if (detail.getToolSpec() != null) {
             String toolJson = JSONUtil.toJsonStr(detail.getToolSpec());
-            if (toolJson == null || toolJson.trim().equals("{}")) {
-                m.setTools(null);
-            } else {
-                m.setTools(toolJson);
-            }
+            mcpConfig.setTools(toolJson != null && !toolJson.trim().equals("{}") ? toolJson : null);
         } else {
-            m.setTools(null);
+            mcpConfig.setTools(null);
         }
 
         // meta
         MCPConfigResult.McpMetadata meta = new MCPConfigResult.McpMetadata();
         meta.setSource("nacos");
-        m.setMeta(meta);
+        mcpConfig.setMeta(meta);
 
-        return JSONUtil.toJsonStr(m);
+        return mcpConfig;
     }
 
     @Override
@@ -215,6 +205,4 @@ public class NacosServiceImpl implements NacosService {
         return nacosInstanceRepository.findByNacosId(nacosId)
             .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.NACOS_INSTANCE, nacosId));
     }
-
-
 } 
