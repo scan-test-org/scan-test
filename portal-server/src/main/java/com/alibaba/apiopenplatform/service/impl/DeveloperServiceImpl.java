@@ -73,15 +73,13 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     @Transactional
     public Developer createDeveloper(DeveloperCreateParam param) {
-        developerRepository.findByUsername(param.getUsername()).ifPresent(developer -> {
+        String portalId = contextHolder.getPortal();
+        developerRepository.findByPortalIdAndUsername(portalId, param.getUsername()).ifPresent(developer -> {
             throw new BusinessException(ErrorCode.DEVELOPER_USERNAME_EXISTS, param.getUsername());
         });
 
         Developer developer = param.convertTo();
         developer.setDeveloperId(generateDeveloperId());
-
-        // 从当前请求上下文中获取portalId
-        String portalId = contextHolder.getPortal();
         developer.setPortalId(portalId);
 
         developer.setPasswordHash(PasswordHasher.hash(param.getPassword()));
@@ -97,7 +95,8 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     public AuthResponseResult loginWithPassword(String username, String password) {
-        Optional<Developer> devOpt = developerRepository.findByUsername(username);
+        String portalId = contextHolder.getPortal();
+        Optional<Developer> devOpt = developerRepository.findByPortalIdAndUsername(portalId, username);
         if (!devOpt.isPresent()) {
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND);
         }
@@ -147,11 +146,15 @@ public class DeveloperServiceImpl implements DeveloperService {
             developer = new Developer();
             developer.setDeveloperId(generateDeveloperId());
             
+            // 从当前请求上下文中获取portalId
+            String portalId = contextHolder.getPortal();
+            
             // 使用displayName作为用户名，如果为空则使用providerSubject
             String username = displayName != null ? displayName : providerName + "_" + providerSubject;
             String originalUsername = username;
             int suffix = 1;
-            while (developerRepository.findByUsername(username).isPresent()) {
+            // 按 portalId + username 组合检查用户名冲突
+            while (developerRepository.findByPortalIdAndUsername(portalId, username).isPresent()) {
                 username = originalUsername + "_" + suffix;
                 suffix++;
             }
@@ -161,7 +164,7 @@ public class DeveloperServiceImpl implements DeveloperService {
             developer.setEmail(email);
             developer.setStatus(DeveloperStatus.APPROVED);
             developer.setAuthType("OIDC");
-            developer.setPortalId("default");
+            developer.setPortalId(portalId);  
             developer = developerRepository.save(developer);
             log.info("[handleExternalLogin] 新注册开发者，developerId={}, username={}", developer.getDeveloperId(), developer.getUsername());
             // 绑定外部身份
@@ -411,7 +414,8 @@ public class DeveloperServiceImpl implements DeveloperService {
 
         // 检查用户名唯一性（如果修改了用户名）
         if (username != null && !username.equals(developer.getUsername())) {
-            if (developerRepository.findByUsername(username).isPresent()) {
+            // 按 portalId + username 组合检查唯一性
+            if (developerRepository.findByPortalIdAndUsername(developer.getPortalId(), username).isPresent()) {
                 throw new BusinessException(ErrorCode.DEVELOPER_USERNAME_EXISTS, username);
             }
             developer.setUsername(username);

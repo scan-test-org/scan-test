@@ -22,7 +22,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "developer", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"developerId"}),
-        @UniqueConstraint(columnNames = {"username"})
+        @UniqueConstraint(columnNames = {"portalId", "username"})  // 按portalId+username组合唯一
 })
 public class Developer extends BaseEntity implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -34,7 +34,7 @@ public class Developer extends BaseEntity implements Serializable {
     @Column(nullable = false, unique = true, length = 64)
     private String developerId;
 
-    @Column(nullable = true, unique = true, length = 64)
+    @Column(nullable = true, length = 64)  // 移除unique=true，因为现在是组合唯一
     private String username;
 
     @Column(nullable = true)
