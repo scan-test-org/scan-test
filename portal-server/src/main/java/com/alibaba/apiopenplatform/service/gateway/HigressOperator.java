@@ -6,6 +6,7 @@ import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.entity.ConsumerCredential;
+import com.alibaba.apiopenplatform.entity.ProductRef;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
@@ -124,17 +125,17 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public void authorizationConsumerToApi(Gateway gateway, String consumerId, String apiId) {
+    public void authorizationConsumerToApi(Gateway gateway, String consumerId, ProductRef productRef) {
         HigressClient client = getClient(gateway);
         try {
             // Higress网关的授权逻辑
-            log.info("Authorizing consumer {} to apiId {} in Higress gateway {}", consumerId, apiId, gateway.getGatewayId());
+            log.info("Authorizing consumer {} to HigressConfig {} in Higress gateway {}", consumerId, productRef.getHigressRefConfig(), gateway.getGatewayId());
             
             // TODO: 实现具体的Higress授权逻辑
             // 例如：配置路由规则、权限等
             
         } catch (Exception e) {
-            log.error("Error authorizing consumer {} to apiId {} in Higress gateway {}", consumerId, apiId, gateway.getGatewayId(), e);
+            log.error("Error authorizing consumer {} to HigressConfig {} in Higress gateway {}", consumerId, productRef.getHigressRefConfig(), gateway.getGatewayId(), e);
             throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to authorize consumer to apiId in Higress gateway: " + e.getMessage());
         }
     }

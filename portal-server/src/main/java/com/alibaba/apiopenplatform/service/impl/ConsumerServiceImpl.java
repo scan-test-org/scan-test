@@ -227,7 +227,7 @@ public class ConsumerServiceImpl implements ConsumerService {
             String apiId = getApiIdFromProductRef(productRef, gateway);
             if (apiId != null) {
                 // 创建授权关系
-                gatewayService.authorizationConsumerToApi(consumer, apiId);
+                gatewayService.authorizationConsumerToApi(consumer, productRef);
 
                 log.info("Authorized consumer {} to apiId {} in gateway {}", consumerId, apiId, gateway.getGatewayId());
             }

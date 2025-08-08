@@ -1,11 +1,12 @@
 package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.core.codec.Base64;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
-import com.alibaba.apiopenplatform.entity.ConsumerRef;
+import com.alibaba.apiopenplatform.entity.ProductRef;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthorizationRule;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -24,9 +25,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /**
  * @author zh
@@ -176,19 +177,94 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public void authorizationConsumerToApi(Gateway gateway, String consumerId, String apiId) {
-        APIGClient client = getClient(gateway);
+    public void authorizationConsumerToApi(Gateway gateway, String consumerId, ProductRef productRef) {
+        Assert.notNull(productRef.getApigRefConfig());
+
+        String apiId = productRef.getApigRefConfig().getApiId();
         try {
-            // 为消费者授权访问指定的API
             log.info("Authorizing consumer {} to apiId {} in APIG gateway {}", consumerId, apiId, gateway.getGatewayId());
-            
-            // TODO: 实现具体的APIG授权逻辑
-            // 例如：调用APIG的授权API，创建消费者对API的访问权限等
-            
+
+            // 参数校验
+            Assert.notEmpty(consumerId);
+            Assert.notEmpty(apiId);
+            Assert.notEmpty(gateway.getGatewayId());
+
+            // 组装授权规则（按 createConsumerAuthorizationRules 的数据结构）
+            List<ConsumerAuthorizationRule> rules = new ArrayList<>();
+            ConsumerAuthorizationRule rule = new ConsumerAuthorizationRule();
+            rule.setConsumerId(consumerId);
+            rule.setResourceId(apiId);
+            // 针对 API 授权，资源类型设置为 RestApi（HttpApi 直接授权暂不支持，需到 Route 粒度）
+            rule.setResourceType(productRef.getSourceType().name());
+            // 可选：永不过期，若需时效性，可在上层传入 expireMode/expireTimestamp 并在此设置
+            // rule.setExpireMode("Forever");
+            // rule.setExpireTimestamp(XXXXXXXXL);
+            rules.add(rule);
+
+            // 调用统一创建授权规则的方法
+            createConsumerAuthorizationRules(gateway, rules);
+
         } catch (Exception e) {
             log.error("Error authorizing consumer {} to apiId {} in APIG gateway {}", consumerId, apiId, gateway.getGatewayId(), e);
             throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to authorize consumer to apiId in APIG gateway: " + e.getMessage());
         }
+    }
+
+    private void createConsumerAuthorizationRules(Gateway gateway, List<ConsumerAuthorizationRule> consumerAuthorizationRules) {
+        APIGClient client = getClient(gateway);
+
+        Assert.notEmpty(consumerAuthorizationRules);
+        Assert.notEmpty(gateway.getGatewayId());
+
+        ListEnvironmentsResponse listEnvironmentsResponse = client.execute(c -> {
+            ListEnvironmentsRequest request = ListEnvironmentsRequest.builder()
+                    .gatewayId(gateway.getGatewayId())
+                    .build();
+            try {
+                return c.listEnvironments(request).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        String envId = "";
+        List<EnvironmentInfo> envs = listEnvironmentsResponse.getBody().getData().getItems();
+        if (!envs.isEmpty()) {
+            envId = envs.get(0).getEnvironmentId();
+        }
+
+        Assert.notEmpty(envId);
+
+        String finalEnvId = envId;
+        List<CreateConsumerAuthorizationRulesRequest.AuthorizationRules> authorizationRules = consumerAuthorizationRules.stream().map(consumerAuthorizationRule -> {
+            return CreateConsumerAuthorizationRulesRequest.AuthorizationRules.builder()
+                    .consumerId(consumerAuthorizationRule.getConsumerId())
+                    .expireMode(consumerAuthorizationRule.getExpireMode())
+                    .resourceType(consumerAuthorizationRule.getResourceType())
+                    .resourceIdentifier(CreateConsumerAuthorizationRulesRequest.ResourceIdentifier.builder()
+                            .resourceId(consumerAuthorizationRule.getResourceId())
+                            .environmentId(finalEnvId).build())
+                    .expireTimestamp(consumerAuthorizationRule.getExpireTimestamp())
+                    .build();
+        }).collect(Collectors.toList());
+
+
+        client.execute(c -> {
+            CreateConsumerAuthorizationRulesRequest createConsumerAuthorizationRulesRequest = CreateConsumerAuthorizationRulesRequest.builder()
+                    .authorizationRules(authorizationRules)
+                    .build();
+            try {
+                CreateConsumerAuthorizationRulesResponse response = c.createConsumerAuthorizationRules(createConsumerAuthorizationRulesRequest).get();
+
+                if (!"200".equals(response.getBody().getCode())) {
+                    throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+                }
+
+                return response;
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @Override

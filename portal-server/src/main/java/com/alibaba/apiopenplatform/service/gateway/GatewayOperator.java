@@ -5,11 +5,10 @@ import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
-import com.alibaba.apiopenplatform.entity.ConsumerRef;
+import com.alibaba.apiopenplatform.entity.*;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.service.gateway.client.GatewayClient;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
-import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -17,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import com.alibaba.apiopenplatform.entity.Consumer;
-import com.alibaba.apiopenplatform.entity.ConsumerCredential;
 
 /**
  * @author zh
@@ -44,7 +41,7 @@ public abstract class GatewayOperator<T> {
 
     abstract public void deleteConsumer(Gateway gateway);
 
-    abstract public void authorizationConsumerToApi(Gateway gateway, String consumerId, String apiId);
+    abstract public void authorizationConsumerToApi(Gateway gateway, String consumerId, ProductRef productRef);
 
 
     abstract public APIResult fetchAPI(Gateway gateway, String apiId);
