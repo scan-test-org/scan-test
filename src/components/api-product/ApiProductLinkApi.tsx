@@ -2,7 +2,7 @@ import { Card, Button, Table, Tag, Space, Modal, Form, Input, Select, message } 
 import { PlusOutlined, LinkOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useState, useEffect } from 'react'
 import type { ApiProduct } from '@/types/api-product'
-import { apiProductApi, gatewayApi } from '@/lib/api'
+import { apiProductApi, gatewayApi, nacosApi } from '@/lib/api'
 import { getServiceName } from '@/lib/utils'
 
 interface ApiProductLinkApiProps {
@@ -44,20 +44,33 @@ interface Gateway {
   createAt: string
 }
 
-
+interface NacosInstance {
+  nacosId: string
+  nacosName: string
+  serverUrl: string
+  namespace: string
+  username: string
+  description: string
+  adminId: string
+}
 
 export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkApiProps) {
   const [linkedService, setLinkedService] = useState<LinkedService | null>(null)
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [form] = Form.useForm()
   const [gateways, setGateways] = useState<Gateway[]>([])
+  const [nacosInstances, setNacosInstances] = useState<NacosInstance[]>([])
   const [gatewayLoading, setGatewayLoading] = useState(false)
+  const [nacosLoading, setNacosLoading] = useState(false)
   const [selectedGateway, setSelectedGateway] = useState<Gateway | null>(null)
+  const [selectedNacos, setSelectedNacos] = useState<NacosInstance | null>(null)
   const [apiList, setApiList] = useState<ApiItem[]>([])
   const [apiLoading, setApiLoading] = useState(false)
+  const [sourceType, setSourceType] = useState<'GATEWAY' | 'NACOS'>('GATEWAY')
 
   useEffect(() => {    
     fetchGateways()
+    fetchNacosInstances()
   }, [])
 
   useEffect(() => {
@@ -91,6 +104,33 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     }
   }
 
+  const fetchNacosInstances = async () => {
+    setNacosLoading(true)
+    try {
+      const res = await nacosApi.getNacos({
+        page: 0,
+        size: 1000 // 获取所有 Nacos 实例
+      })
+      setNacosInstances(res.data.content || [])
+    } catch (error) {
+      console.error('获取Nacos实例列表失败:', error)
+    } finally {
+      setNacosLoading(false)
+    }
+  }
+
+  const handleSourceTypeChange = (value: 'GATEWAY' | 'NACOS') => {
+    setSourceType(value)
+    setSelectedGateway(null)
+    setSelectedNacos(null)
+    setApiList([])
+    form.setFieldsValue({
+      gatewayId: undefined,
+      nacosId: undefined,
+      apiId: undefined
+    })
+  }
+
   const handleGatewayChange = async (gatewayId: string) => {
     const gateway = gateways.find(g => g.gatewayId === gatewayId)
     setSelectedGateway(gateway || null)
@@ -103,7 +143,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     try {
       if (gateway.gatewayType === 'APIG_API') {
         // APIG_API类型：获取REST API列表
-        const restRes = await gatewayApi.getGatewayRestApis(gatewayId)
+        const restRes = await gatewayApi.getGatewayRestApis(gatewayId, {})
         const restApis = (restRes.data?.content || []).map((api: any) => ({
           apiId: api.apiId,
           apiName: api.apiName,
@@ -112,7 +152,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         setApiList(restApis)
       } else if (gateway.gatewayType === 'HIGRESS') {
         // HIGRESS类型：获取MCP Server列表
-        const res = await gatewayApi.getGatewayMcpServers(gatewayId)
+        const res = await gatewayApi.getGatewayMcpServers(gatewayId, {})
         const mcpServers = (res.data?.content || []).map((api: any) => ({
           mcpServerName: api.mcpServerName,
           fromGatewayType: 'HIGRESS' as const,
@@ -121,7 +161,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         setApiList(mcpServers)
       } else if (gateway.gatewayType === 'APIG_AI') {
         // APIG_AI类型：获取MCP Server列表
-        const res = await gatewayApi.getGatewayMcpServers(gatewayId)
+        const res = await gatewayApi.getGatewayMcpServers(gatewayId, {})
         const mcpServers = (res.data?.content || []).map((api: any) => ({
           mcpServerName: api.mcpServerName,
           fromGatewayType: 'APIG_AI' as const,
@@ -138,6 +178,32 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     }
   }
 
+  const handleNacosChange = async (nacosId: string) => {
+    const nacos = nacosInstances.find(n => n.nacosId === nacosId)
+    setSelectedNacos(nacos || null)
+    
+    if (!nacos) return
+
+    console.log('nacosId', nacosId);
+    
+    setApiLoading(true)
+    try {
+      // 从 Nacos 获取 MCP Server 列表
+      const res = await nacosApi.getNacosMcpServers(nacosId, {})
+      const mcpServers = (res.data?.content || []).map((api: any) => ({
+        mcpServerName: api.mcpServerName,
+        fromGatewayType: 'NACOS' as const,
+        type: 'MCP Server (Nacos)'
+      }))
+      setApiList(mcpServers)
+    } catch (error) {
+      console.error('获取Nacos MCP Server列表失败:', error)
+      message.error('获取Nacos MCP Server列表失败')
+    } finally {
+      setApiLoading(false)
+    }
+  }
+
   const renderServiceDetails = () => {
     if (!linkedService) {
       return (
@@ -148,6 +214,10 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     }
 
     const getServiceType = () => {
+
+      if (linkedService.sourceType === 'NACOS') {
+        return 'MCP Server (Nacos)'
+      }
       
       if (linkedService.apigRefConfig) {
         if ('apiName' in linkedService.apigRefConfig && linkedService.apigRefConfig.apiName) {
@@ -180,7 +250,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="font-medium">网关ID:</span>
+            <span className="font-medium">{linkedService.sourceType === 'GATEWAY' ? '网关ID:' : 'Nacos实例ID:'}</span>
             <span className="ml-2">{linkedService.gatewayId}</span>
           </div>
           <div>
@@ -233,7 +303,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
 
   const handleModalOk = () => {
     form.validateFields().then((values) => {
-      const { sourceType, gatewayId, apiId } = values
+      const { sourceType, gatewayId, nacosId, apiId } = values
       const selectedApi = apiList.find(item => {
         if ('apiId' in item) {
           return item.apiId === apiId
@@ -244,7 +314,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       })
       
       const newService: LinkedService = {
-        gatewayId,
+        gatewayId: sourceType === 'GATEWAY' ? gatewayId : nacosId, // 对于 Nacos，使用 nacosId 作为 gatewayId
         sourceType,
         productId: apiProduct.productId,
         apigRefConfig: selectedApi && 'apiId' in selectedApi ? selectedApi as RestAPIItem | APIGAIMCPItem : undefined,
@@ -257,7 +327,9 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         fetchLinkedService()
         form.resetFields()
         setSelectedGateway(null)
+        setSelectedNacos(null)
         setApiList([])
+        setSourceType('GATEWAY')
       }).catch((err: any) => {
         message.error('关联失败')
       })
@@ -268,7 +340,9 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     setIsModalVisible(false)
     form.resetFields()
     setSelectedGateway(null)
+    setSelectedNacos(null)
     setApiList([])
+    setSourceType('GATEWAY')
   }
 
   return (
@@ -308,59 +382,95 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
             initialValue="GATEWAY"
             rules={[{ required: true, message: '请选择来源类型' }]}
           >
-            <Select placeholder="请选择来源类型">
+            <Select placeholder="请选择来源类型" onChange={handleSourceTypeChange}>
               <Select.Option value="GATEWAY">网关</Select.Option>
               <Select.Option value="NACOS">Nacos</Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="gatewayId"
-            label="网关实例"
-            rules={[{ required: true, message: '请选择网关' }]}
-          >
-            <Select 
-              placeholder="请选择网关实例" 
-              loading={gatewayLoading}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-              }
-              onChange={handleGatewayChange}
-              optionLabelProp="label"
+          {sourceType === 'GATEWAY' && (
+            <Form.Item
+              name="gatewayId"
+              label="网关实例"
+              rules={[{ required: true, message: '请选择网关' }]}
             >
-              {gateways.map(gateway => (
-                <Select.Option 
-                  key={gateway.gatewayId} 
-                  value={gateway.gatewayId}
-                  label={gateway.gatewayName}
-                >
-                  <div>
-                    <div className="font-medium">{gateway.gatewayName}</div>
-                    <div className="text-sm text-gray-500">
-                      {gateway.gatewayId} - {gateway.gatewayType}
+              <Select 
+                placeholder="请选择网关实例" 
+                loading={gatewayLoading}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                }
+                onChange={handleGatewayChange}
+                optionLabelProp="label"
+              >
+                {gateways.map(gateway => (
+                  <Select.Option 
+                    key={gateway.gatewayId} 
+                    value={gateway.gatewayId}
+                    label={gateway.gatewayName}
+                  >
+                    <div>
+                      <div className="font-medium">{gateway.gatewayName}</div>
+                      <div className="text-sm text-gray-500">
+                        {gateway.gatewayId} - {gateway.gatewayType}
+                      </div>
                     </div>
-                  </div>
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
+
+          {sourceType === 'NACOS' && (
+            <Form.Item
+              name="nacosId"
+              label="Nacos实例"
+              rules={[{ required: true, message: '请选择Nacos实例' }]}
+            >
+              <Select 
+                placeholder="请选择Nacos实例" 
+                loading={nacosLoading}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                }
+                onChange={handleNacosChange}
+                optionLabelProp="label"
+              >
+                {nacosInstances.map(nacos => (
+                  <Select.Option 
+                    key={nacos.nacosId} 
+                    value={nacos.nacosId}
+                    label={nacos.nacosName}
+                  >
+                    <div>
+                      <div className="font-medium">{nacos.nacosName}</div>
+                      <div className="text-sm text-gray-500">
+                        {nacos.serverUrl} - {nacos.namespace}
+                      </div>
+                    </div>
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
           
-          {selectedGateway && (
+          {(selectedGateway || selectedNacos) && (
             <Form.Item
               name="apiId"
               label={apiProduct.type === 'REST_API' ? '选择REST API' : '选择MCP Server'}
               rules={[{ required: true, message: apiProduct.type === 'REST_API' ? '请选择REST API' : '请选择MCP Server' }]}
             >
-                              <Select 
-                  placeholder={apiProduct.type === 'REST_API' ? '请选择REST API' : '请选择MCP Server'} 
-                  loading={apiLoading}
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-                  }
-                  optionLabelProp="label"
-                >
+              <Select 
+                placeholder={apiProduct.type === 'REST_API' ? '请选择REST API' : '请选择MCP Server'} 
+                loading={apiLoading}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                }
+                optionLabelProp="label"
+              >
                 {apiList.map((api: any) => (
                   <Select.Option 
                     key={api.apiId || api.mcpServerName} 

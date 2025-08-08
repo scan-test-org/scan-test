@@ -70,24 +70,17 @@ export default function Consoles() {
 
   const columns = [
     {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string, record: Gateway) => (
-        <div>
-          <div className="font-medium">{name}</div>
-          <div className="text-sm text-gray-500">
-            {record.gatewayId}
-          </div>
-          
-        </div>
-      ),
+      title: '网关ID',
+      dataIndex: 'gatewayId',
+      key: 'gatewayId',
     },
     {
       title: '类型',
       dataIndex: 'gatewayType',
       key: 'gatewayType',
-      
+      render: (gatewayType: string) => {
+        return gatewayType === 'APIG_API' ? 'API 网关' : gatewayType === 'HIGRESS' ? 'HIGRESS 网关' : 'AI 网关'
+      }
     },
     
     {
@@ -99,7 +92,7 @@ export default function Consoles() {
       title: '操作',
       key: 'action',
       render: (_: any, record: Gateway) => (
-        <Button danger onClick={() => handleDeleteGateway(record.gatewayId)}>删除</Button>
+        <Button type="link" danger onClick={() => handleDeleteGateway(record.gatewayId)}>删除</Button>
       ),
     },
   ]
@@ -118,7 +111,7 @@ export default function Consoles() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg border">
+      <div className="bg-white rounded-lg">
         <Table
           columns={columns}
           dataSource={gateways}

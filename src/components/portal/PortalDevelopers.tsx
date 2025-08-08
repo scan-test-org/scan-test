@@ -85,13 +85,12 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
       okType: 'danger',
       cancelText: '取消',
       onOk() {
-        // portalApi.deleteDeveloper(portal.portalId, developerId).then((res) => {
-        //   message.success('删除成功')
-        //   fetchDevelopers()
-        // }).catch((err) => {
-        //   message.error('删除失败')
-        // })
-        message.info('删除功能待实现')
+        portalApi.deleteDeveloper(developerId).then((res) => {
+          message.success('删除成功')
+          fetchDevelopers()
+        }).catch((err) => {
+          message.error('删除失败')
+        })
       },
     })
   }
