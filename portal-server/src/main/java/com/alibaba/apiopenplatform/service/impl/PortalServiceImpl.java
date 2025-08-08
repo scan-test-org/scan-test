@@ -1,18 +1,21 @@
 package com.alibaba.apiopenplatform.service.impl;
 
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
+import com.alibaba.apiopenplatform.dto.params.consumer.QuerySubscriptionParam;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
+import com.alibaba.apiopenplatform.dto.result.SubscriptionResult;
 import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.entity.PortalDomain;
+import com.alibaba.apiopenplatform.entity.ProductSubscription;
 import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
+import com.alibaba.apiopenplatform.repository.SubscriptionRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DomainType;
 import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
@@ -22,8 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -39,6 +46,8 @@ public class PortalServiceImpl implements PortalService {
     private final PortalDomainRepository portalDomainRepository;
 
     private final ApplicationEventPublisher eventPublisher;
+
+    private final SubscriptionRepository subscriptionRepository;
 
     private final String domainFormat = "%s.api.portal.local";
 
@@ -146,6 +155,24 @@ public class PortalServiceImpl implements PortalService {
                     portalDomainRepository.delete(portalDomain);
                 });
         return getPortal(portalId);
+    }
+
+    @Override
+    public PageResult<SubscriptionResult> listSubscriptions(String portalId, QuerySubscriptionParam param, Pageable pageable) {
+        // Ensure portal exists
+        findPortal(portalId);
+
+        Specification<ProductSubscription> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("portalId"), portalId));
+            if (param != null && param.getStatus() != null) {
+                predicates.add(cb.equal(root.get("status"), param.getStatus()));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<ProductSubscription> page = subscriptionRepository.findAll(spec, pageable);
+        return new PageResult<SubscriptionResult>().convertFrom(page, s -> new SubscriptionResult().convertFrom(s));
     }
 
     private Portal findPortal(String portalId) {
