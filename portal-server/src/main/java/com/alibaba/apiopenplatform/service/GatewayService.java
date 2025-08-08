@@ -5,6 +5,8 @@ import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Consumer;
+import com.alibaba.apiopenplatform.entity.ConsumerCredential;
+import com.alibaba.apiopenplatform.entity.ProductRef;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -68,7 +70,16 @@ public interface GatewayService {
 
     String fetchMcpConfig(String gatewayId, Object conf);
 
-    void createConsumer(Consumer consumer);
+    String createConsumer(String gatewayId, Consumer consumer, ConsumerCredential credential);
 
     void deleteConsumer(Consumer consumer);
+
+    /**
+     * 为消费者授权访问指定的API
+     * @param consumer 消费者
+     * @param apiId API ID
+     */
+    void authorizationConsumerToApi(Consumer consumer, ProductRef productRef);
+
+    void assertGatewayConsumerExist(String gatewayId, Consumer consumer);
 }
