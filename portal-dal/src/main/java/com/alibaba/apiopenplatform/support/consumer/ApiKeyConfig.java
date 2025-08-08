@@ -23,6 +23,7 @@ public class ApiKeyConfig {
      */
     private String key;
 
+    @Data
     static class ApiKeyCredential {
 
         private String apiKey;
