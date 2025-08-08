@@ -3,6 +3,8 @@ package com.alibaba.apiopenplatform.service;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
+import com.alibaba.apiopenplatform.dto.params.consumer.QuerySubscriptionParam;
+import com.alibaba.apiopenplatform.dto.result.SubscriptionResult;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -84,4 +86,14 @@ public interface PortalService {
      * @return
      */
     PortalResult unbindDomain(String portalId, String domain);
+
+    /**
+     * 获取门户上的API产品订阅列表
+     *
+     * @param portalId 门户ID
+     * @param param    查询参数
+     * @param pageable 分页参数
+     * @return PageResult of SubscriptionResult
+     */
+    PageResult<SubscriptionResult> listSubscriptions(String portalId, QuerySubscriptionParam param, Pageable pageable);
 }
