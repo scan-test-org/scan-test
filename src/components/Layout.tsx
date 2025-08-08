@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { HomeOutlined, GlobalOutlined, AppstoreOutlined, DesktopOutlined, UserOutlined, MenuOutlined } from '@ant-design/icons'
+import { HomeOutlined, GlobalOutlined, AppstoreOutlined, DesktopOutlined, UserOutlined, MenuOutlined, SettingOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import { isAuthenticated, removeToken } from '../lib/utils'
 
@@ -9,6 +9,7 @@ interface NavigationItem {
   cn: string
   href: string
   icon: React.ComponentType<any>
+  children?: NavigationItem[]
 }
 
 const Layout: React.FC = () => {
@@ -45,7 +46,16 @@ const Layout: React.FC = () => {
   const navigation: NavigationItem[] = [
     { name: 'Portal', cn: '门户', href: '/portals', icon: GlobalOutlined },
     { name: 'API Products', cn: 'API产品', href: '/api-products', icon: AppstoreOutlined },
-    { name: '网关实例', cn: '', href: '/consoles', icon: DesktopOutlined },
+    { 
+      name: '实例管理', 
+      cn: '实例管理', 
+      href: '/consoles', 
+      icon: SettingOutlined,
+      children: [
+        { name: '网关实例', cn: '网关实例', href: '/consoles/gateway', icon: DesktopOutlined },
+        { name: 'Nacos实例', cn: 'Nacos实例', href: '/consoles/nacos', icon: DesktopOutlined },
+      ]
+    },
   ]
 
   const toggleSidebar = () => {
@@ -56,6 +66,67 @@ const Layout: React.FC = () => {
     removeToken()
     setIsLoggedIn(false)
     navigate('/login')
+  }
+
+  const isMenuActive = (item: NavigationItem): boolean => {
+    if (location.pathname === item.href) return true
+    if (item.children) {
+      return item.children.some(child => location.pathname === child.href)
+    }
+    return false
+  }
+
+  const renderMenuItem = (item: NavigationItem, level: number = 0) => {
+    const Icon = item.icon
+    const isActive = isMenuActive(item)
+    const hasChildren = item.children && item.children.length > 0
+
+    return (
+      <div key={item.name}>
+        {hasChildren ? (
+          // 父级菜单，只显示标题，不可点击
+          <div
+            className={`flex items-center mt-2 px-3 py-2 rounded-lg transition-colors duration-150 ${
+              level > 0 ? 'ml-4' : ''
+            } text-gray-700 font-medium text-sm`}
+            title={sidebarCollapsed ? item.name : ''}
+          >
+            <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+            {!sidebarCollapsed && (
+              <div className="flex flex-col flex-1">
+                <span className="text-base leading-none">{item.name}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          // 子菜单，可点击导航
+          <Link
+            to={item.href}
+            className={`flex items-center mt-2 px-3 py-3 rounded-lg transition-colors duration-150 ${
+              level > 0 ? 'ml-4' : ''
+            } ${
+              isActive
+                ? 'bg-gray-100 text-black font-semibold'
+                : 'text-gray-500 hover:text-black hover:bg-gray-50'
+            }`}
+            title={sidebarCollapsed ? item.name : ''}
+          >
+            <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+            {!sidebarCollapsed && (
+              <div className="flex flex-col flex-1">
+                <span className="text-base leading-none">{item.name}</span>
+              </div>
+            )}
+          </Link>
+        )}
+        
+        {!sidebarCollapsed && hasChildren && (
+          <div className="ml-2">
+            {item.children!.map(child => renderMenuItem(child, level + 1))}
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -97,29 +168,7 @@ const Layout: React.FC = () => {
           sidebarCollapsed ? 'w-16' : 'w-64'
         }`}>
           <nav className="flex flex-col space-y-2 px-4">
-            {navigation.map((item) => {
-              const Icon = item.icon
-              const isActive = location.pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center px-3 py-3 rounded-lg transition-colors duration-150 ${
-                    isActive
-                      ? 'bg-gray-100 text-black font-semibold'
-                      : 'text-gray-500 hover:text-black hover:bg-gray-50'
-                  }`}
-                  title={sidebarCollapsed ? item.name : ''}
-                >
-                  <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                  {!sidebarCollapsed && (
-                    <div className="flex flex-col">
-                      <span className="text-base leading-none">{item.name}</span>
-                    </div>
-                  )}
-                </Link>
-              )
-            })}
+            {navigation.map(item => renderMenuItem(item))}
           </nav>
         </aside>
 

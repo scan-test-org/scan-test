@@ -25,7 +25,11 @@ export const getStatusBadgeVariant = (status: string) => {
   return status === "PENDING" ? "orange" : status === "READY" ? "blue" : "green"
 }
 
-export const getServiceName = (linkedServiceParam: any) => {      
+export const getServiceName = (linkedServiceParam: any) => {  
+  
+  if (linkedServiceParam?.sourceType === 'NACOS') {
+    return 'Nacos MCP服务'
+  }    
   if (linkedServiceParam?.apigRefConfig) {
     if ('apiName' in linkedServiceParam.apigRefConfig && linkedServiceParam.apigRefConfig.apiName) {
       return linkedServiceParam.apigRefConfig.apiName

@@ -92,7 +92,7 @@ export const portalApi = {
     })
   },
   deleteDeveloper: (developerId: string) => {
-    return api.delete(`/admin/${developerId}`)
+    return api.delete(`/admins/${developerId}`)
   },
   getConsumerList: (portalId: string, developerId: string, pagination?: { page: number; size: number }) => {
     return api.get(`/consumers`, {
@@ -191,3 +191,23 @@ export const gatewayApi = {
     })
   }
 } 
+
+export const nacosApi = {
+  getNacos: (params?: any) => {
+    return api.get(`/nacos`, { params })
+  },
+  createNacos: (data: any) => {
+    return api.post(`/nacos`, data)
+  },
+  deleteNacos: (nacosId: string) => {
+    return api.delete(`/nacos/${nacosId}`)
+  },
+  updateNacos: (nacosId: string, data: any) => {
+    return api.put(`/nacos/${nacosId}`, data)
+  },
+  getNacosMcpServers: (nacosId: string, data: any) => {
+    return api.get(`/nacos/${nacosId}/mcp-servers`, {
+      params: data
+    })
+  }
+}
