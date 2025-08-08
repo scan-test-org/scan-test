@@ -1,6 +1,9 @@
 package com.alibaba.apiopenplatform.support.consumer;
 
+import com.alibaba.apiopenplatform.support.enums.CredentialMode;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author zh
@@ -8,7 +11,12 @@ import lombok.Data;
 @Data
 public class HmacConfig {
 
-    private String ak;
+    private List<HmacCredential> credentials;
 
-    private String sk;
+    static class HmacCredential {
+        private String ak;
+        private String sk;
+
+        private CredentialMode mode;
+    }
 }

@@ -39,9 +39,4 @@ public interface ConsumerRefRepository extends JpaRepository<ConsumerRef, Long>,
      * 根据网关类型查找引用列表
      */
     List<ConsumerRef> findByGatewayType(String gatewayType);
-
-    /**
-     * 根据UID和网关类型查找引用列表
-     */
-    List<ConsumerRef> findByUidAndGatewayType(String uid, String gatewayType);
-} 
+}
