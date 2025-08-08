@@ -1,15 +1,25 @@
-import { useEffect, useState } from "react";
-import { Card, Tag, Button, Typography, Input, Avatar } from "antd";
-import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import { Layout } from "../components/Layout";
-import api from "../lib/api";
-import { ProductType, ProductStatus } from "../types";
-import type { Product, ApiResponse, PaginatedResponse } from "../types";
-import { getCategoryText, getCategoryColor } from "../lib/statusUtils";
+import React, { useState, useEffect } from 'react';
+import { Card, Tag, Typography, Input, Avatar } from 'antd';
+import { Link } from 'react-router-dom';
+import { Layout } from '../components/Layout';
+import api from '../lib/api';
+import { ProductType, ProductStatus } from '../types';
+import type { Product, ApiResponse, PaginatedResponse } from '../types';
+import { getCategoryText, getCategoryColor } from '../lib/statusUtils';
 
-const { Title, Paragraph } = Typography;
 const { Search } = Input;
+const { Title, Paragraph } = Typography;
+
+// 流光渲染组件
+const ShimmerText: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <div className="relative z-10">{text}</div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-shimmer" style={{ animationDelay: '1.5s' }}></div>
+    </div>
+  );
+};
 
 interface ApiProduct {
   key: string;
@@ -93,9 +103,10 @@ function APIsPage() {
         <Title level={1} className="mb-4">
           API Registry
         </Title>
-        <Paragraph className="text-gray-600 text-lg max-w-4xl mx-auto">
-          支持私有化部署,共建和兼容 API Registry 官方协议,具备更多管理能力,支持自动注册、智能路由的API Registry
-        </Paragraph>
+        <ShimmerText 
+          text="支持私有化部署,共建和兼容 API Registry 官方协议,具备更多管理能力,支持自动注册、智能路由的API Registry"
+          className="text-gray-600 text-lg max-w-4xl mx-auto"
+        />
       </div>
 
       {/* Search Section */}

@@ -150,7 +150,7 @@ function ConsumersPage() {
             </Button>
           )}
           <Search
-            placeholder={productId ? "搜索消费者..." : "搜索消费者..."}
+            placeholder={"搜索消费者..."}
             prefix={<SearchOutlined />}
             style={{ width: 300 }}
             value={searchName}
