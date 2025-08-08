@@ -369,10 +369,22 @@ function ApiDetailPage() {
         />
       </Card>
 
-      <Card title="API 绑定关系">
+      <Card 
+        title={
+          <div className="flex items-center justify-between">
+            <span>消费者授权</span>
+            <Button 
+              type="primary" 
+              onClick={() => window.open(`/consumers?productId=${apiData.productId}`, '_blank')}
+            >
+              管理授权
+            </Button>
+          </div>
+        }
+      >
         <div className="p-4">
           <Paragraph className="text-gray-600">
-            这里展示API的绑定关系、消费者等信息
+            点击"管理授权"按钮查看和管理此API产品的消费者订阅情况
           </Paragraph>
         </div>
       </Card>

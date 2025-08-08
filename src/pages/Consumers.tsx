@@ -1,9 +1,10 @@
 import { Card, Table, Button, Space, Typography, Input, Avatar } from "antd";
-import { SearchOutlined, DeleteOutlined } from "@ant-design/icons";
+import { SearchOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import { Layout } from "../components/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { getConsumers, deleteConsumer, createConsumer } from "../lib/api";
 import { message, Modal } from "antd";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -19,6 +20,10 @@ interface Consumer {
 }
 
 function ConsumersPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get('productId');
+  
   const [consumers, setConsumers] = useState<Consumer[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -38,7 +43,7 @@ function ConsumersPage() {
       );
       setConsumers(res.data?.content || []);
       setTotal(res.data?.totalElements || 0);
-    } catch (e) {
+    } catch {
       message.error("获取消费者列表失败");
     } finally {
       setLoading(false);
@@ -109,8 +114,15 @@ function ConsumersPage() {
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: Consumer) => (
+      render: (_: unknown, record: Consumer) => (
         <Space>
+          <Button 
+            type="link" 
+            icon={<EyeOutlined />} 
+            onClick={() => navigate(`/consumers/${record.consumerId}`)}
+          >
+            查看详情
+          </Button>
           <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
             删除
           </Button>
@@ -123,20 +135,22 @@ function ConsumersPage() {
     <Layout>
       <div className="mb-8">
         <Title level={1} className="mb-2">
-          消费者管理
+          {productId ? '产品订阅管理' : '消费者管理'}
         </Title>
         <Paragraph className="text-gray-600">
-          管理API的消费者用户和订阅信息
+          {productId ? '管理此产品的消费者订阅情况' : '管理API的消费者用户和订阅信息'}
         </Paragraph>
       </div>
 
       <Card>
         <div className="mb-4 flex gap-4">
-          <Button type="primary" onClick={() => setAddModalOpen(true)}>
-            新增消费者
-          </Button>
+          {!productId && (
+            <Button type="primary" onClick={() => setAddModalOpen(true)}>
+              新增消费者
+            </Button>
+          )}
           <Search
-            placeholder="搜索消费者..."
+            placeholder={productId ? "搜索消费者..." : "搜索消费者..."}
             prefix={<SearchOutlined />}
             style={{ width: 300 }}
             value={searchName}
