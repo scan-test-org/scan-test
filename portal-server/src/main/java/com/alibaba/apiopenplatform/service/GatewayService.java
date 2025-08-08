@@ -6,6 +6,7 @@ import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.entity.ConsumerCredential;
+import com.alibaba.apiopenplatform.entity.ProductRef;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -78,7 +79,7 @@ public interface GatewayService {
      * @param consumer 消费者
      * @param apiId API ID
      */
-    void authorizationConsumerToApi(Consumer consumer, String apiId);
+    void authorizationConsumerToApi(Consumer consumer, ProductRef productRef);
 
     void assertGatewayConsumerExist(String gatewayId, Consumer consumer);
 }

@@ -7,10 +7,7 @@ import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
-import com.alibaba.apiopenplatform.entity.Consumer;
-import com.alibaba.apiopenplatform.entity.ConsumerCredential;
-import com.alibaba.apiopenplatform.entity.ConsumerRef;
-import com.alibaba.apiopenplatform.entity.Gateway;
+import com.alibaba.apiopenplatform.entity.*;
 import com.alibaba.apiopenplatform.repository.ConsumerCredentialRepository;
 import com.alibaba.apiopenplatform.repository.ConsumerRefRepository;
 import com.alibaba.apiopenplatform.repository.GatewayRepository;
@@ -169,10 +166,10 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public void authorizationConsumerToApi(Consumer consumer, String apiId) {
+    public void authorizationConsumerToApi(Consumer consumer, ProductRef productRef) {
         List<Gateway> gateways = findAllGateways();
         for (Gateway gateway : gateways) {
-            getOperator(gateway).authorizationConsumerToApi(gateway, consumer.getConsumerId(), apiId);
+            getOperator(gateway).authorizationConsumerToApi(gateway, consumer.getConsumerId(), productRef);
         }
     }
 
