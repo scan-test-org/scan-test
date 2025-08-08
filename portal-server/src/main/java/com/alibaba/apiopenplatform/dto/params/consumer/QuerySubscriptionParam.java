@@ -10,4 +10,6 @@ import lombok.Data;
 public class QuerySubscriptionParam {
 
     private SubscriptionStatus status;
+
+    private String productName;
 }

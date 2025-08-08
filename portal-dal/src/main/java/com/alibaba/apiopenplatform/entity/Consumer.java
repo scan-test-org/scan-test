@@ -25,7 +25,7 @@ public class Consumer extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "consumer_id", length = 32, nullable = false)
+    @Column(name = "consumer_id", length = 64, nullable = false)
     private String consumerId;
 
     @Column(name = "name", length = 64, nullable = false)

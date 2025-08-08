@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.support.consumer;
 
+import com.alibaba.apiopenplatform.support.enums.CredentialMode;
 import lombok.Data;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
 @Data
 public class ApiKeyConfig {
 
-    private List<String> apiKeys;
+    private List<ApiKeyCredential> credentials;
 
     /**
      * apikey的位置
@@ -21,4 +22,11 @@ public class ApiKeyConfig {
      * apikey参数名称
      */
     private String key;
+
+    static class ApiKeyCredential {
+
+        private String apiKey;
+
+        private CredentialMode mode;
+    }
 }
