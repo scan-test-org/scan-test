@@ -16,6 +16,7 @@ import {
 import api from "../../lib/api";
 import type { Subscription } from "../../types/consumer";
 import type { Product } from "../../types";
+import { getSubscriptionStatusText, getSubscriptionStatusColor } from "../../lib/statusUtils";
 
 interface SubscriptionManagerProps {
   consumerId: string;
@@ -34,9 +35,9 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
     setProductDrawerVisible(true);
     setProductLoading(true);
     try {
-      const response = await api.get("/products?page=0&size=100");
-      if (response.data?.code === "SUCCESS" && response.data?.data) {
-        setProducts(response.data.data.content || []);
+      const response: any = await api.get("/products?page=0&size=100");
+      if (response?.code === "SUCCESS" && response?.data) {
+        setProducts(response.data.content || []);
       }
     } catch (error) {
       console.error('获取产品列表失败:', error);
@@ -77,27 +78,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return '待审批';
-      case 'APPROVED':
-        return '已通过';
-      default:
-        return status;
-    }
-  };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'orange';
-      case 'APPROVED':
-        return 'green';
-      default:
-        return 'default';
-    }
-  };
 
   const subscriptionColumns = [
     {
@@ -124,7 +105,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
-        <Badge status={getStatusColor(status) as 'success' | 'processing' | 'error' | 'default' | 'warning'} text={getStatusText(status)} />
+        <Badge status={getSubscriptionStatusColor(status) as 'success' | 'processing' | 'error' | 'default' | 'warning'} text={getSubscriptionStatusText(status)} />
       ),
     },
     {

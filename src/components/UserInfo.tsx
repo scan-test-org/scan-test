@@ -56,7 +56,7 @@ export function UserInfo() {
     {
       key: 'my-applications',
       icon: <AppstoreOutlined />,
-      label: 'My applications',
+      label: '消费者管理',
       onClick: () => navigate('/consumers'),
     },
     {
@@ -65,7 +65,7 @@ export function UserInfo() {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Log out',
+      label: '退出登录',
       onClick: handleLogout,
     },
   ];
@@ -83,7 +83,7 @@ export function UserInfo() {
       >
         <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
           <Avatar src={userInfo.avatar} icon={<UserOutlined />} size="small" />
-          <span>{userInfo.displayName}</span>
+          {/* <span>{userInfo.displayName}</span> */}
         </div>
       </Dropdown>
     );
