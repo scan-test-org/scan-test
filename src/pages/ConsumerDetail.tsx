@@ -18,7 +18,7 @@ function ConsumerDetailPage() {
   const fetchConsumerDetail = useCallback(async () => {
     if (!consumerId) return;
     try {
-      const response = await api.get(`/consumers/${consumerId}`);
+      const response: any = await api.get(`/consumers/${consumerId}`);
       if (response?.code === "SUCCESS" && response?.data) {
         setConsumer(response.data);
       }
@@ -31,7 +31,7 @@ function ConsumerDetailPage() {
   const fetchCredentials = useCallback(async () => {
     if (!consumerId) return;
     try {
-      const response = await api.get(`/consumers/${consumerId}/credentials`);
+      const response: any = await api.get(`/consumers/${consumerId}/credentials`);
       if (response?.code === "SUCCESS" && response?.data) {
         const credentialData: ConsumerCredentialResult = response.data;
         const credentialsList: Credential[] = [];
@@ -81,7 +81,7 @@ function ConsumerDetailPage() {
         size: 100,
         ...searchParams
       };
-      const response = await api.get(`/consumers/${consumerId}/subscriptions`, { params });
+      const response: any = await api.get(`/consumers/${consumerId}/subscriptions`, { params });
       if (response?.code === "SUCCESS" && response.data) {
         setSubscriptions(response.data.content || []);
       } else {
@@ -131,11 +131,9 @@ function ConsumerDetailPage() {
     );
   }
 
-  return (
-    <Layout>
-      {/* <ConsumerHeader consumer={consumer} /> */}
-
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+      return (
+      <Layout>
+        <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <Tabs.TabPane tab="基本信息" key="basic">
           <ConsumerBasicInfo consumer={consumer} />
           <div className="mt-6">

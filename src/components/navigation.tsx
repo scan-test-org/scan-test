@@ -1,7 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import { UserInfo } from "./user-info";
+import { UserInfo } from "./UserInfo";
 
 export function Navigation() {
   const location = useLocation();
@@ -21,19 +19,25 @@ export function Navigation() {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="bg-[#f4f4f6] sticky top-0 z-50">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">A</span>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center">
+              {/* LOGO区域 */}
+              <img
+                src="/logo.png"
+                alt="logo"
+                className="w-6 h-6"
+                style={{ display: "block" }}
+              />
               </div>
               <span className="text-xl font-bold text-gray-900">API Portal</span>
             </Link>
           </div>
           
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Link 
               to="/getting-started" 
               className={getNavLinkClass('/getting-started')}
@@ -55,14 +59,14 @@ export function Navigation() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="hidden sm:block">
+            {/* <div className="hidden sm:block">
               <Input
                 placeholder="Search"
                 prefix={<SearchOutlined className="text-gray-400" />}
                 className="w-48 lg:w-64"
                 size="middle"
               />
-            </div>
+            </div> */}
             <UserInfo />
           </div>
         </div>

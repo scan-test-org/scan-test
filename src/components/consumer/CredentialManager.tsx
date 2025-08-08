@@ -38,11 +38,11 @@ export function CredentialManager({ consumerId, credentials, onCredentialsChange
     setCredentialLoading(true);
     try {
       // 先获取当前的凭证配置
-      const currentResponse = await api.get(`/consumers/${consumerId}/credentials`);
+      const currentResponse: any = await api.get(`/consumers/${consumerId}/credentials`);
       let currentConfig: ConsumerCredentialResult = {};
       
-      if (currentResponse.data?.code === "SUCCESS" && currentResponse.data?.data) {
-        currentConfig = currentResponse.data.data;
+      if (currentResponse?.code === "SUCCESS" && currentResponse?.data) {
+        currentConfig = currentResponse.data;
       }
 
       // 构建新的凭证配置
@@ -77,8 +77,8 @@ export function CredentialManager({ consumerId, credentials, onCredentialsChange
         }
       }
 
-      const response = await api.post(`/consumers/${consumerId}/credentials`, param);
-      if (response.data?.code === "SUCCESS") {
+      const response: any = await api.post(`/consumers/${consumerId}/credentials`, param);
+      if (response?.code === "SUCCESS") {
         message.success('凭证创建成功');
         setCredentialModalVisible(false);
         resetCredentialForm();
@@ -95,11 +95,11 @@ export function CredentialManager({ consumerId, credentials, onCredentialsChange
   const handleDeleteCredential = async (credentialType: string) => {
     try {
       // 先获取当前的凭证配置
-      const currentResponse = await api.get(`/consumers/${consumerId}/credentials`);
+      const currentResponse: any = await api.get(`/consumers/${consumerId}/credentials`);
       let currentConfig: ConsumerCredentialResult = {};
       
-      if (currentResponse.data?.code === "SUCCESS" && currentResponse.data?.data) {
-        currentConfig = currentResponse.data.data;
+      if (currentResponse?.code === "SUCCESS" && currentResponse?.data) {
+        currentConfig = currentResponse.data;
       }
 
       // 构建删除后的凭证配置，清空对应类型的凭证
@@ -130,8 +130,8 @@ export function CredentialManager({ consumerId, credentials, onCredentialsChange
         }
       }
 
-      const response = await api.post(`/consumers/${consumerId}/credentials`, param);
-      if (response.data?.code === "SUCCESS") {
+      const response: any = await api.post(`/consumers/${consumerId}/credentials`, param);
+      if (response?.code === "SUCCESS") {
         message.success('凭证删除成功');
         onCredentialsChange();
       }

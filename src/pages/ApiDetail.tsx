@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Badge, Table, Typography, Space, Tag, Spin, Alert, Descriptions, Button, Modal } from "antd";
+import { Card, Table, Tag, Spin, Alert, Descriptions, Button, Modal, Typography } from "antd";
+
+const { Paragraph } = Typography;
 import { FileTextOutlined } from "@ant-design/icons";
 import { Layout } from "../components/Layout";
+import { ProductHeader } from "../components/ProductHeader";
 import api from "../lib/api";
-import { ProductStatus, ProductCategory } from "../types";
 import type { Product, ApiResponse } from "../types";
 import MonacoEditor from "react-monaco-editor";
-
-const { Title, Paragraph } = Typography;
+import { getStatusText, getCategoryText } from "../lib/statusUtils";
 
 interface ApiEndpoint {
   key: string;
@@ -170,67 +171,7 @@ function ApiDetailPage() {
     setIsSpecModalVisible(true);
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'PUBLISHED':
-        return '已发布'
-      case 'DRAFT':
-        return '草稿'
-      case 'DEPRECATED':
-        return '已弃用'
-      case ProductStatus.ENABLE:
-        return '活跃'
-      case ProductStatus.DISABLE:
-        return '非活跃'
-      default:
-        return status
-    }
-  };
 
-  const getStatusColor = (status: string): "success" | "processing" | "default" => {
-    switch (status) {
-      case 'PUBLISHED':
-        return 'success'
-      case 'DRAFT':
-        return 'processing'
-      case 'DEPRECATED':
-        return 'default'
-      case ProductStatus.ENABLE:
-        return 'success'
-      case ProductStatus.DISABLE:
-        return 'default'
-      default:
-        return 'default'
-    }
-  };
-
-  const getCategoryText = (category: string) => {
-    switch (category) {
-      case ProductCategory.OFFICIAL:
-      case 'official2':
-        return '官方'
-      case ProductCategory.COMMUNITY:
-        return '社区'
-      case ProductCategory.CUSTOM:
-        return '自定义'
-      default:
-        return category
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case ProductCategory.OFFICIAL:
-      case 'official2':
-        return 'blue'
-      case ProductCategory.COMMUNITY:
-        return 'green'
-      case ProductCategory.CUSTOM:
-        return 'orange'
-      default:
-        return 'default'
-    }
-  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -305,23 +246,18 @@ function ApiDetailPage() {
 
   return (
     <Layout>
-      <div className="mb-8">
-        <Title level={1} className="mb-2">
-          {apiData.name}
-        </Title>
-        <Space className="mb-4">
-          <Badge 
-            status={getStatusColor(apiData.status)} 
-            text={getStatusText(apiData.status)} 
-          />
-          <Tag color="blue">v1.0.0</Tag>
-          <Tag color={getCategoryColor(apiData.category)}>{getCategoryText(apiData.category)}</Tag>
-          {apiData.enabled && <Tag color="green">已启用</Tag>}
-        </Space>
-        <Paragraph className="text-gray-600">
-          {apiData.description}
-        </Paragraph>
-      </div>
+      <ProductHeader
+        name={apiData.name}
+        description={apiData.description}
+        status={apiData.status}
+        category={apiData.category}
+        icon={apiData.icon || undefined}
+        defaultIcon="/logo.png"
+        version="v1.0.0"
+        enabled={apiData.enabled}
+        showVersion={true}
+        showEnabled={false}
+      />
 
       <Card title="基本信息" className="mb-6">
         <Descriptions column={2} bordered size="small">
@@ -372,19 +308,19 @@ function ApiDetailPage() {
       <Card 
         title={
           <div className="flex items-center justify-between">
-            <span>消费者授权</span>
+            <span>消费者订阅</span>
             <Button 
               type="primary" 
               onClick={() => window.open(`/consumers?productId=${apiData.productId}`, '_blank')}
             >
-              管理授权
+              管理订阅
             </Button>
           </div>
         }
       >
         <div className="p-4">
           <Paragraph className="text-gray-600">
-            点击"管理授权"按钮查看和管理此API产品的消费者订阅情况
+            点击"管理订阅"按钮查看和管理此API产品的消费者订阅情况
           </Paragraph>
         </div>
       </Card>

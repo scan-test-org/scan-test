@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../lib/api";
 import { Layout } from "../components/Layout";
+import { ProductHeader } from "../components/ProductHeader";
 import {
   Card,
-  Typography,
-  Tag,
-  Space,
   Descriptions,
   Spin,
   Alert,
@@ -19,7 +17,7 @@ import {
 } from "antd";
 import MonacoEditor from "react-monaco-editor";
 import ReactMarkdown from "react-markdown";
-import { ProductType, ProductCategory } from "../types";
+import { ProductType } from "../types";
 import type {
   Product,
   McpServerConfig,
@@ -27,31 +25,10 @@ import type {
   McpConfig,
 } from "../types";
 import * as yaml from "js-yaml";
-
-const { Title, Paragraph } = Typography;
-
-// 来源类型映射
-const FromTypeMap: Record<string, string> = {
-  HTTP: "HTTP转MCP",
-  MCP: "MCP直接代理",
-  OPEN_API: "OpenAPI转MCP",
-  DIRECT_ROUTE: "直接路由",
-  DATABASE: "数据库",
-};
-
-// 来源映射
-const SourceMap: Record<string, string> = {
-  APIG_AI: "AI网关",
-  HIGRESS: "Higress",
-  NACOS: "Nacos",
-};
-
-// 状态映射
-const StatusMap: Record<string, { text: string; color: string }> = {
-  PENDING: { text: "待发布", color: "orange" },
-  READY: { text: "就绪", color: "blue" },
-  PUBLISHED: { text: "已发布", color: "green" },
-};
+import { 
+  FromTypeMap, 
+  SourceMap 
+} from "../lib/statusUtils";
 
 function McpDetail() {
   const { mcpName } = useParams();
@@ -329,62 +306,20 @@ function McpDetail() {
   const currentMcpConfig = nacosMcpConfig || mcpConfig;
   const hasLocalConfig = nacosMcpConfig?.mcpServerConfig.localConfig || false;
 
-  const getStatusInfo = (status: string) => {
-    return StatusMap[status] || { text: status, color: "default" };
-  };
 
-  const getCategoryText = (category: ProductCategory) => {
-    switch (category) {
-      case ProductCategory.OFFICIAL:
-        return "官方";
-      case ProductCategory.COMMUNITY:
-        return "社区";
-      case ProductCategory.CUSTOM:
-        return "自定义";
-      default:
-        return category;
-    }
-  };
 
   return (
     <Layout>
-      {/* 头部信息区域 */}
-      <div className="mb-8">
-        <div className="flex items-start gap-4 mb-4">
-          <img
-            src={data.icon || "/MCP.png"}
-            alt="icon"
-            className="w-16 h-16 rounded-lg object-cover border"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "/default-icon.png";
-            }}
-          />
-                      <div className="flex-1">
-              <Title level={1} className="mb-2">
-                {name}
-              </Title>
-              <Space className="mb-3">
-                <Tag color={getStatusInfo(status).color}>
-                  {getStatusInfo(status).text}
-                </Tag>
-                <Tag color="blue">{getCategoryText(category)}</Tag>
-                <Tag color="purple">Model Context Protocol</Tag>
-                <Tag color={typeof (data as McpServerProduct).enabled !== "undefined" && (data as McpServerProduct).enabled ? "green" : "red"}>
-                  {typeof (data as McpServerProduct).enabled !== "undefined"
-                    ? (data as McpServerProduct).enabled
-                      ? "已启用"
-                      : "未启用"
-                    : "未知"}
-                </Tag>
-                <Tag color={enableConsumerAuth ? "green" : "orange"}>
-                  消费者认证: {enableConsumerAuth ? "启用" : "禁用"}
-                </Tag>
-              </Space>
-            </div>
-          </div>
-          <Paragraph className="text-gray-600 mb-3">{description}</Paragraph>
-      </div>
+      <ProductHeader
+        name={name}
+        description={description}
+        status={status}
+        category={category}
+        icon={data.icon || "/MCP.png"}
+        defaultIcon="/MCP.png"
+        enableConsumerAuth={enableConsumerAuth || undefined}
+        showConsumerAuth={true}
+      />
 
       {/* 主要内容区域 - 左右布局 */}
       <Row gutter={24}>
@@ -538,21 +473,6 @@ function McpDetail() {
 
         {/* 右侧配置信息 */}
         <Col span={8}>
-
-          {/* 消费者授权 */}
-          <Card title="消费者授权" className="mb-6">
-            <div className="text-center py-4">
-              <Button 
-                type="primary" 
-                onClick={() => window.open(`/consumers?productId=${data.productId}`, '_blank')}
-              >
-                管理授权
-              </Button>
-              <div className="text-sm text-gray-500 mt-2">
-                查看和管理此MCP产品的消费者订阅情况
-              </div>
-            </div>
-          </Card>
 
           {/* 连接配置 */}
           {((mcpConfig && mcpConfig.domains && mcpConfig.domains.length > 0) ||
@@ -708,6 +628,20 @@ function McpDetail() {
           )}
         </Col>
       </Row>
+      {/* 消费者订阅 */}
+      <Card title="消费者订阅" className="mb-6">
+            <div className="text-center py-4">
+              <Button 
+                type="primary" 
+                onClick={() => window.open(`/consumers?productId=${data.productId}`, '_blank')}
+              >
+                管理订阅
+              </Button>
+              <div className="text-sm text-gray-500 mt-2">
+                查看和管理此MCP产品的消费者订阅情况
+              </div>
+            </div>
+          </Card>
     </Layout>
   );
 }

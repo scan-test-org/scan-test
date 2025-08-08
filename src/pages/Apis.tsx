@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Card, Tag, Button, Typography, Input, Avatar } from "antd";
-import { SearchOutlined, EyeOutlined, FilterOutlined } from "@ant-design/icons";
+import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import api from "../lib/api";
-import { ProductType, ProductStatus, ProductCategory } from "../types";
+import { ProductType, ProductStatus } from "../types";
 import type { Product, ApiResponse, PaginatedResponse } from "../types";
+import { getCategoryText, getCategoryColor } from "../lib/statusUtils";
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -62,31 +63,7 @@ function APIsPage() {
     }
   };
 
-  const getCategoryText = (category: string) => {
-    switch (category) {
-      case ProductCategory.OFFICIAL:
-        return '官方'
-      case ProductCategory.COMMUNITY:
-        return '社区'
-      case ProductCategory.CUSTOM:
-        return '自定义'
-      default:
-        return category
-    }
-  };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case ProductCategory.OFFICIAL:
-        return 'blue'
-      case ProductCategory.COMMUNITY:
-        return 'green'
-      case ProductCategory.CUSTOM:
-        return 'orange'
-      default:
-        return 'default'
-    }
-  };
 
   const filteredApiProducts = apiProducts.filter(product => {
     return product.name.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -126,18 +103,10 @@ function APIsPage() {
         <div className="relative w-full max-w-2xl">
           <Search
             placeholder="请输入内容"
-            prefix={<SearchOutlined className="text-gray-400" />}
-            suffix={
-              <Button 
-                type="text" 
-                icon={<FilterOutlined />} 
-                className="text-gray-400 hover:text-gray-600"
-              />
-            }
             size="large"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="rounded-lg"
+            className="rounded-lg shadow-lg"
           />
         </div>
       </div>
@@ -152,68 +121,55 @@ function APIsPage() {
       {/* APIs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {filteredApiProducts.map((product) => (
-          <Card
-            key={product.key}
-            hoverable
-            className="h-full transition-all duration-200 hover:shadow-lg"
-            bodyStyle={{ padding: '20px' }}
-          >
-            <div className="flex items-start space-x-4">
-              {/* API Icon */}
-              <Avatar
-                size={48}
-                style={{ 
-                  backgroundColor: getApiIconColor(product.name),
-                  fontSize: '18px',
-                  fontWeight: 'bold'
-                }}
-              >
-                {product.icon || getApiIcon(product.name)}
-              </Avatar>
+          <Link key={product.key} to={`/apis/${product.key}`} className="block">
+            <Card
+              hoverable
+              className="h-full transition-all duration-200 hover:shadow-lg cursor-pointer rounded-lg shadow-lg"
+            >
+              <div className="flex items-start space-x-4">
+                {/* API Icon */}
+                <Avatar
+                  size={48}
+                  style={{ 
+                    backgroundColor: getApiIconColor(product.name),
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {product.icon || getApiIcon(product.name)}
+                </Avatar>
 
-              {/* API Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-2">
-                  <Title level={5} className="mb-0 truncate">
-                    {product.name}
-                  </Title>
-                  <Tag color="green" className="text-xs">
-                    REST
-                  </Tag>
-                </div>
+                {/* API Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <Title level={5} className="mb-0 truncate">
+                      {product.name}
+                    </Title>
+                    <Tag color="green" className="text-xs">
+                      REST
+                    </Tag>
+                  </div>
 
-                <div className="text-sm text-gray-500 mb-2">
-                  创建者: {product.creator}
-                </div>
+                  <div className="text-sm text-gray-500 mb-2">
+                    创建者: {product.creator}
+                  </div>
 
-                </div>
-              </div>
-                <Paragraph className="text-sm text-gray-600 mb-3 line-clamp-2">
-                  {product.description}
-                </Paragraph>
-
-                <div className="flex items-center justify-between">
-                  <Tag color={getCategoryColor(product.category)} className="text-xs">
-                    {getCategoryText(product.category)}
-                  </Tag>
-                  <div className="text-xs text-gray-400">
-                    更新 {product.lastUpdated}
                   </div>
                 </div>
+                  <Paragraph className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {product.description}
+                  </Paragraph>
 
-                <div className="mt-4">
-                  <Link to={`/apis/${product.key}`}>
-                    <Button 
-                      type="primary" 
-                      size="small" 
-                      icon={<EyeOutlined />}
-                      className="w-full"
-                    >
-                      查看详情
-                    </Button>
-                  </Link>
-            </div>
-          </Card>
+                  <div className="flex items-center justify-between">
+                    <Tag color={getCategoryColor(product.category)} className="">
+                      {getCategoryText(product.category)}
+                    </Tag>
+                    <div className="text-xs text-gray-400">
+                      更新 {product.lastUpdated}
+                    </div>
+                  </div>
+            </Card>
+          </Link>
         ))}
       </div>
 
