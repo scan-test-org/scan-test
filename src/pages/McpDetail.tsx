@@ -539,6 +539,21 @@ function McpDetail() {
         {/* 右侧配置信息 */}
         <Col span={8}>
 
+          {/* 消费者授权 */}
+          <Card title="消费者授权" className="mb-6">
+            <div className="text-center py-4">
+              <Button 
+                type="primary" 
+                onClick={() => window.open(`/consumers?productId=${data.productId}`, '_blank')}
+              >
+                管理授权
+              </Button>
+              <div className="text-sm text-gray-500 mt-2">
+                查看和管理此MCP产品的消费者订阅情况
+              </div>
+            </div>
+          </Card>
+
           {/* 连接配置 */}
           {((mcpConfig && mcpConfig.domains && mcpConfig.domains.length > 0) ||
             (nacosMcpConfig &&
