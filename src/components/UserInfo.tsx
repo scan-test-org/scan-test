@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Avatar, Spin, Dropdown } from "antd";
+import { Button, Avatar, Dropdown } from "antd";
 import { UserOutlined, LogoutOutlined, AppstoreOutlined } from "@ant-design/icons";
 import api from "../lib/api";
 import { useNavigate } from "react-router-dom";
@@ -12,11 +12,9 @@ interface UserInfo {
 
 export function UserInfo() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [loadingUser, setLoadingUser] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-      setLoadingUser(true);
       api.get("/developers/profile")
         .then((response) => {
           const data = response.data;
@@ -27,8 +25,7 @@ export function UserInfo() {
               avatar: data.avatarUrl || undefined,
             });
           }
-        })
-        .finally(() => setLoadingUser(false));
+        });
   }, []);
 
   const handleLogout = () => {
@@ -70,19 +67,16 @@ export function UserInfo() {
     },
   ];
 
-  if (loadingUser) {
-    return <Spin size="small" />;
-  }
   if (userInfo) {
     return (
       <Dropdown
         menu={{ items: menuItems }}
         placement="bottomRight"
         trigger={['hover']}
-        overlayClassName="user-dropdown"
+        overlayClassName="user-dropdown" 
       >
         <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
-          <Avatar src={userInfo.avatar} icon={<UserOutlined />} size="small" />
+          <Avatar src={userInfo.avatar} icon={<UserOutlined />} size="default" />
           {/* <span>{userInfo.displayName}</span> */}
         </div>
       </Dropdown>
