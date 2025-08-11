@@ -5,7 +5,7 @@ import lombok.Data;
 
 /**
  * 网关 MCP Server 结果基类
- * @author zh
+ * @author zxd
  */
 @Data
 @Schema(
