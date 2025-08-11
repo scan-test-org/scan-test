@@ -44,7 +44,7 @@ export function Navigation({ loading = false }: NavigationProps) {
                   style={{ display: "block" }}
                 />
                 </div>
-                <span className="text-xl font-bold text-gray-900">API Portal</span>
+                <span className="text-xl font-bold text-gray-900">AI 开放平台</span>
               </Link>
             )}
           </div>

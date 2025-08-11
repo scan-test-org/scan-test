@@ -90,10 +90,10 @@ function McpPage() {
       {/* Header Section */}
       <div className="text-center mb-8">
         <Title level={1} className="mb-4">
-          MCP Registry
+          MCP 市场
         </Title>
         <Paragraph className="text-gray-600 text-lg max-w-4xl mx-auto text-flow text-flow-grey slow">
-          支持私有化部署,共建和兼容 MCP Registry 官方协议,具备更多管理能力,支持自动注册、智能路由的MCP Registry
+          支持私有化部署,共建和兼容 MCP 市场 官方协议,具备更多管理能力,支持自动注册、智能路由的MCP Registry
         </Paragraph>
       </div>
 
