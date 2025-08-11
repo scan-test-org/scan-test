@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Table, Tag, Spin, Alert, Descriptions, Button, Modal, Typography } from "antd";
+import { Card, Table, Tag, Alert, Descriptions, Button, Modal, Typography } from "antd";
 
 const { Paragraph } = Typography;
 import { FileTextOutlined } from "@ant-design/icons";
@@ -218,19 +218,11 @@ function ApiDetailPage() {
     }
   ];
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-[300px]">
-          <Spin size="large" />
-        </div>
-      </Layout>
-    );
-  }
+
 
   if (error) {
     return (
-      <Layout>
+      <Layout loading={loading}>
         <Alert message={error} type="error" showIcon className="my-8" />
       </Layout>
     );
@@ -238,14 +230,14 @@ function ApiDetailPage() {
 
   if (!apiData) {
     return (
-      <Layout>
+      <Layout loading={loading}>
         <Alert message="未找到API信息" type="warning" showIcon className="my-8" />
       </Layout>
     );
   }
 
   return (
-    <Layout>
+    <Layout loading={loading}>
       <ProductHeader
         name={apiData.name}
         description={apiData.description}
