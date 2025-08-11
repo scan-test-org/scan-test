@@ -9,31 +9,33 @@ export interface Consumer {
   enabled?: boolean;
 }
 
-export interface Credential {
-  id?: string;
-  type: 'API_KEY' | 'HMAC' | 'JWT';
+export type Credential = HMACCredential | APIKeyCredential;
+
+export interface HMACCredential {
+  ak?: string;
+  sk?: string;
+  mode?: 'SYSTEM' | 'CUSTOM';
+}
+
+export interface APIKeyCredential {
   apiKey?: string;
-  accessKey?: string;
-  secretKey?: string;
-  createAt?: string;
+  mode?: 'SYSTEM' | 'CUSTOM';
 }
 
 export interface ConsumerCredentialResult {
   apiKeyConfig?: {
     credentials?: Array<{
-      id?: string;
-      key?: string;
-      createAt?: string;
+      apiKey?: string;
+      mode?: 'SYSTEM' | 'CUSTOM';
     }>;
     source?: string;
     key?: string;
   };
   hmacConfig?: {
     credentials?: Array<{
-      id?: string;
-      accessKey?: string;
-      secretKey?: string;
-      createAt?: string;
+      ak?: string;
+      sk?: string;
+      mode?: 'SYSTEM' | 'CUSTOM';
     }>;
   };
   jwtConfig?: Record<string, unknown>;
@@ -51,25 +53,18 @@ export interface Subscription {
 export interface CreateCredentialParam {
   apiKeyConfig?: {
     credentials?: Array<{
-      id?: string;
-      key?: string;
-      createAt?: string;
+      apiKey?: string;
+      mode?: 'SYSTEM' | 'CUSTOM';
     }>;
     source?: string;
     key?: string;
-    generationMethod?: 'SYSTEM' | 'CUSTOM';
-    customApiKey?: string;
   };
   hmacConfig?: {
     credentials?: Array<{
-      id?: string;
-      accessKey?: string;
-      secretKey?: string;
-      createAt?: string;
+      ak?: string;
+      sk?: string;
+      mode?: 'SYSTEM' | 'CUSTOM';
     }>;
-    generationMethod?: 'SYSTEM' | 'CUSTOM';
-    customAccessKey?: string;
-    customSecretKey?: string;
   };
   jwtConfig?: Record<string, unknown>;
 } 
