@@ -137,7 +137,7 @@ function ConsumerDetailPage() {
           </div>
         </Tabs.TabPane>
 
-        <Tabs.TabPane tab="消费者订阅" key="authorization">
+        <Tabs.TabPane tab="订阅列表" key="authorization">
           <SubscriptionManager 
             consumerId={consumerId!}
             subscriptions={subscriptions}
