@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Table, Tag, Alert, Descriptions, Button, Modal, Typography } from "antd";
+import { Card, Table, Tag, Alert, Descriptions, Button, Modal } from "antd";
 
-const { Paragraph } = Typography;
 import { FileTextOutlined } from "@ant-design/icons";
 import { Layout } from "../components/Layout";
 import { ProductHeader } from "../components/ProductHeader";
@@ -202,20 +201,20 @@ function ApiDetailPage() {
         <code className="text-sm bg-gray-100 px-2 py-1 rounded">{path}</code>
       )
     },
-    {
-      title: '操作ID',
-      dataIndex: 'operationId',
-      key: 'operationId',
-      width: 150,
-      render: (operationId: string) => (
-        <span className="text-sm text-gray-600">{operationId || '-'}</span>
-      )
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-    }
+    // {
+    //   title: '操作ID',
+    //   dataIndex: 'operationId',
+    //   key: 'operationId',
+    //   width: 150,
+    //   render: (operationId: string) => (
+    //     <span className="text-sm text-gray-600">{operationId || '-'}</span>
+    //   )
+    // },
+    // {
+    //   title: '描述',
+    //   dataIndex: 'description',
+    //   key: 'description',
+    // }
   ];
 
 
@@ -295,26 +294,6 @@ function ApiDetailPage() {
           pagination={false}
           size="small"
         />
-      </Card>
-
-      <Card 
-        title={
-          <div className="flex items-center justify-between">
-            <span>消费者订阅</span>
-            <Button 
-              type="primary" 
-              onClick={() => window.open(`/consumers?productId=${apiData.productId}`, '_blank')}
-            >
-              管理订阅
-            </Button>
-          </div>
-        }
-      >
-        <div className="p-4">
-          <Paragraph className="text-gray-600">
-            点击"管理订阅"按钮查看和管理此API产品的消费者订阅情况
-          </Paragraph>
-        </div>
       </Card>
 
       {/* OpenAPI 规范模态框 */}
