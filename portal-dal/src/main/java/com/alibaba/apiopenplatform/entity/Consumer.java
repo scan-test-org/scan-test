@@ -38,9 +38,9 @@ public class Consumer extends BaseEntity {
 //    @Column(name = "status", length = 32, nullable = false)
 //    private ConsumerStatus status;
 
-    @Column(name = "portal_id", length = 32, nullable = false)
+    @Column(name = "portal_id", length = 64, nullable = false)
     private String portalId;
 
-    @Column(name = "developer_id", length = 32, nullable = false)
+    @Column(name = "developer_id", length = 64, nullable = false)
     private String developerId;
 }

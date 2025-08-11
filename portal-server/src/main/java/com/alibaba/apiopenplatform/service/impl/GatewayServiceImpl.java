@@ -1,9 +1,11 @@
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.EnumUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
@@ -15,6 +17,7 @@ import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.gateway.GatewayOperator;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import com.alibaba.apiopenplatform.support.gateway.GatewayIdentityConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -26,7 +29,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +43,8 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     private final GatewayRepository gatewayRepository;
 
     private Map<GatewayType, GatewayOperator> gatewayOperators;
+
+    private final ContextHolder contextHolder;
 
     private ConsumerRefRepository consumerRefRepository;
 
@@ -57,7 +61,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
                 });
 
         Gateway gateway = param.convertTo();
-        gateway.setAdminId("admin");
+        gateway.setAdminId(contextHolder.getUser());
         gatewayRepository.save(gateway);
     }
 
@@ -70,7 +74,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     @Override
     public PageResult<GatewayResult> listGateways(Pageable pageable) {
-        Page<Gateway> gateways = gatewayRepository.findByAdminId("admin", pageable);
+        Page<Gateway> gateways = gatewayRepository.findByAdminId(contextHolder.getUser(), pageable);
 
         return new PageResult<GatewayResult>().convertFrom(gateways, gateway -> new GatewayResult().convertFrom(gateway));
     }
@@ -142,19 +146,8 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     @Override
     public String createConsumer(String gatewayId, Consumer consumer, ConsumerCredential credential) {
-        if (gatewayId == null) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Gateway cannot be null");
-        }
-        if (consumer == null) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Consumer cannot be null");
-        }
-        if (credential == null) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Credential cannot be null");
-        }
         Gateway gateway = findGateway(gatewayId);
-        String gwConsumerId = getOperator(gateway).createConsumer(gateway, consumer, credential);
-
-        return gwConsumerId != null ? gwConsumerId : consumer.getConsumerId(); // 如果都失败了，返回原始Consumer ID
+        return getOperator(gateway).createConsumer(gateway, consumer, credential);
     }
 
     @Override
@@ -179,13 +172,13 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Gateway", gatewayId));
 
         // todo 需要放到 GatewayOperator
-        Optional<ConsumerRef> existingRef = consumerRefRepository.findByConsumerIdAndRegionAndGatewayType(consumer.getConsumerId(), gateway.getApigConfig().getRegion(), gateway.getGatewayType().name());
-
-        if (!existingRef.isPresent()) {
-            // 创建网关Consumer 需要拉到 Consumer 关联的 Credential
-            ConsumerCredential credential = consumerCredentialRepository.findByConsumerId(consumer.getConsumerId()).orElse(null);
-            createGatewayConsumer(consumer, gateway, credential);
-        }
+//        Optional<ConsumerRef> existingRef = consumerRefRepository.findByConsumerIdAndRegionAndGatewayType(consumer.getConsumerId(), gateway.getApigConfig().getRegion(), gateway.getGatewayType().name());
+//
+//        if (!existingRef.isPresent()) {
+//            // 创建网关Consumer 需要拉到 Consumer 关联的 Credential
+//            ConsumerCredential credential = consumerCredentialRepository.findByConsumerId(consumer.getConsumerId()).orElse(null);
+//            createGatewayConsumer(consumer, gateway, credential);
+//        }
     }
 
     private void createGatewayConsumer(Consumer consumer, Gateway gateway, ConsumerCredential credential) {
@@ -196,8 +189,8 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
             // 创建映射关系
             ConsumerRef consumerRef = new ConsumerRef();
             consumerRef.setConsumerId(consumer.getConsumerId());
-            consumerRef.setRegion(gateway.getGatewayId()); // 使用gatewayId作为region
-            consumerRef.setGatewayType(gateway.getGatewayType().name());
+//            consumerRef.setRegion(gateway.getGatewayId()); // 使用gatewayId作为region
+            consumerRef.setGatewayType(gateway.getGatewayType());
             consumerRef.setGwConsumerId(gwConsumerId); // 使用网关返回的真实Consumer ID
 
             consumerRefRepository.save(consumerRef);
@@ -207,6 +200,17 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
             log.error("Failed to create consumer in gateway {}", gateway.getGatewayId(), e);
             throw e;
         }
+    }
+
+    @Override
+    public GatewayIdentityConfig getGatewayIdentity(String gatewayId) {
+        Gateway gateway = findGateway(gatewayId);
+
+        return GatewayIdentityConfig.builder()
+                .gatewayType(gateway.getGatewayType())
+                .apigConfig(gateway.getApigConfig())
+                .higressConfig(gateway.getHigressConfig())
+                .build();
     }
 
     @Override
