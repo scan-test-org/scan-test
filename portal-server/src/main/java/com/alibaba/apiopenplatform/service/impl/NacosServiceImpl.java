@@ -197,7 +197,12 @@ public class NacosServiceImpl implements NacosService {
         // tools
         if (detail.getToolSpec() != null) {
             String toolJson = JSONUtil.toJsonStr(detail.getToolSpec());
-            mcpConfig.setTools(toolJson != null && !toolJson.trim().equals("{}") ? toolJson : null);
+            if (toolJson != null && !toolJson.trim().equals("{}")) {
+                String toolYaml = convertJsonToYaml(toolJson);
+                mcpConfig.setTools(toolYaml);
+            } else {
+                mcpConfig.setTools(null);
+            }
         } else {
             mcpConfig.setTools(null);
         }
@@ -208,6 +213,14 @@ public class NacosServiceImpl implements NacosService {
         mcpConfig.setMeta(meta);
 
         return mcpConfig;
+    }
+
+    private String convertJsonToYaml(String jsonStr) {
+        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
+
+        Object jsonObj = JSONUtil.parse(jsonStr);
+
+        return yaml.dump(jsonObj);
     }
 
     @Override

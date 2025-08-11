@@ -204,8 +204,19 @@ public class ProductServiceImpl implements ProductService {
                     throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT_REF, product.getProductId());
                 });
 
+        log.info("addProductRef - param: {}", param);
+        
         ProductRef productRef = param.convertTo();
+        log.info("addProductRef - after convertTo: {}", productRef);
+        
         productRef.setProductId(productId);
+        
+        // // 确保nacosRefConfig字段被正确设置
+        // if (param.getSourceType().isNacos() && param.getNacosRefConfig() != null) {
+        //     productRef.setNacosRefConfig(param.getNacosRefConfig());
+        //     log.info("addProductRef - manually set nacosRefConfig: {}", productRef.getNacosRefConfig());
+        // }
+        
         syncConfig(product, productRef);
 
         productRefRepository.save(productRef);
@@ -229,6 +240,8 @@ public class ProductServiceImpl implements ProductService {
 
     private void syncConfig(Product product, ProductRef productRef) {
         SourceType sourceType = productRef.getSourceType();
+        
+        log.info("syncConfig - sourceType: {}, productRef: {}", sourceType, productRef);
 
         if (sourceType.isGateway()) {
             GatewayResult gateway = gatewayService.getGateway(productRef.getGatewayId());
@@ -243,9 +256,14 @@ public class ProductServiceImpl implements ProductService {
         } else if (sourceType.isNacos()) {
             // 从Nacos获取MCP Server配置
             NacosRefConfig nacosRefConfig = productRef.getNacosRefConfig();
+            log.info("syncConfig - nacosRefConfig: {}, nacosId: {}", nacosRefConfig, productRef.getNacosId());
+            
             if (nacosRefConfig != null) {
                 String mcpConfig = nacosService.fetchMcpConfig(productRef.getNacosId(), nacosRefConfig);
                 productRef.setMcpConfig(mcpConfig);
+                log.info("syncConfig - mcpConfig set: {}", mcpConfig);
+            } else {
+                log.warn("syncConfig - nacosRefConfig is null, cannot fetch MCP config");
             }
         }
         productRef.setEnabled(true);
