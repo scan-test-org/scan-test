@@ -74,7 +74,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     @Override
     public PageResult<GatewayResult> listGateways(Pageable pageable) {
-        Page<Gateway> gateways = gatewayRepository.findByAdminId(contextHolder.getUser(), pageable);
+        Page<Gateway> gateways = gatewayRepository.findAll(pageable);
 
         return new PageResult<GatewayResult>().convertFrom(gateways, gateway -> new GatewayResult().convertFrom(gateway));
     }
@@ -244,5 +244,9 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
                     "No gateway operator found for gateway type: " + gateway.getGatewayType());
         }
         return gatewayOperator;
+    }
+
+    public static void main(String[] args) {
+        System.out.println("[\n  {\n    \"name\":\"hubspot_create_contact\",\n    \"description\":\"Create a new contact in HubSpot\",\n    \"inputSchema\":{\n      \"type\":\"object\",\n      \"properties\":{\n        \"firstname\":{\n          \"type\":\"string\",\n          \"description\":\"Contact's first name\"\n        },\n        \"lastname\":{\n          \"type\":\"string\",\n          \"description\":\"Contact's last name\"\n        },\n        \"email\":{\n          \"type\":\"string\",\n          \"description\":\"Contact's email address\"\n        },\n        \"properties\":{\n          \"type\":\"object\",\n          \"description\":\"Additional contact properties\"\n        }\n      },\n      \"required\":[\n        \"firstname\",\n        \"lastname\"\n      ]\n    }\n  },\n  {\n    \"name\":\"hubspot_create_company\",\n    \"description\":\"Create a new company in HubSpot\",\n    \"inputSchema\":{\n      \"type\":\"object\",\n      \"properties\":{\n        \"name\":{\n          \"type\":\"string\",\n          \"description\":\"Company name\"\n        },\n        \"properties\":{\n          \"type\":\"object\",\n          \"description\":\"Additional company properties\"\n        }\n      },\n      \"required\":[\n        \"name\"\n      ]\n    }\n  },\n  {\n    \"name\":\"hubspot_get_company_activity\",\n    \"description\":\"Get activity history for a specific company\",\n    \"inputSchema\":{\n      \"type\":\"object\",\n      \"properties\":{\n        \"company_id\":{\n          \"type\":\"string\",\n          \"description\":\"HubSpot company ID\"\n        }\n      },\n      \"required\":[\n        \"company_id\"\n      ]\n    }\n  },\n  {\n    \"name\":\"hubspot_get_recent_engagements\",\n    \"description\":\"Get recent engagement activities across all contacts and companies\",\n    \"inputSchema\":{\n      \"type\":\"object\",\n      \"properties\":{\n        \"days\":{\n          \"type\":\"integer\",\n          \"description\":\"Number of days to look back (default: 7)\"\n        },\n        \"limit\":{\n          \"type\":\"integer\",\n          \"description\":\"Maximum number of engagements to return (default: 50)\"\n        }\n      }\n    }\n  },\n  {\n    \"name\":\"hubspot_get_active_companies\",\n    \"description\":\"Get most recently active companies from HubSpot\",\n    \"inputSchema\":{\n      \"type\":\"object\",\n      \"properties\":{\n        \"limit\":{\n          \"type\":\"integer\",\n          \"description\":\"Maximum number of companies to return (default: 10)\"\n        }\n      }\n    }\n  },\n  {\n    \"name\":\"hubspot_get_active_contacts\",\n    \"description\":\"Get most recently active contacts from HubSpot\",\n    \"inputSchema\":{\n      \"type\":\"object\",\n      \"properties\":{\n        \"limit\":{\n          \"type\":\"integer\",\n          \"description\":\"Maximum number of contacts to return (default: 10)\"\n        }\n      }\n    }\n  }\n]");
     }
 }

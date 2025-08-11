@@ -142,34 +142,36 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     @Override
     public String createConsumer(Gateway gateway, Consumer consumer, ConsumerCredential credential) {
         APIGClient client = getClient(gateway);
+        try {
+            // ApiKey
+            ApiKeyIdentityConfig apikeyIdentityConfig = convertToApiKeyIdentityConfig(credential.getApiKeyConfig());
 
-        // ApiKey
-        ApiKeyIdentityConfig apikeyIdentityConfig = convertToApiKeyIdentityConfig(credential.getApiKeyConfig());
+            // Hmac
+            List<AkSkIdentityConfig> akSkIdentityConfigs = convertToAkSkIdentityConfigs(credential.getHmacConfig());
 
-        // Hmac
-        List<AkSkIdentityConfig> akSkIdentityConfigs = convertToAkSkIdentityConfigs(credential.getHmacConfig());
+            CreateConsumerRequest createConsumerRequest = CreateConsumerRequest.builder()
+                    .name(consumer.getName())
+                    .gatewayType(gateway.getGatewayType().getType())
+                    .apikeyIdentityConfig(apikeyIdentityConfig)
+                    .akSkIdentityConfigs(akSkIdentityConfigs)
+                    .build();
 
-        CreateConsumerRequest createConsumerRequest = CreateConsumerRequest.builder()
-                .name(consumer.getName())
-                .gatewayType(gateway.getGatewayType().getType())
-                .apikeyIdentityConfig(apikeyIdentityConfig)
-                .akSkIdentityConfigs(akSkIdentityConfigs)
-                .build();
-
-        CreateConsumerResponse response = client.execute(c -> {
-            CompletableFuture<CreateConsumerResponse> future = c.createConsumer(createConsumerRequest);
-            try {
-                return future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
+            CreateConsumerResponse response = client.execute(c -> {
+                try {
+                    return c.createConsumer(createConsumerRequest).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
             }
-        });
 
-        if (response.getStatusCode() != 200) {
-            throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            return response.getBody().getData().getConsumerId();
+        } catch (Exception e) {
+            log.error("Error creating Consumer", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error creating Consumer，Cause：" + e.getMessage());
         }
-
-        return response.getBody().getData().getConsumerId();
     }
 
     @Override
@@ -237,17 +239,16 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         Assert.notEmpty(envId);
 
         String finalEnvId = envId;
-        List<CreateConsumerAuthorizationRulesRequest.AuthorizationRules> authorizationRules = consumerAuthorizationRules.stream().map(consumerAuthorizationRule -> {
-            return CreateConsumerAuthorizationRulesRequest.AuthorizationRules.builder()
-                    .consumerId(consumerAuthorizationRule.getConsumerId())
-                    .expireMode(consumerAuthorizationRule.getExpireMode())
-                    .resourceType(consumerAuthorizationRule.getResourceType())
-                    .resourceIdentifier(CreateConsumerAuthorizationRulesRequest.ResourceIdentifier.builder()
-                            .resourceId(consumerAuthorizationRule.getResourceId())
-                            .environmentId(finalEnvId).build())
-                    .expireTimestamp(consumerAuthorizationRule.getExpireTimestamp())
-                    .build();
-        }).collect(Collectors.toList());
+        List<CreateConsumerAuthorizationRulesRequest.AuthorizationRules> authorizationRules = consumerAuthorizationRules.stream()
+                .map(consumerAuthorizationRule -> CreateConsumerAuthorizationRulesRequest.AuthorizationRules.builder()
+                .consumerId(consumerAuthorizationRule.getConsumerId())
+                .expireMode(consumerAuthorizationRule.getExpireMode())
+                .resourceType(consumerAuthorizationRule.getResourceType())
+                .resourceIdentifier(CreateConsumerAuthorizationRulesRequest.ResourceIdentifier.builder()
+                        .resourceId(consumerAuthorizationRule.getResourceId())
+                        .environmentId(finalEnvId).build())
+                .expireTimestamp(consumerAuthorizationRule.getExpireTimestamp())
+                .build()).collect(Collectors.toList());
 
 
         client.execute(c -> {
