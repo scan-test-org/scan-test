@@ -209,7 +209,7 @@ function ConsumersPage() {
       </Card>
 
       <Card title="消费者统计" className="mt-8">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="flex justify-center">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{total}</div>
             <div className="text-sm text-gray-500">总消费者</div>
