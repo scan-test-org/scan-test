@@ -570,20 +570,6 @@ function McpDetail() {
           )}
         </Col>
       </Row>
-      {/* 消费者订阅 */}
-      <Card title="消费者订阅" className="mb-6">
-            <div className="text-center py-4">
-              <Button 
-                type="primary" 
-                onClick={() => window.open(`/consumers?productId=${data.productId}`, '_blank')}
-              >
-                管理订阅
-              </Button>
-              <div className="text-sm text-gray-500 mt-2">
-                查看和管理此MCP产品的消费者订阅情况
-              </div>
-            </div>
-          </Card>
     </Layout>
   );
 }

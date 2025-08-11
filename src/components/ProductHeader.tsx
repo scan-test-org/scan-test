@@ -1,6 +1,7 @@
 import React from "react";
-import { Typography, Tag, Space } from "antd";
+import { Typography, Tag, Space, Button } from "antd";
 import { getStatusText, getStatusColor, getCategoryText, getCategoryColor } from "../lib/statusUtils";
+import { useNavigate, useParams } from "react-router-dom";
 
 const { Title, Paragraph } = Typography;
 
@@ -33,6 +34,8 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
   showVersion = false,
   showEnabled = false,
 }) => {
+  const navigate = useNavigate();
+  const { id, mcpName } = useParams();
   return (
     <div className="mb-8">
       <div className="flex items-start gap-4 mb-4">
@@ -75,6 +78,11 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
         </div>
       </div>
       <Paragraph className="text-gray-600 mb-3">{description}</Paragraph>
+      <Button type="primary" onClick={() => {
+        navigate(`/consumers?productId=${id || mcpName}`);
+      }}>
+        管理订阅
+      </Button>
     </div>
   );
 }; 
