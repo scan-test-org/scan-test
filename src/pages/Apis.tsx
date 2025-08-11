@@ -6,9 +6,12 @@ import api from "../lib/api";
 import { ProductType, ProductStatus } from "../types";
 import type { Product, ApiResponse, PaginatedResponse } from "../types";
 import { getCategoryText, getCategoryColor } from "../lib/statusUtils";
+import './Test.css';
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
+
+
 
 interface ApiProduct {
   key: string;
@@ -86,13 +89,13 @@ function APIsPage() {
   };
 
   return (
-    <Layout>
+    <Layout loading={loading}>
       {/* Header Section */}
       <div className="text-center mb-8">
         <Title level={1} className="mb-4">
           API Registry
         </Title>
-        <Paragraph className="text-gray-600 text-lg max-w-4xl mx-auto">
+        <Paragraph className="text-gray-600 text-lg max-w-4xl mx-auto text-flow text-flow-grey slow">
           支持私有化部署,共建和兼容 API Registry 官方协议,具备更多管理能力,支持自动注册、智能路由的API Registry
         </Paragraph>
       </div>
@@ -153,8 +156,6 @@ function APIsPage() {
                     创建者: {product.creator}
                   </div>
 
-                  </div>
-                </div>
                   <Paragraph className="text-sm text-gray-600 mb-3 line-clamp-2">
                     {product.description}
                   </Paragraph>
@@ -167,20 +168,15 @@ function APIsPage() {
                       更新 {product.lastUpdated}
                     </div>
                   </div>
+                </div>
+              </div>
             </Card>
           </Link>
         ))}
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="text-center py-8">
-          <div className="text-gray-500">加载中...</div>
-        </div>
-      )}
-
       {/* Empty State */}
-      {!loading && filteredApiProducts.length === 0 && (
+      {filteredApiProducts.length === 0 && (
         <div className="text-center py-8">
           <div className="text-gray-500">暂无API产品</div>
         </div>

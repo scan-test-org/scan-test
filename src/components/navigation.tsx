@@ -1,7 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
+import { Skeleton } from "antd";
 import { UserInfo } from "./UserInfo";
 
-export function Navigation() {
+interface NavigationProps {
+  loading?: boolean;
+}
+
+export function Navigation({ loading = false }: NavigationProps) {
   const location = useLocation();
   
   const isActive = (path: string) => {
@@ -23,39 +28,57 @@ export function Navigation() {
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center">
-              {/* LOGO区域 */}
-              <img
-                src="/logo.png"
-                alt="logo"
-                className="w-6 h-6"
-                style={{ display: "block" }}
-              />
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                <Skeleton.Avatar size={32} active />
+                <Skeleton.Input active size="small" style={{ width: 120, height: 24 }} />
               </div>
-              <span className="text-xl font-bold text-gray-900">API Portal</span>
-            </Link>
+            ) : (
+              <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center">
+                {/* LOGO区域 */}
+                <img
+                  src="/logo.png"
+                  alt="logo"
+                  className="w-6 h-6"
+                  style={{ display: "block" }}
+                />
+                </div>
+                <span className="text-xl font-bold text-gray-900">API Portal</span>
+              </Link>
+            )}
           </div>
           
           <div className="hidden md:flex items-center space-x-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Link 
-              to="/getting-started" 
-              className={getNavLinkClass('/getting-started')}
-            >
-              Getting Started
-            </Link>
-            <Link 
-              to="/apis" 
-              className={getNavLinkClass('/apis')}
-            >
-              APIs
-            </Link>
-            <Link 
-              to="/mcp" 
-              className={getNavLinkClass('/mcp')}
-            >
-              MCP
-            </Link>
+            {loading ? (
+              <>
+                <Skeleton.Input active size="small" style={{ width: 100, height: 20 }} />
+                <Skeleton.Input active size="small" style={{ width: 60, height: 20 }} />
+                <Skeleton.Input active size="small" style={{ width: 60, height: 20 }} />
+                <Skeleton.Input active size="small" style={{ width: 60, height: 20 }} />
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/getting-started" 
+                  className={getNavLinkClass('/getting-started')}
+                >
+                  Getting Started
+                </Link>
+                <Link 
+                  to="/apis" 
+                  className={getNavLinkClass('/apis')}
+                >
+                  APIs
+                </Link>
+                <Link 
+                  to="/mcp" 
+                  className={getNavLinkClass('/mcp')}
+                >
+                  MCP
+                </Link>
+              </>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
@@ -67,7 +90,11 @@ export function Navigation() {
                 size="middle"
               />
             </div> */}
-            <UserInfo />
+            {loading ? (
+              <Skeleton.Avatar size={32} active />
+            ) : (
+              <UserInfo />
+            )}
           </div>
         </div>
       </div>

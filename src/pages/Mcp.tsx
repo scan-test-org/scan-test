@@ -86,13 +86,13 @@ function McpPage() {
   };
 
   return (
-    <Layout>
+    <Layout loading={loading}>
       {/* Header Section */}
       <div className="text-center mb-8">
         <Title level={1} className="mb-4">
           MCP Registry
         </Title>
-        <Paragraph className="text-gray-600 text-lg max-w-4xl mx-auto">
+        <Paragraph className="text-gray-600 text-lg max-w-4xl mx-auto text-flow text-flow-grey slow">
           支持私有化部署,共建和兼容 MCP Registry 官方协议,具备更多管理能力,支持自动注册、智能路由的MCP Registry
         </Paragraph>
       </div>
@@ -172,15 +172,8 @@ function McpPage() {
         ))}
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="text-center py-8">
-          <div className="text-gray-500">加载中...</div>
-        </div>
-      )}
-
       {/* Empty State */}
-      {!loading && filteredMcpServers.length === 0 && (
+      {filteredMcpServers.length === 0 && (
         <div className="text-center py-8">
           <div className="text-gray-500">暂无MCP服务器</div>
         </div>
