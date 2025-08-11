@@ -104,11 +104,7 @@ function McpDetail() {
   ) => {
     // 互斥：优先判断本地模式
     if (localConfig) {
-      const localConfigJson = `{
-  "mcpServers": {
-    "${serverName}": ${JSON.stringify(localConfig, null, 2)}
-  }
-}`;
+      const localConfigJson = JSON.stringify(localConfig, null, 2);
       setLocalJson(localConfigJson);
       setHttpJson("");
       setSseJson("");
