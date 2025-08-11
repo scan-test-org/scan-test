@@ -5,7 +5,7 @@ import { Layout } from "../components/Layout";
 import api from "../lib/api";
 import { ProductType, ProductStatus } from "../types";
 import type { Product, ApiResponse, PaginatedResponse } from "../types";
-import { getCategoryText, getCategoryColor } from "../lib/statusUtils";
+// import { getCategoryText, getCategoryColor } from "../lib/statusUtils";
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -93,7 +93,7 @@ function McpPage() {
           MCP 市场
         </Title>
         <Paragraph className="text-gray-600 text-lg max-w-4xl mx-auto text-flow text-flow-grey slow">
-          支持私有化部署,共建和兼容 MCP 市场 官方协议,具备更多管理能力,支持自动注册、智能路由的MCP Registry
+          支持私有化部署，共建和兼容MCP市场官方协议，具备更多管理能力，支持自动注册、智能路由的MCP市场
         </Paragraph>
       </div>
 
@@ -125,7 +125,7 @@ function McpPage() {
               hoverable
               className="h-full transition-all duration-200 hover:shadow-lg cursor-pointer rounded-lg shadow-lg"
             >
-              <div className="flex items-start space-x-4">
+              <div className="flex items-start space-x-4 mb-2">
                 {/* Server Icon */}
                 <Avatar
                   size={48}
@@ -149,9 +149,9 @@ function McpPage() {
                     </Tag>
                   </div>
 
-                  <div className="text-sm text-gray-500 mb-2">
+                  {/* <div className="text-sm text-gray-500 mb-2">
                     创建者: {server.creator}
-                  </div>
+                  </div> */}
 
                   </div>
                 </div>
@@ -160,9 +160,9 @@ function McpPage() {
                   </Paragraph>
 
                   <div className="flex items-center justify-between">
-                    <Tag color={getCategoryColor(server.category || 'OFFICIAL')} className="">
+                    {/* <Tag color={getCategoryColor(server.category || 'OFFICIAL')} className="">
                       {getCategoryText(server.category || 'OFFICIAL')}
-                    </Tag>
+                    </Tag> */}
                     <div className="text-xs text-gray-400">
                       更新 {server.lastUpdated}
                     </div>
