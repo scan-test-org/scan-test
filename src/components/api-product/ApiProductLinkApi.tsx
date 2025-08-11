@@ -20,6 +20,12 @@ interface HigressMCPItem {
   fromGatewayType: 'HIGRESS'
 }
 
+interface NacosMCPItem {
+  mcpServerName: string
+  fromGatewayType: 'NACOS'
+  namespaceId: string
+}
+
 interface APIGAIMCPItem {
   mcpServerName: string
   fromGatewayType: 'APIG_AI'
@@ -27,7 +33,7 @@ interface APIGAIMCPItem {
   apiId: string
 }
 
-type ApiItem = RestAPIItem | HigressMCPItem | APIGAIMCPItem;
+type ApiItem = RestAPIItem | HigressMCPItem | APIGAIMCPItem | NacosMCPItem;
 
 interface LinkedService {
   productId: string
@@ -36,6 +42,7 @@ interface LinkedService {
   sourceType: 'GATEWAY' | 'NACOS'
   apigRefConfig?: RestAPIItem | APIGAIMCPItem
   higressRefConfig?: HigressMCPItem
+  nacosRefConfig?: NacosMCPItem
 }
 
 interface Gateway {
@@ -65,7 +72,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
   const [nacosLoading, setNacosLoading] = useState(false)
   const [selectedGateway, setSelectedGateway] = useState<Gateway | null>(null)
   const [selectedNacos, setSelectedNacos] = useState<NacosInstance | null>(null)
-  const [apiList, setApiList] = useState<ApiItem[]>([])
+  const [apiList, setApiList] = useState<ApiItem[] | NacosMCPItem[]>([])
   const [apiLoading, setApiLoading] = useState(false)
   const [sourceType, setSourceType] = useState<'GATEWAY' | 'NACOS'>('GATEWAY')
 
@@ -321,6 +328,10 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         productId: apiProduct.productId,
         apigRefConfig: selectedApi && 'apiId' in selectedApi ? selectedApi as RestAPIItem | APIGAIMCPItem : undefined,
         higressRefConfig: selectedApi && 'mcpServerName' in selectedApi && 'fromGatewayType' in selectedApi && selectedApi.fromGatewayType === 'HIGRESS' ? selectedApi as HigressMCPItem : undefined,
+        nacosRefConfig: sourceType === 'NACOS' && selectedApi && 'fromGatewayType' in selectedApi && selectedApi.fromGatewayType === 'NACOS' ? {
+          ...selectedApi,
+          namespaceId: 'public'
+        } : undefined,
       }
       
       apiProductApi.createApiProductRef(apiProduct.productId, newService).then((res: any) => {
