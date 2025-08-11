@@ -134,7 +134,7 @@ export interface McpConfig {
       domain: string;
       protocol: string;
     }>;
-    localConfig?: any;
+    rawConfig?: string;
   };
   tools: string; // YAML格式的tools配置字符串
   meta: {
