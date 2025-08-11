@@ -31,7 +31,8 @@ type ApiItem = RestAPIItem | HigressMCPItem | APIGAIMCPItem;
 
 interface LinkedService {
   productId: string
-  gatewayId: string
+  gatewayId?: string
+  nacosId?: string
   sourceType: 'GATEWAY' | 'NACOS'
   apigRefConfig?: RestAPIItem | APIGAIMCPItem
   higressRefConfig?: HigressMCPItem
@@ -314,7 +315,8 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       })
       
       const newService: LinkedService = {
-        gatewayId: sourceType === 'GATEWAY' ? gatewayId : nacosId, // 对于 Nacos，使用 nacosId 作为 gatewayId
+        gatewayId: sourceType === 'GATEWAY' ? gatewayId : undefined, // 对于 Nacos，使用 nacosId 作为 gatewayId
+        nacosId: sourceType === 'NACOS' ? nacosId : undefined,
         sourceType,
         productId: apiProduct.productId,
         apigRefConfig: selectedApi && 'apiId' in selectedApi ? selectedApi as RestAPIItem | APIGAIMCPItem : undefined,
