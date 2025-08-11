@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, Tag, Button, Typography, Input, Avatar } from "antd";
-import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
+import { Card, Tag, Typography, Input, Avatar } from "antd";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import api from "../lib/api";
