@@ -22,7 +22,7 @@ public class ProductResult implements OutputConverter<ProductResult, Product> {
 
     private ProductStatus status = ProductStatus.PENDING;
 
-    private Boolean enableConsumerAuth;
+    private Boolean enableConsumerAuth = false;
 
     private ProductType type;
 

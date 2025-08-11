@@ -33,7 +33,7 @@ public class Gateway extends BaseEntity {
     @Column(name = "name", length = 32, nullable = false)
     private GatewayType gatewayType;
 
-    @Column(name = "gateway_id", length = 32, nullable = false)
+    @Column(name = "gateway_id", length = 64, nullable = false)
     private String gatewayId;
 
     @Column(name = "admin_id", length = 64, nullable = false)

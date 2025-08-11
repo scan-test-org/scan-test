@@ -26,7 +26,7 @@ public class NacosInstance extends BaseEntity {
     @Column(name = "nacos_name", length = 64, nullable = false)
     private String nacosName;
 
-    @Column(name = "nacos_id", length = 32, nullable = false)
+    @Column(name = "nacos_id", length = 64, nullable = false)
     private String nacosId;
 
     @Column(name = "admin_id", length = 64, nullable = false)
