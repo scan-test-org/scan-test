@@ -211,11 +211,6 @@ public class ProductServiceImpl implements ProductService {
         
         productRef.setProductId(productId);
         
-        // // 确保nacosRefConfig字段被正确设置
-        // if (param.getSourceType().isNacos() && param.getNacosRefConfig() != null) {
-        //     productRef.setNacosRefConfig(param.getNacosRefConfig());
-        //     log.info("addProductRef - manually set nacosRefConfig: {}", productRef.getNacosRefConfig());
-        // }
         
         syncConfig(product, productRef);
 
