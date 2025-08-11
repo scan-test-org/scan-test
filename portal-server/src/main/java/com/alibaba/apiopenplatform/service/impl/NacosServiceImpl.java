@@ -27,12 +27,12 @@ import com.alibaba.nacos.maintainer.client.ai.AiMaintainerFactory;
 import com.alibaba.nacos.maintainer.client.ai.McpMaintainerService;
 import com.alibaba.nacos.api.ai.model.mcp.McpServerDetailInfo;
 
-import java.util.List;
 import java.util.Properties;
 import javax.annotation.PostConstruct;
 
 /**
  * Nacos服务实现
+ *
  * @author zxd
  */
 @Service
@@ -70,7 +70,7 @@ public class NacosServiceImpl implements NacosService {
         try {
             NacosInstance nacosInstance = findNacosInstance(nacosId);
             McpMaintainerService serviceToUse = buildDynamicMcpService(nacosInstance);
-            
+
             McpServerDetailInfo detail = serviceToUse.getMcpServerDetail(namespaceId, mcpName, version);
             return detail != null ? McpMarketDetailParam.builder().build().convertFrom(detail) : null;
         } catch (Exception e) {
@@ -78,7 +78,7 @@ public class NacosServiceImpl implements NacosService {
         }
     }
 
-    private McpMaintainerService buildDynamicMcpService(NacosInstance nacosInstance) throws Exception {
+    private McpMaintainerService buildDynamicMcpService(NacosInstance nacosInstance) {
         Properties properties = buildProperties(
                 nacosInstance.getServerUrl(),
                 nacosInstance.getUsername(),
@@ -87,7 +87,12 @@ public class NacosServiceImpl implements NacosService {
         if (nacosInstance.getNamespace() != null) {
             properties.setProperty("namespace", nacosInstance.getNamespace());
         }
-        return (McpMaintainerService) AiMaintainerFactory.createAiMaintainerService(properties);
+        try {
+            return AiMaintainerFactory.createAiMaintainerService(properties);
+        } catch (Exception e) {
+            log.error("Error init Nacos McpMaintainerService", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Failed to init Nacos McpMaintainerService");
+        }
     }
 
     private Properties buildProperties(String serverAddr, String username, String password) {
@@ -112,9 +117,9 @@ public class NacosServiceImpl implements NacosService {
     @Override
     public void createNacosInstance(CreateNacosParam param) {
         nacosInstanceRepository.findByNacosNameAndAdminId(param.getNacosName(), DEFAULT_ADMIN_ID)
-            .ifPresent(nacos -> {
-                throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.NACOS_INSTANCE, nacos.getNacosName());
-            });
+                .ifPresent(nacos -> {
+                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.NACOS_INSTANCE, nacos.getNacosName());
+                });
 
         NacosInstance nacosInstance = param.convertTo();
         nacosInstance.setNacosId(IdGenerator.genNacosId());
@@ -125,13 +130,13 @@ public class NacosServiceImpl implements NacosService {
     @Override
     public void updateNacosInstance(String nacosId, UpdateNacosParam param) {
         NacosInstance existingInstance = findNacosInstance(nacosId);
-        
+
         nacosInstanceRepository.findByNacosNameAndAdminId(param.getNacosName(), DEFAULT_ADMIN_ID)
-            .ifPresent(nacos -> {
-                if (!nacos.getNacosId().equals(nacosId)) {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.NACOS_INSTANCE, nacos.getNacosName());
-                }
-            });
+                .ifPresent(nacos -> {
+                    if (!nacos.getNacosId().equals(nacosId)) {
+                        throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.NACOS_INSTANCE, nacos.getNacosName());
+                    }
+                });
 
         param.update(existingInstance);
         nacosInstanceRepository.save(existingInstance);
@@ -156,21 +161,26 @@ public class NacosServiceImpl implements NacosService {
     }
 
     @Override
-    public String fetchMcpConfig(String nacosId, Object conf) throws Exception {
+    public String fetchMcpConfig(String nacosId, Object conf) {
         NacosRefConfig config = (NacosRefConfig) conf;
         NacosInstance nacosInstance = findNacosInstance(nacosId);
-        
+
         McpMaintainerService service = buildDynamicMcpService(nacosInstance);
         String namespace = config.getNamespaceId() != null ? config.getNamespaceId() : "public";
         String version = null;
 
-        McpServerDetailInfo detail = service.getMcpServerDetail(namespace, config.getMcpServerName(), version);
-        if (detail == null) {
-            return null;
-        }
+        try {
+            McpServerDetailInfo detail = service.getMcpServerDetail(namespace, config.getMcpServerName(), version);
+            if (detail == null) {
+                return null;
+            }
 
-        MCPConfigResult mcpConfig = buildMCPConfigResult(detail);
-        return JSONUtil.toJsonStr(mcpConfig);
+            MCPConfigResult mcpConfig = buildMCPConfigResult(detail);
+            return JSONUtil.toJsonStr(mcpConfig);
+        } catch (Exception e) {
+            log.error("Error fetching Nacos MCP servers", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Failed to fetch Nacos MCP config");
+        }
     }
 
     private MCPConfigResult buildMCPConfigResult(McpServerDetailInfo detail) {
@@ -203,6 +213,6 @@ public class NacosServiceImpl implements NacosService {
     @Override
     public NacosInstance findNacosInstance(String nacosId) {
         return nacosInstanceRepository.findByNacosId(nacosId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.NACOS_INSTANCE, nacosId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.NACOS_INSTANCE, nacosId));
     }
 } 

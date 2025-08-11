@@ -53,11 +53,11 @@ public interface ConsumerService {
     // 凭证相关CRUD
     /**
      * 创建Consumer凭证
+     *
      * @param consumerId Consumer ID
-     * @param param 创建参数
-     * @return ConsumerCredentialResult
+     * @param param      创建参数
      */
-    ConsumerCredentialResult createCredential(String consumerId, CreateCredentialParam param);
+    void createCredential(String consumerId, CreateCredentialParam param);
 
     /**
      * 获取Consumer凭证
@@ -68,11 +68,11 @@ public interface ConsumerService {
 
     /**
      * 更新Consumer凭证
+     *
      * @param consumerId Consumer ID
-     * @param param 更新参数
-     * @return ConsumerCredentialResult
+     * @param param      更新参数
      */
-    ConsumerCredentialResult updateCredential(String consumerId, UpdateCredentialParam param);
+    void updateCredential(String consumerId, UpdateCredentialParam param);
 
     /**
      * 删除Consumer凭证
@@ -83,7 +83,7 @@ public interface ConsumerService {
     /**
      * 订阅API产品
      */
-    SubscriptionResult subscribeProduct(String consumerId, CreateSubscriptionParam param);
+    void subscribeProduct(String consumerId, CreateSubscriptionParam param);
 
     /**
      * 获取Consumer的订阅列表

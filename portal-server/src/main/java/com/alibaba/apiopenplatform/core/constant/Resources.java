@@ -21,6 +21,8 @@ public class Resources {
 
     public static final String CONSUMER = "Consumer";
 
+    public static final String CONSUMER_CREDENTIAL = "ConsumerCredential";
+
     public static final String GATEWAY = "Gateway";
 
     public static final String PRODUCT_REF = "ProductRef";
