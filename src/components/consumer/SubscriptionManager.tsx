@@ -211,26 +211,21 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
           <div className="text-sm text-gray-600 mb-2">选择要订阅的产品：</div>
           <Select
             placeholder="请选择产品"
-            style={{ width: '100%', height: 55 }}
+            style={{ width: '100%'}}
             value={selectedProduct}
             onChange={setSelectedProduct}
             loading={productLoading}
             showSearch
-            filterOption={(input, option) => {
-              const product = option?.data as Product;
-              return product?.name?.toLowerCase().includes(input.toLowerCase()) ||
-                     product?.description?.toLowerCase().includes(input.toLowerCase());
-            }}
-            optionFilterProp="children"
+            // filterOption={(input, option) => {
+            //   const product = option?.data as Product;
+            //   return product?.name?.toLowerCase().includes(input.toLowerCase()) ||
+            //          product?.description?.toLowerCase().includes(input.toLowerCase());
+            // }}
+            // optionFilterProp="children"
           >
             {products.map(product => (
-              <Select.Option key={product.productId} value={product.productId} data={product}>
-                <div className="flex flex-col">
-                  <div className="font-medium">{product.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {product.type} - {product.description}
-                  </div>
-                </div>
+              <Select.Option key={product.productId} value={product.productId}>
+                {product.name}
               </Select.Option>
             ))}
           </Select>
