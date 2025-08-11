@@ -15,7 +15,7 @@ import {
 } from "@ant-design/icons";
 import api from "../../lib/api";
 import type { Subscription } from "../../types/consumer";
-import type { Product } from "../../types";
+import type { ApiResponse, Product } from "../../types";
 import { getSubscriptionStatusText, getSubscriptionStatusColor } from "../../lib/statusUtils";
 
 interface SubscriptionManagerProps {
@@ -35,7 +35,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
     setProductDrawerVisible(true);
     setProductLoading(true);
     try {
-      const response: any = await api.get("/products?page=0&size=100");
+      const response: ApiResponse<{ content: Product[] }> = await api.get("/products?page=0&size=100");
       if (response?.code === "SUCCESS" && response?.data) {
         setProducts(response.data.content || []);
       }
@@ -128,7 +128,8 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
     },
   ];
 
-
+  // 确保 subscriptions 始终是数组
+  const safeSubscriptions = Array.isArray(subscriptions) ? subscriptions : [];
 
   return (
     <>
@@ -169,7 +170,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
         </div>
         <Table
           columns={subscriptionColumns}
-          dataSource={subscriptions}
+          dataSource={safeSubscriptions}
           rowKey={(record) => record.productId}
           pagination={false}
           size="small"

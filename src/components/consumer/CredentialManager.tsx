@@ -20,7 +20,7 @@ import {
   EditOutlined
 } from "@ant-design/icons";
 import api from "../../lib/api";
-import type { ConsumerCredentialResult, CreateCredentialParam } from "../../types/consumer";
+import type { ConsumerCredentialResult, CreateCredentialParam, ConsumerCredential, HMACCredential, APIKeyCredential } from "../../types/consumer";
 import type { ApiResponse } from "../../types";
 
 interface CredentialManagerProps {
@@ -31,10 +31,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
   const [credentialType, setCredentialType] = useState<'API_KEY' | 'HMAC'>('API_KEY');
   const [credentialModalVisible, setCredentialModalVisible] = useState(false);
   const [credentialLoading, setCredentialLoading] = useState(false);
-  const [generationMethod, setGenerationMethod] = useState<'SYSTEM' | 'CUSTOM'>('SYSTEM');
-  const [customApiKey, setCustomApiKey] = useState('');
-  const [customAccessKey, setCustomAccessKey] = useState('');
-  const [customSecretKey, setCustomSecretKey] = useState('');
+
   const [sourceModalVisible, setSourceModalVisible] = useState(false);
   const [editingSource, setEditingSource] = useState<string>('Default');
   const [editingKey, setEditingKey] = useState<string>('Authorization');
@@ -43,6 +40,8 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
   const [currentKey, setCurrentKey] = useState<string>('Authorization');
   // 表单（编辑凭证来源）
   const [sourceForm] = Form.useForm();
+  // 表单（创建凭证）
+  const [credentialForm] = Form.useForm();
   // 当前完整配置（驱动表格数据源）
   const [currentConfig, setCurrentConfig] = useState<ConsumerCredentialResult | null>(null);
 
@@ -69,8 +68,10 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
   }, [consumerId]);
 
   const handleCreateCredential = async () => {
-    setCredentialLoading(true);
     try {
+      const values = await credentialForm.validateFields();
+      setCredentialLoading(true);
+      
       // 先获取当前的凭证配置
       const currentResponse: ApiResponse<ConsumerCredentialResult> = await api.get(`/consumers/${consumerId}/credentials`);
       let currentConfig: ConsumerCredentialResult = {};
@@ -80,55 +81,34 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       }
 
       // 构建新的凭证配置
-      const param: CreateCredentialParam = {};
+      const param: CreateCredentialParam = {
+        ...currentConfig,
+      };
       
       if (credentialType === 'API_KEY') {
+        const newCredential: ConsumerCredential = {
+          apiKey: values.generationMethod === 'CUSTOM' ? values.customApiKey : generateRandomCredential('apiKey'),
+          mode: values.generationMethod
+        };
         param.apiKeyConfig = {
           ...currentConfig.apiKeyConfig,
-          credentials: [{
-            apiKey: generationMethod === 'CUSTOM' ? customApiKey : undefined,
-            mode: generationMethod
-          }]
+          credentials: [...(currentConfig.apiKeyConfig?.credentials || []), newCredential]
         };
-        // 保留其他类型的凭证
-        if (currentConfig.hmacConfig) {
-          param.hmacConfig = {
-            credentials: currentConfig.hmacConfig.credentials?.map(cred => ({
-              ak: cred.ak,
-              sk: cred.sk,
-              mode: 'SYSTEM' as const
-            }))
-          };
-        }
-        if (currentConfig.jwtConfig) {
-          param.jwtConfig = currentConfig.jwtConfig;
-        }
       } else if (credentialType === 'HMAC') {
-        param.hmacConfig = {
-          credentials: [{
-            ak: generationMethod === 'CUSTOM' ? customAccessKey : undefined,
-            sk: generationMethod === 'CUSTOM' ? customSecretKey : undefined,
-            mode: generationMethod
-          }]
+        const newCredential: ConsumerCredential = {
+          ak: values.generationMethod === 'CUSTOM' ? values.customAccessKey : generateRandomCredential('accessKey'),
+          sk: values.generationMethod === 'CUSTOM' ? values.customSecretKey : generateRandomCredential('secretKey'),
+          mode: values.generationMethod
         };
-        // 保留其他类型的凭证
-        if (currentConfig.apiKeyConfig) {
-          param.apiKeyConfig = {
-            ...currentConfig.apiKeyConfig,
-            credentials: currentConfig.apiKeyConfig.credentials?.map(cred => ({
-              apiKey: cred.apiKey,
-              mode: 'SYSTEM' as const
-            }))
-          };
-        }
-        if (currentConfig.jwtConfig) {
-          param.jwtConfig = currentConfig.jwtConfig;
-        }
+        param.hmacConfig = {
+          ...currentConfig.hmacConfig,
+          credentials: [...(currentConfig.hmacConfig?.credentials || []), newCredential]
+        };
       }
 
-      const response: ApiResponse<ConsumerCredentialResult> = await api.post(`/consumers/${consumerId}/credentials`, param);
+      const response: ApiResponse<ConsumerCredentialResult> = await api.put(`/consumers/${consumerId}/credentials`, param);
       if (response?.code === "SUCCESS") {
-        message.success('凭证创建成功');
+        message.success('凭证添加成功');
         setCredentialModalVisible(false);
         resetCredentialForm();
         // 刷新当前配置以驱动表格
@@ -142,7 +122,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
     }
   };
 
-  const handleDeleteCredential = async (credentialType: string) => {
+  const handleDeleteCredential = async (credentialType: string, credential: ConsumerCredential) => {
     try {
       // 先获取当前的凭证配置
       const currentResponse: ApiResponse<ConsumerCredentialResult> = await api.get(`/consumers/${consumerId}/credentials`);
@@ -153,47 +133,23 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       }
 
       // 构建删除后的凭证配置，清空对应类型的凭证
-      const param: CreateCredentialParam = {};
+      const param: CreateCredentialParam = {
+        ...currentConfig,
+      };
       
       if (credentialType === 'API_KEY') {
         param.apiKeyConfig = {
-          credentials: [],
+          credentials: currentConfig.apiKeyConfig?.credentials?.filter(cred => cred.apiKey !== (credential as APIKeyCredential).apiKey),
           source: currentConfig.apiKeyConfig?.source || 'Default',
           key: currentConfig.apiKeyConfig?.key || 'Authorization'
         };
-        // 保留其他类型的凭证
-        if (currentConfig.hmacConfig) {
-          param.hmacConfig = {
-            credentials: currentConfig.hmacConfig.credentials?.map(cred => ({
-              ak: cred.ak,
-              sk: cred.sk,
-              mode: 'SYSTEM' as const
-            }))
-          };
-        }
-        if (currentConfig.jwtConfig) {
-          param.jwtConfig = currentConfig.jwtConfig;
-        }
       } else if (credentialType === 'HMAC') {
         param.hmacConfig = {
-          credentials: []
+          credentials: currentConfig.hmacConfig?.credentials?.filter(cred => cred.ak !== (credential as HMACCredential).ak),
         };
-        // 保留其他类型的凭证
-        if (currentConfig.apiKeyConfig) {
-          param.apiKeyConfig = {
-            ...currentConfig.apiKeyConfig,
-            credentials: currentConfig.apiKeyConfig.credentials?.map(cred => ({
-              apiKey: cred.apiKey,
-              mode: 'SYSTEM' as const
-            }))
-          };
-        }
-        if (currentConfig.jwtConfig) {
-          param.jwtConfig = currentConfig.jwtConfig;
-        }
       }
 
-      const response: ApiResponse<ConsumerCredentialResult> = await api.post(`/consumers/${consumerId}/credentials`, param);
+      const response: ApiResponse<ConsumerCredentialResult> = await api.put(`/consumers/${consumerId}/credentials`, param);
       if (response?.code === "SUCCESS") {
         message.success('凭证删除成功');
         await fetchCurrentConfig();
@@ -214,13 +170,10 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
   };
 
   const resetCredentialForm = () => {
-    setGenerationMethod('SYSTEM');
-    setCustomApiKey('');
-    setCustomAccessKey('');
-    setCustomSecretKey('');
+    credentialForm.resetFields();
   };
 
-  const handleEditSource = async () => {
+  const handleEditSource = async (source: string, key: string) => {
     try {
       // 先获取当前的凭证配置
       const currentResponse: ApiResponse<ConsumerCredentialResult> = await api.get(`/consumers/${consumerId}/credentials`);
@@ -236,14 +189,14 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       // 更新API Key配置的source和key
       if (currentConfig.apiKeyConfig) {
         param.apiKeyConfig = {
-          source: editingSource,
-          key: editingSource === 'Default' ? 'Authorization' : editingKey,
+          source: source,
+          key: source === 'Default' ? 'Authorization' : key,
           credentials: currentConfig.apiKeyConfig.credentials
         };
       } else {
         param.apiKeyConfig = {
-          source: editingSource,
-          key: editingSource === 'Default' ? 'Authorization' : editingKey,
+          source: source,
+          key: source === 'Default' ? 'Authorization' : key,
           credentials: []
         };
       }
@@ -251,7 +204,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       
 
       // 提交配置到后端
-      const response: ApiResponse<ConsumerCredentialResult> = await api.post(`/consumers/${consumerId}/credentials`, param);
+      const response: ApiResponse<ConsumerCredentialResult> = await api.put(`/consumers/${consumerId}/credentials`, param);
       if (response?.code === "SUCCESS") {
         message.success('凭证来源更新成功');
         
@@ -284,6 +237,74 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
     setSourceModalVisible(true);
   };
 
+  const openCredentialModal = () => {
+    // 打开弹窗前重置表单并设置初始值
+    credentialForm.resetFields();
+    credentialForm.setFieldsValue({ 
+      generationMethod: 'SYSTEM',
+      customApiKey: '',
+      customAccessKey: '',
+      customSecretKey: ''
+    });
+    setCredentialModalVisible(true);
+  };
+
+  // 生成随机凭证
+  const generateRandomCredential = (type: 'apiKey' | 'accessKey' | 'secretKey'): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    
+    if (type === 'apiKey') {
+      const apiKey = Array.from({ length: 16 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+      console.log('生成API Key:', apiKey);
+      
+      // 确保表单字段已经渲染并设置值
+      const setValue = () => {
+        try {
+          credentialForm.setFieldsValue({ customApiKey: apiKey });
+          console.log('API Key已设置到表单');
+        } catch (error) {
+          console.error('设置API Key失败:', error);
+        }
+      };
+      
+      // 如果表单已经渲染，立即设置；否则延迟设置
+      if (credentialForm.getFieldValue('customApiKey') !== undefined) {
+        setValue();
+      } else {
+        setTimeout(setValue, 100);
+      }
+      
+      return apiKey;
+    } else {
+      const ak = Array.from({ length: 16 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+      const sk = Array.from({ length: 32 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+      console.log('生成AK:', ak, 'SK:', sk);
+      
+      // 确保表单字段已经渲染并设置值
+      const setValue = () => {
+        try {
+          credentialForm.setFieldsValue({ 
+            customAccessKey: ak, 
+            customSecretKey: sk 
+          });
+          console.log('AK/SK已设置到表单');
+        } catch (error) {
+          console.error('设置AK/SK失败:', error);
+        }
+      };
+      
+      // 如果表单已经渲染，立即设置；否则延迟设置
+      if (credentialForm.getFieldValue('customAccessKey') !== undefined) {
+        setValue();
+      } else {
+        setTimeout(setValue, 100);
+      }
+      
+      // 根据类型返回对应的值
+      return type === 'accessKey' ? ak : sk;
+    }
+  };
+
   // API Key 列
   const apiKeyColumns = [
     {
@@ -298,21 +319,21 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       ),
     },
     {
-      title: '创建时间',
-      dataIndex: 'createAt',
-      key: 'createAt',
-      render: (date: string) => (date ? new Date(date).toLocaleString() : '-'),
-    },
-    {
       title: '操作',
       key: 'action',
-      render: () => (
-        <Popconfirm title="确定要删除所有API Key凭证吗？" onConfirm={() => handleDeleteCredential('API_KEY')}>
+      render: (record: ConsumerCredential) => (
+        <Popconfirm title="确定要删除所有API Key凭证吗？" onConfirm={() => handleDeleteCredential('API_KEY', record)}>
           <Button type="link" danger size="small" icon={<DeleteOutlined />}>删除</Button>
         </Popconfirm>
       ),
     },
   ];
+
+  // 脱敏函数
+  const maskSecretKey = (secretKey: string): string => {
+    if (!secretKey || secretKey.length < 8) return secretKey;
+    return secretKey.substring(0, 4) + '*'.repeat(secretKey.length - 8) + secretKey.substring(secretKey.length - 4);
+  };
 
   // HMAC 列
   const hmacColumns = [
@@ -333,22 +354,16 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       key: 'sk',
       render: (sk: string) => (
         <div className="flex items-center space-x-2">
-          <code className="text-sm bg-gray-100 px-2 py-1 rounded">{sk}</code>
+          <code className="text-sm bg-gray-100 px-2 py-1 rounded">{maskSecretKey(sk)}</code>
           <Button type="text" size="small" icon={<CopyOutlined />} onClick={() => handleCopyCredential(sk)} />
         </div>
       ),
     },
     {
-      title: '创建时间',
-      dataIndex: 'createAt',
-      key: 'createAt',
-      render: (date: string) => (date ? new Date(date).toLocaleString() : '-'),
-    },
-    {
       title: '操作',
       key: 'action',
-      render: () => (
-        <Popconfirm title="确定要删除所有AK/SK凭证吗？" onConfirm={() => handleDeleteCredential('HMAC')}>
+      render: (record: ConsumerCredential) => (
+        <Popconfirm title="确定要删除所有AK/SK凭证吗？" onConfirm={() => handleDeleteCredential('HMAC', record)}>
           <Button type="link" danger size="small" icon={<DeleteOutlined />}>删除</Button>
         </Popconfirm>
       ),
@@ -387,7 +402,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
                 icon={<PlusOutlined />}
                 onClick={() => {
                   setCredentialType('API_KEY');
-                  setCredentialModalVisible(true);
+                  openCredentialModal();
                 }}
               >
                 添加凭证
@@ -417,7 +432,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
                 icon={<PlusOutlined />}
                 onClick={() => {
                   setCredentialType('HMAC');
-                  setCredentialModalVisible(true);
+                  openCredentialModal();
                 }}
               >
                 添加AK/SK
@@ -454,58 +469,95 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
         okText="添加"
         cancelText="取消"
       >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <span className="text-red-500">*</span> 生成方式
-            </label>
-            <Radio.Group value={generationMethod} onChange={(e) => setGenerationMethod(e.target.value)}>
+        <Form form={credentialForm} layout="vertical" initialValues={{ 
+          generationMethod: 'SYSTEM',
+          customApiKey: '',
+          customAccessKey: '',
+          customSecretKey: ''
+        }}>
+          <Form.Item
+            label="生成方式"
+            name="generationMethod"
+            rules={[{ required: true, message: '请选择生成方式' }]}
+          >
+            <Radio.Group>
               <Radio value="SYSTEM">系统生成</Radio>
               <Radio value="CUSTOM">自定义</Radio>
             </Radio.Group>
-          </div>
+          </Form.Item>
 
-          {generationMethod === 'CUSTOM' && (
-            <div className="space-y-4">
-              {credentialType === 'API_KEY' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    API Key
-                  </label>
-                  <Input
-                    placeholder="请输入自定义API Key"
-                    value={customApiKey}
-                    onChange={(e) => setCustomApiKey(e.target.value)}
-                  />
-                </div>
-              )}
-              {credentialType === 'HMAC' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Access Key
-                    </label>
-                    <Input
-                      placeholder="请输入自定义Access Key"
-                      value={customAccessKey}
-                      onChange={(e) => setCustomAccessKey(e.target.value)}
-                    />
+          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.generationMethod !== curr.generationMethod}>
+            {({ getFieldValue }) => {
+              const method = getFieldValue('generationMethod');
+              if (method === 'CUSTOM') {
+                return (
+                  <>
+                                         {credentialType === 'API_KEY' && (
+                       <Form.Item
+                         label="API Key"
+                         name="customApiKey"
+                         rules={[
+                           { required: true, message: '请输入自定义API Key' },
+                           { pattern: /^[A-Za-z0-9-_]+$/, message: '仅支持字母/数字/-/_' },
+                           { len: 16, message: 'API Key长度必须为16位' }
+                         ]}
+                       >
+                           <Input placeholder="请输入自定义API Key（16位）" maxLength={16} />
+                          
+                       </Form.Item>
+                     )}
+                    {credentialType === 'HMAC' && (
+                      <>
+                                               <Form.Item
+                         label="Access Key"
+                         name="customAccessKey"
+                         rules={[
+                           { required: true, message: '请输入自定义Access Key' },
+                           { pattern: /^[A-Za-z0-9-_]+$/, message: '仅支持字母/数字/-/_' },
+                           { len: 16, message: 'Access Key长度必须为16位' }
+                         ]}
+                       >
+                           <Input placeholder="请输入自定义Access Key（16位）" maxLength={16} />
+                       </Form.Item>
+                       <Form.Item
+                         label="Secret Key"
+                         name="customSecretKey"
+                         rules={[
+                           { required: true, message: '请输入自定义Secret Key' },
+                           { pattern: /^[A-Za-z0-9-_]+$/, message: '仅支持字母/数字/-/_' },
+                           { len: 32, message: 'Secret Key长度必须为32位' }
+                         ]}
+                       >
+                         <Input placeholder="请输入自定义Secret Key（32位）" maxLength={32} />
+                       </Form.Item>
+                      </>
+                    )}
+                  </>
+                );
+              } else if (method === 'SYSTEM') {
+                return (
+                  <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <InfoCircleOutlined />
+                      <span>系统将自动生成符合规范的凭证</span>
+                    </div>
+                    <div className="text-xs">
+                      {credentialType === 'API_KEY' ? (
+                        <>• API Key: 16位字母数字组合</>
+                      ) : (
+                        <>
+                          • Access Key: 16位字母数字组合<br/>
+                          • Secret Key: 32位字母数字组合
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Secret Key
-                    </label>
-                    <Input
-                      placeholder="请输入自定义Secret Key"
-                      value={customSecretKey}
-                      onChange={(e) => setCustomSecretKey(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+                );
+              }
+              return null;
+            }}
+          </Form.Item>
+        </Form>
       </Modal>
 
       {/* 编辑凭证来源模态框 */}
@@ -526,7 +578,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
             const values = await sourceForm.validateFields();
             setEditingSource(values.source);
             setEditingKey(values.key);
-            await handleEditSource();
+            await handleEditSource(values.source, values.key);
           } catch {
             // 校验失败，不提交
           }
