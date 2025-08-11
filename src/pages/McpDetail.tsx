@@ -22,6 +22,7 @@ import type {
   McpServerConfig,
   McpServerProduct,
   McpConfig,
+  ApiResponse,
 } from "../types";
 import * as yaml from "js-yaml";
 import { 
@@ -149,16 +150,16 @@ function McpDetail() {
   };
 
   useEffect(() => {
-    console.log("useEffect 触发，mcpName:", mcpName);
-    if (!mcpName) {
-      console.log("mcpName 为空，返回");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    api
-      .get(`/products/${mcpName}`)
-      .then((response: any) => {
+    const fetchDetail = async () => {
+      console.log("useEffect 触发，mcpName:", mcpName);
+      if (!mcpName) {
+        console.log("mcpName 为空，返回");
+        return;
+      }
+      setLoading(true);
+      setError("");
+      try {
+        const response: ApiResponse<Product> = await api.get(`/products/${mcpName}`);
         if (response.code === "SUCCESS" && response.data) {
           setData(response.data);
 
@@ -240,15 +241,15 @@ function McpDetail() {
           console.log("API 响应失败:", response);
           setError(response.message || "数据加载失败");
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("API请求失败:", error);
         setError("加载失败，请稍后重试");
-      })
-      .finally(() => {
+      } finally {
         console.log("请求完成，设置 loading 为 false");
         setLoading(false);
-      });
+      }
+    };
+    fetchDetail();
   }, [mcpName]);
 
   const handleCopy = async (text: string) => {
