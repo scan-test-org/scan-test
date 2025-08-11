@@ -16,6 +16,7 @@ import com.alibaba.apiopenplatform.repository.NacosInstanceRepository;
 import com.alibaba.apiopenplatform.service.NacosService;
 import com.alibaba.apiopenplatform.service.gateway.NacosOperator;
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
+import com.alibaba.apiopenplatform.converter.NacosToGatewayToolsConverter;
 import cn.hutool.json.JSONUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -194,13 +195,15 @@ public class NacosServiceImpl implements NacosService {
         }
         mcpConfig.setMcpServerConfig(serverConfig);
 
-        // tools
+        // tools - 使用转换器转换为网关格式
         if (detail.getToolSpec() != null) {
-            String toolJson = JSONUtil.toJsonStr(detail.getToolSpec());
-            if (toolJson != null && !toolJson.trim().equals("{}")) {
-                String toolYaml = convertJsonToYaml(toolJson);
-                mcpConfig.setTools(toolYaml);
-            } else {
+            try {
+                NacosToGatewayToolsConverter converter = new NacosToGatewayToolsConverter();
+                converter.convertFromNacos(detail);
+                String gatewayFormatYaml = converter.toYaml();
+                mcpConfig.setTools(gatewayFormatYaml);
+            } catch (Exception e) {
+                log.error("Error converting tools to gateway format", e);
                 mcpConfig.setTools(null);
             }
         } else {
@@ -215,13 +218,7 @@ public class NacosServiceImpl implements NacosService {
         return mcpConfig;
     }
 
-    private String convertJsonToYaml(String jsonStr) {
-        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
 
-        Object jsonObj = JSONUtil.parse(jsonStr);
-
-        return yaml.dump(jsonObj);
-    }
 
     @Override
     public NacosInstance findNacosInstance(String nacosId) {
