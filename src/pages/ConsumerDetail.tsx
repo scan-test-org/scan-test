@@ -36,9 +36,11 @@ function ConsumerDetailPage() {
         size: 100,
         ...searchParams
       };
-      const response: ApiResponse<Subscription[]> = await api.get(`/consumers/${consumerId}/subscriptions`, { params });
+      const response: ApiResponse<{ content: Subscription[] }> = await api.get(`/consumers/${consumerId}/subscriptions`, { params });
       if (response?.code === "SUCCESS" && response.data) {
-        setSubscriptions(response.data);
+        // 确保从正确的数据结构中提取订阅列表
+        const subscriptionsData = response.data.content
+        setSubscriptions(Array.isArray(subscriptionsData) ? subscriptionsData : []);
       } else {
         setSubscriptions([]);
       }

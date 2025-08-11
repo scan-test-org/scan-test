@@ -9,7 +9,7 @@ export interface Consumer {
   enabled?: boolean;
 }
 
-export type Credential = HMACCredential | APIKeyCredential;
+export type ConsumerCredential = HMACCredential | APIKeyCredential;
 
 export interface HMACCredential {
   ak?: string;
