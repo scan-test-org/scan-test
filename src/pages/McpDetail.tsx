@@ -19,9 +19,8 @@ import ReactMarkdown from "react-markdown";
 import { ProductType } from "../types";
 import type {
   Product,
-  McpServerConfig,
-  McpServerProduct,
   McpConfig,
+  McpServerProduct,
   ApiResponse,
 } from "../types";
 import * as yaml from "js-yaml";
@@ -35,8 +34,7 @@ function McpDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [data, setData] = useState<Product | null>(null);
-  const [mcpConfig, setMcpConfig] = useState<McpServerConfig | null>(null);
-  const [nacosMcpConfig, setNacosMcpConfig] = useState<McpConfig | null>(null);
+  const [mcpConfig, setMcpConfig] = useState<McpConfig | null>(null);
   const [parsedTools, setParsedTools] = useState<
     Array<{
       name: string;
@@ -99,17 +97,30 @@ function McpDetail() {
 
   // 生成连接配置的函数
   const generateConnectionConfig = (
-    domains: Array<{ domain: string; protocol: string }>,
-    path: string,
+    domains: Array<{ domain: string; protocol: string }> | null | undefined,
+    path: string | null | undefined,
     serverName: string,
     localConfig?: unknown
   ) => {
-    if (domains && domains.length > 0) {
+    // 互斥：优先判断本地模式
+    if (localConfig) {
+      const localConfigJson = `{
+  "mcpServers": {
+    "${serverName}": ${JSON.stringify(localConfig, null, 2)}
+  }
+}`;
+      setLocalJson(localConfigJson);
+      setHttpJson("");
+      setSseJson("");
+      return;
+    }
+
+    // HTTP/SSE 模式
+    if (domains && domains.length > 0 && path) {
       const domain = domains[0];
       const baseUrl = `${domain.protocol}://${domain.domain}`;
       const endpoint = `${baseUrl}${path}`;
 
-      // HTTP配置
       const httpConfig = `{
   "mcpServers": {
     "${serverName}": {
@@ -118,7 +129,6 @@ function McpDetail() {
   }
 }`;
 
-      // SSE配置
       const sseConfig = `{
   "mcpServers": {
     "${serverName}": {
@@ -127,26 +137,16 @@ function McpDetail() {
   }
 }`;
 
-      // Local配置
-      const localConfigJson = localConfig
-        ? `{
-  "mcpServers": {
-    "${serverName}": ${JSON.stringify(localConfig, null, 2)}
-  }
-}`
-        : `{
-  "mcpServers": {
-    "${serverName}": {
-      "command": "your-local-command",
-      "args": ["arg1", "arg2"]
-    }
-  }
-}`;
-
       setHttpJson(httpConfig);
       setSseJson(sseConfig);
-      setLocalJson(localConfigJson);
+      setLocalJson("");
+      return;
     }
+
+    // 无有效配置
+    setHttpJson("");
+    setSseJson("");
+    setLocalJson("");
   };
 
   useEffect(() => {
@@ -163,13 +163,12 @@ function McpDetail() {
         if (response.code === "SUCCESS" && response.data) {
           setData(response.data);
 
-          // 处理MCP配置 - 支持新旧两种格式
+          // 处理MCP配置（统一使用新结构 mcpConfig）
           if (response.data.type === ProductType.MCP_SERVER) {
             const mcpProduct = response.data as McpServerProduct;
 
-            // 优先处理新的nacos格式
             if (mcpProduct.mcpConfig) {
-              setNacosMcpConfig(mcpProduct.mcpConfig);
+              setMcpConfig(mcpProduct.mcpConfig);
 
               // 解析tools配置
               if (mcpProduct.mcpConfig.tools) {
@@ -186,55 +185,8 @@ function McpDetail() {
                 mcpProduct.mcpConfig.mcpServerConfig.domains,
                 mcpProduct.mcpConfig.mcpServerConfig.path,
                 mcpProduct.mcpConfig.mcpServerName,
-                mcpProduct.mcpConfig.mcpServerConfig.localConfig
+                mcpProduct.mcpConfig.mcpServerConfig.rawConfig
               );
-            }
-            // 兼容旧格式
-            else if (mcpProduct.mcpSpec) {
-              setMcpConfig(mcpProduct.mcpSpec);
-
-              // 解析YAML配置中的工具信息
-              if (mcpProduct.mcpSpec.mcpServerConfig) {
-                const parsedConfig = parseYamlConfig(
-                  mcpProduct.mcpSpec.mcpServerConfig
-                );
-                if (parsedConfig && parsedConfig.tools) {
-                  setParsedTools(parsedConfig.tools);
-                }
-              }
-
-              // 生成连接配置
-              if (
-                mcpProduct.mcpSpec.domains &&
-                mcpProduct.mcpSpec.domains.length > 0
-              ) {
-                const domain = mcpProduct.mcpSpec.domains[0];
-                const baseUrl = `${domain.protocol}://${domain.domain}`;
-                const httpConfig = `{
-  "mcpServers": {
-    "${mcpName}": {
-      "url": "${baseUrl}/mcp-servers/${mcpName}"
-    }
-  }
-}`;
-                const sseConfig = `{
-  "mcpServers": {
-    "${mcpName}": {
-      "url": "${baseUrl}/mcp-servers/${mcpName}/sse"
-    }
-  }
-}`;
-                setHttpJson(httpConfig);
-                setSseJson(sseConfig);
-                setLocalJson(`{
-  "mcpServers": {
-    "${mcpName}": {
-      "command": "your-local-command",
-      "args": ["arg1", "arg2"]
-    }
-  }
-}`);
-              }
             }
           }
         } else {
@@ -295,8 +247,8 @@ function McpDetail() {
   }
 
   const { name, description, status, category, enableConsumerAuth } = data;
-  const currentMcpConfig = nacosMcpConfig || mcpConfig;
-  const hasLocalConfig = nacosMcpConfig?.mcpServerConfig.localConfig || false;
+  const currentMcpConfig = mcpConfig;
+  const hasLocalConfig = Boolean(mcpConfig?.mcpServerConfig.rawConfig);
 
 
 
@@ -341,44 +293,44 @@ function McpDetail() {
                     <div>
                       <Descriptions column={1} bordered size="small">
                         <Descriptions.Item label="MCP Server Name">
-                          {nacosMcpConfig?.mcpServerName ||
-                            mcpConfig?.mcpServerName ||
-                            "无"}
+                          {mcpConfig?.mcpServerName || "无"}
                         </Descriptions.Item>
                         <Descriptions.Item label="来源类型">
-                          {nacosMcpConfig?.meta.fromType
-                            ? FromTypeMap[nacosMcpConfig.meta.fromType] ||
-                              nacosMcpConfig.meta.fromType
-                            : mcpConfig?.fromType || "无"}
+                          {mcpConfig?.meta?.fromType
+                            ? FromTypeMap[mcpConfig.meta.fromType] ||
+                              mcpConfig.meta.fromType
+                            : "无"}
                         </Descriptions.Item>
                         <Descriptions.Item label="来源">
-                          {nacosMcpConfig?.meta.source
-                            ? SourceMap[nacosMcpConfig.meta.source] ||
-                              nacosMcpConfig.meta.source
-                            : mcpConfig?.fromGatewayType || "无"}
+                          {mcpConfig?.meta?.source
+                            ? SourceMap[mcpConfig.meta.source] ||
+                              mcpConfig.meta.source
+                            : "无"}
                         </Descriptions.Item>
                         <Descriptions.Item label="路径">
-                          {nacosMcpConfig?.mcpServerConfig.path || "无"}
+                          {mcpConfig?.mcpServerConfig.path || "无"}
                         </Descriptions.Item>
                         <Descriptions.Item label="运行模式">
                           {hasLocalConfig ? "Local Mode" : "SSE/HTTP Mode"}
                         </Descriptions.Item>
                         <Descriptions.Item label="域名配置">
-                          {(nacosMcpConfig?.mcpServerConfig.domains ||
-                            mcpConfig?.domains) &&
-                          (nacosMcpConfig?.mcpServerConfig.domains ||
-                            mcpConfig?.domains)!.length > 0
-                            ? (nacosMcpConfig?.mcpServerConfig.domains ||
-                                mcpConfig?.domains)!.map((d, i) => (
-                                <div key={i} className="mb-2">
-                                  <div>
-                                    <strong>域名:</strong> {d.domain}
+                          {mcpConfig?.mcpServerConfig.domains &&
+                          mcpConfig.mcpServerConfig.domains.length > 0
+                            ? mcpConfig.mcpServerConfig.domains.map(
+                                (
+                                  d: { domain: string; protocol: string },
+                                  i: number
+                                ) => (
+                                  <div key={i} className="mb-2">
+                                    <div>
+                                      <strong>域名:</strong> {d.domain}
+                                    </div>
+                                    <div>
+                                      <strong>协议:</strong> {d.protocol}
+                                    </div>
                                   </div>
-                                  <div>
-                                    <strong>协议:</strong> {d.protocol}
-                                  </div>
-                                </div>
-                              ))
+                                )
+                              )
                             : "无"}
                         </Descriptions.Item>
                       </Descriptions>
@@ -467,15 +419,12 @@ function McpDetail() {
         <Col span={8}>
 
           {/* 连接配置 */}
-          {((mcpConfig && mcpConfig.domains && mcpConfig.domains.length > 0) ||
-            (nacosMcpConfig &&
-              nacosMcpConfig.mcpServerConfig.domains &&
-              nacosMcpConfig.mcpServerConfig.domains.length > 0)) && (
+          {mcpConfig && (
             <Card title="连接配置" className="mb-6">
               <Tabs
                 defaultActiveKey={hasLocalConfig ? "local" : "sse"}
-                items={[
-                  ...(hasLocalConfig
+                items={
+                  hasLocalConfig
                     ? [
                         {
                           key: "local",
@@ -523,98 +472,99 @@ function McpDetail() {
                           ),
                         },
                       ]
-                    : []),
-                  {
-                    key: "http",
-                    label: "HTTP Config",
-                    children: (
-                      <div className="relative">
-                        <div className="absolute top-2 right-2">
-                          <Button
-                            size="small"
-                            onClick={() => handleCopy(httpJson)}
-                          >
-                            复制
-                          </Button>
-                        </div>
-                        <div
-                          style={{
-                            width: "100%",
-                            overflowX: "auto",
-                            height: "200px",
-                          }}
-                        >
-                          <MonacoEditor
-                            language="json"
-                            theme="vs-dark"
-                            value={httpJson}
-                            options={{
-                              readOnly: true,
-                              minimap: { enabled: false },
-                              scrollBeyondLastLine: false,
-                              scrollbar: {
-                                vertical: "visible",
-                                horizontal: "visible",
-                              },
-                              wordWrap: "off",
-                              lineNumbers: "on",
-                              automaticLayout: true,
-                              fontSize: 12,
-                              copyWithSyntaxHighlighting: true,
-                              contextmenu: true,
-                            }}
-                            height="200"
-                          />
-                        </div>
-                      </div>
-                    ),
-                  },
-                  {
-                    key: "sse",
-                    label: "SSE Config",
-                    children: (
-                      <div className="relative">
-                        <div className="absolute top-2 right-2">
-                          <Button
-                            size="small"
-                            onClick={() => handleCopy(sseJson)}
-                          >
-                            复制
-                          </Button>
-                        </div>
-                        <div
-                          style={{
-                            width: "100%",
-                            overflowX: "auto",
-                            height: "200px",
-                          }}
-                        >
-                          <MonacoEditor
-                            language="json"
-                            theme="vs-dark"
-                            value={sseJson}
-                            options={{
-                              readOnly: true,
-                              minimap: { enabled: false },
-                              scrollBeyondLastLine: false,
-                              scrollbar: {
-                                vertical: "visible",
-                                horizontal: "visible",
-                              },
-                              wordWrap: "off",
-                              lineNumbers: "on",
-                              automaticLayout: true,
-                              fontSize: 12,
-                              copyWithSyntaxHighlighting: true,
-                              contextmenu: true,
-                            }}
-                            height="200"
-                          />
-                        </div>
-                      </div>
-                    ),
-                  },
-                ]}
+                    : [
+                        {
+                          key: "http",
+                          label: "HTTP Config",
+                          children: (
+                            <div className="relative">
+                              <div className="absolute top-2 right-2">
+                                <Button
+                                  size="small"
+                                  onClick={() => handleCopy(httpJson)}
+                                >
+                                  复制
+                                </Button>
+                              </div>
+                              <div
+                                style={{
+                                  width: "100%",
+                                  overflowX: "auto",
+                                  height: "200px",
+                                }}
+                              >
+                                <MonacoEditor
+                                  language="json"
+                                  theme="vs-dark"
+                                  value={httpJson}
+                                  options={{
+                                    readOnly: true,
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    scrollbar: {
+                                      vertical: "visible",
+                                      horizontal: "visible",
+                                    },
+                                    wordWrap: "off",
+                                    lineNumbers: "on",
+                                    automaticLayout: true,
+                                    fontSize: 12,
+                                    copyWithSyntaxHighlighting: true,
+                                    contextmenu: true,
+                                  }}
+                                  height="200"
+                                />
+                              </div>
+                            </div>
+                          ),
+                        },
+                        {
+                          key: "sse",
+                          label: "SSE Config",
+                          children: (
+                            <div className="relative">
+                              <div className="absolute top-2 right-2">
+                                <Button
+                                  size="small"
+                                  onClick={() => handleCopy(sseJson)}
+                                >
+                                  复制
+                                </Button>
+                              </div>
+                              <div
+                                style={{
+                                  width: "100%",
+                                  overflowX: "auto",
+                                  height: "200px",
+                                }}
+                              >
+                                <MonacoEditor
+                                  language="json"
+                                  theme="vs-dark"
+                                  value={sseJson}
+                                  options={{
+                                    readOnly: true,
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    scrollbar: {
+                                      vertical: "visible",
+                                      horizontal: "visible",
+                                    },
+                                    wordWrap: "off",
+                                    lineNumbers: "on",
+                                    automaticLayout: true,
+                                    fontSize: 12,
+                                    copyWithSyntaxHighlighting: true,
+                                    contextmenu: true,
+                                  }}
+                                  height="200"
+                                />
+                              </div>
+                            </div>
+                          ),
+                        },
+                      ]
+                }
               />
             </Card>
           )}
