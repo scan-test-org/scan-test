@@ -28,7 +28,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
   const [productDrawerVisible, setProductDrawerVisible] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [productLoading, setProductLoading] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [subscriptionSearch, setSubscriptionSearch] = useState({ productName: '', status: '' as 'PENDING' | 'APPROVED' | '' });
 
   const openProductDrawer = async () => {
@@ -48,18 +48,16 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
   };
 
   const handleSubscribeProducts = async () => {
-    if (selectedProducts.length === 0) {
+    if (!selectedProduct) {
       message.warning('请选择要订阅的产品');
       return;
     }
 
     try {
-      for (const productId of selectedProducts) {
-        await api.post(`/consumers/${consumerId}/subscriptions`, { productId });
-      }
+      await api.post(`/consumers/${consumerId}/subscriptions`, { productId: selectedProduct });
       message.success('订阅成功');
       setProductDrawerVisible(false);
-      setSelectedProducts([]);
+      setSelectedProduct('');
       onSubscriptionsChange();
     } catch (error) {
       console.error('订阅失败:', error);
@@ -130,32 +128,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
     },
   ];
 
-  const productColumns = [
-    {
-      title: '产品名称',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: '产品类型',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: string) => {
-        const typeMap = {
-          'REST_API': 'REST API',
-          'HTTP_API': 'HTTP API',
-          'MCP_SERVER': 'MCP Server'
-        };
-        return typeMap[type as keyof typeof typeMap] || type;
-      }
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-    },
-  ];
+
 
   return (
     <>
@@ -167,7 +140,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
               icon={<PlusOutlined />}
               onClick={openProductDrawer}
             >
-              授权
+              订阅
             </Button>
             <Input.Search
               placeholder="请输入API名称进行搜索"
@@ -206,20 +179,20 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
 
       {/* 产品选择抽屉 */}
       <Drawer
-        title="选择要授权的产品"
+        title="订阅"
         placement="right"
         width={600}
         open={productDrawerVisible}
         onClose={() => {
           setProductDrawerVisible(false);
-          setSelectedProducts([]);
+          setSelectedProduct('');
         }}
         footer={
           <div className="flex justify-end space-x-2">
             <Button
               onClick={() => {
                 setProductDrawerVisible(false);
-                setSelectedProducts([]);
+                setSelectedProduct('');
               }}
             >
               取消
@@ -227,26 +200,41 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
             <Button
               type="primary"
               onClick={handleSubscribeProducts}
-              disabled={selectedProducts.length === 0}
+              disabled={!selectedProduct}
             >
-              确定授权 ({selectedProducts.length})
+              确定订阅
             </Button>
           </div>
         }
       >
-        <Table
-          columns={productColumns}
-          dataSource={products}
-          rowKey={(record) => record.productId}
-          loading={productLoading}
-          rowSelection={{
-            selectedRowKeys: selectedProducts,
-            onChange: (selectedRowKeys) => setSelectedProducts(selectedRowKeys as string[]),
-          }}
-          pagination={false}
-          size="small"
-          locale={{ emptyText: '没有数据' }}
-        />
+        <div className="mb-4">
+          <div className="text-sm text-gray-600 mb-2">选择要订阅的产品：</div>
+          <Select
+            placeholder="请选择产品"
+            style={{ width: '100%', height: 55 }}
+            value={selectedProduct}
+            onChange={setSelectedProduct}
+            loading={productLoading}
+            showSearch
+            filterOption={(input, option) => {
+              const product = option?.data as Product;
+              return product?.name?.toLowerCase().includes(input.toLowerCase()) ||
+                     product?.description?.toLowerCase().includes(input.toLowerCase());
+            }}
+            optionFilterProp="children"
+          >
+            {products.map(product => (
+              <Select.Option key={product.productId} value={product.productId} data={product}>
+                <div className="flex flex-col">
+                  <div className="font-medium">{product.name}</div>
+                  <div className="text-xs text-gray-500">
+                    {product.type} - {product.description}
+                  </div>
+                </div>
+              </Select.Option>
+            ))}
+          </Select>
+        </div>
       </Drawer>
     </>
   );

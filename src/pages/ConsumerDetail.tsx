@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Layout } from "../components/Layout";
-import { Spin, Alert, Tabs } from "antd";
+import { Alert, Tabs } from "antd";
 import api from "../lib/api";
 import { ConsumerBasicInfo, CredentialManager, SubscriptionManager } from "../components/consumer";
 import type { Consumer, Credential, Subscription, ConsumerCredentialResult } from "../types/consumer";
@@ -105,19 +105,11 @@ function ConsumerDetailPage() {
     });
   }, [consumerId, fetchConsumerDetail, fetchCredentials, fetchSubscriptions]);
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-[300px]">
-          <Spin size="large" />
-        </div>
-      </Layout>
-    );
-  }
+
 
   if (error) {
     return (
-      <Layout>
+      <Layout loading={loading}>
         <Alert message={error} type="error" showIcon className="my-8" />
       </Layout>
     );
@@ -125,14 +117,14 @@ function ConsumerDetailPage() {
 
   if (!consumer) {
     return (
-      <Layout>
+      <Layout loading={loading}>
         <Alert message="未找到消费者信息" type="warning" showIcon className="my-8" />
       </Layout>
     );
   }
 
       return (
-      <Layout>
+      <Layout loading={loading}>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <Tabs.TabPane tab="基本信息" key="basic">
           <ConsumerBasicInfo consumer={consumer} />
@@ -145,7 +137,7 @@ function ConsumerDetailPage() {
           </div>
         </Tabs.TabPane>
 
-        <Tabs.TabPane tab="消费者授权" key="authorization">
+        <Tabs.TabPane tab="消费者订阅" key="authorization">
           <SubscriptionManager 
             consumerId={consumerId!}
             subscriptions={subscriptions}

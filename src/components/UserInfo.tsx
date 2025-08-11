@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Avatar, Dropdown } from "antd";
+import { Button, Avatar, Dropdown, Skeleton } from "antd";
 import { UserOutlined, LogoutOutlined, AppstoreOutlined } from "@ant-design/icons";
 import api from "../lib/api";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ interface UserInfo {
 
 export function UserInfo() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,6 +26,9 @@ export function UserInfo() {
               avatar: data.avatarUrl || undefined,
             });
           }
+        })
+        .finally(() => {
+          setLoading(false);
         });
   }, []);
 
@@ -66,6 +70,15 @@ export function UserInfo() {
       onClick: handleLogout,
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <Skeleton.Avatar size={32} active />
+        {/* <Skeleton.Input active size="small" style={{ width: 80, height: 24 }} /> */}
+      </div>
+    );
+  }
 
   if (userInfo) {
     return (

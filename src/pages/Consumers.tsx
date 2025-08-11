@@ -132,7 +132,7 @@ function ConsumersPage() {
   ];
 
   return (
-    <Layout>
+    <Layout loading={loading}>
       <div className="mb-8">
         <Title level={1} className="mb-2">
           {productId ? '产品订阅管理' : '消费者管理'}
