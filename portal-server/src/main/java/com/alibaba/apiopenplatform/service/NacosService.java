@@ -6,11 +6,8 @@ import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
-import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam;
 import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 /**
  * Nacos服务接口 - 统一管理Nacos实例和MCP市场功能
@@ -58,7 +55,7 @@ public interface NacosService {
     /**
      * 获取Nacos MCP Server配置
      */
-    String fetchMcpConfig(String nacosId, Object conf) throws Exception;
+    String fetchMcpConfig(String nacosId, Object conf);
 
     /**
      * 查找Nacos实例

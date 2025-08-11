@@ -4,6 +4,7 @@ import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.consumer.QuerySubscriptionParam;
 import com.alibaba.apiopenplatform.dto.params.portal.*;
@@ -49,6 +50,8 @@ public class PortalServiceImpl implements PortalService {
 
     private final SubscriptionRepository subscriptionRepository;
 
+    private final ContextHolder contextHolder;
+
     private final String domainFormat = "%s.api.portal.local";
 
     public PortalResult createPortal(CreatePortalParam param) {
@@ -60,7 +63,7 @@ public class PortalServiceImpl implements PortalService {
         String portalId = IdGenerator.genPortalId();
         Portal portal = param.convertTo();
         portal.setPortalId(portalId);
-        portal.setAdminId("admin");
+        portal.setAdminId(contextHolder.getUser());
 
         // Setting & Ui
         portal.setPortalSettingConfig(new PortalSettingConfig());

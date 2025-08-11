@@ -57,17 +57,16 @@ public class ConsumerController {
 
     @Operation(summary = "删除Consumer")
     @DeleteMapping("/{consumerId}")
-    public void deleteDevConsumer(
-            @PathVariable @NotBlank(message = "Consumer ID不能为空") String consumerId) {
+    public void deleteDevConsumer(@PathVariable String consumerId) {
         consumerService.deleteConsumer(consumerId);
     }
 
     @Operation(summary = "生成Consumer凭证")
     @PostMapping("/{consumerId}/credentials")
     @DeveloperAuth
-    public ConsumerCredentialResult createCredential(@PathVariable String consumerId,
-                                                     @RequestBody @Valid CreateCredentialParam param) {
-        return consumerService.createCredential(consumerId, param);
+    public void createCredential(@PathVariable String consumerId,
+                                 @RequestBody @Valid CreateCredentialParam param) {
+        consumerService.createCredential(consumerId, param);
     }
 
     @Operation(summary = "获取Consumer凭证信息")
@@ -80,9 +79,9 @@ public class ConsumerController {
     @Operation(summary = "更新Consumer凭证")
     @PutMapping("/{consumerId}/credentials")
     @DeveloperAuth
-    public ConsumerCredentialResult updateCredential(@PathVariable String consumerId,
-                                                     @RequestBody @Valid UpdateCredentialParam param) {
-        return consumerService.updateCredential(consumerId, param);
+    public void updateCredential(@PathVariable String consumerId,
+                                 @RequestBody @Valid UpdateCredentialParam param) {
+        consumerService.updateCredential(consumerId, param);
     }
 
     @Operation(summary = "删除Consumer凭证")
@@ -95,17 +94,17 @@ public class ConsumerController {
     @Operation(summary = "订阅API产品")
     @PostMapping("/{consumerId}/subscriptions")
     @DeveloperAuth
-    public SubscriptionResult subscribeProduct(@PathVariable String consumerId,
+    public void subscribeProduct(@PathVariable String consumerId,
                                                @RequestBody @Valid CreateSubscriptionParam param) {
-        return consumerService.subscribeProduct(consumerId, param);
+        consumerService.subscribeProduct(consumerId, param);
     }
 
     @Operation(summary = "获取Consumer的订阅列表")
     @GetMapping("/{consumerId}/subscriptions")
     @DeveloperAuth
     public PageResult<SubscriptionResult> listSubscriptions(@PathVariable String consumerId,
-                                                           QuerySubscriptionParam param,
-                                                           Pageable pageable) {
+                                                            QuerySubscriptionParam param,
+                                                            Pageable pageable) {
         return consumerService.listSubscriptions(consumerId, param, pageable);
     }
 

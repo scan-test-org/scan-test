@@ -28,7 +28,7 @@ public class ProductSubscription extends BaseEntity {
     @Column(name = "consumer_id", length = 32, nullable = false)
     private String consumerId;
 
-    @Column(name = "developer_id", length = 32, nullable = false)
+    @Column(name = "developer_id", length = 32)
     private String developerId;
 
     @Column(name = "portal_id", length = 32)

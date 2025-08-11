@@ -87,7 +87,7 @@ public interface ProductService {
      * @param productId
      * @param param
      */
-    void addProductRef(String productId, CreateProductRefParam param) throws Exception;
+    void addProductRef(String productId, CreateProductRefParam param);
 
     /**
      * 查询API产品引用的资源
@@ -103,12 +103,6 @@ public interface ProductService {
      * @param productId
      */
     void deleteProductRef(String productId);
-
-    /**
-     * 上架MCP Server为Product
-     */
-    ProductResult addMcpServerProduct(com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam param);
-
 
     /**
      * 清理门户资源

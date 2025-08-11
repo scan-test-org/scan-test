@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface ConsumerCredentialRepository extends BaseRepository<ConsumerCredential, Long> {
 
     Optional<ConsumerCredential> findByConsumerId(String consumerId);
+
+    void deleteAllByConsumerId(String consumerId);
 }

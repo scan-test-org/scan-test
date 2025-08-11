@@ -66,7 +66,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResult createProduct(CreateProductParam param) {
-        productRepository.findByNameAndAdminId(param.getName(), "admin")
+        productRepository.findByNameAndAdminId(param.getName(), contextHolder.getUser())
                 .ifPresent(APIProduct -> {
                     throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT, param.getName());
                 });
@@ -75,7 +75,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = param.convertTo();
         product.setProductId(productId);
-        product.setAdminId("admin");
+        product.setAdminId(contextHolder.getUser());
         productRepository.save(product);
 
         return getProduct(productId);
@@ -83,10 +83,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResult getProduct(String productId) {
-//        Product product = contextHolder.isAdministrator() ?
-//                findProduct(productId) :
-//                findPublishedProduct(contextHolder.getPortal(), productId);
-        Product product = findProduct(productId);
+        Product product = contextHolder.isAdministrator() ?
+                findProduct(productId) :
+                findPublishedProduct(contextHolder.getPortal(), productId);
 
         ProductResult result = new ProductResult().convertFrom(product);
 
@@ -187,35 +186,6 @@ public class ProductServiceImpl implements ProductService {
         productRepository.delete(Product);
     }
 
-    @Override
-    public ProductResult addMcpServerProduct(com.alibaba.apiopenplatform.dto.params.mcp.McpMarketCardParam param) {
-        Product product = new Product();
-        product.setProductId(param.getId());
-        product.setName(param.getName());
-        product.setDescription(param.getDescription());
-        product.setType(ProductType.MCP_SERVER);
-        // icon/logo
-        product.setIcon("default-icon"); // 你可以在前端或后续补充真实logo
-        // 分类/能力标签
-        product.setCategory(param.getCapabilities() != null && !param.getCapabilities().isEmpty() ? param.getCapabilities().get(0).toString() : "MCP");
-        // 作者/团队
-        product.setAdminId(""); // McpMarketCardDto没有creator字段
-        // 详细文档/仓库/扩展字段
-        java.util.Map<String, Object> ext = new java.util.HashMap<>();
-        ext.put("version", param.getVersion());
-        ext.put("versionDetail", param.getVersionDetail());
-        ext.put("capabilities", param.getCapabilities());
-        // ext.put("tools", param.getTools()); // McpMarketCardDto没有tools字段
-        ext.put("repository", param.getRepository());
-        ext.put("localServerConfig", param.getLocalServerConfig());
-        ext.put("remoteServerConfig", param.getRemoteServerConfig());
-        ext.put("protocol", param.getProtocol());
-        ext.put("frontProtocol", param.getFrontProtocol());
-        product.setDocument(new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(ext).toString());
-        productRepository.save(product);
-        return new ProductResult().convertFrom(product);
-    }
-
     /**
      * 查找产品，如果不存在则抛出异常
      */
@@ -225,7 +195,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void addProductRef(String productId, CreateProductRefParam param) throws Exception {
+    public void addProductRef(String productId, CreateProductRefParam param) {
         Product product = findProduct(productId);
 
         // 是否已存在API引用
@@ -257,7 +227,7 @@ public class ProductServiceImpl implements ProductService {
         productRefRepository.delete(productRef);
     }
 
-    private void syncConfig(Product product, ProductRef productRef) throws Exception {
+    private void syncConfig(Product product, ProductRef productRef) {
         SourceType sourceType = productRef.getSourceType();
 
         if (sourceType.isGateway()) {
@@ -289,7 +259,7 @@ public class ProductServiceImpl implements ProductService {
                         product.setApiConfig(JSONUtil.toBean(productRef.getApiConfig(), APIConfigResult.class));
                     }
 
-                    // Spec
+                    // API Config
                     if (StrUtil.isNotBlank(productRef.getMcpConfig())) {
                         product.setMcpConfig(JSONUtil.toBean(productRef.getMcpConfig(), MCPConfigResult.class));
                     }
