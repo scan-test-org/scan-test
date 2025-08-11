@@ -6,7 +6,6 @@ import { ProductHeader } from "../components/ProductHeader";
 import {
   Card,
   Descriptions,
-  Spin,
   Alert,
   Collapse,
   Button,
@@ -273,25 +272,17 @@ function McpDetail() {
     }
   };
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-[300px]">
-          <Spin size="large" />
-        </div>
-      </Layout>
-    );
-  }
+
   if (error) {
     return (
-      <Layout>
+      <Layout loading={loading}>
         <Alert message={error} type="error" showIcon className="my-8" />
       </Layout>
     );
   }
   if (!data) {
     return (
-      <Layout>
+      <Layout loading={loading}>
         <Alert
           message="未找到相关数据"
           type="warning"
@@ -309,7 +300,7 @@ function McpDetail() {
 
 
   return (
-    <Layout>
+    <Layout loading={loading}>
       <ProductHeader
         name={name}
         description={description}
