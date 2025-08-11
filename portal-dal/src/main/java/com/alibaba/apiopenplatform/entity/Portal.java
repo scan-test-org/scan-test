@@ -27,7 +27,7 @@ public class Portal extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "portal_id", length = 32, nullable = false)
+    @Column(name = "portal_id", length =64, nullable = false)
     private String portalId;
 
     @Column(name = "name", length = 64, nullable = false)
@@ -39,7 +39,7 @@ public class Portal extends BaseEntity {
     @Column(name = "description", length = 256)
     private String description;
 
-    @Column(name = "admin_id", length = 32)
+    @Column(name = "admin_id", length = 64)
     private String adminId;
 
     @Column(name = "portal_setting_config", columnDefinition = "text")

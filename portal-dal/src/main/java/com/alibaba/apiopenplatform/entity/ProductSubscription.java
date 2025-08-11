@@ -22,16 +22,16 @@ public class ProductSubscription extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", length = 32, nullable = false)
+    @Column(name = "product_id", length = 64, nullable = false)
     private String productId;
 
-    @Column(name = "consumer_id", length = 32, nullable = false)
+    @Column(name = "consumer_id", length = 64, nullable = false)
     private String consumerId;
 
-    @Column(name = "developer_id", length = 32)
+    @Column(name = "developer_id", length = 64)
     private String developerId;
 
-    @Column(name = "portal_id", length = 32)
+    @Column(name = "portal_id", length = 64)
     private String portalId;
 
     @Enumerated(EnumType.STRING)

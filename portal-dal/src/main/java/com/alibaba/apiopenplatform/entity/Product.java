@@ -22,16 +22,16 @@ public class Product extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", length = 32, nullable = false)
+    @Column(name = "product_id", length = 64, nullable = false)
     private String productId;
 
-    @Column(name = "admin_id", length = 32)
+    @Column(name = "admin_id", length = 64)
     private String adminId;
 
     @Column(name = "name", length = 64, nullable = false)
     private String name;
 
-    @Column(name = "type", length = 32)
+    @Column(name = "type", length = 64)
     @Enumerated(EnumType.STRING)
     private ProductType type;
 

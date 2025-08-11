@@ -14,7 +14,7 @@ public class HmacConfig {
     private List<HmacCredential> credentials;
 
     @Data
-    static class HmacCredential {
+    public static class HmacCredential {
         private String ak;
         private String sk;
 

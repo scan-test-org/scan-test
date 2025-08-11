@@ -11,11 +11,7 @@ import com.alibaba.apiopenplatform.dto.params.consumer.QueryConsumerParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateConsumerParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateCredentialParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.UpdateCredentialParam;
-import com.alibaba.apiopenplatform.dto.result.ConsumerResult;
-import com.alibaba.apiopenplatform.dto.result.PageResult;
-import com.alibaba.apiopenplatform.dto.result.PortalResult;
-import com.alibaba.apiopenplatform.dto.result.ConsumerCredentialResult;
-import com.alibaba.apiopenplatform.dto.result.SubscriptionResult;
+import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.dto.params.consumer.CreateSubscriptionParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.QuerySubscriptionParam;
 import com.alibaba.apiopenplatform.entity.*;
@@ -25,6 +21,9 @@ import com.alibaba.apiopenplatform.repository.SubscriptionRepository;
 import com.alibaba.apiopenplatform.service.ConsumerService;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
+import com.alibaba.apiopenplatform.service.ProductService;
+import com.alibaba.apiopenplatform.support.enums.SourceType;
+import com.alibaba.apiopenplatform.support.gateway.GatewayIdentityConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -69,6 +68,8 @@ public class ConsumerServiceImpl implements ConsumerService {
     private final SubscriptionRepository subscriptionRepository;
 
     private final ProductRefRepository productRefRepository;
+
+    private final ProductService productService;
 
     private final GatewayRepository gatewayRepository;
 
@@ -159,9 +160,39 @@ public class ConsumerServiceImpl implements ConsumerService {
     public void subscribeProduct(String consumerId, CreateSubscriptionParam param) {
         Consumer consumer = contextHolder.isDeveloper() ?
                 findDevConsumer(consumerId) : findConsumer(consumerId);
+        // 勿重复订阅
         if (subscriptionRepository.findByConsumerIdAndProductId(consumerId, param.getProductId()).isPresent()) {
             return;
         }
+
+        ProductRefResult productRef = productService.getProductRef(param.getProductId());
+        if (productRef == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, param.getProductId());
+        }
+
+        // 非网关型不支持订阅
+        if (productRef.getSourceType() != SourceType.GATEWAY) {
+            throw new BusinessException(ErrorCode.PRODUCT_TYPE_NOT_MATCH, param.getProductId());
+        }
+
+//        ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
+//
+//        GatewayIdentityConfig gatewayIdentity = gatewayService.getGatewayIdentity(productRef.getGatewayId());
+//
+//
+//        if (!consumerRefRepository.findConsumerRef(consumerId, gatewayIdentity.getGatewayType(), gatewayIdentity.getIdentity()).isPresent()) {
+//            String gwConsumerId = gatewayService.createConsumer(productRef.getGatewayId(), consumer, credential);
+//            consumerRefRepository.save(ConsumerRef.builder()
+//                    .consumerId(consumerId)
+//                    .gwConsumerId(gwConsumerId)
+//                    .gatewayType(gatewayIdentity.getGatewayType())
+//                    .gatewayIdentity(gatewayIdentity.getIdentity())
+//                    .build());
+//        }
+
+
+
 
         // 获取产品的API引用信息
 //        ProductRef productRef = productRefRepository.findFirstByProductId(param.getProductId())
