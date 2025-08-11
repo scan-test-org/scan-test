@@ -6,7 +6,9 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.ProductRef;
+import com.alibaba.apiopenplatform.support.consumer.ApiKeyConfig;
 import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthorizationRule;
+import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -141,24 +143,23 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     public String createConsumer(Gateway gateway, Consumer consumer, ConsumerCredential credential) {
         APIGClient client = getClient(gateway);
 
-        String apiKeyIdentityConfigStr = null;
+        // ApiKey
+        ApiKeyIdentityConfig apikeyIdentityConfig = convertToApiKeyIdentityConfig(credential.getApiKeyConfig());
 
-        if (credential != null) {
-            if (credential.getApiKeyConfig() != null) {
-                apiKeyIdentityConfigStr = JSONUtil.toJsonStr(credential.getApiKeyConfig());
-            }
-        }
+        // Hmac
+        List<AkSkIdentityConfig> akSkIdentityConfigs = convertToAkSkIdentityConfigs(credential.getHmacConfig());
 
         CreateConsumerRequest createConsumerRequest = CreateConsumerRequest.builder()
                 .name(consumer.getName())
                 .gatewayType(gateway.getGatewayType().getType())
-                .apikeyIdentityConfig(JSONUtil.toBean(apiKeyIdentityConfigStr, ApiKeyIdentityConfig.class))
+                .apikeyIdentityConfig(apikeyIdentityConfig)
+                .akSkIdentityConfigs(akSkIdentityConfigs)
                 .build();
 
         CreateConsumerResponse response = client.execute(c -> {
             CompletableFuture<CreateConsumerResponse> future = c.createConsumer(createConsumerRequest);
             try {
-                return future.get(); // 或者根据需要处理返回结果
+                return future.get();
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -418,6 +419,47 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             log.error("Error fetching REST operations", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching REST operations，Cause：" + e.getMessage());
         }
+    }
+
+    protected ApiKeyIdentityConfig convertToApiKeyIdentityConfig(ApiKeyConfig config) {
+        if (config == null) {
+            return null;
+        }
+
+        // ApikeySource
+        ApiKeyIdentityConfig.ApikeySource apikeySource = ApiKeyIdentityConfig.ApikeySource.builder()
+                .source(config.getSource())
+                .value(config.getKey())
+                .build();
+
+        // credentials
+        List<ApiKeyIdentityConfig.Credentials> credentials = config.getCredentials().stream()
+                .map(cred -> ApiKeyIdentityConfig.Credentials.builder()
+                        .apikey(cred.getApiKey())
+                        .generateMode(cred.getMode().name())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ApiKeyIdentityConfig.builder()
+                .apikeySource(apikeySource)
+                .credentials(credentials)
+                .type("ApiKey")
+                .build();
+    }
+
+    protected List<AkSkIdentityConfig> convertToAkSkIdentityConfigs(HmacConfig hmacConfig) {
+        if (hmacConfig == null || hmacConfig.getCredentials() == null) {
+            return null;
+        }
+
+        return hmacConfig.getCredentials().stream()
+                .map(cred -> AkSkIdentityConfig.builder()
+                        .ak(cred.getAk())
+                        .sk(cred.getSk())
+                        .generateMode(cred.getMode().name())
+                        .type("HMAC")
+                        .build())
+                .collect(Collectors.toList());
     }
 }
 

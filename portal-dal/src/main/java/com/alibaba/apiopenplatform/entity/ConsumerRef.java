@@ -1,7 +1,7 @@
 package com.alibaba.apiopenplatform.entity;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -9,13 +9,11 @@ import javax.persistence.*;
  * @author zh
  */
 @Entity
-@Table(name = "consumerRef",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"gw_consumer_id"}, name = "uk_consumer_id"),
-                @UniqueConstraint(columnNames = {"consumer_id", "region", "gateway_type"},
-                        name = "uk_consumer_relation")
-        })
+@Table(name = "consumer_ref")
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class ConsumerRef extends BaseEntity {
 
@@ -23,15 +21,16 @@ public class ConsumerRef extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "consumer_id", length = 32, nullable = false)
+    @Column(name = "consumer_id", length = 64, nullable = false)
     private String consumerId;
 
-    @Column(name = "region", length = 32, nullable = false)
-    private String region;
-
     @Column(name = "gateway_type", length = 32, nullable = false)
-    private String gatewayType;
+    @Enumerated(EnumType.STRING)
+    private GatewayType gatewayType;
 
-    @Column(name = "gw_consumer_id", length = 32, nullable = false)
+    @Column(name = "gw_consumer_id", length = 64, nullable = false)
     private String gwConsumerId;
+
+    @Column(name = "gateway_identity", columnDefinition = "text", nullable = false)
+    private String gatewayIdentity;
 }

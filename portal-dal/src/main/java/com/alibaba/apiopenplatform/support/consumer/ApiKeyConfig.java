@@ -24,7 +24,7 @@ public class ApiKeyConfig {
     private String key;
 
     @Data
-    static class ApiKeyCredential {
+    public static class ApiKeyCredential {
 
         private String apiKey;
 

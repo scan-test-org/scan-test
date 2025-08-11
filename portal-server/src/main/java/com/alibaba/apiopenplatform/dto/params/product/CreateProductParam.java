@@ -21,6 +21,7 @@ public class CreateProductParam implements InputConverter<Product> {
     @Size(max = 50, message = "API产品名称长度不能超过50个字符")
     private String name;
 
+    @Size(max = 256, message = "API产品描述长度不能超过256个字符")
     private String description;
 
     @NotNull(message = "API产品类型不能为空")

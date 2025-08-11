@@ -25,10 +25,10 @@ public class ProductRef extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", length = 32, nullable = false)
+    @Column(name = "product_id", length = 64, nullable = false)
     private String productId;
 
-    @Column(name = "gateway_id", length = 32)
+    @Column(name = "gateway_id", length = 64)
     private String gatewayId;
 
     @Column(name = "apig_ref_config", columnDefinition = "text")
@@ -39,7 +39,7 @@ public class ProductRef extends BaseEntity {
     @Convert(converter = HigressRefConfigConverter.class)
     private HigressRefConfig higressRefConfig;
 
-    @Column(name = "nacos_id", length = 32)
+    @Column(name = "nacos_id", length = 64)
     private String nacosId;
 
     @Column(name = "nacos_ref_config", columnDefinition = "text")
