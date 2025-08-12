@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 
 /**
  * 创建Nacos实例参数
+ *
  * @author zxd
  */
 @Data
@@ -28,17 +29,4 @@ public class CreateNacosParam implements InputConverter<NacosInstance> {
     private String password;
 
     private String description;
-
-    @Override
-    public NacosInstance convertTo() {
-        NacosInstance nacosInstance = new NacosInstance();
-        nacosInstance.setNacosName(this.nacosName);
-        nacosInstance.setServerUrl(this.serverUrl);
-        nacosInstance.setNamespace(this.namespace);
-        nacosInstance.setUsername(this.username);
-        nacosInstance.setPassword(this.password);
-        nacosInstance.setDescription(this.description);
-
-        return nacosInstance;
-    }
 } 

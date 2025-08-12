@@ -50,48 +50,61 @@ public interface ConsumerService {
      */
     void deleteConsumer(String consumerId);
 
-    // 凭证相关CRUD
     /**
      * 创建Consumer凭证
      *
-     * @param consumerId Consumer ID
-     * @param param      创建参数
+     * @param consumerId
+     * @param param
      */
     void createCredential(String consumerId, CreateCredentialParam param);
 
     /**
      * 获取Consumer凭证
-     * @param consumerId Consumer ID
-     * @return ConsumerCredentialResult
+     *
+     * @param consumerId
+     * @return
      */
     ConsumerCredentialResult getCredential(String consumerId);
 
     /**
      * 更新Consumer凭证
      *
-     * @param consumerId Consumer ID
-     * @param param      更新参数
+     * @param consumerId
+     * @param param
      */
     void updateCredential(String consumerId, UpdateCredentialParam param);
 
     /**
      * 删除Consumer凭证
+     *
      * @param consumerId Consumer ID
      */
     void deleteCredential(String consumerId);
 
     /**
      * 订阅API产品
+     *
+     * @param consumerId
+     * @param param
+     * @return
      */
-    void subscribeProduct(String consumerId, CreateSubscriptionParam param);
+    SubscriptionResult subscribeProduct(String consumerId, CreateSubscriptionParam param);
 
     /**
      * 获取Consumer的订阅列表
+     *
+     * @param consumerId
+     * @param param
+     * @param pageable
+     * @return
      */
     PageResult<SubscriptionResult> listSubscriptions(String consumerId, QuerySubscriptionParam param, Pageable pageable);
 
     /**
-     * 取消订阅
+     * 取消订阅API产品
+     *
+     * @param consumerId
+     * @param productId
      */
     void deleteSubscription(String consumerId, String productId);
 }

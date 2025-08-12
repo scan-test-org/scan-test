@@ -32,9 +32,8 @@ public interface PortalService {
      * 检查门户是否存在
      *
      * @param portalId
-     * @return
      */
-    boolean hasPortal(String portalId);
+    void existsPortal(String portalId);
 
     /**
      * 查询门户列表

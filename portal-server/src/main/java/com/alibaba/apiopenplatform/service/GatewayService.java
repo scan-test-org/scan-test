@@ -75,11 +75,6 @@ public interface GatewayService {
 
     void deleteConsumer(Consumer consumer);
 
-    /**
-     * 为消费者授权访问指定的API
-     * @param consumer 消费者
-     * @param apiId API ID
-     */
     void authorizationConsumerToApi(Consumer consumer, ProductRef productRef);
 
     void assertGatewayConsumerExist(String gatewayId, Consumer consumer);

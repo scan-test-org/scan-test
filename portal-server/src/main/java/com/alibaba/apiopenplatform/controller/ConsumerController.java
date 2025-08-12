@@ -94,7 +94,7 @@ public class ConsumerController {
     @PostMapping("/{consumerId}/subscriptions")
     @DeveloperAuth
     public void subscribeProduct(@PathVariable String consumerId,
-                                               @RequestBody @Valid CreateSubscriptionParam param) {
+                                 @RequestBody @Valid CreateSubscriptionParam param) {
         consumerService.subscribeProduct(consumerId, param);
     }
 

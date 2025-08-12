@@ -9,6 +9,7 @@ import javax.validation.constraints.Size;
 
 /**
  * 更新Nacos实例参数
+ *
  * @author zxd
  */
 @Data
@@ -33,17 +34,4 @@ public class UpdateNacosParam implements InputConverter<NacosInstance> {
 
     @Size(max = 512, message = "描述长度不能超过512个字符")
     private String description;
-
-    /**
-     * 更新NacosInstance实例
-     */
-    public void update(NacosInstance instance) {
-        instance.setNacosName(this.nacosName);
-        instance.setServerUrl(this.serverUrl);
-        instance.setNamespace(this.namespace);
-        instance.setUsername(this.username);
-        instance.setPassword(this.password);
-        instance.setDescription(this.description);
-    }
-
 } 
