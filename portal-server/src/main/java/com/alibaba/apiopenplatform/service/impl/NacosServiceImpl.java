@@ -191,7 +191,8 @@ public class NacosServiceImpl implements NacosService {
         // mcpServer config
         MCPConfigResult.MCPServerConfig serverConfig = new MCPConfigResult.MCPServerConfig();
         if (detail.getLocalServerConfig() != null) {
-            serverConfig.setRawConfig(detail.getLocalServerConfig().toString());
+            // 直接设置对象，让外层的 JSONUtil.toJsonStr 处理序列化
+            serverConfig.setRawConfig(detail.getLocalServerConfig());
         }
         mcpConfig.setMcpServerConfig(serverConfig);
 

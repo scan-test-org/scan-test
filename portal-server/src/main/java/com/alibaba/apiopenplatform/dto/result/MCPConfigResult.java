@@ -48,7 +48,7 @@ public class MCPConfigResult {
         /**
          * for nacos
          */
-        private String rawConfig;
+        private Object rawConfig;
     }
 
     @Data

@@ -34,7 +34,7 @@ public class GlobalCorsConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
-        resolver.setFallbackPageable(PageRequest.of(0, 10,
+        resolver.setFallbackPageable(PageRequest.of(0, 100,
                 Sort.by(Sort.Direction.DESC, "createAt")));
         argumentResolvers.add(resolver);
     }

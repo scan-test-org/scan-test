@@ -35,7 +35,8 @@ public class NacosOperator {
         McpMaintainerService service = buildMcpService(nacosInstance);
         String namespace = nacosInstance.getNamespace() != null ? nacosInstance.getNamespace() : "public";
         
-        Page<McpServerBasicInfo> page = service.listMcpServer(namespace, "", 1, 100);
+        // 获取所有 MCP Server，不分页
+        Page<McpServerBasicInfo> page = service.listMcpServer(namespace, "", 1, Integer.MAX_VALUE);
         if (page == null || page.getPageItems() == null) {
             return PageResult.of(new ArrayList<>(), pageable.getPageNumber(), pageable.getPageSize(), 0);
         }
