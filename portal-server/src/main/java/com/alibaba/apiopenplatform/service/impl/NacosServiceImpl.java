@@ -29,6 +29,9 @@ import com.alibaba.nacos.maintainer.client.ai.McpMaintainerService;
 import com.alibaba.nacos.api.ai.model.mcp.McpServerDetailInfo;
 
 import java.util.Properties;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
 import javax.annotation.PostConstruct;
 
 /**
@@ -191,13 +194,10 @@ public class NacosServiceImpl implements NacosService {
         // mcpServer config
         MCPConfigResult.MCPServerConfig serverConfig = new MCPConfigResult.MCPServerConfig();
         if (detail.getLocalServerConfig() != null) {
-            // 将配置对象序列化为JSON字符串，确保格式正确
-            String configJson = JSONUtil.toJsonStr(detail.getLocalServerConfig());
-            serverConfig.setRawConfig(configJson);
+            serverConfig.setRawConfig(detail.getLocalServerConfig());
         }
         mcpConfig.setMcpServerConfig(serverConfig);
 
-        // tools - 使用转换器转换为网关格式
         if (detail.getToolSpec() != null) {
             try {
                 NacosToGatewayToolsConverter converter = new NacosToGatewayToolsConverter();
