@@ -195,6 +195,8 @@ public class NacosServiceImpl implements NacosService {
         MCPConfigResult.MCPServerConfig serverConfig = new MCPConfigResult.MCPServerConfig();
         if (detail.getLocalServerConfig() != null) {
             serverConfig.setRawConfig(detail.getLocalServerConfig());
+        } else if (detail.getRemoteServerConfig() != null) {
+            serverConfig.setRawConfig(detail.getRemoteServerConfig());
         }
         mcpConfig.setMcpServerConfig(serverConfig);
 
