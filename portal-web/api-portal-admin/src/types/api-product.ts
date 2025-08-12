@@ -14,6 +14,14 @@ export interface ApiProductMcpConfig {
     mcpServerConfig: any;
     fromType: string;
   }
+  mcpServerConfig: {
+    path: string;
+    domains: {
+      domain: string;
+      protocol: string;
+    }[];
+    rawConfig: string;
+  }
 }
 
 export interface ApiProduct {
