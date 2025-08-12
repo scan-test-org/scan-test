@@ -32,7 +32,7 @@ const menuItems = [
   },
   {
     key: "published-apis",
-    label: "Published APIs",
+    label: "Published API Products",
     icon: FileTextOutlined,
     description: "已发布的API管理"
   },
@@ -182,7 +182,7 @@ export default function PortalDetail() {
               <Button type="text" icon={<MoreOutlined />} size="small" />
             </Dropdown>
           </div>
-          <Paragraph className="text-gray-600 mb-3">{portal.name}</Paragraph>
+          <Paragraph className="text-gray-600 mb-3" ellipsis={{ rows: 1, tooltip: portal.name }}>{portal.name}</Paragraph>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <LinkOutlined className="h-3 w-3" />
             <a 

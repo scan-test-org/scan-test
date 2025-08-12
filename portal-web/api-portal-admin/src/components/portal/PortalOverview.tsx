@@ -84,10 +84,6 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
                 <span className="font-medium">{portal.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">管理员ID</span>
-                <span className="font-medium">{portal.adminId}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-gray-600">域名</span>
                 <div className="flex items-center gap-2">
                   <LinkOutlined />
@@ -102,12 +98,12 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
                   {portal.portalSettingConfig?.builtinAuthEnabled ? "已启用" : "已禁用"}
                 </Tag>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-gray-600">OIDC认证</span>
                 <Tag color={portal.portalSettingConfig?.oidcAuthEnabled ? "green" : "default"}>
                   {portal.portalSettingConfig?.oidcAuthEnabled ? "已启用" : "已禁用"}
                 </Tag>
-              </div>
+              </div> */}
               <div className="flex justify-between">
                 <span className="text-gray-600">开发者自动审批</span>
                 <Tag color={portal.portalSettingConfig?.autoApproveDevelopers ? "green" : "default"}>

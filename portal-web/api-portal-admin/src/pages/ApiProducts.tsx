@@ -7,6 +7,7 @@ import { ApiOutlined, ClockCircleOutlined, MoreOutlined, PlusOutlined, Exclamati
 import { apiProductApi } from '@/lib/api';
 import { getStatusBadgeVariant } from '@/lib/utils';
 import ApiProductFormModal from '@/components/api-product/ApiProductFormModal';
+import { AdvancedSearch, SearchParam } from '@/components/common/AdvancedSearch';
 
 // 优化的产品卡片组件
 const ProductCard = memo(({ product, onNavigate, handleRefresh, onEdit }: {
@@ -83,7 +84,7 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh, onEdit }: {
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               {product.category && <Badge color="green" text={product.category} />}
               <Badge color={getTypeBadgeVariant(product.type)} text={product.type === "REST_API" ? "REST API" : "MCP Server"} />
-              <Badge color={getStatusBadgeVariant(product.status)} text={product.status === "PENDING" ? "待关联" : product.status === "READY" ? "已关联" : "已发布"} />
+              <Badge color={getStatusBadgeVariant(product.status)} text={product.status === "PENDING" ? "待配置" : product.status === "READY" ? "待发布" : "已发布"} />
             </div>
           </div>
         </div>
@@ -106,16 +107,6 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh, onEdit }: {
           <div className="flex justify-between">
             <span className="text-gray-500">Product ID</span>
             <span>{product.productId}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span className="text-gray-500">Created At</span>
-            <span>{product.createdAt}</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span className="text-gray-500">enableConsumerAuth</span>
-            <span>{product.enableConsumerAuth }</span>
           </div>
         </div>
       </div>
@@ -158,6 +149,69 @@ export default function ApiProducts() {
     fetchApiProducts(0, 12);
   }, [fetchApiProducts]);
 
+  // 使用useMemo优化数据计算
+  const categories = useMemo(() =>
+    ["All", ...Array.from(new Set(apiProducts?.map(product => product.category)))],
+    [apiProducts]
+  )
+
+  const types = useMemo(() =>
+    ["All", "REST API", "MCP Server"],
+    []
+  )
+
+  // 高级搜索配置
+  const searchParamsList: SearchParam[] = useMemo(() => [
+    {
+      label: '产品名称',
+      name: 'name',
+      placeholder: '请输入产品名称',
+      type: 'input'
+    },
+    {
+      label: '产品分类',
+      name: 'category',
+      placeholder: '选择分类',
+      type: 'select',
+      optionList: categories.filter(cat => cat !== 'All').map(cat => ({
+        label: cat,
+        value: cat
+      }))
+    },
+    {
+      label: '产品类型',
+      name: 'type',
+      placeholder: '选择类型',
+      type: 'select',
+      optionList: types.filter(type => type !== 'All').map(type => ({
+        label: type === 'REST API' ? 'REST API' : 'MCP Server',
+        value: type === 'REST API' ? 'REST_API' : 'MCP_SERVER'
+      }))
+    }
+  ], [categories, types]);
+
+  // 搜索处理函数
+  const handleSearch = (searchName: string, searchValue: string) => {
+    // 根据搜索条件过滤产品
+    if (searchName === 'name') {
+      // 名称搜索逻辑
+      const filtered = apiProducts.filter(product => 
+        product.name.toLowerCase().includes(searchValue.toLowerCase())
+      );
+      // 这里可以更新显示的产品列表或调用API
+    } else if (searchName === 'category') {
+      setSelectedCategory(searchValue);
+    } else if (searchName === 'type') {
+      setSelectedType(searchValue);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSelectedCategory('All');
+    setSelectedType('All');
+    // 重置搜索状态
+  };
+
   // 处理分页变化
   const handlePaginationChange = (page: number, pageSize: number) => {
     fetchApiProducts(page - 1, pageSize);
@@ -171,17 +225,6 @@ export default function ApiProducts() {
   const handleTypeChange = useCallback((type: string) => {
     setSelectedType(type)
   }, [])
-
-  // 使用useMemo优化数据计算
-  const categories = useMemo(() =>
-    ["All", ...Array.from(new Set(apiProducts?.map(product => product.category)))],
-    [apiProducts]
-  )
-
-  const types = useMemo(() =>
-    ["All", "REST API", "MCP Server"],
-    []
-  )
 
   // 过滤API Products
   const filteredProducts = useMemo(() =>
@@ -239,33 +282,13 @@ export default function ApiProducts() {
         </Button>
       </div>
 
-      {/* 过滤器 */}
-      <div className="flex gap-4">
-        <Select
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          style={{ width: 200 }}
-          placeholder="选择分类"
-        >
-          {categories.map(category => (
-            <Select.Option key={category} value={category}>
-              {category}
-            </Select.Option>
-          ))}
-        </Select>
-        <Select
-          value={selectedType}
-          onChange={handleTypeChange}
-          style={{ width: 200 }}
-          placeholder="选择类型"
-        >
-          {types.map(type => (
-            <Select.Option key={type} value={type}>
-              {type}
-            </Select.Option>
-          ))}
-        </Select>
-      </div>
+      {/* 高级搜索 */}
+      <AdvancedSearch
+        searchParamsList={searchParamsList}
+        onSearch={handleSearch}
+        onClear={handleClearSearch}
+        className="mb-4"
+      />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredProducts.map((product) => (

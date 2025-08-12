@@ -2,6 +2,7 @@ import { Card, Table, Badge, Button, Space, Avatar, Tag, Input } from 'antd'
 import { SearchOutlined, UserAddOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { Portal } from '@/types'
+import { formatDateTime } from '@/lib/utils'
 
 interface PortalConsumersProps {
   portal: Portal
@@ -141,13 +142,13 @@ export function PortalConsumers({ portal }: PortalConsumersProps) {
       title: '加入时间',
       dataIndex: 'joinedAt',
       key: 'joinedAt',
-      render: (date: string) => new Date(date).toLocaleDateString()
+      render: (date: string) => formatDateTime(date)
     },
     {
       title: '最后活跃',
       dataIndex: 'lastActive',
       key: 'lastActive',
-      render: (date: string) => new Date(date).toLocaleDateString()
+      render: (date: string) => formatDateTime(date)
     },
     {
       title: '操作',

@@ -39,7 +39,7 @@ const Register: React.FC = () => {
         <div className="mb-4">
           <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-4" />
         </div>
-        <h2 className="text-2xl font-bold mb-6 text-gray-900 text-center">注册 API Portal</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 text-center">注册 AI Portal</h2>
         <Form
           className="w-full flex flex-col gap-4"
           layout="vertical"

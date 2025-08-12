@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import { getConsumers, deleteConsumer, createConsumer } from "../lib/api";
 import { message, Modal } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { formatDateTime } from "../lib/utils";
 
 const { Title, Paragraph } = Typography;
 const { Search } = Input;
@@ -109,7 +110,7 @@ function ConsumersPage() {
       title: '创建时间',
       dataIndex: 'createAt',
       key: 'createAt',
-      render: (date: string) => date ? new Date(date).toLocaleDateString() : '-',
+      render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
       title: '操作',

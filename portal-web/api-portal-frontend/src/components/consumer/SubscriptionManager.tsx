@@ -17,6 +17,7 @@ import api from "../../lib/api";
 import type { Subscription } from "../../types/consumer";
 import type { ApiResponse, Product } from "../../types";
 import { getSubscriptionStatusText, getSubscriptionStatusColor } from "../../lib/statusUtils";
+import { formatDateTime } from "../../lib/utils";
 
 interface SubscriptionManagerProps {
   consumerId: string;
@@ -110,7 +111,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
       title: '订阅时间',
       dataIndex: 'createAt',
       key: 'createAt',
-      render: (date: string) => date ? new Date(date).toLocaleString() : '-',
+      render: (date: string) => date ? formatDateTime(date) : '-',
     },
     {
       title: '操作',

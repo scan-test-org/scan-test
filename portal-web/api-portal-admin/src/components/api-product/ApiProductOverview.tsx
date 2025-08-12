@@ -9,7 +9,7 @@ import {
   ClockCircleOutlined
 } from '@ant-design/icons'
 import type { ApiProduct } from '@/types/api-product'
-import { getStatusBadgeVariant, getServiceName } from '@/lib/utils'
+import { getStatusBadgeVariant, getServiceName, formatDateTime } from '@/lib/utils'
 import { apiProductApi } from '@/lib/api'
 
 
@@ -108,12 +108,12 @@ export function ApiProductOverview({ apiProduct }: ApiProductOverviewProps) {
               <div className="flex justify-between">
                 <span className="text-gray-600">状态</span>
                 <Tag color={getStatusBadgeVariant(apiProduct.status)}>
-                  {apiProduct.status === "PENDING" ? "待关联" : apiProduct.status === "READY" ? "已关联" : "已发布"}
+                  {apiProduct.status === "PENDING" ? "待配置" : apiProduct.status === "READY" ? "待发布" : "已发布"}
                 </Tag>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">创建时间</span>
-                <span>{new Date(apiProduct.createAt).toLocaleString()}</span>
+                <span>{formatDateTime(apiProduct.createAt)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">产品描述</span>

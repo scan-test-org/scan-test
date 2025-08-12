@@ -2,6 +2,7 @@ import { Card, Button, Table, Tag, Space, Modal, Form, Input, Select, Switch, me
 import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import type { ApiProduct } from '@/types/api-product';
+import { formatDateTime } from '@/lib/utils'
 
 interface ApiProductPolicyProps {
   apiProduct: ApiProduct
@@ -102,7 +103,7 @@ export function ApiProductPolicy({ apiProduct }: ApiProductPolicyProps) {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString()
+      render: (date: string) => formatDateTime(date)
     },
     {
       title: '操作',

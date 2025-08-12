@@ -34,4 +34,52 @@ export function processProductSpecs<T extends { type: string; mcpSpec?: string |
     };
   }
   return product;
-} 
+}
+
+/**
+ * 格式化日期时间，显示完整的时间点包括小时、分钟、秒
+ * @param dateString 日期字符串或Date对象
+ * @returns 格式化后的日期时间字符串
+ */
+export const formatDateTime = (dateString: string | Date): string => {
+  try {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    if (isNaN(date.getTime())) {
+      return String(dateString);
+    }
+    
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  } catch {
+    return String(dateString);
+  }
+};
+
+/**
+ * 格式化日期，只显示年月日
+ * @param dateString 日期字符串或Date对象
+ * @returns 格式化后的日期字符串
+ */
+export const formatDate = (dateString: string | Date): string => {
+  try {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    if (isNaN(date.getTime())) {
+      return String(dateString);
+    }
+    
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  } catch {
+    return String(dateString);
+  }
+}; 
