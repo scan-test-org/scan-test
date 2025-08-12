@@ -43,18 +43,18 @@ export interface BaseProduct {
   document: string | null;
   icon: string | null;
   category: ProductCategory;
+  productType: ProductType;
+  productName: string;
 }
 
 // REST API 产品
 export interface RestApiProduct extends BaseProduct {
-  type: typeof ProductType.REST_API;
   apiSpec: string | null;
   mcpSpec: null;
 }
 
 // MCP Server 产品
 export interface McpServerProduct extends BaseProduct {
-  type: typeof ProductType.MCP_SERVER;
   apiSpec: null;
   mcpSpec?: McpServerConfig; // 保持向后兼容
   mcpConfig?: McpConfig; // 新的nacos格式

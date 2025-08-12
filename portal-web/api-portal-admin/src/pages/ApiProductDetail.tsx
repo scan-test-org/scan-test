@@ -28,8 +28,8 @@ const menuItems = [
   },
   {
     key: "api-docs",
-    label: "API Docs",
-    description: "API文档编辑"
+    label: "API Config",
+    description: "API配置"
   },
   {
     key: "usage-guide",

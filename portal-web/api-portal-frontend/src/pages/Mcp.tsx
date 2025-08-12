@@ -70,21 +70,6 @@ function McpPage() {
            server.creator.toLowerCase().includes(searchText.toLowerCase());
   });
 
-  const getServerIcon = (name: string) => {
-    // Generate initials for server icon
-    const words = name.split(' ');
-    if (words.length >= 2) {
-      return words[0][0] + words[1][0];
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-
-  const getServerIconColor = (name: string) => {
-    const colors = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2'];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
-  };
-
   return (
     <Layout loading={loading}>
       {/* Header Section */}
@@ -129,13 +114,8 @@ function McpPage() {
                 {/* Server Icon */}
                 <Avatar
                   size={48}
-                  style={{ 
-                    backgroundColor: getServerIconColor(server.name),
-                    fontSize: '18px',
-                    fontWeight: 'bold'
-                  }}
+                  src={server.icon}
                 >
-                  {server.icon || getServerIcon(server.name)}
                 </Avatar>
 
                 {/* Server Info */}
