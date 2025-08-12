@@ -160,7 +160,10 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         setApiList(restApis)
       } else if (gateway.gatewayType === 'HIGRESS') {
         // HIGRESS类型：获取MCP Server列表
-        const res = await gatewayApi.getGatewayMcpServers(gatewayId, {})
+        const res = await gatewayApi.getGatewayMcpServers(gatewayId, {
+          page: 0,
+          size: 1000 // 获取所有MCP Server
+        })
         const mcpServers = (res.data?.content || []).map((api: any) => ({
           mcpServerName: api.mcpServerName,
           fromGatewayType: 'HIGRESS' as const,
@@ -169,7 +172,10 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         setApiList(mcpServers)
       } else if (gateway.gatewayType === 'APIG_AI') {
         // APIG_AI类型：获取MCP Server列表
-        const res = await gatewayApi.getGatewayMcpServers(gatewayId, {})
+        const res = await gatewayApi.getGatewayMcpServers(gatewayId, {
+          page: 0,
+          size: 1000 // 获取所有MCP Server
+        })
         const mcpServers = (res.data?.content || []).map((api: any) => ({
           mcpServerName: api.mcpServerName,
           fromGatewayType: 'APIG_AI' as const,
@@ -197,7 +203,10 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     setApiLoading(true)
     try {
       // 从 Nacos 获取 MCP Server 列表
-      const res = await nacosApi.getNacosMcpServers(nacosId, {})
+      const res = await nacosApi.getNacosMcpServers(nacosId, {
+        page: 0,
+        size: 1000 // 获取所有MCP Server
+      })
       const mcpServers = (res.data?.content || []).map((api: any) => ({
         mcpServerName: api.mcpServerName,
         fromGatewayType: 'NACOS' as const,
