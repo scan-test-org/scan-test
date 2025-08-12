@@ -140,7 +140,7 @@ public class NacosToGatewayToolsConverter {
                     arg.setName(argName);
                     arg.setDescription(getStringValue(argNode, "description"));
                     arg.setType(getStringValue(argNode, "type"));
-                    arg.setRequired(true); // 默认设为required
+                    arg.setRequired(getBooleanValue(argNode, "required", false)); // 从配置中读取，如果没有则默认为 false
                     arg.setPosition("query"); // 默认position
                     
                     args.add(arg);
