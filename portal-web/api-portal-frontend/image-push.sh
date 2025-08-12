@@ -1,6 +1,6 @@
 set -e
-# rm -rf ./dist
-# npm run build
+rm -rf ./dist
+npm run build
 
 repository=registry.cn-shanghai.aliyuncs.com
 aliyun_user=mse_dev_chengpu_testcloud_com
