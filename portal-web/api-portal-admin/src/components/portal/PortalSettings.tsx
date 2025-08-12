@@ -365,7 +365,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
                 onChange={(checked) => handleSettingUpdate('builtinAuthEnabled', checked)}
               />
             </Form.Item>
-            <Form.Item
+            {/* <Form.Item
               name="oidcAuthEnabled"
               label="OIDC认证"
               valuePropName="checked"
@@ -373,7 +373,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               <Switch 
                 onChange={(checked) => handleSettingUpdate('oidcAuthEnabled', checked)}
               />
-            </Form.Item>
+            </Form.Item> */}
             <Form.Item
               name="autoApproveDevelopers"
               label="开发者自动审批"

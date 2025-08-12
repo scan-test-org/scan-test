@@ -146,11 +146,6 @@ export default function NacosConsoles() {
       ellipsis: true,
     },
     {
-      title: '管理员ID',
-      dataIndex: 'adminId',
-      key: 'adminId',
-    },
-    {
       title: '操作',
       key: 'action',
       width: 150,

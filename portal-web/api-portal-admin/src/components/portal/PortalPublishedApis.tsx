@@ -71,14 +71,14 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
 
   const columns = [
     {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'ID',
-      dataIndex: 'productId',
-      key: 'productId',
+      title: '名称/ID',
+      key: 'nameAndId',
+      render: (_: any, record: ApiProduct) => (
+        <div>
+          <div>{record.name}</div>
+          <div style={{ fontSize: '12px', color: '#666' }}>ID: {record.productId}</div>
+        </div>
+      ),
     },
     {
       title: '描述',
@@ -136,14 +136,14 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
       ),
     },
     {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'ID',
-      dataIndex: 'productId',
-      key: 'productId',
+      title: '名称/ID',
+      key: 'nameAndId',
+      render: (_: any, record: ApiProduct) => (
+        <div>
+          <div>{record.name}</div>
+          <div style={{ fontSize: '12px', color: '#666' }}>ID: {record.productId}</div>
+        </div>
+      ),
     },
     {
       title: '描述',
@@ -209,7 +209,7 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold mb-2">API管理</h1>
+          <h1 className="text-2xl font-bold mb-2">API Product</h1>
           <p className="text-gray-600">管理在此Portal中发布的API</p>
         </div>
         <Button type="primary" onClick={() => setIsModalVisible(true)}>
