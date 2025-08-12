@@ -4,6 +4,22 @@ import type { ApiProduct } from "@/types/api-product";
 import MonacoEditor from "react-monaco-editor";
 import * as yaml from "js-yaml";
 
+// 来源类型映射
+const FromTypeMap: Record<string, string> = {
+  HTTP: "HTTP转MCP",
+  MCP: "MCP直接代理",
+  OPEN_API: "OpenAPI转MCP",
+  DIRECT_ROUTE: "直接路由",
+  DATABASE: "数据库",
+};
+
+// 来源映射
+const SourceMap: Record<string, string> = {
+  APIG_AI: "AI网关",
+  HIGRESS: "Higress",
+  NACOS: "Nacos",
+};
+
 interface ApiProductApiDocsProps {
   apiProduct: ApiProduct;
   handleRefresh: () => void;
@@ -41,6 +57,68 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
     }>;
     allowTools?: Array<string>;
   }>({});
+
+  // MCP 连接配置JSON
+  const [httpJson, setHttpJson] = useState("");
+  const [sseJson, setSseJson] = useState("");
+  const [localJson, setLocalJson] = useState("");
+
+  // 生成连接配置JSON
+  const generateConnectionConfig = (
+    domains: Array<{ domain: string; protocol: string }> | null | undefined,
+    path: string | null | undefined,
+    serverName: string,
+    localConfig?: unknown
+  ) => {
+    // 互斥：优先判断本地模式
+    if (localConfig) {
+      const localConfigJson = JSON.stringify(localConfig, null, 2);
+      setLocalJson(localConfigJson);
+      setHttpJson("");
+      setSseJson("");
+      return;
+    }
+
+    // HTTP/SSE 模式
+    if (domains && domains.length > 0 && path) {
+      const domain = domains[0];
+      const baseUrl = `${domain.protocol}://${domain.domain}`;
+      const endpoint = `${baseUrl}${path}`;
+
+      const httpConfig = `{
+  "mcpServers": {
+    "${serverName}": {
+      "url": "${endpoint}"
+    }
+  }
+}`;
+
+      const sseConfig = `{
+  "mcpServers": {
+    "${serverName}": {
+      "url": "${endpoint}/sse"
+    }
+  }
+}`;
+
+      setHttpJson(httpConfig);
+      setSseJson(sseConfig);
+      setLocalJson("");
+      return;
+    }
+
+    // 无有效配置
+    setHttpJson("");
+    setSseJson("");
+    setLocalJson("");
+  };
+
+  // 复制到剪贴板
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      // 可以添加成功提示
+    });
+  };
 
   useEffect(() => {
     // 设置源码内容
@@ -152,6 +230,14 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
             ? doc.allowTools
             : undefined,
         });
+
+        // 生成连接配置JSON
+        generateConnectionConfig(
+          apiProduct.mcpConfig.mcpServerConfig?.domains,
+          apiProduct.mcpConfig.mcpServerConfig?.path,
+          apiProduct.mcpConfig.meta.mcpServerName,
+          apiProduct.mcpConfig.mcpServerConfig?.rawConfig
+        );
       } catch {
         setMcpParsed({});
       }
@@ -297,13 +383,56 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
                       <Descriptions.Item label="允许工具">
                         {mcpParsed.allowTools?.join(", ") || "—"}
                       </Descriptions.Item>
-                      <Descriptions.Item label="配置键数">
+                      {/* <Descriptions.Item label="配置键数">
                         {mcpParsed.server?.config
                           ? Object.keys(mcpParsed.server.config).length
                           : 0}
-                      </Descriptions.Item>
+                      </Descriptions.Item> */}
                       <Descriptions.Item label="来源">
-                        {apiProduct.mcpConfig?.meta.source || "—"}
+                        {apiProduct.mcpConfig?.meta.source
+                          ? SourceMap[apiProduct.mcpConfig.meta.source] || apiProduct.mcpConfig.meta.source
+                          : "—"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="来源类型">
+                        {apiProduct.mcpConfig?.meta.fromType
+                          ? FromTypeMap[apiProduct.mcpConfig.meta.fromType] || apiProduct.mcpConfig.meta.fromType
+                          : "—"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="路径">
+                        {apiProduct.mcpConfig?.mcpServerConfig?.path || "—"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="运行模式">
+                        {apiProduct.mcpConfig?.mcpServerConfig?.rawConfig ? "Local Mode" : "SSE/HTTP Mode"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="域名">
+                        {apiProduct.mcpConfig?.mcpServerConfig?.domains &&
+                        Array.isArray(apiProduct.mcpConfig.mcpServerConfig.domains) &&
+                        apiProduct.mcpConfig.mcpServerConfig.domains.length > 0 ? (
+                          <div className="space-y-1">
+                            {apiProduct.mcpConfig.mcpServerConfig.domains.map((d: any, i: number) => (
+                              <div key={i} className="text-sm">
+                                {d.domain}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="协议">
+                        {apiProduct.mcpConfig?.mcpServerConfig?.domains &&
+                        Array.isArray(apiProduct.mcpConfig.mcpServerConfig.domains) &&
+                        apiProduct.mcpConfig.mcpServerConfig.domains.length > 0 ? (
+                          <div className="space-y-1">
+                            {apiProduct.mcpConfig.mcpServerConfig.domains.map((d: any, i: number) => (
+                              <div key={i} className="text-sm">
+                                {d.protocol}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
                       </Descriptions.Item>
                     </Descriptions>
                     <div className="mb-2">
@@ -408,6 +537,86 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
               </div>
             ),
           },
+          ...(isMcp ? [{
+            key: "mcpServerConfig",
+            label: "MCP连接配置",
+            children: (
+              <div className="space-y-4">
+                <div className="">
+                  {apiProduct.mcpConfig?.mcpServerConfig?.rawConfig ? (
+                    // Local Mode - 显示本地配置
+                    <div>
+                      <h3 className="text-lg font-bold mb-2">Local Config</h3>
+                      <MonacoEditor
+                        language="json"
+                        theme="vs-dark"
+                        value={localJson}
+                        options={{
+                          readOnly: true,
+                          minimap: { enabled: true },
+                          scrollBeyondLastLine: false,
+                          scrollbar: { vertical: "visible", horizontal: "visible" },
+                          wordWrap: "off",
+                          lineNumbers: "on",
+                          automaticLayout: true,
+                          fontSize: 14,
+                          copyWithSyntaxHighlighting: true,
+                          contextmenu: true,
+                        }}
+                        height="150px"
+                      />
+                    </div>
+                  ) : (
+                    // HTTP/SSE Mode - 显示HTTP和SSE配置
+                    <>
+                      <div className="mt-4">
+                        <h3 className="text-lg font-bold mb-2">HTTP Config</h3>
+                        <MonacoEditor
+                          language="json"
+                          theme="vs-dark"
+                          value={httpJson}
+                          options={{
+                            readOnly: true,
+                            minimap: { enabled: true },
+                            scrollBeyondLastLine: false,
+                            scrollbar: { vertical: "visible", horizontal: "visible" },
+                            wordWrap: "off",
+                            lineNumbers: "on",
+                            automaticLayout: true,
+                            fontSize: 14,
+                            copyWithSyntaxHighlighting: true,
+                            contextmenu: true,
+                          }}
+                          height="150px"
+                        />
+                      </div>
+                      <div className="mt-4">
+                        <h3 className="text-lg font-bold mb-2">SSE Config</h3>
+                        <MonacoEditor
+                          language="json"
+                          theme="vs-dark"
+                          value={sseJson}
+                          options={{
+                            readOnly: true,
+                            minimap: { enabled: true },
+                            scrollBeyondLastLine: false,
+                            scrollbar: { vertical: "visible", horizontal: "visible" },
+                            wordWrap: "off",
+                            lineNumbers: "on",
+                            automaticLayout: true,
+                            fontSize: 14,
+                            copyWithSyntaxHighlighting: true,
+                            contextmenu: true,
+                          }}
+                          height="150px"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            ),
+          }] : [])
         ]}
       />
     </div>
