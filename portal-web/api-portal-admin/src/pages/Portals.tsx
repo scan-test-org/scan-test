@@ -247,7 +247,7 @@ PortalCard.displayName = "PortalCard";
 export default function Portals() {
   const navigate = useNavigate();
   const [portals, setPortals] = useState<Portal[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true); // 初始状态为 loading
   const [error, setError] = useState<string | null>(null);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [form] = Form.useForm();

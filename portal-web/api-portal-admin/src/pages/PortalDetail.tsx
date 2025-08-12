@@ -60,7 +60,7 @@ export default function PortalDetail() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [portal, setPortal] = useState<Portal | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true) // 初始状态为 loading
   const [error, setError] = useState<string | null>(null)
 
   // 从URL查询参数获取当前tab，默认为overview

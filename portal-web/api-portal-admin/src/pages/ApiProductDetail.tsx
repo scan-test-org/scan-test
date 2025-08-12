@@ -47,6 +47,7 @@ export default function ApiProductDetail() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [apiProduct, setApiProduct] = useState<ApiProduct>({} as ApiProduct)
+  const [loading, setLoading] = useState(true) // 添加 loading 状态
   
   // 从URL query参数获取当前tab，默认为overview
   const currentTab = searchParams.get('tab') || 'overview'
@@ -60,10 +61,13 @@ export default function ApiProductDetail() {
   const fetchApiProduct = () => {
     const productId = searchParams.get('productId')
     if (productId) {
+      setLoading(true)
       apiProductApi.getApiProductDetail(productId).then((res: any) => {
         setApiProduct(res.data)
+        setLoading(false)
+      }).catch(() => {
+        setLoading(false)
       })
-      
     }
   }
 

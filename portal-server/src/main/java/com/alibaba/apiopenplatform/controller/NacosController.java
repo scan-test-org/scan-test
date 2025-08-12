@@ -1,7 +1,6 @@
 package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
-import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.CreateNacosParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
 import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
@@ -18,6 +17,7 @@ import javax.validation.Valid;
 
 /**
  * Nacos实例管理与能力市场统一控制器
+ *
  * @author zxd
  */
 @Tag(name = "Nacos资源管理")
@@ -63,7 +63,7 @@ public class NacosController {
     @Operation(summary = "获取Nacos中的MCP Server列表")
     @GetMapping("/{nacosId}/mcp-servers")
     public PageResult<NacosMCPServerResult> fetchMcpServers(@PathVariable String nacosId,
-                                                       Pageable pageable) throws Exception {
+                                                            Pageable pageable) throws Exception {
         return nacosService.fetchMcpServers(nacosId, pageable);
     }
 

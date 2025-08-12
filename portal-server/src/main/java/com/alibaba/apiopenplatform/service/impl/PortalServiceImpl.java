@@ -87,8 +87,9 @@ public class PortalServiceImpl implements PortalService {
     }
 
     @Override
-    public boolean hasPortal(String portalId) {
-        return findPortal(portalId) != null;
+    public void existsPortal(String portalId) {
+        portalRepository.findByPortalId(portalId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
     }
 
     @Override

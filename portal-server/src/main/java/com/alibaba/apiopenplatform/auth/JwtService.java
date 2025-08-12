@@ -5,6 +5,7 @@ import cn.hutool.jwt.JWTUtil;
 import cn.hutool.jwt.signers.JWTSignerUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.Date;
@@ -21,7 +22,7 @@ public class JwtService {
     private final long expireMillis;
 
     public JwtService(@Value("${jwt.secret}") String secret,
-                     @Value("${jwt.expiration}") String expiration) {
+                      @Value("${jwt.expiration}") String expiration) {
         this.secret = secret;
         // 支持2h、7200000等格式
         if (expiration.matches("\\d+[smhd]")) {
@@ -33,8 +34,9 @@ public class JwtService {
 
     /**
      * 生成JWT Token，支持管理员和开发者
-     * @param userType 用户类型（admin/developer）
-     * @param userId 用户唯一标识（adminId/developerId）
+     *
+     * @param userType    用户类型（admin/developer）
+     * @param userId      用户唯一标识（adminId/developerId）
      * @param extraClaims 额外自定义claims（可选）
      * @return token字符串
      */
@@ -54,6 +56,7 @@ public class JwtService {
 
     /**
      * 解析并验证Token，返回claims
+     *
      * @param token token字符串
      * @return claims Map
      * @throws IllegalArgumentException token无效或过期
