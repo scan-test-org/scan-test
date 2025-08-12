@@ -43,7 +43,9 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.alibaba.apiopenplatform.support.enums.SubscriptionStatus;
 import com.alibaba.apiopenplatform.repository.GatewayRepository;
@@ -70,8 +72,6 @@ public class ConsumerServiceImpl implements ConsumerService {
     private final ConsumerCredentialRepository credentialRepository;
 
     private final SubscriptionRepository subscriptionRepository;
-
-    private final ProductRefRepository productRefRepository;
 
     private final ProductService productService;
 
@@ -234,7 +234,20 @@ public class ConsumerServiceImpl implements ConsumerService {
         existsConsumer(consumerId);
 
         Page<ProductSubscription> subscriptions = subscriptionRepository.findAll(buildCredentialSpec(consumerId, param), pageable);
-        return new PageResult<SubscriptionResult>().convertFrom(subscriptions, s -> new SubscriptionResult().convertFrom(s));
+
+        List<String> productIds = subscriptions.getContent().stream()
+                .map(ProductSubscription::getProductId)
+                .collect(Collectors.toList());
+        Map<String, ProductResult> products = productService.getProducts(productIds);
+        return new PageResult<SubscriptionResult>().convertFrom(subscriptions, s -> {
+            SubscriptionResult r = new SubscriptionResult().convertFrom(s);
+            ProductResult product = products.get(r.getProductId());
+            if (product != null) {
+                r.setProductType(product.getType());
+                r.setProductName(product.getName());
+            }
+            return r;
+        });
     }
 
     @Override

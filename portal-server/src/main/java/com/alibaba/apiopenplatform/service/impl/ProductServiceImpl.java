@@ -37,9 +37,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author zh
@@ -333,5 +332,12 @@ public class ProductServiceImpl implements ProductService {
         } catch (Exception e) {
             log.error("Failed to cleanup developers for portal {}: {}", portalId, e.getMessage());
         }
+    }
+
+    @Override
+    public Map<String, ProductResult> getProducts(List<String> productIds) {
+        List<Product> products = productRepository.findByProductIdIn(productIds);
+        return products.stream()
+                .collect(Collectors.toMap(Product::getProductId, product -> new ProductResult().convertFrom(product)));
     }
 }

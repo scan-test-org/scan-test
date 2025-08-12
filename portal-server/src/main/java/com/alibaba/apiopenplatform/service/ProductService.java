@@ -8,6 +8,9 @@ import com.alibaba.apiopenplatform.dto.result.ProductRefResult;
 import com.alibaba.apiopenplatform.dto.result.ProductResult;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author zh
  */
@@ -110,4 +113,6 @@ public interface ProductService {
      * @param event
      */
     void handlePortalDeletion(PortalDeletingEvent event);
+
+    Map<String, ProductResult> getProducts(List<String> productIds);
 }

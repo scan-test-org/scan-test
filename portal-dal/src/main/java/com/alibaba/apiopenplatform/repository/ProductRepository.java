@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import com.alibaba.apiopenplatform.entity.Product;
@@ -21,9 +22,9 @@ public interface ProductRepository extends BaseRepository<Product, Long> {
 
     Page<Product> findByProductIdIn(Collection<String> productIds, Pageable pageable);
 
-    Page<Product> findByAdminId(String adminId, Pageable pageable);
+    List<Product>  findByProductIdIn(Collection<String> productIds);
 
-    Page<Product> findByType(String type, Pageable pageable);
+    Page<Product> findByAdminId(String adminId, Pageable pageable);
 
     Page<Product> findByCategory(String category, Pageable pageable);
 }
