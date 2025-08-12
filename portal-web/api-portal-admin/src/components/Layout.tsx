@@ -142,7 +142,7 @@ const Layout: React.FC = () => {
                 className="hover:bg-gray-100"
               />
             </div>
-          <span className="text-2xl font-bold">API Portal</span>
+          <span className="text-2xl font-bold">AI开发平台</span>
         </div>
         {/* 顶部右侧用户信息或登录按钮 */}
         {isLoggedIn ? (

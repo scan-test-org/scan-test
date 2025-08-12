@@ -3,6 +3,7 @@ import { EditOutlined, DeleteOutlined, ExclamationCircleOutlined, EyeOutlined } 
 import { useEffect, useState } from 'react'
 import { Portal, Developer } from '@/types'
 import { portalApi } from '@/lib/api'
+import { formatDateTime } from '@/lib/utils'
 
 interface PortalDevelopersProps {
   portal: Portal
@@ -161,7 +162,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
-        <Badge status={status === 'APPROVED' ? 'success' : 'default'} text={status} />
+        <Badge status={status === 'APPROVED' ? 'success' : 'default'} text={status === 'APPROVED' ? '可用' : '待审核'} />
       )
     },
     
@@ -169,7 +170,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
       title: '创建时间',
       dataIndex: 'createAt',
       key: 'createAt',
-      render: (date: string) => new Date(date).toLocaleDateString()
+      render: (date: string) => formatDateTime(date)
     },
   
     {
@@ -229,7 +230,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
       key: 'status',
       width: 120,
       render: (status: string) => (
-        <Badge status={status === 'APPROVED' ? 'success' : 'default'} text={status} />
+        <Badge status={status === 'APPROVED' ? 'success' : 'default'} text={status === 'APPROVED' ? '可用' : '待审核'} />
       )
     },
     {
@@ -237,7 +238,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
-      render: (date: string) => new Date(date).toLocaleDateString()
+      render: (date: string) => formatDateTime(date)
     },
     {
       title: '操作',

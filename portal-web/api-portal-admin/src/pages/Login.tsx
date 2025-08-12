@@ -37,7 +37,7 @@ const Login: React.FC = () => {
           <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-4" />
         </div>
         <h2 className="text-2xl font-bold mb-6 text-gray-900 text-center">
-          登录 API Portal
+          登录 AI开发平台
         </h2>
         {/* 账号密码登录表单 */}
         <Form

@@ -3,6 +3,7 @@ import { Button, Table, message, Modal } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { gatewayApi } from '@/lib/api'
 import ImportGatewayModal from '@/components/console/ImportGatewayModal'
+import { formatDateTime } from '@/lib/utils'
 
 interface Gateway {
   gatewayId: string
@@ -87,6 +88,7 @@ export default function Consoles() {
       title: '创建时间',
       dataIndex: 'createAt',
       key: 'createAt',
+      render: (date: string) => formatDateTime(date)
     },
     {
       title: '操作',
