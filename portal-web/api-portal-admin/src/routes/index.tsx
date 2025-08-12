@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import Layout from '@/components/Layout'
+import LayoutWrapper from '@/components/LayoutWrapper'
 import Portals from '@/pages/Portals'
 import ApiProducts from '@/pages/ApiProducts'
 import Consoles from '@/pages/GatewayConsoles'
@@ -16,7 +16,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <Layout />,
+    element: <LayoutWrapper />,
     children: [
       {
         index: true,

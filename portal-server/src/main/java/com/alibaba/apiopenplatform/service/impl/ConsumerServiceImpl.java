@@ -3,6 +3,7 @@ package com.alibaba.apiopenplatform.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.DeveloperDeletingEvent;
+import com.alibaba.apiopenplatform.core.event.ProductDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
@@ -26,7 +27,6 @@ import com.alibaba.apiopenplatform.support.consumer.ApiKeyConfig;
 import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 import com.alibaba.apiopenplatform.support.enums.CredentialMode;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
-import com.alibaba.apiopenplatform.support.gateway.GatewayIdentityConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -44,12 +44,10 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.alibaba.apiopenplatform.support.enums.SubscriptionStatus;
 import com.alibaba.apiopenplatform.repository.GatewayRepository;
-import com.alibaba.apiopenplatform.repository.ProductRefRepository;
 import com.alibaba.apiopenplatform.repository.ConsumerRefRepository;
 
 /**
@@ -74,8 +72,6 @@ public class ConsumerServiceImpl implements ConsumerService {
     private final SubscriptionRepository subscriptionRepository;
 
     private final ProductService productService;
-
-    private final GatewayRepository gatewayRepository;
 
     private final ConsumerRefRepository consumerRefRepository;
 
@@ -162,14 +158,15 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     @Override
-    public void subscribeProduct(String consumerId, CreateSubscriptionParam param) {
+    public SubscriptionResult subscribeProduct(String consumerId, CreateSubscriptionParam param) {
         Consumer consumer = contextHolder.isDeveloper() ?
                 findDevConsumer(consumerId) : findConsumer(consumerId);
         // 勿重复订阅
         if (subscriptionRepository.findByConsumerIdAndProductId(consumerId, param.getProductId()).isPresent()) {
-            return;
+            throw new BusinessException(ErrorCode.PRODUCT_API_EXISTS, param.getProductId());
         }
 
+        ProductResult product = productService.getProduct(param.getProductId());
         ProductRefResult productRef = productService.getProductRef(param.getProductId());
         if (productRef == null) {
             throw new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, param.getProductId());
@@ -227,6 +224,13 @@ public class ConsumerServiceImpl implements ConsumerService {
         subscription.setConsumerId(consumerId);
         subscription.setStatus(SubscriptionStatus.APPROVED);
         subscriptionRepository.save(subscription);
+
+
+        SubscriptionResult r = new SubscriptionResult().convertFrom(subscription);
+        r.setProductName(product.getName());
+        r.setProductType(product.getType());
+
+        return r;
     }
 
     @Override
@@ -316,39 +320,6 @@ public class ConsumerServiceImpl implements ConsumerService {
         };
     }
 
-    @EventListener
-    @Async("taskExecutor")
-    public void handleDeveloperDeletion(DeveloperDeletingEvent event) {
-        String developerId = event.getDeveloperId();
-        try {
-            log.info("Cleaning consumers for developer {}", developerId);
-
-            List<Consumer> consumers = consumerRepository.findAllByDeveloperId(developerId);
-            consumers.forEach(consumer -> {
-                gatewayService.deleteConsumer(consumer);
-                consumerRepository.delete(consumer);
-
-//                deleteConsumer(consumer.getConsumerId());
-                // TODO 清除凭证
-            });
-        } catch (Exception e) {
-            log.error("Failed to clean consumers for developer {}", developerId, e);
-        }
-    }
-
-    private String getApiIdFromProductRef(ProductRef productRef, Gateway gateway) {
-        // 根据网关类型从ProductRef中获取API ID
-        switch (gateway.getGatewayType()) {
-            case APIG_API:
-            case APIG_AI:
-                return productRef.getApigRefConfig() != null ? productRef.getApigRefConfig().getApiId() : null;
-            case HIGRESS:
-                return productRef.getHigressRefConfig() != null ? productRef.getHigressRefConfig().getMcpServerName() : null;
-            default:
-                return null;
-        }
-    }
-
     /**
      * 补充Credentials
      *
@@ -383,6 +354,40 @@ public class ConsumerServiceImpl implements ConsumerService {
                     }
                 }
             }
+        }
+    }
+
+    @EventListener
+    @Async("taskExecutor")
+    public void handleDeveloperDeletion(DeveloperDeletingEvent event) {
+        String developerId = event.getDeveloperId();
+        try {
+            log.info("Cleaning consumers for developer {}", developerId);
+
+            List<Consumer> consumers = consumerRepository.findAllByDeveloperId(developerId);
+            consumers.forEach(consumer -> {
+                gatewayService.deleteConsumer(consumer);
+                consumerRepository.delete(consumer);
+
+//                deleteConsumer(consumer.getConsumerId());
+                // TODO 清除凭证
+            });
+        } catch (Exception e) {
+            log.error("Failed to clean consumers for developer {}", developerId, e);
+        }
+    }
+
+    @EventListener
+    @Async("taskExecutor")
+    public void handleProductDeletion(ProductDeletingEvent event) {
+        String productId = event.getProductId();
+        try {
+            log.info("Cleaning subscriptions for product {}", productId);
+
+            subscriptionRepository.deleteAllByProductId(productId);
+            // TODO 订阅关系删除
+        } catch (Exception e) {
+            log.error("Failed to clean subscriptions for product {}", productId, e);
         }
     }
 }
