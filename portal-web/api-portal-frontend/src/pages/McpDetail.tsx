@@ -259,6 +259,7 @@ function McpDetail() {
         defaultIcon="/MCP.png"
         enableConsumerAuth={enableConsumerAuth || undefined}
         showConsumerAuth={true}
+        mcpConfig={mcpConfig}
       />
 
       {/* 主要内容区域 - 左右布局 */}

@@ -82,21 +82,21 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
   const subscriptionColumns = [
     {
       title: '产品名称',
-      dataIndex: 'product',
+      dataIndex: 'productName',
       key: 'productName',
-      render: (product: Product) => product?.name || '-',
+      render: (productName: Product['productName']) => productName || '-',
     },
     {
       title: '产品类型',
-      dataIndex: 'product',
+      dataIndex: 'productType',
       key: 'productType',
-      render: (product: Product) => {
+      render: (productType: Product['productType']) => {
         const typeMap = {
           'REST_API': 'REST API',
           'HTTP_API': 'HTTP API',
           'MCP_SERVER': 'MCP Server'
         };
-        return typeMap[product?.type as keyof typeof typeMap] || product?.type || '-';
+        return typeMap[productType as keyof typeof typeMap] || productType || '-';
       }
     },
     {
@@ -132,6 +132,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
   // 确保 subscriptions 始终是数组
   const safeSubscriptions = Array.isArray(subscriptions) ? subscriptions : [];
 
+  console.log('safeSubscriptions', safeSubscriptions);
   return (
     <>
       <Card>

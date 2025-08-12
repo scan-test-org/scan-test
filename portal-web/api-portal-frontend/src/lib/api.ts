@@ -88,4 +88,11 @@ export function createConsumer(data: any) {
   return api.post('/consumers', data);
 }
 
+// 申请订阅API产品
+export function subscribeProduct(consumerId: string, productId: string) {
+  return api.post(`/consumers/${consumerId}/subscriptions`, {
+    productId: productId
+  });
+}
+
 export default api 
