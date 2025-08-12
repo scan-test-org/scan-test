@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
-import { Badge, Button, Card, Col, Dropdown, Modal, Row, Select, Statistic, Form, Input, message, Pagination } from 'antd';
+import { Badge, Button, Card, Dropdown, Modal, message, Pagination, Skeleton } from 'antd';
 import type { ApiProduct } from '@/types/api-product';
 import { ApiOutlined, ClockCircleOutlined, MoreOutlined, PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { apiProductApi } from '@/lib/api';
@@ -24,7 +24,7 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh, onEdit }: {
     return type === "REST_API" ? "blue" : "purple"
   }
 
-  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handleClick = useCallback(() => {
     onNavigate(product.productId)
   }, [product.productId, onNavigate]);
 
@@ -38,7 +38,7 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh, onEdit }: {
       okType: 'danger',
       cancelText: '取消',
       onOk() {
-        apiProductApi.deleteApiProduct(productId).then((res: any) => {
+        apiProductApi.deleteApiProduct(productId).then(() => {
           message.success('API Product 删除成功');
           handleRefresh();
         });
@@ -119,9 +119,8 @@ ProductCard.displayName = 'ProductCard'
 export default function ApiProducts() {
   const navigate = useNavigate();
   const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedType, setSelectedType] = useState<string>('All');
-  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState<{ type?: string }>({});
+  const [loading, setLoading] = useState(true); // 初始状态为 loading
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 12,
@@ -131,10 +130,12 @@ export default function ApiProducts() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ApiProduct | null>(null);
 
-  const fetchApiProducts = useCallback((page = 0, size = 12) => {
+  const fetchApiProducts = useCallback((page = 0, size = 12, extraFilters?: { type?: string }) => {
     setLoading(true);
-    apiProductApi.getApiProducts({ page, size }).then((res: any) => {
-      setApiProducts(res.data.content);
+    const effective = extraFilters ?? filters;
+    apiProductApi.getApiProducts({ page, size, ...effective }).then((res: any) => {
+      const products = res.data.content;
+      setApiProducts(products);
       setPagination({
         current: page + 1,
         pageSize: size,
@@ -143,73 +144,62 @@ export default function ApiProducts() {
     }).finally(() => {
       setLoading(false);
     });
-  }, []);
+  }, [filters]);
 
   useEffect(() => {
     fetchApiProducts(0, 12);
   }, [fetchApiProducts]);
 
-  // 使用useMemo优化数据计算
-  const categories = useMemo(() =>
-    ["All", ...Array.from(new Set(apiProducts?.map(product => product.category)))],
-    [apiProducts]
-  )
-
-  const types = useMemo(() =>
-    ["All", "REST API", "MCP Server"],
-    []
-  )
+  // 预设的产品类型（无 "All"）
+  const typeOptions = useMemo(() => (
+    [
+      { label: 'REST API', value: 'REST_API' },
+      { label: 'MCP Server', value: 'MCP_SERVER' },
+    ]
+  ), [])
 
   // 高级搜索配置
   const searchParamsList: SearchParam[] = useMemo(() => [
-    {
-      label: '产品名称',
-      name: 'name',
-      placeholder: '请输入产品名称',
-      type: 'input'
-    },
-    {
-      label: '产品分类',
-      name: 'category',
-      placeholder: '选择分类',
-      type: 'select',
-      optionList: categories.filter(cat => cat !== 'All').map(cat => ({
-        label: cat,
-        value: cat
-      }))
-    },
+    // {
+    //   label: '产品名称',
+    //   name: 'name',
+    //   placeholder: '请输入产品名称',
+    //   type: 'input'
+    // },
+    // {
+    //   label: '产品分类',
+    //   name: 'category',
+    //   placeholder: '选择分类',
+    //   type: 'select',
+    //   optionList: categories.filter(cat => cat !== 'All').map(cat => ({
+    //     label: cat,
+    //     value: cat
+    //   }))
+    // },
     {
       label: '产品类型',
       name: 'type',
       placeholder: '选择类型',
       type: 'select',
-      optionList: types.filter(type => type !== 'All').map(type => ({
-        label: type === 'REST API' ? 'REST API' : 'MCP Server',
-        value: type === 'REST API' ? 'REST_API' : 'MCP_SERVER'
-      }))
+      optionList: typeOptions,
     }
-  ], [categories, types]);
+  ], [typeOptions]);
 
-  // 搜索处理函数
+  // 搜索处理函数（仅服务端过滤）
   const handleSearch = (searchName: string, searchValue: string) => {
-    // 根据搜索条件过滤产品
-    if (searchName === 'name') {
-      // 名称搜索逻辑
-      const filtered = apiProducts.filter(product => 
-        product.name.toLowerCase().includes(searchValue.toLowerCase())
-      );
-      // 这里可以更新显示的产品列表或调用API
-    } else if (searchName === 'category') {
-      setSelectedCategory(searchValue);
-    } else if (searchName === 'type') {
-      setSelectedType(searchValue);
+    if (searchName === 'type') {
+      // 记录筛选并服务端查询
+      const next = { ...filters, type: searchValue || undefined };
+      setFilters(next);
+      fetchApiProducts(0, pagination.pageSize, next);
     }
   };
 
   const handleClearSearch = () => {
-    setSelectedCategory('All');
-    setSelectedType('All');
-    // 重置搜索状态
+    // 清空筛选并重新请求列表
+    const cleared = {} as { type?: string };
+    setFilters(cleared);
+    fetchApiProducts(0, pagination.pageSize, cleared);
   };
 
   // 处理分页变化
@@ -217,26 +207,7 @@ export default function ApiProducts() {
     fetchApiProducts(page - 1, pageSize);
   };
 
-  // 优化的过滤器处理函数
-  const handleCategoryChange = useCallback((category: string) => {
-    setSelectedCategory(category);
-  }, [])
-
-  const handleTypeChange = useCallback((type: string) => {
-    setSelectedType(type)
-  }, [])
-
-  // 过滤API Products
-  const filteredProducts = useMemo(() =>
-    apiProducts?.filter(product => {
-      const categoryMatch = selectedCategory === "All" || product.category === selectedCategory
-      const typeMatch = selectedType === "All" ||
-        (selectedType === "REST API" && product.type === "REST_API") ||
-        (selectedType === 'MCP Server' && product.type === 'MCP_SERVER')
-      return categoryMatch && typeMatch;
-    }),
-    [apiProducts, selectedCategory, selectedType],
-  )
+  // 直接使用服务端返回的列表
 
   // 优化的导航处理函数
   const handleNavigateToProduct = useCallback((productId: string) => {
@@ -290,31 +261,57 @@ export default function ApiProducts() {
         className="mb-4"
       />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProducts.map((product) => (
-          <ProductCard
-            key={product.productId}
-            product={product}
-            onNavigate={handleNavigateToProduct}
-            handleRefresh={() => fetchApiProducts(pagination.current - 1, pagination.pageSize)}
-            onEdit={handleEdit}
-          />
-        ))}
-      </div>
-
-      {pagination.total > 0 && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            current={pagination.current}
-            pageSize={pagination.pageSize}
-            total={pagination.total}
-            onChange={handlePaginationChange}
-            showSizeChanger
-            showQuickJumper
-            showTotal={(total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`}
-            pageSizeOptions={['6', '12', '24', '48']}
-          />
+      {loading ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: pagination.pageSize || 12 }).map((_, index) => (
+            <div key={index} className="h-full rounded-lg shadow-lg bg-white p-4">
+              <div className="flex items-start space-x-4">
+                <Skeleton.Avatar size={48} active />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <Skeleton.Input active size="small" style={{ width: 120 }} />
+                    <Skeleton.Input active size="small" style={{ width: 60 }} />
+                  </div>
+                  <Skeleton.Input active size="small" style={{ width: '100%', marginBottom: 12 }} />
+                  <Skeleton.Input active size="small" style={{ width: '80%', marginBottom: 8 }} />
+                  <div className="flex items-center justify-between">
+                    <Skeleton.Input active size="small" style={{ width: 60 }} />
+                    <Skeleton.Input active size="small" style={{ width: 80 }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+      ) : (
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {apiProducts.map((product) => (
+              <ProductCard
+                key={product.productId}
+                product={product}
+                onNavigate={handleNavigateToProduct}
+                handleRefresh={() => fetchApiProducts(pagination.current - 1, pagination.pageSize)}
+                onEdit={handleEdit}
+              />
+            ))}
+          </div>
+
+          {pagination.total > 0 && (
+            <div className="flex justify-center mt-6">
+              <Pagination
+                current={pagination.current}
+                pageSize={pagination.pageSize}
+                total={pagination.total}
+                onChange={handlePaginationChange}
+                showSizeChanger
+                showQuickJumper
+                showTotal={(total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`}
+                pageSizeOptions={['6', '12', '24', '48']}
+              />
+            </div>
+          )}
+        </>
       )}
 
       <ApiProductFormModal

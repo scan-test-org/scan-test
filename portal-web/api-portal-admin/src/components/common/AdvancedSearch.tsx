@@ -111,14 +111,23 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           <Select
             placeholder={currentParam.placeholder}
             value={activeSearchValue}
-            onChange={setActiveSearchValue}
+            onChange={(value) => {
+              setActiveSearchValue(value);
+              // 自动触发搜索
+              if (value) {
+                onSearch(activeSearchName, value);
+              }
+            }}
             style={{ 
               width: 400,
               borderTopLeftRadius: 0,
               borderBottomLeftRadius: 0
             }}
             allowClear
-            onClear={() => setActiveSearchValue('')}
+            onClear={() => {
+              setActiveSearchValue('');
+              onClear?.();
+            }}
             className="h-10"
             size="large"
           >
