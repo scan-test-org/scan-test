@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
+import com.alibaba.apiopenplatform.core.event.ProductDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
@@ -26,6 +27,7 @@ import com.alibaba.apiopenplatform.support.enums.SourceType;
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 
@@ -62,6 +64,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductPublicationRepository publicationRepository;
 
     private final NacosService nacosService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public ProductResult createProduct(CreateProductParam param) {
@@ -130,7 +134,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void publishProduct(String productId, String portalId) {
-        portalService.hasPortal(portalId);
+        portalService.existsPortal(portalId);
         if (publicationRepository.findByPortalIdAndProductId(portalId, productId).isPresent()) {
             return;
         }
@@ -166,14 +170,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void unpublishProduct(String productId, String portalId) {
-        portalService.hasPortal(portalId);
+        portalService.existsPortal(portalId);
 
         publicationRepository.findByPortalIdAndProductId(portalId, productId)
                 .ifPresent(publicationRepository::delete);
-    }
-
-    public void unpublishProduct(String portalId) {
-        publicationRepository.deleteAllByPortalId(portalId);
     }
 
     @Override
@@ -183,6 +183,9 @@ public class ProductServiceImpl implements ProductService {
         // 下线后删除
         publicationRepository.deleteByProductId(productId);
         productRepository.delete(Product);
+
+        // 异步清理Product资源
+        eventPublisher.publishEvent(new ProductDeletingEvent(productId));
     }
 
     /**
@@ -202,15 +205,8 @@ public class ProductServiceImpl implements ProductService {
                 .ifPresent(productRef -> {
                     throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT_REF, product.getProductId());
                 });
-
-        log.info("addProductRef - param: {}", param);
-        
         ProductRef productRef = param.convertTo();
-        log.info("addProductRef - after convertTo: {}", productRef);
-        
         productRef.setProductId(productId);
-        
-        
         syncConfig(product, productRef);
 
         productRefRepository.save(productRef);
@@ -234,8 +230,6 @@ public class ProductServiceImpl implements ProductService {
 
     private void syncConfig(Product product, ProductRef productRef) {
         SourceType sourceType = productRef.getSourceType();
-        
-        log.info("syncConfig - sourceType: {}, productRef: {}", sourceType, productRef);
 
         if (sourceType.isGateway()) {
             GatewayResult gateway = gatewayService.getGateway(productRef.getGatewayId());
@@ -250,14 +244,9 @@ public class ProductServiceImpl implements ProductService {
         } else if (sourceType.isNacos()) {
             // 从Nacos获取MCP Server配置
             NacosRefConfig nacosRefConfig = productRef.getNacosRefConfig();
-            log.info("syncConfig - nacosRefConfig: {}, nacosId: {}", nacosRefConfig, productRef.getNacosId());
-            
             if (nacosRefConfig != null) {
                 String mcpConfig = nacosService.fetchMcpConfig(productRef.getNacosId(), nacosRefConfig);
                 productRef.setMcpConfig(mcpConfig);
-                log.info("syncConfig - mcpConfig set: {}", mcpConfig);
-            } else {
-                log.warn("syncConfig - nacosRefConfig is null, cannot fetch MCP config");
             }
         }
         productRef.setEnabled(true);

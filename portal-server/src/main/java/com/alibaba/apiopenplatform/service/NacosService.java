@@ -5,62 +5,70 @@ import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
 import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
-import com.alibaba.apiopenplatform.entity.NacosInstance;
-import com.alibaba.apiopenplatform.dto.params.mcp.McpMarketDetailParam;
+import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import org.springframework.data.domain.Pageable;
 
 /**
- * Nacos服务接口 - 统一管理Nacos实例和MCP市场功能
  * @author zxd
  */
 public interface NacosService {
 
-
-
-    /**
-     * 获取指定Nacos实例中的MCP Server详情
-     */
-    McpMarketDetailParam getMcpServerDetail(String nacosId, String mcpName, String namespaceId, String version);
-
     /**
      * 获取Nacos实例列表
+     *
+     * @param pageable
+     * @return
      */
     PageResult<NacosResult> listNacosInstances(Pageable pageable);
 
     /**
-     * 创建Nacos实例
+     * 导入Nacos实例
+     *
+     * @param param
      */
     void createNacosInstance(CreateNacosParam param);
 
     /**
      * 更新Nacos实例
+     *
+     * @param nacosId
+     * @param param
      */
     void updateNacosInstance(String nacosId, UpdateNacosParam param);
 
     /**
      * 删除Nacos实例
+     *
+     * @param nacosId
      */
     void deleteNacosInstance(String nacosId);
 
+
     /**
      * 获取Nacos实例详情
+     *
+     * @param nacosId
+     * @return
      */
     NacosResult getNacosInstance(String nacosId);
 
     /**
-     * 获取指定Nacos实例中的MCP Server列表
+     * 获取MCP Server列表
+     *
+     * @param nacosId
+     * @param pageable
+     * @return
+     * @throws Exception
      */
     PageResult<NacosMCPServerResult> fetchMcpServers(String nacosId, Pageable pageable) throws Exception;
 
-    /**
-     * 获取Nacos MCP Server配置
-     */
-    String fetchMcpConfig(String nacosId, Object conf);
 
     /**
-     * 查找Nacos实例
+     * 获取MCP Server配置
+     *
+     * @param nacosId
+     * @param nacosRefConfig
+     * @return
      */
-    NacosInstance findNacosInstance(String nacosId);
-
-
+    String fetchMcpConfig(String nacosId, NacosRefConfig nacosRefConfig);
 }

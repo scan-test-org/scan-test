@@ -34,7 +34,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
-import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 
@@ -53,7 +52,6 @@ public class DeveloperServiceImpl implements DeveloperService {
     private final DeveloperRepository developerRepository;
     private final JwtService jwtService;
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
-    private final PortalRepository portalRepository;
     private final PortalService portalService;
     private final ContextHolder contextHolder;
     private final ApplicationEventPublisher eventPublisher;
@@ -215,7 +213,7 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     public void setDeveloperStatus(String portalId, String developerId, String status) {
-        portalService.hasPortal(portalId);
+        portalService.existsPortal(portalId);
         Developer developer = findDeveloper(developerId);
         developer.setStatus("APPROVED".equalsIgnoreCase(status) ? DeveloperStatus.APPROVED : DeveloperStatus.PENDING);
         developerRepository.save(developer);

@@ -8,6 +8,7 @@ import com.alibaba.apiopenplatform.dto.result.SubscriptionResult;
 import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
@@ -24,13 +25,10 @@ import javax.validation.Valid;
 @Validated
 @Tag(name = "门户管理")
 @AdminAuth
+@RequiredArgsConstructor
 public class PortalController {
 
     private final PortalService portalService;
-
-    public PortalController(PortalService portalService) {
-        this.portalService = portalService;
-    }
 
     @Operation(summary = "创建门户")
     @PostMapping
