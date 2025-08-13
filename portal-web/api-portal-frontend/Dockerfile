@@ -4,7 +4,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY proxy.conf /etc/nginx/default.d/proxy.conf
 COPY bin /home/admin/bin
 
-RUN mkdir -p /app
 
 WORKDIR /app
 
