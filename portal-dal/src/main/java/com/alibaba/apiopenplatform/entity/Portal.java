@@ -33,9 +33,6 @@ public class Portal extends BaseEntity {
     @Column(name = "name", length = 64, nullable = false)
     private String name;
 
-    @Column(name = "title", length = 64, nullable = false)
-    private String title;
-
     @Column(name = "description", length = 256)
     private String description;
 
