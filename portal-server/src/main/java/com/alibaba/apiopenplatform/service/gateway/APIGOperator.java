@@ -126,7 +126,6 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
                 gateways.add(GatewayResult.builder()
                         .gatewayName(item.getName())
                         .gatewayId(item.getGatewayId())
-                        .region(param.getRegion())
                         .gatewayType(param.getGatewayType())
                         .build());
             }
