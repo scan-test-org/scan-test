@@ -76,7 +76,5 @@ public interface GatewayService {
 
     void authorizeConsumer(String gwConsumerId, ProductRefResult productRef);
 
-    void assertGatewayConsumerExist(String gatewayId, Consumer consumer);
-
     GatewayConfig getGatewayConfig(String gatewayId);
 }

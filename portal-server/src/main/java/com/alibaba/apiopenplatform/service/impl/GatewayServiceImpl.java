@@ -169,42 +169,6 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public void assertGatewayConsumerExist(String gatewayId, Consumer consumer) {
-        Gateway gateway = gatewayRepository.findByGatewayId(gatewayId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Gateway", gatewayId));
-
-        // todo 需要放到 GatewayOperator
-//        Optional<ConsumerRef> existingRef = consumerRefRepository.findByConsumerIdAndRegionAndGatewayType(consumer.getConsumerId(), gateway.getApigConfig().getRegion(), gateway.getGatewayType().name());
-//
-//        if (!existingRef.isPresent()) {
-//            // 创建网关Consumer 需要拉到 Consumer 关联的 Credential
-//            ConsumerCredential credential = consumerCredentialRepository.findByConsumerId(consumer.getConsumerId()).orElse(null);
-//            createGatewayConsumer(consumer, gateway, credential);
-//        }
-    }
-
-    private void createGatewayConsumer(Consumer consumer, Gateway gateway, ConsumerCredential credential) {
-        try {
-            // 调用网关创建Consumer，获取返回的网关Consumer ID
-            String gwConsumerId = createConsumer(gateway.getGatewayId(), consumer, credential);
-
-            // 创建映射关系
-            ConsumerRef consumerRef = new ConsumerRef();
-            consumerRef.setConsumerId(consumer.getConsumerId());
-//            consumerRef.setRegion(gateway.getGatewayId()); // 使用gatewayId作为region
-            consumerRef.setGatewayType(gateway.getGatewayType());
-            consumerRef.setGwConsumerId(gwConsumerId); // 使用网关返回的真实Consumer ID
-
-            consumerRefRepository.save(consumerRef);
-
-            log.info("Created gateway consumer {} for consumer {} in gateway {}", gwConsumerId, consumer.getConsumerId(), gateway.getGatewayId());
-        } catch (Exception e) {
-            log.error("Failed to create consumer in gateway {}", gateway.getGatewayId(), e);
-            throw e;
-        }
-    }
-
-    @Override
     public GatewayConfig getGatewayConfig(String gatewayId) {
         Gateway gateway = findGateway(gatewayId);
 
