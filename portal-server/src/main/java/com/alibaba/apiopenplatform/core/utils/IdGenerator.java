@@ -26,6 +26,11 @@ public class IdGenerator {
     private static final String CONSUMER_PREFIX = "consumer-";
     private static final String ADMINISTRATOR_PREFIX = "admin-";
     private static final String NACOS_PREFIX = "nacos-";
+    private static final String HIGRESS_PREFIX = "higress-";
+
+    public static String genHigressGatewayId() {
+        return HIGRESS_PREFIX + ObjectId.next();
+    }
 
     public static String genPortalId() {
         return PORTAL_PREFIX + ObjectId.next();

@@ -5,6 +5,7 @@ import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
+import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
@@ -60,6 +61,9 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
                 });
 
         Gateway gateway = param.convertTo();
+        if (gateway.getGatewayType().isHigress()) {
+            gateway.setGatewayId(IdGenerator.genHigressGatewayId());
+        }
         gateway.setAdminId(contextHolder.getUser());
         gatewayRepository.save(gateway);
     }
