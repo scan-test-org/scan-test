@@ -3,18 +3,16 @@ import { Button, Table, message, Modal } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { gatewayApi } from '@/lib/api'
 import ImportGatewayModal from '@/components/console/ImportGatewayModal'
+import ImportHigressModal from '@/components/console/ImportHigressModal'
+import GatewayTypeSelector from '@/components/console/GatewayTypeSelector'
 import { formatDateTime } from '@/lib/utils'
-
-interface Gateway {
-  gatewayId: string
-  gatewayName: string
-  gatewayType: 'APIG_API' | 'HIGRESS' | 'APIG_AI'
-  createAt: string
-}
+import { Gateway, GatewayType } from '@/types'
 
 export default function Consoles() {
   const [gateways, setGateways] = useState<Gateway[]>([])
+  const [typeSelectorVisible, setTypeSelectorVisible] = useState(false)
   const [importVisible, setImportVisible] = useState(false)
+  const [higressImportVisible, setHigressImportVisible] = useState(false)
   const [loading, setLoading] = useState(false)
   const [pagination, setPagination] = useState({
     current: 1,
@@ -48,6 +46,16 @@ export default function Consoles() {
     fetchGatewaysConsoles(pagination.current - 1, pagination.pageSize)
   }
 
+  // 处理网关类型选择
+  const handleGatewayTypeSelect = (type: GatewayType) => {
+    setTypeSelectorVisible(false)
+    if (type === 'HIGRESS') {
+      setHigressImportVisible(true)
+    } else {
+      setImportVisible(true)
+    }
+  }
+
   // 处理分页变化
   const handlePaginationChange = (page: number, pageSize: number) => {
     fetchGatewaysConsoles(page - 1, pageSize)
@@ -76,6 +84,11 @@ export default function Consoles() {
       key: 'gatewayId',
     },
     {
+      title: '网关名称',
+      dataIndex: 'gatewayName',
+      key: 'gatewayName',
+    },
+    {
       title: '类型',
       dataIndex: 'gatewayType',
       key: 'gatewayType',
@@ -83,7 +96,15 @@ export default function Consoles() {
         return gatewayType === 'APIG_API' ? 'API 网关' : gatewayType === 'HIGRESS' ? 'HIGRESS 网关' : 'AI 网关'
       }
     },
-    
+    {
+      title: '区域',
+      dataIndex: 'region',
+      key: 'region',
+      render: (region: string, record: Gateway) => {
+        // 只有 APIG 类型的网关才有区域信息
+        return record.gatewayType !== 'HIGRESS' ? region : '-'
+      }
+    },
     {
       title: '创建时间',
       dataIndex: 'createAt',
@@ -108,7 +129,7 @@ export default function Consoles() {
             管理和配置您的网关实例
           </p>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setImportVisible(true)}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setTypeSelectorVisible(true)}>
           导入网关实例
         </Button>
       </div>
@@ -117,7 +138,7 @@ export default function Consoles() {
         <Table
           columns={columns}
           dataSource={gateways}
-          rowKey="id"
+          rowKey="gatewayId"
           loading={loading}
           pagination={{
             current: pagination.current,
@@ -136,6 +157,18 @@ export default function Consoles() {
         visible={importVisible}
         onCancel={() => setImportVisible(false)}
         onSuccess={handleImportSuccess}
+      />
+
+      <ImportHigressModal
+        visible={higressImportVisible}
+        onCancel={() => setHigressImportVisible(false)}
+        onSuccess={handleImportSuccess}
+      />
+
+      <GatewayTypeSelector
+        visible={typeSelectorVisible}
+        onCancel={() => setTypeSelectorVisible(false)}
+        onSelect={handleGatewayTypeSelect}
       />
     </div>
   )
