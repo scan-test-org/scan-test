@@ -67,7 +67,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
     try {
       const res = await portalApi.getPortals({
         page: 0,
-        size: 1000 // 获取所有门户
+        size: 500 // 获取所有门户
       })
       setAllPortals(res.data.content?.map((item: any) => ({
         ...item,
