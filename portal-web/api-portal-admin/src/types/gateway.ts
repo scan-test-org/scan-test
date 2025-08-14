@@ -3,6 +3,8 @@ export interface Gateway {
   gatewayName: string
   gatewayType: 'APIG_API' | 'HIGRESS' | 'APIG_AI'
   createAt: string
+  apigConfig?: ApigConfig
+  higressConfig?: HigressConfig
 }
 
 export interface ApigConfig {

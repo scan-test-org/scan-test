@@ -13,12 +13,18 @@ export default function Consoles() {
   const [typeSelectorVisible, setTypeSelectorVisible] = useState(false)
   const [importVisible, setImportVisible] = useState(false)
   const [higressImportVisible, setHigressImportVisible] = useState(false)
+  const [selectedGatewayType, setSelectedGatewayType] = useState<GatewayType>('APIG_API')
   const [loading, setLoading] = useState(false)
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
     total: 0,
   })
+
+  // 按类型分组的网关列表
+  const apigApiGateways = gateways.filter(g => g.gatewayType === 'APIG_API')
+  const apigAiGateways = gateways.filter(g => g.gatewayType === 'APIG_AI')
+  const higressGateways = gateways.filter(g => g.gatewayType === 'HIGRESS')
 
   const fetchGatewaysConsoles = useCallback(async (page = 0, size = 10) => {
     setLoading(true)
@@ -48,6 +54,7 @@ export default function Consoles() {
 
   // 处理网关类型选择
   const handleGatewayTypeSelect = (type: GatewayType) => {
+    setSelectedGatewayType(type)
     setTypeSelectorVisible(false)
     if (type === 'HIGRESS') {
       setHigressImportVisible(true)
@@ -77,7 +84,8 @@ export default function Consoles() {
     })
   }
 
-  const columns = [
+  // APIG 网关的列定义
+  const apigColumns = [
     {
       title: '网关ID',
       dataIndex: 'gatewayId',
@@ -89,20 +97,54 @@ export default function Consoles() {
       key: 'gatewayName',
     },
     {
-      title: '类型',
-      dataIndex: 'gatewayType',
-      key: 'gatewayType',
-      render: (gatewayType: string) => {
-        return gatewayType === 'APIG_API' ? 'API 网关' : gatewayType === 'HIGRESS' ? 'HIGRESS 网关' : 'AI 网关'
-      }
-    },
-    {
       title: '区域',
       dataIndex: 'region',
       key: 'region',
-      render: (region: string, record: Gateway) => {
-        // 只有 APIG 类型的网关才有区域信息
-        return record.gatewayType !== 'HIGRESS' ? region : '-'
+      render: (_: any, record: Gateway) => {
+        return record.apigConfig?.region || '-'
+      }
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createAt',
+      key: 'createAt',
+      render: (date: string) => formatDateTime(date)
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_: any, record: Gateway) => (
+        <Button type="link" danger onClick={() => handleDeleteGateway(record.gatewayId)}>删除</Button>
+      ),
+    },
+  ]
+
+  // Higress 网关的列定义
+  const higressColumns = [
+    {
+      title: '网关ID',
+      dataIndex: 'gatewayId',
+      key: 'gatewayId',
+    },
+    {
+      title: '网关名称',
+      dataIndex: 'gatewayName',
+      key: 'gatewayName',
+    },
+    {
+      title: '主机地址',
+      dataIndex: 'host',
+      key: 'host',
+      render: (_: any, record: Gateway) => {
+        return record.higressConfig?.host || '-'
+      }
+    },
+    {
+      title: '端口',
+      dataIndex: 'port',
+      key: 'port',
+      render: (_: any, record: Gateway) => {
+        return record.higressConfig?.port || '-'
       }
     },
     {
@@ -134,27 +176,63 @@ export default function Consoles() {
         </Button>
       </div>
 
+      {/* API 网关列表 */}
       <div className="bg-white rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">API 网关</h3>
+          <p className="text-sm text-gray-500 mt-1">阿里云 API 网关服务</p>
+        </div>
         <Table
-          columns={columns}
-          dataSource={gateways}
+          columns={apigColumns}
+          dataSource={apigApiGateways}
           rowKey="gatewayId"
           loading={loading}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            onChange: handlePaginationChange,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
-            position: ['bottomRight'],
+          pagination={false}
+          locale={{
+            emptyText: '暂无 API 网关实例'
+          }}
+        />
+      </div>
+
+      {/* AI 网关列表 */}
+      <div className="bg-white rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">AI 网关</h3>
+          <p className="text-sm text-gray-500 mt-1">阿里云 AI 网关服务</p>
+        </div>
+        <Table
+          columns={apigColumns}
+          dataSource={apigAiGateways}
+          rowKey="gatewayId"
+          loading={loading}
+          pagination={false}
+          locale={{
+            emptyText: '暂无 AI 网关实例'
+          }}
+        />
+      </div>
+
+      {/* Higress 网关列表 */}
+      <div className="bg-white rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Higress 网关</h3>
+          <p className="text-sm text-gray-500 mt-1">Higress 云原生网关</p>
+        </div>
+        <Table
+          columns={higressColumns}
+          dataSource={higressGateways}
+          rowKey="gatewayId"
+          loading={loading}
+          pagination={false}
+          locale={{
+            emptyText: '暂无 Higress 网关实例'
           }}
         />
       </div>
 
       <ImportGatewayModal
         visible={importVisible}
+        gatewayType={selectedGatewayType as 'APIG_API' | 'APIG_AI'}
         onCancel={() => setImportVisible(false)}
         onSuccess={handleImportSuccess}
       />

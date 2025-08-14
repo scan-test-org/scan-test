@@ -92,7 +92,6 @@ export default function ImportHigressModal({ visible, onCancel, onSuccess }: Imp
         <Form.Item 
           label="访问令牌" 
           name="accessToken" 
-          rules={[{ required: true, message: '请输入访问令牌' }]}
         >
           <Input.Password placeholder="请输入访问令牌" />
         </Form.Item>
@@ -100,7 +99,6 @@ export default function ImportHigressModal({ visible, onCancel, onSuccess }: Imp
         <Form.Item 
           label="JWT 策略" 
           name="jwtPolicy" 
-          rules={[{ required: true, message: '请输入 JWT 策略' }]}
         >
           <Input placeholder="请输入 JWT 策略" />
         </Form.Item>

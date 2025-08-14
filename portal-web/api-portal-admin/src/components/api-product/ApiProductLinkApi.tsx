@@ -50,6 +50,13 @@ interface Gateway {
   gatewayName: string
   gatewayType: 'APIG_API' | 'HIGRESS' | 'APIG_AI'
   createAt: string
+  apigConfig?: {
+    region: string
+  }
+  higressConfig?: {
+    host: string
+    port: number
+  }
 }
 
 interface NacosInstance {
