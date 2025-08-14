@@ -5,11 +5,12 @@ import { Gateway, ApigConfig } from '@/types'
 
 interface ImportGatewayModalProps {
   visible: boolean
+  gatewayType: 'APIG_API' | 'APIG_AI'
   onCancel: () => void
   onSuccess: () => void
 }
 
-export default function ImportGatewayModal({ visible, onCancel, onSuccess }: ImportGatewayModalProps) {
+export default function ImportGatewayModal({ visible, gatewayType, onCancel, onSuccess }: ImportGatewayModalProps) {
   const [importForm] = Form.useForm()
 
   const [gatewayLoading, setGatewayLoading] = useState(false)
@@ -60,7 +61,7 @@ export default function ImportGatewayModal({ visible, onCancel, onSuccess }: Imp
   // 处理网关分页变化
   const handleGatewayPaginationChange = (page: number, pageSize: number) => {
     const values = importForm.getFieldsValue()
-    fetchGateways(values, page - 1, pageSize)
+    fetchGateways({...values, gatewayType: gatewayType}, page - 1, pageSize)
   }
 
   // 处理导入
@@ -71,6 +72,7 @@ export default function ImportGatewayModal({ visible, onCancel, onSuccess }: Imp
     }
     gatewayApi.importGateway({
       ...selectedGateway,
+      gatewayType: gatewayType,
       apigConfig: apigConfig,
     }).then(() => {
       message.success('导入成功！')
@@ -116,7 +118,7 @@ export default function ImportGatewayModal({ visible, onCancel, onSuccess }: Imp
               onClick={() => {
                 importForm.validateFields().then((values) => {
                   setApigConfig(values)
-                  fetchGateways(values)
+                  fetchGateways({...values, gatewayType: gatewayType})
                 })
               }}
               loading={gatewayLoading}

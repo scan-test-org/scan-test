@@ -167,7 +167,6 @@ export const gatewayApi = {
   getApigGateway: (data: any) => {
     return api.get(`/gateways/apig`, { params: {
       ...data,
-      gatewayType: 'APIG_API'
     } })
   },
   // 删除网关
