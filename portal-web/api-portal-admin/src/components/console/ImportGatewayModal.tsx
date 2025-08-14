@@ -1,24 +1,12 @@
 import { useState } from 'react'
 import { Button, Table, Modal, Form, Input, message, Divider } from 'antd'
 import { gatewayApi } from '@/lib/api'
-
-interface Gateway {
-  gatewayId: string
-  gatewayName: string
-  gatewayType: 'APIG_API' | 'HIGRESS' | 'APIG_AI'
-  createAt: string
-}
+import { Gateway, ApigConfig } from '@/types'
 
 interface ImportGatewayModalProps {
   visible: boolean
   onCancel: () => void
   onSuccess: () => void
-}
-
-interface ApigConfig {
-  region: string
-  accessKey: string
-  secretKey: string
 }
 
 export default function ImportGatewayModal({ visible, onCancel, onSuccess }: ImportGatewayModalProps) {
@@ -83,7 +71,7 @@ export default function ImportGatewayModal({ visible, onCancel, onSuccess }: Imp
     }
     gatewayApi.importGateway({
       ...selectedGateway,
-      apigOption: apigConfig,
+      apigConfig: apigConfig,
     }).then(() => {
       message.success('导入成功！')
       handleCancel()
