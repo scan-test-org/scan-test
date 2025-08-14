@@ -27,6 +27,7 @@ import com.alibaba.apiopenplatform.support.consumer.ApiKeyConfig;
 import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 import com.alibaba.apiopenplatform.support.enums.CredentialMode;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
+import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -47,7 +48,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.alibaba.apiopenplatform.support.enums.SubscriptionStatus;
-import com.alibaba.apiopenplatform.repository.GatewayRepository;
 import com.alibaba.apiopenplatform.repository.ConsumerRefRepository;
 
 /**
@@ -177,54 +177,37 @@ public class ConsumerServiceImpl implements ConsumerService {
             throw new BusinessException(ErrorCode.PRODUCT_TYPE_NOT_MATCH, param.getProductId());
         }
 
-//        ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
-//
-//        GatewayIdentityConfig gatewayIdentity = gatewayService.getGatewayIdentity(productRef.getGatewayId());
-//
-//
-//        if (!consumerRefRepository.findConsumerRef(consumerId, gatewayIdentity.getGatewayType(), gatewayIdentity.getIdentity()).isPresent()) {
-//            String gwConsumerId = gatewayService.createConsumer(productRef.getGatewayId(), consumer, credential);
-//            consumerRefRepository.save(ConsumerRef.builder()
-//                    .consumerId(consumerId)
-//                    .gwConsumerId(gwConsumerId)
-//                    .gatewayType(gatewayIdentity.getGatewayType())
-//                    .gatewayIdentity(gatewayIdentity.getIdentity())
-//                    .build());
-//        }
+        ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
 
+        GatewayConfig gatewayConfig = gatewayService.getGatewayConfig(productRef.getGatewayId());
 
-        // 获取产品的API引用信息
-//        ProductRef productRef = productRefRepository.findFirstByProductId(param.getProductId())
-//                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, param.getProductId()));
-//
-//        // 为每个网关处理Consumer创建和授权
-//        try {
-//            // 检查是否已存在该网关的Consumer映射
-//            gatewayService.assertGatewayConsumerExist(productRef.getGatewayId(), consumer);
-//
-//            Gateway gateway = gatewayRepository.findByGatewayId(productRef.getGatewayId())
-//                    .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Gateway", productRef.getGatewayId()));
-//
-//            // 获取API ID并创建授权关系
-//            String apiId = getApiIdFromProductRef(productRef, gateway);
-//            if (apiId != null) {
-//                // 创建授权关系
-//                gatewayService.authorizationConsumerToApi(consumer, productRef);
-//
-//                log.info("Authorized consumer {} to apiId {} in gateway {}", consumerId, apiId, gateway.getGatewayId());
-//            }
-//        } catch (Exception e) {
-//            log.error("Failed to process consumer {} for product {} in gateway {}", consumerId, param.getProductId(), productRef.getGatewayId(), e);
-//            throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to process consumer in gateway: " + e.getMessage());
-//        }
+        // 是否在网关上有对应的Consumer
+        String gwConsumerId = consumerRefRepository.findConsumerRef(
+                        consumerId,
+                        gatewayConfig.getGatewayType(),
+                        gatewayConfig
+                )
+                .map(ConsumerRef::getGwConsumerId)
+                .orElseGet(() -> {
+                    String newGwConsumerId = gatewayService.createConsumer(productRef.getGatewayId(), consumer, credential);
+                    consumerRefRepository.save(ConsumerRef.builder()
+                            .consumerId(consumerId)
+                            .gwConsumerId(newGwConsumerId)
+                            .gatewayType(gatewayConfig.getGatewayType())
+                            .gatewayConfig(gatewayConfig)
+                            .build());
+                    return newGwConsumerId;
+                });
+
+        // 授权
+        gatewayService.authorizeConsumer(gwConsumerId, productRef);
 
         // 创建订阅记录
         ProductSubscription subscription = param.convertTo();
         subscription.setConsumerId(consumerId);
         subscription.setStatus(SubscriptionStatus.APPROVED);
         subscriptionRepository.save(subscription);
-
 
         SubscriptionResult r = new SubscriptionResult().convertFrom(subscription);
         r.setProductName(product.getName());
@@ -366,7 +349,12 @@ public class ConsumerServiceImpl implements ConsumerService {
 
             List<Consumer> consumers = consumerRepository.findAllByDeveloperId(developerId);
             consumers.forEach(consumer -> {
-                gatewayService.deleteConsumer(consumer);
+
+                List<ConsumerRef> consumerRefs = consumerRefRepository.findByConsumerId(consumer.getConsumerId());
+                for (ConsumerRef consumerRef : consumerRefs) {
+                    gatewayService.deleteConsumer(consumerRef.getGwConsumerId(), consumerRef.getGatewayConfig());
+                }
+
                 consumerRepository.delete(consumer);
 
 //                deleteConsumer(consumer.getConsumerId());

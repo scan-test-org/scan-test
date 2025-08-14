@@ -16,7 +16,7 @@ import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.gateway.GatewayOperator;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
-import com.alibaba.apiopenplatform.support.gateway.GatewayIdentityConfig;
+import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -149,20 +149,23 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
         return getOperator(gateway).createConsumer(gateway, consumer, credential);
     }
 
+//    @Override
+//    public void deleteConsumer(String gatewayId, String gwConsumerId) {
+//        Gateway gateway = findGateway(gatewayId);
+//        getOperator(gateway).deleteConsumer(gateway, gwConsumerId);
+//    }
+
     @Override
-    public void deleteConsumer(Consumer consumer) {
-        List<Gateway> gateways = findAllGateways();
-        for (Gateway gateway : gateways) {
-            getOperator(gateway).deleteConsumer(gateway);
-        }
+    public void deleteConsumer(String gwConsumerId, GatewayConfig config) {
+        gatewayOperators.get(config.getGatewayType()).deleteConsumer(gwConsumerId, config);
     }
 
     @Override
-    public void authorizationConsumerToApi(Consumer consumer, ProductRef productRef) {
-        List<Gateway> gateways = findAllGateways();
-        for (Gateway gateway : gateways) {
-            getOperator(gateway).authorizationConsumerToApi(gateway, consumer.getConsumerId(), productRef);
-        }
+    public void authorizeConsumer(String gwConsumerId, ProductRefResult productRef) {
+        Gateway gateway = findGateway(productRef.getGatewayId());
+        Object refConfig = gateway.getGatewayType().isHigress() ? productRef.getHigressRefConfig() : productRef.getApigRefConfig();
+
+        getOperator(gateway).authorizeConsumer(gateway, gwConsumerId, refConfig);
     }
 
     @Override
@@ -202,10 +205,10 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public GatewayIdentityConfig getGatewayIdentity(String gatewayId) {
+    public GatewayConfig getGatewayConfig(String gatewayId) {
         Gateway gateway = findGateway(gatewayId);
 
-        return GatewayIdentityConfig.builder()
+        return GatewayConfig.builder()
                 .gatewayType(gateway.getGatewayType())
                 .apigConfig(gateway.getApigConfig())
                 .higressConfig(gateway.getHigressConfig())

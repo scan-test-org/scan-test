@@ -10,11 +10,11 @@ import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.service.gateway.client.GatewayClient;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -39,10 +39,9 @@ public abstract class GatewayOperator<T> {
 
     abstract public String createConsumer(Gateway gateway, Consumer consumer, ConsumerCredential credential);
 
-    abstract public void deleteConsumer(Gateway gateway);
+    abstract public void deleteConsumer(String consumerId, GatewayConfig config);
 
-    abstract public void authorizationConsumerToApi(Gateway gateway, String consumerId, ProductRef productRef);
-
+    abstract public void authorizeConsumer(Gateway gateway, String consumerId, Object refConfig);
 
     abstract public APIResult fetchAPI(Gateway gateway, String apiId);
 
@@ -57,6 +56,16 @@ public abstract class GatewayOperator<T> {
                 key -> createClient(gateway)
         );
     }
+
+//    @SuppressWarnings("unchecked")
+//    protected T getClient(Gateway gateway) {
+//        String clientKey = gateway.getGatewayType().isAPIG() ?
+//                gateway.getApigConfig().buildUniqueKey() : gateway.getHigressConfig().buildUniqueKey();
+//        return (T) clientCache.computeIfAbsent(
+//                clientKey,
+//                key -> createClient(gateway)
+//        );
+//    }
 
     /**
      * 创建网关客户端

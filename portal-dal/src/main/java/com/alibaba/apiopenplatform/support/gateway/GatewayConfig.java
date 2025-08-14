@@ -1,6 +1,5 @@
 package com.alibaba.apiopenplatform.support.gateway;
 
-import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import lombok.Builder;
 import lombok.Data;
@@ -10,15 +9,11 @@ import lombok.Data;
  */
 @Data
 @Builder
-public class GatewayIdentityConfig {
+public class GatewayConfig {
 
     private GatewayType gatewayType;
 
     private APIGConfig apigConfig;
 
     private HigressConfig higressConfig;
-
-    public String getIdentity() {
-        return gatewayType.isHigress() ? JSONUtil.toJsonStr(higressConfig) : JSONUtil.toJsonStr(apigConfig);
-    }
 }
