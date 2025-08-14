@@ -50,7 +50,7 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
       setModalLoading(true)
       apiProductApi.getApiProducts({
         page: 0,
-        size: 1000 // 获取所有可用的API
+        size: 500 // 获取所有可用的API
       }).then((res) => {
         // 过滤掉已发布在该门户里的api
         setApiProductsOptions(res.data.content.filter((api: ApiProduct) => 
