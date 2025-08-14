@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import com.alibaba.apiopenplatform.support.gateway.APIGConfig;
+import com.alibaba.apiopenplatform.support.gateway.HigressConfig;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -27,27 +29,13 @@ public class ImportGatewayParam implements InputConverter<Gateway> {
 
     private String gatewayId;
 
-    @Valid
-    private APIGOption apigOption;
+    private APIGConfig apigConfig;
 
-    @Valid
-    private HigressOption higressOption;
+    private HigressConfig higressConfig;
 
     @AssertTrue(message = "网关配置无效")
     private boolean isGatewayConfigValid() {
-        return gatewayType.isAPIG() && apigOption != null && StrUtil.isNotBlank(gatewayId)
-                || gatewayType.isHigress() && higressOption != null;
-    }
-
-    @Override
-    public Gateway convertTo() {
-        Gateway gateway = InputConverter.super.convertTo();
-        if (higressOption != null) {
-            gateway.setHigressConfig(higressOption.convertTo());
-        }
-        if (apigOption != null) {
-            gateway.setApigConfig(apigOption.convertTo());
-        }
-        return gateway;
+        return gatewayType.isAPIG() && apigConfig != null && StrUtil.isNotBlank(gatewayId)
+                || gatewayType.isHigress() && higressConfig != null;
     }
 }
