@@ -149,16 +149,20 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             // Hmac
             List<AkSkIdentityConfig> akSkIdentityConfigs = convertToAkSkIdentityConfigs(credential.getHmacConfig());
 
-            CreateConsumerRequest createConsumerRequest = CreateConsumerRequest.builder()
+            CreateConsumerRequest.Builder builder = CreateConsumerRequest.builder()
                     .name(consumer.getName())
                     .gatewayType(gateway.getGatewayType().getType())
-                    .apikeyIdentityConfig(apikeyIdentityConfig)
-                    .akSkIdentityConfigs(akSkIdentityConfigs)
-                    .build();
+                    .enable(true);
+            if (apikeyIdentityConfig != null) {
+                builder.apikeyIdentityConfig(apikeyIdentityConfig);
+            }
+            if (akSkIdentityConfigs != null) {
+                builder.akSkIdentityConfigs(akSkIdentityConfigs);
+            }
 
             CreateConsumerResponse response = client.execute(c -> {
                 try {
-                    return c.createConsumer(createConsumerRequest).get();
+                    return c.createConsumer(builder.build()).get();
                 } catch (InterruptedException | ExecutionException e) {
                     throw new RuntimeException(e);
                 }
@@ -207,6 +211,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             for (HttpApiOperationInfo operation : operations) {
                 AuthorizationRules rule = AuthorizationRules.builder()
                         .consumerId(consumerId)
+                        .expireMode("LongTerm")
                         .resourceType("RestApiOperation")
                         .resourceIdentifier(ResourceIdentifier.builder()
                                 .resourceId(operation.getOperationId())
@@ -372,7 +377,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
                         .gatewayId(gateway.getGatewayId())
                         .httpApiId(apiId)
                         .pageNumber(1)
-                        .pageSize(10086)
+                        .pageSize(500)
                         .build();
                 try {
                     return c.listHttpApiOperations(request).get();
@@ -407,14 +412,14 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         List<ApiKeyIdentityConfig.Credentials> credentials = config.getCredentials().stream()
                 .map(cred -> ApiKeyIdentityConfig.Credentials.builder()
                         .apikey(cred.getApiKey())
-                        .generateMode(cred.getMode().name())
+                        .generateMode("Custom")
                         .build())
                 .collect(Collectors.toList());
 
         return ApiKeyIdentityConfig.builder()
                 .apikeySource(apikeySource)
                 .credentials(credentials)
-                .type("ApiKey")
+                .type("Apikey")
                 .build();
     }
 
@@ -428,7 +433,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
                         .ak(cred.getAk())
                         .sk(cred.getSk())
                         .generateMode(cred.getMode().name())
-                        .type("HMAC")
+                        .type("AkSk")
                         .build())
                 .collect(Collectors.toList());
     }

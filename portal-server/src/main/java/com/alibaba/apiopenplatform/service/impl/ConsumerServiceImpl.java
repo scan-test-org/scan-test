@@ -173,35 +173,35 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
 
         // 非网关型不支持订阅
-        if (productRef.getSourceType() != SourceType.GATEWAY) {
-            throw new BusinessException(ErrorCode.PRODUCT_TYPE_NOT_MATCH, param.getProductId());
-        }
-
-        ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
-
-        GatewayConfig gatewayConfig = gatewayService.getGatewayConfig(productRef.getGatewayId());
-
-        // 是否在网关上有对应的Consumer
-        String gwConsumerId = consumerRefRepository.findConsumerRef(
-                        consumerId,
-                        gatewayConfig.getGatewayType(),
-                        gatewayConfig
-                )
-                .map(ConsumerRef::getGwConsumerId)
-                .orElseGet(() -> {
-                    String newGwConsumerId = gatewayService.createConsumer(productRef.getGatewayId(), consumer, credential);
-                    consumerRefRepository.save(ConsumerRef.builder()
-                            .consumerId(consumerId)
-                            .gwConsumerId(newGwConsumerId)
-                            .gatewayType(gatewayConfig.getGatewayType())
-                            .gatewayConfig(gatewayConfig)
-                            .build());
-                    return newGwConsumerId;
-                });
-
-        // 授权
-        gatewayService.authorizeConsumer(gwConsumerId, productRef);
+//        if (productRef.getSourceType() != SourceType.GATEWAY) {
+//            throw new BusinessException(ErrorCode.PRODUCT_TYPE_NOT_MATCH, param.getProductId());
+//        }
+//
+//        ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
+//
+//        GatewayConfig gatewayConfig = gatewayService.getGatewayConfig(productRef.getGatewayId());
+//
+//        // 是否在网关上有对应的Consumer
+//        String gwConsumerId = consumerRefRepository.findConsumerRef(
+//                        consumerId,
+//                        gatewayConfig.getGatewayType(),
+//                        gatewayConfig
+//                )
+//                .map(ConsumerRef::getGwConsumerId)
+//                .orElseGet(() -> {
+//                    String newGwConsumerId = gatewayService.createConsumer(productRef.getGatewayId(), consumer, credential);
+//                    consumerRefRepository.save(ConsumerRef.builder()
+//                            .consumerId(consumerId)
+//                            .gwConsumerId(newGwConsumerId)
+//                            .gatewayType(gatewayConfig.getGatewayType())
+//                            .gatewayConfig(gatewayConfig)
+//                            .build());
+//                    return newGwConsumerId;
+//                });
+//
+//        // 授权
+//        gatewayService.authorizeConsumer(gwConsumerId, productRef);
 
         // 创建订阅记录
         ProductSubscription subscription = param.convertTo();
