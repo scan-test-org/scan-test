@@ -44,8 +44,6 @@ public enum ErrorCode {
     DEVELOPER_UNBIND_FAILED(HttpStatus.BAD_REQUEST, "DEVELOPER_UNBIND_FAILED", "解绑失败，账号至少保留一种登录方式"),
 
     // Portal相关错误
-    PORTAL_NOT_FOUND(HttpStatus.NOT_FOUND, "PORTAL_NOT_FOUND", "Portal[%s]不存在"),
-    PORTAL_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "PORTAL_SETTING_NOT_FOUND", "Portal设置不存在"),
     OIDC_CONFIG_DISABLED(HttpStatus.BAD_REQUEST, "OIDC_CONFIG_DISABLED", "OIDC配置未启用"),
 
     // 通用错误

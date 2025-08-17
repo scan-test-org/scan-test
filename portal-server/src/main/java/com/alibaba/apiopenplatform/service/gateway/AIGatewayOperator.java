@@ -9,6 +9,7 @@ import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Gateway;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
@@ -18,6 +19,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -27,12 +31,6 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class AIGatewayOperator extends APIGOperator {
-
-    private static final String SSE_FORMAT =
-            "{\"mcpServers\":{\"%s\":{\"type\":\"sse\",\"url\":\"http://%s%s/sse\"}}}";
-
-    private static final String STREAMABLE_FORMAT =
-            "{\"mcpServers\":{\"%s\":{\"url\":\"http://%s%s\"}}}";
 
     @Override
     public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
@@ -149,5 +147,50 @@ public class AIGatewayOperator extends APIGOperator {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Plugin Attachment，Cause：" + e.getMessage());
         }
         return null;
+    }
+
+    @Override
+    public ConsumerAuthConfig authorizeConsumer(Gateway gateway, String consumerId, Object refConfig) {
+        APIGClient client = getClient(gateway);
+
+        APIGRefConfig config = (APIGRefConfig) refConfig;
+        // MCP Server 授权
+        String mcpRouteId = config.getMcpRouteId();
+
+        try {
+            // 确认Gateway的EnvId
+            String envId = fetchGatewayEnv(gateway);
+
+            CreateConsumerAuthorizationRulesRequest.AuthorizationRules rule = CreateConsumerAuthorizationRulesRequest.AuthorizationRules.builder()
+                    .consumerId(consumerId)
+                    .expireMode("LongTerm")
+                    .resourceType("MCP")
+                    .resourceIdentifier(CreateConsumerAuthorizationRulesRequest.ResourceIdentifier.builder()
+                            .resourceId(mcpRouteId)
+                            .environmentId(envId).build())
+                    .build();
+
+            CreateConsumerAuthorizationRulesResponse response = client.execute(c -> {
+                CreateConsumerAuthorizationRulesRequest request = CreateConsumerAuthorizationRulesRequest.builder()
+                        .authorizationRules(Collections.singletonList(rule))
+                        .build();
+                try {
+                    return c.createConsumerAuthorizationRules(request).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            if (200 != response.getStatusCode()) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+
+            return ConsumerAuthConfig.builder()
+                    .apigAuthorizationRuleIds(response.getBody().getData().getConsumerAuthorizationRuleIds())
+                    .build();
+        } catch (Exception e) {
+            log.error("Error authorizing consumer {} to mcp server {} in AI gateway {}", consumerId, mcpRouteId, gateway.getGatewayId(), e);
+            throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to authorize consumer to mcp server in AI gateway: " + e.getMessage());
+        }
     }
 }

@@ -15,6 +15,7 @@ import com.alibaba.apiopenplatform.repository.ConsumerRefRepository;
 import com.alibaba.apiopenplatform.repository.GatewayRepository;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.gateway.GatewayOperator;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
@@ -64,7 +65,8 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
         if (gateway.getGatewayType().isHigress()) {
             gateway.setGatewayId(IdGenerator.genHigressGatewayId());
         }
-        gateway.setAdminId(contextHolder.getUser());
+//        gateway.setAdminId(contextHolder.getUser());
+        gateway.setAdminId("admin-68888f2a58740e1f306d9980");
         gatewayRepository.save(gateway);
     }
 
@@ -148,16 +150,14 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public String createConsumer(String gatewayId, Consumer consumer, ConsumerCredential credential) {
-        Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).createConsumer(gateway, consumer, credential);
+    public String createConsumer(Consumer consumer, ConsumerCredential credential, GatewayConfig config) {
+       return gatewayOperators.get(config.getGatewayType()).createConsumer(consumer, credential, config);
     }
 
-//    @Override
-//    public void deleteConsumer(String gatewayId, String gwConsumerId) {
-//        Gateway gateway = findGateway(gatewayId);
-//        getOperator(gateway).deleteConsumer(gateway, gwConsumerId);
-//    }
+    @Override
+    public void updateConsumer(String gwConsumerId, ConsumerCredential credential, GatewayConfig config) {
+        gatewayOperators.get(config.getGatewayType()).updateConsumer(gwConsumerId, credential, config);
+    }
 
     @Override
     public void deleteConsumer(String gwConsumerId, GatewayConfig config) {
@@ -165,11 +165,18 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public void authorizeConsumer(String gwConsumerId, ProductRefResult productRef) {
-        Gateway gateway = findGateway(productRef.getGatewayId());
-        Object refConfig = gateway.getGatewayType().isHigress() ? productRef.getHigressRefConfig() : productRef.getApigRefConfig();
+    public ConsumerAuthConfig authorizeConsumer(String gatewayId, String gwConsumerId, ProductRefResult productRef) {
+        Gateway gateway = findGateway(gatewayId);
+        Object refConfig = gateway.getGatewayType().isHigress() ?
+                productRef.getHigressRefConfig() : productRef.getApigRefConfig();
+        return getOperator(gateway).authorizeConsumer(gateway, gwConsumerId, refConfig);
+    }
 
-        getOperator(gateway).authorizeConsumer(gateway, gwConsumerId, refConfig);
+    @Override
+    public void deathAuthorizeConsumer(String gatewayId, String gwConsumerId, ConsumerAuthConfig config) {
+        Gateway gateway = findGateway(gatewayId);
+
+        getOperator(gateway).revokeConsumerAuthorization(gateway, gwConsumerId, config);
     }
 
     @Override
@@ -197,14 +204,6 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     private Gateway findGateway(String gatewayId) {
         return gatewayRepository.findByGatewayId(gatewayId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.GATEWAY, gatewayId));
-    }
-
-    private List<Gateway> findAllGateways() {
-        List<Gateway> gateways = gatewayRepository.findAll();
-        if (gateways.isEmpty()) {
-            throw new BusinessException(ErrorCode.GATEWAY_ERROR, "No gateways found");
-        }
-        return gateways;
     }
 
     private GatewayOperator getOperator(Gateway gateway) {

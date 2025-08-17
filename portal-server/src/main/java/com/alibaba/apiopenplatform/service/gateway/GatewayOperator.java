@@ -9,6 +9,7 @@ import com.alibaba.apiopenplatform.entity.*;
 import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.service.gateway.client.GatewayClient;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -37,11 +38,15 @@ public abstract class GatewayOperator<T> {
 
     abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
 
-    abstract public String createConsumer(Gateway gateway, Consumer consumer, ConsumerCredential credential);
+    abstract public String createConsumer(Consumer consumer, ConsumerCredential credential, GatewayConfig config);
+
+    abstract public void updateConsumer(String consumerId, ConsumerCredential credential, GatewayConfig config);
 
     abstract public void deleteConsumer(String consumerId, GatewayConfig config);
 
-    abstract public void authorizeConsumer(Gateway gateway, String consumerId, Object refConfig);
+    abstract public ConsumerAuthConfig authorizeConsumer(Gateway gateway, String consumerId, Object refConfig);
+
+    abstract public void revokeConsumerAuthorization(Gateway gateway, String consumerId, ConsumerAuthConfig authConfig);
 
     abstract public APIResult fetchAPI(Gateway gateway, String apiId);
 

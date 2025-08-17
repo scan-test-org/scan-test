@@ -2,10 +2,12 @@ package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.support.consumer.ApiKeyConfig;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 import com.alibaba.apiopenplatform.support.enums.APIGAPIType;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -138,9 +140,39 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         }
     }
 
-    @Override
-    public String createConsumer(Gateway gateway, Consumer consumer, ConsumerCredential credential) {
+    protected String fetchGatewayEnv(Gateway gateway) {
         APIGClient client = getClient(gateway);
+        try {
+            GetGatewayResponse response = client.execute(c -> {
+                GetGatewayRequest request = GetGatewayRequest.builder()
+                        .gatewayId(gateway.getGatewayId())
+                        .build();
+                try {
+                    return c.getGateway(request).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+
+            List<GetGatewayResponseBody.Environments> environments = response.getBody().getData().getEnvironments();
+            if (CollUtil.isEmpty(environments)) {
+                return null;
+            }
+
+            return environments.get(0).getEnvironmentId();
+        } catch (Exception e) {
+            log.error("Error fetching Gateway", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Gateway，Cause：" + e.getMessage());
+        }
+    }
+
+    @Override
+    public String createConsumer(Consumer consumer, ConsumerCredential credential, GatewayConfig config) {
+        APIGClient client = new APIGClient(config.getApigConfig());
+
         try {
             // ApiKey
             ApiKeyIdentityConfig apikeyIdentityConfig = convertToApiKeyIdentityConfig(credential.getApiKeyConfig());
@@ -150,7 +182,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
 
             CreateConsumerRequest.Builder builder = CreateConsumerRequest.builder()
                     .name(consumer.getName())
-                    .gatewayType(gateway.getGatewayType().getType())
+                    .gatewayType(config.getGatewayType().getType())
                     .enable(true);
             if (apikeyIdentityConfig != null) {
                 builder.apikeyIdentityConfig(apikeyIdentityConfig);
@@ -175,6 +207,44 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             log.error("Error creating Consumer", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error creating Consumer，Cause：" + e.getMessage());
         }
+
+    }
+
+    @Override
+    public void updateConsumer(String consumerId, ConsumerCredential credential, GatewayConfig config) {
+        APIGClient client = new APIGClient(config.getApigConfig());
+        try {
+            // ApiKey
+            ApiKeyIdentityConfig apikeyIdentityConfig = convertToApiKeyIdentityConfig(credential.getApiKeyConfig());
+
+            // Hmac
+            List<AkSkIdentityConfig> akSkIdentityConfigs = convertToAkSkIdentityConfigs(credential.getHmacConfig());
+
+            UpdateConsumerRequest.Builder builder = UpdateConsumerRequest.builder()
+                    .consumerId(consumerId);
+
+            if (apikeyIdentityConfig != null) {
+                builder.apikeyIdentityConfig(apikeyIdentityConfig);
+            }
+
+            if (akSkIdentityConfigs != null) {
+                builder.akSkIdentityConfigs(akSkIdentityConfigs);
+            }
+
+            UpdateConsumerResponse response = client.execute(c -> {
+                try {
+                    return c.updateConsumer(builder.build()).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Error creating Consumer", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error creating Consumer，Cause：" + e.getMessage());
+        }
     }
 
     @Override
@@ -195,7 +265,9 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public void authorizeConsumer(Gateway gateway, String consumerId, Object refConfig) {
+    public ConsumerAuthConfig authorizeConsumer(Gateway gateway, String consumerId, Object refConfig) {
+        APIGClient client = getClient(gateway);
+
         APIGRefConfig config = (APIGRefConfig) refConfig;
         // REST API 授权
         String apiId = config.getApiId();
@@ -203,8 +275,11 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         try {
             List<HttpApiOperationInfo> operations = fetchRESTOperations(gateway, apiId);
             if (CollUtil.isEmpty(operations)) {
-                return;
+                return null;
             }
+
+            // 确认Gateway的EnvId
+            String envId = fetchGatewayEnv(gateway);
 
             List<AuthorizationRules> rules = new ArrayList<>();
             for (HttpApiOperationInfo operation : operations) {
@@ -214,32 +289,58 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
                         .resourceType("RestApiOperation")
                         .resourceIdentifier(ResourceIdentifier.builder()
                                 .resourceId(operation.getOperationId())
-                                .environmentId("envId").build())
+                                .environmentId(envId).build())
                         .build();
                 rules.add(rule);
             }
 
-            APIGClient client = getClient(gateway);
-            client.execute(c -> {
+            CreateConsumerAuthorizationRulesResponse response = client.execute(c -> {
                 CreateConsumerAuthorizationRulesRequest request = CreateConsumerAuthorizationRulesRequest.builder()
                         .authorizationRules(rules)
                         .build();
                 try {
-                    CreateConsumerAuthorizationRulesResponse response = c.createConsumerAuthorizationRules(request).get();
-
-                    if (200 != response.getStatusCode()) {
-                        throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
-                    }
-
-                    return response;
+                    return c.createConsumerAuthorizationRules(request).get();
                 } catch (InterruptedException | ExecutionException e) {
                     throw new RuntimeException(e);
                 }
             });
 
+            if (200 != response.getStatusCode()) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+
+            return ConsumerAuthConfig.builder()
+                    .apigAuthorizationRuleIds(response.getBody().getData().getConsumerAuthorizationRuleIds())
+                    .build();
         } catch (Exception e) {
             log.error("Error authorizing consumer {} to apiId {} in APIG gateway {}", consumerId, apiId, gateway.getGatewayId(), e);
             throw new BusinessException(ErrorCode.GATEWAY_ERROR, "Failed to authorize consumer to apiId in APIG gateway: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void revokeConsumerAuthorization(Gateway gateway, String consumerId, ConsumerAuthConfig authConfig) {
+        APIGClient client = getClient(gateway);
+
+        try {
+            BatchDeleteConsumerAuthorizationRuleRequest request = BatchDeleteConsumerAuthorizationRuleRequest.builder()
+                    .consumerAuthorizationRuleIds(StrUtil.join(",", authConfig.getApigAuthorizationRuleIds()))
+                    .build();
+
+            BatchDeleteConsumerAuthorizationRuleResponse response = client.execute(c -> {
+                try {
+                    return c.batchDeleteConsumerAuthorizationRule(request).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Error deleting Consumer Authorization", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error deleting Consumer Authorization，Cause：" + e.getMessage());
         }
     }
 

@@ -57,11 +57,6 @@ public class DeveloperServiceImpl implements DeveloperService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public Optional<Developer> findByUsername(String username) {
-        return developerRepository.findByUsername(username);
-    }
-
-    @Override
     public Optional<Developer> findByDeveloperId(String developerId) {
         return developerRepository.findByDeveloperId(developerId);
     }
@@ -254,7 +249,6 @@ public class DeveloperServiceImpl implements DeveloperService {
         return true;
     }
 
-    // 私有辅助方法
     private String generateToken(Developer developer) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", developer.getDeveloperId());
@@ -303,9 +297,6 @@ public class DeveloperServiceImpl implements DeveloperService {
     private void validateOidcProvider(String portalId, String providerName) {
         PortalResult portal = portalService.getPortal(portalId);
         PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
-        if (portalSetting == null) {
-            throw new BusinessException(ErrorCode.PORTAL_SETTING_NOT_FOUND);
-        }
         
         boolean valid = portalSetting.getOidcConfigs() != null && 
                 portalSetting.getOidcConfigs().stream()

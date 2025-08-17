@@ -19,7 +19,7 @@ import java.util.Optional;
 @Repository
 public interface ConsumerRefRepository extends JpaRepository<ConsumerRef, Long>, JpaSpecificationExecutor<ConsumerRef> {
 
-    List<ConsumerRef> findByConsumerId(String consumerId);
+    List<ConsumerRef> findAllByConsumerId(String consumerId);
 
     @Query("SELECT c FROM ConsumerRef c WHERE c.consumerId = :consumerId AND c.gatewayType = :gatewayType AND c.gatewayConfig = :gatewayConfig")
     Optional<ConsumerRef> findConsumerRef(@Param("consumerId") String consumerId,

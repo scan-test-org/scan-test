@@ -181,7 +181,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         // APIG_AI类型：获取MCP Server列表
         const res = await gatewayApi.getGatewayMcpServers(gatewayId, {
           page: 0,
-          size: 1000 // 获取所有MCP Server
+          size: 500 // 获取所有MCP Server
         })
         const mcpServers = (res.data?.content || []).map((api: any) => ({
           mcpServerName: api.mcpServerName,

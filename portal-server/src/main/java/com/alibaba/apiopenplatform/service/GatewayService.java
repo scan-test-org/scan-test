@@ -6,6 +6,7 @@ import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.Consumer;
 import com.alibaba.apiopenplatform.entity.ConsumerCredential;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import org.springframework.data.domain.Pageable;
 
@@ -70,11 +71,15 @@ public interface GatewayService {
 
     String fetchMcpConfig(String gatewayId, Object conf);
 
-    String createConsumer(String gatewayId, Consumer consumer, ConsumerCredential credential);
+    String createConsumer(Consumer consumer, ConsumerCredential credential, GatewayConfig config);
+
+    void updateConsumer(String gwConsumerId, ConsumerCredential credential, GatewayConfig config);
 
     void deleteConsumer(String gwConsumerId, GatewayConfig config);
 
-    void authorizeConsumer(String gwConsumerId, ProductRefResult productRef);
+    ConsumerAuthConfig authorizeConsumer(String gatewayId, String gwConsumerId, ProductRefResult productRef);
+
+    void deathAuthorizeConsumer(String gatewayId, String gwConsumerId, ConsumerAuthConfig config);
 
     GatewayConfig getGatewayConfig(String gatewayId);
 }

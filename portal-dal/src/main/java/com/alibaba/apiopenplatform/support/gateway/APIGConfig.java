@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.support.gateway;
 
+import com.alibaba.apiopenplatform.support.common.Encrypted;
 import lombok.Data;
 
 /**
@@ -8,8 +9,10 @@ import lombok.Data;
 @Data
 public class APIGConfig {
 
+    @Encrypted
     private String accessKey;
 
+    @Encrypted
     private String secretKey;
 
     private String region;

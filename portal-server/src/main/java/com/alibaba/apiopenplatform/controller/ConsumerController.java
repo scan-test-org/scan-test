@@ -93,9 +93,9 @@ public class ConsumerController {
     @Operation(summary = "订阅API产品")
     @PostMapping("/{consumerId}/subscriptions")
     @DeveloperAuth
-    public void subscribeProduct(@PathVariable String consumerId,
-                                 @RequestBody @Valid CreateSubscriptionParam param) {
-        consumerService.subscribeProduct(consumerId, param);
+    public SubscriptionResult subscribeProduct(@PathVariable String consumerId,
+                                               @RequestBody @Valid CreateSubscriptionParam param) {
+        return consumerService.subscribeProduct(consumerId, param);
     }
 
     @Operation(summary = "获取Consumer的订阅列表")
@@ -110,7 +110,7 @@ public class ConsumerController {
     @Operation(summary = "取消订阅")
     @DeleteMapping("/{consumerId}/subscriptions/{productId}")
     public void deleteSubscription(@PathVariable String consumerId, @PathVariable String productId) {
-        consumerService.deleteSubscription(consumerId, productId);
+        consumerService.unsubscribeProduct(consumerId, productId);
     }
 
     @Operation(summary = "审批订阅申请")

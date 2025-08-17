@@ -24,9 +24,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 
 import java.util.*;
 
-import org.springframework.beans.factory.annotation.Value;
 import com.alibaba.apiopenplatform.core.security.DeveloperAuthenticationProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -51,11 +49,8 @@ public class SecurityConfig {
     private final JwtService jwtService;
     private final TokenBlacklistService tokenBlacklistService;
     private final com.alibaba.apiopenplatform.service.DeveloperService developerService;
-    @Value("${frontend.oauth2.success-url:http://localhost:3000/oauth2/success}")
-    private String frontendSuccessUrl;
 
-    @Autowired
-    private DeveloperAuthenticationProvider developerAuthenticationProvider;
+    private final DeveloperAuthenticationProvider developerAuthenticationProvider;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -117,7 +112,6 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    // 移除 customOAuth2UserService、customOidcUserService、customAuthenticationSuccessHandler、customAuthenticationFailureHandler 等 Bean
 
     // 自定义OidcUser，合并自定义attributes（含token）
     public static class CustomOidcUser extends DefaultOidcUser {

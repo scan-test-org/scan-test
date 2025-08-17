@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.support.gateway;
 
+import com.alibaba.apiopenplatform.support.common.Encrypted;
 import lombok.Data;
 
 /**
@@ -7,6 +8,13 @@ import lombok.Data;
  */
 @Data
 public class HigressConfig {
+
+    private String address;
+
+    private String username;
+
+    @Encrypted
+    private String password;
 
     private String host;
 

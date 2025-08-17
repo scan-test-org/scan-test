@@ -17,7 +17,6 @@ import java.util.Optional;
  * @author zxd
  */
 public interface DeveloperService {
-    Optional<Developer> findByUsername(String username);
 
     Optional<Developer> findByDeveloperId(String developerId);
 
