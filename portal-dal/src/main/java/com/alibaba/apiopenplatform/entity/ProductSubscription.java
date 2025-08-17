@@ -1,5 +1,7 @@
 package com.alibaba.apiopenplatform.entity;
 
+import com.alibaba.apiopenplatform.converter.ConsumerAuthConfigConverter;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.enums.SubscriptionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -37,4 +39,8 @@ public class ProductSubscription extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 32, nullable = false)
     private SubscriptionStatus status;
+
+    @Column(name = "consumer_auth_config", columnDefinition = "text")
+    @Convert(converter = ConsumerAuthConfigConverter.class)
+    private ConsumerAuthConfig consumerAuthConfig;
 }

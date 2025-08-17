@@ -24,6 +24,7 @@ import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.service.ProductService;
 import com.alibaba.apiopenplatform.support.consumer.ApiKeyConfig;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 import com.alibaba.apiopenplatform.support.enums.CredentialMode;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
@@ -43,6 +44,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -86,6 +88,11 @@ public class ConsumerServiceImpl implements ConsumerService {
         consumer.setPortalId(portal.getPortalId());
 
         consumerRepository.save(consumer);
+
+        // 初始化Credential
+        ConsumerCredential credential = initCredential(consumerId);
+        credentialRepository.save(credential);
+
         return getConsumer(consumerId);
     }
 
@@ -112,9 +119,15 @@ public class ConsumerServiceImpl implements ConsumerService {
         // 凭证
         credentialRepository.deleteAllByConsumerId(consumerId);
 
-//        // 删除网关Consumer映射关系
-//        List<ConsumerRef> consumerRefs = consumerRefRepository.findByConsumerId(consumerId);
-//        consumerRefRepository.deleteAll(consumerRefs);
+        // 删除网关上的Consumer
+        List<ConsumerRef> consumerRefs = consumerRefRepository.findAllByConsumerId(consumerId);
+        for (ConsumerRef consumerRef : consumerRefs) {
+            try {
+                gatewayService.deleteConsumer(consumerRef.getGwConsumerId(), consumerRef.getGatewayConfig());
+            } catch (Exception e) {
+                log.error("deleteConsumer gatewayConsumer error, gwConsumerId: {}", consumerRef.getGwConsumerId(), e);
+            }
+        }
 
         consumerRepository.delete(consumer);
     }
@@ -133,6 +146,20 @@ public class ConsumerServiceImpl implements ConsumerService {
         credentialRepository.save(credential);
     }
 
+    private ConsumerCredential initCredential(String consumerId) {
+        ConsumerCredential credential = new ConsumerCredential();
+        credential.setConsumerId(consumerId);
+
+        ApiKeyConfig.ApiKeyCredential apiKeyCredential = new ApiKeyConfig.ApiKeyCredential();
+        ApiKeyConfig apiKeyConfig = new ApiKeyConfig();
+        apiKeyConfig.setCredentials(Collections.singletonList(apiKeyCredential));
+
+        credential.setApiKeyConfig(apiKeyConfig);
+        complementCredentials(credential);
+
+        return credential;
+    }
+
     @Override
     public ConsumerCredentialResult getCredential(String consumerId) {
         existsConsumer(consumerId);
@@ -148,6 +175,16 @@ public class ConsumerServiceImpl implements ConsumerService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
 
         param.update(credential);
+
+        List<ConsumerRef> consumerRefs = consumerRefRepository.findAllByConsumerId(consumerId);
+        for (ConsumerRef consumerRef : consumerRefs) {
+            try {
+                gatewayService.updateConsumer(consumerRef.getGwConsumerId(), credential, consumerRef.getGatewayConfig());
+            } catch (Exception e) {
+                log.error("update gatewayConsumer error, gwConsumerId: {}", consumerRef.getGwConsumerId(), e);
+            }
+        }
+
         credentialRepository.saveAndFlush(credential);
     }
 
@@ -163,7 +200,7 @@ public class ConsumerServiceImpl implements ConsumerService {
                 findDevConsumer(consumerId) : findConsumer(consumerId);
         // 勿重复订阅
         if (subscriptionRepository.findByConsumerIdAndProductId(consumerId, param.getProductId()).isPresent()) {
-            throw new BusinessException(ErrorCode.PRODUCT_API_EXISTS, param.getProductId());
+            throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "重复订阅");
         }
 
         ProductResult product = productService.getProduct(param.getProductId());
@@ -173,38 +210,18 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
 
         // 非网关型不支持订阅
-//        if (productRef.getSourceType() != SourceType.GATEWAY) {
-//            throw new BusinessException(ErrorCode.PRODUCT_TYPE_NOT_MATCH, param.getProductId());
-//        }
-//
-//        ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
-//
-//        GatewayConfig gatewayConfig = gatewayService.getGatewayConfig(productRef.getGatewayId());
-//
-//        // 是否在网关上有对应的Consumer
-//        String gwConsumerId = consumerRefRepository.findConsumerRef(
-//                        consumerId,
-//                        gatewayConfig.getGatewayType(),
-//                        gatewayConfig
-//                )
-//                .map(ConsumerRef::getGwConsumerId)
-//                .orElseGet(() -> {
-//                    String newGwConsumerId = gatewayService.createConsumer(productRef.getGatewayId(), consumer, credential);
-//                    consumerRefRepository.save(ConsumerRef.builder()
-//                            .consumerId(consumerId)
-//                            .gwConsumerId(newGwConsumerId)
-//                            .gatewayType(gatewayConfig.getGatewayType())
-//                            .gatewayConfig(gatewayConfig)
-//                            .build());
-//                    return newGwConsumerId;
-//                });
-//
-//        // 授权
-//        gatewayService.authorizeConsumer(gwConsumerId, productRef);
+        if (productRef.getSourceType() != SourceType.GATEWAY) {
+            throw new BusinessException(ErrorCode.PRODUCT_TYPE_NOT_MATCH, param.getProductId());
+        }
 
-        // 创建订阅记录
+        ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
+
+        // 授权
+        ConsumerAuthConfig consumerAuthConfig = authorizeConsumer(consumer, credential, productRef);
+
         ProductSubscription subscription = param.convertTo();
+        subscription.setConsumerAuthConfig(consumerAuthConfig);
         subscription.setConsumerId(consumerId);
         subscription.setStatus(SubscriptionStatus.APPROVED);
         subscriptionRepository.save(subscription);
@@ -215,6 +232,30 @@ public class ConsumerServiceImpl implements ConsumerService {
 
         return r;
     }
+
+    @Override
+    public void unsubscribeProduct(String consumerId, String productId) {
+        existsConsumer(consumerId);
+
+        ProductSubscription subscription = subscriptionRepository
+                .findByConsumerIdAndProductId(consumerId, productId)
+                .orElse(null);
+        if (subscription == null) {
+            return;
+        }
+
+        ProductRefResult productRef = productService.getProductRef(productId);
+        GatewayConfig gatewayConfig = gatewayService.getGatewayConfig(productRef.getGatewayId());
+
+        // 取消网关上的Consumer授权
+        consumerRefRepository.findConsumerRef(consumerId, gatewayConfig.getGatewayType(), gatewayConfig)
+                .ifPresent(consumerRef ->
+                        gatewayService.deathAuthorizeConsumer(productRef.getGatewayId(), consumerRef.getGwConsumerId(), subscription.getConsumerAuthConfig())
+                );
+
+        subscriptionRepository.deleteByConsumerIdAndProductId(consumerId, productId);
+    }
+
 
     @Override
     public PageResult<SubscriptionResult> listSubscriptions(String consumerId, QuerySubscriptionParam param, Pageable pageable) {
@@ -235,14 +276,6 @@ public class ConsumerServiceImpl implements ConsumerService {
             }
             return r;
         });
-    }
-
-    @Override
-    public void deleteSubscription(String consumerId, String productId) {
-        existsConsumer(consumerId);
-
-        subscriptionRepository.findByConsumerIdAndProductId(consumerId, productId)
-                .ifPresent(subscriptionRepository::delete);
     }
 
     private Consumer findConsumer(String consumerId) {
@@ -340,42 +373,63 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
     }
 
+    private ConsumerAuthConfig authorizeConsumer(Consumer consumer, ConsumerCredential credential, ProductRefResult productRef) {
+        GatewayConfig gatewayConfig = gatewayService.getGatewayConfig(productRef.getGatewayId());
+
+        // 是否在网关上有对应的Consumer
+        String gwConsumerId = consumerRefRepository.findConsumerRef(
+                        consumer.getConsumerId(),
+                        gatewayConfig.getGatewayType(),
+                        gatewayConfig
+                )
+                .map(ConsumerRef::getGwConsumerId)
+                .orElseGet(() -> {
+                    String newGwConsumerId = gatewayService.createConsumer(consumer, credential, gatewayConfig);
+                    consumerRefRepository.save(ConsumerRef.builder()
+                            .consumerId(consumer.getConsumerId())
+                            .gwConsumerId(newGwConsumerId)
+                            .gatewayType(gatewayConfig.getGatewayType())
+                            .gatewayConfig(gatewayConfig)
+                            .build());
+                    return newGwConsumerId;
+                });
+
+        // 授权
+        return gatewayService.authorizeConsumer(productRef.getGatewayId(), gwConsumerId, productRef);
+    }
+
     @EventListener
     @Async("taskExecutor")
     public void handleDeveloperDeletion(DeveloperDeletingEvent event) {
         String developerId = event.getDeveloperId();
-        try {
-            log.info("Cleaning consumers for developer {}", developerId);
+        log.info("Cleaning consumers for developer {}", developerId);
 
-            List<Consumer> consumers = consumerRepository.findAllByDeveloperId(developerId);
-            consumers.forEach(consumer -> {
-
-                List<ConsumerRef> consumerRefs = consumerRefRepository.findByConsumerId(consumer.getConsumerId());
-                for (ConsumerRef consumerRef : consumerRefs) {
-                    gatewayService.deleteConsumer(consumerRef.getGwConsumerId(), consumerRef.getGatewayConfig());
-                }
-
-                consumerRepository.delete(consumer);
-
-//                deleteConsumer(consumer.getConsumerId());
-                // TODO 清除凭证
-            });
-        } catch (Exception e) {
-            log.error("Failed to clean consumers for developer {}", developerId, e);
-        }
+        List<Consumer> consumers = consumerRepository.findAllByDeveloperId(developerId);
+        consumers.forEach(consumer -> {
+            try {
+                deleteConsumer(consumer.getConsumerId());
+            } catch (Exception e) {
+                log.error("Failed to delete consumer {}", consumer.getConsumerId(), e);
+            }
+        });
     }
 
     @EventListener
     @Async("taskExecutor")
     public void handleProductDeletion(ProductDeletingEvent event) {
         String productId = event.getProductId();
-        try {
-            log.info("Cleaning subscriptions for product {}", productId);
+        log.info("Cleaning subscriptions for product {}", productId);
 
-            subscriptionRepository.deleteAllByProductId(productId);
-            // TODO 订阅关系删除
-        } catch (Exception e) {
-            log.error("Failed to clean subscriptions for product {}", productId, e);
-        }
+        subscriptionRepository.deleteAllByProductId(productId);
+
+        List<ProductSubscription> subscriptions = subscriptionRepository.findAllByProductId(productId);
+
+        subscriptions.forEach(subscription -> {
+            try {
+                unsubscribeProduct(subscription.getConsumerId(), subscription.getProductId());
+            } catch (Exception e) {
+                log.error("Failed to unsubscribe product {} for consumer {}", productId, subscription.getConsumerId(), e);
+            }
+        });
     }
 }

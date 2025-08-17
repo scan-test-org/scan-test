@@ -14,7 +14,11 @@ public interface SubscriptionRepository extends BaseRepository<ProductSubscripti
 
     List<ProductSubscription> findALlByConsumerId(String consumerId);
 
+    List<ProductSubscription> findAllByProductId(String productId);
+
     void deleteAllByConsumerId(String consumerId);
 
     void deleteAllByProductId(String productId);
+
+    void deleteByConsumerIdAndProductId(String consumerId, String productId);
 }

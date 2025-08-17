@@ -120,10 +120,6 @@ public class DeveloperOauth2Controller {
         String newState = state;
         PortalResult portal = portalService.getPortal(portalId);
         PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
-        if (portalSetting == null) {
-            log.error("[PortalSetting不存在] portalId={}", portalId);
-            throw new BusinessException(ErrorCode.PORTAL_SETTING_NOT_FOUND);
-        }
         java.util.List<PortalSettingConfig> settings = Collections.singletonList(portalSetting);
         OidcConfig config = null;
         for (PortalSettingConfig setting : settings) {

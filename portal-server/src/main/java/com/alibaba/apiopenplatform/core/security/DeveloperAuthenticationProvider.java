@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.core.security;
 
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.service.DeveloperService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,9 +23,10 @@ import java.util.Optional;
  * @author zxd
  */
 @Component
+@RequiredArgsConstructor
 public class DeveloperAuthenticationProvider implements AuthenticationProvider {
-    @Autowired
-    private DeveloperService developerService;
+
+    private final DeveloperService developerService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {

@@ -16,18 +16,18 @@ public class ApiKeyConfig {
     /**
      * apikey的位置
      */
-    private String source;
+    private String source = "Default";
 
     /**
      * apikey参数名称
      */
-    private String key;
+    private String key = "Authorization";
 
     @Data
     public static class ApiKeyCredential {
 
         private String apiKey;
 
-        private CredentialMode mode;
+        private CredentialMode mode = CredentialMode.SYSTEM;
     }
 }

@@ -24,6 +24,10 @@ db:
 #   username: root
 #   password: 12345678
 
+# Encryptor
+encryption:
+  root-key: portalmanagement
+
 springdoc:
   api-docs:
     enabled: true

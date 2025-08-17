@@ -91,6 +91,14 @@ public interface ConsumerService {
     SubscriptionResult subscribeProduct(String consumerId, CreateSubscriptionParam param);
 
     /**
+     * 取消订阅
+     *
+     * @param consumerId
+     * @param productId
+     */
+    void unsubscribeProduct(String consumerId, String productId);
+
+    /**
      * 获取Consumer的订阅列表
      *
      * @param consumerId
@@ -99,12 +107,4 @@ public interface ConsumerService {
      * @return
      */
     PageResult<SubscriptionResult> listSubscriptions(String consumerId, QuerySubscriptionParam param, Pageable pageable);
-
-    /**
-     * 取消订阅API产品
-     *
-     * @param consumerId
-     * @param productId
-     */
-    void deleteSubscription(String consumerId, String productId);
 }
