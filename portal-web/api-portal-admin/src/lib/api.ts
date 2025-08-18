@@ -86,7 +86,7 @@ export const portalApi = {
   },
   // 更新开发者状态
   updateDeveloperStatus: (portalId: string, developerId: string, status: string) => {
-    return api.post(`/developers/${developerId}/status`, {
+    return api.patch(`/developers/${developerId}/status`, {
       portalId,
       status
     })
