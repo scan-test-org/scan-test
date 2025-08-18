@@ -1,0 +1,122 @@
+package com.alibaba.apiopenplatform.core.security;
+
+import com.alibaba.apiopenplatform.auth.JwtService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+
+/**
+ * 通用JWT认证过滤器，支持管理员和开发者多用户类型
+ * 根据claims动态注入ROLE_ADMIN/ROLE_DEVELOPER权限
+ * 集成Token黑名单校验
+ *
+ * @author zxd
+ */
+@Slf4j
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private final JwtService jwtService;
+    private final TokenBlacklistService tokenBlacklistService;
+
+    public JwtAuthenticationFilter(JwtService jwtService, TokenBlacklistService tokenBlacklistService) {
+        this.jwtService = jwtService;
+        this.tokenBlacklistService = tokenBlacklistService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        // 对于公开接口，跳过JWT验证
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/admins/login") || 
+            requestURI.equals("/developers/login") || 
+            requestURI.equals("/developers") ||
+            requestURI.equals("/admins/init") ||
+            requestURI.equals("/admins/need-init") ||
+            requestURI.equals("/developers/authorize") ||
+            requestURI.equals("/developers/callback") ||
+            requestURI.equals("/developers/providers") ||
+            requestURI.equals("/favicon.ico") ||
+            requestURI.equals("/error") ||
+            requestURI.startsWith("/swagger-ui") ||
+            requestURI.startsWith("/v3/api-docs") ||
+            requestURI.startsWith("/portal/swagger-ui") ||
+            requestURI.startsWith("/portal/v3/api-docs")) {
+            chain.doFilter(request, response);
+            return;
+        }
+        
+        // 优先从Authorization头获取token，其次从Cookie获取
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            log.debug("从Authorization头获取到token，长度: {}", token.length());
+        } else {
+            // 从Cookie中获取auth_token
+            javax.servlet.http.Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (javax.servlet.http.Cookie cookie : cookies) {
+                    if ("auth_token".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        log.debug("从Cookie获取到auth_token，长度: {}", token != null ? token.length() : 0);
+                        break;
+                    }
+                }
+            }
+            if (token == null) {
+                log.debug("未找到auth_token Cookie");
+            }
+        }
+        
+        if (token != null) {
+            if (tokenBlacklistService.isBlacklisted(token)) {
+                log.warn("Token已被列入黑名单");
+                SecurityContextHolder.clearContext();
+                unauthorized(response, "Token已失效");
+                return;
+            }
+            try {
+                Map<String, Object> claims = jwtService.parseAndValidateClaims(token);
+                Object userIdObj = claims.get("userId");
+                Object userTypeObj = claims.get("userType");
+                if (!(userIdObj instanceof String) || !(userTypeObj instanceof String)) {
+                    log.warn("JWT缺少userId或userType或类型错误");
+                    SecurityContextHolder.clearContext();
+                    unauthorized(response, "Token无效：缺少userId或userType");
+                    return;
+                }
+                String userId = (String) userIdObj;
+                String userType = ((String) userTypeObj).toUpperCase();
+                String role = "ROLE_" + userType;
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        userId, null, Collections.singletonList(new SimpleGrantedAuthority(role)));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.info("JWT认证成功，userType={}, userId={}", userType, userId);
+            } catch (Exception e) {
+                log.warn("JWT认证失败: {}", e.getMessage());
+                SecurityContextHolder.clearContext();
+                unauthorized(response, "Token无效或已过期");
+                return;
+            }
+        } else {
+            SecurityContextHolder.clearContext();
+        }
+        chain.doFilter(request, response);
+    }
+    private void unauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"" + message + "\"}");
+    }
+} 

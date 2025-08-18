@@ -1,18 +1,26 @@
 package com.alibaba.apiopenplatform.dto.params.portal;
 
+import com.alibaba.apiopenplatform.dto.converter.InputConverter;
+import com.alibaba.apiopenplatform.entity.Portal;
+import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
+import com.alibaba.apiopenplatform.support.portal.PortalUiConfig;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 /**
  * @author zh
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class UpdatePortalParam extends CreatePortalParam {
+public class UpdatePortalParam implements InputConverter<Portal> {
 
-    @NotBlank(message = "门户ID不能为空")
-    private String portalId;
+    @Size(max = 50, message = "门户名称长度不能超过50个字符")
+    private String name;
 
+    @Size(max = 1024, message = "门户描述长度不能超过1024个字符")
+    private String description;
+
+    private PortalSettingConfig portalSettingConfig;
+
+    private PortalUiConfig portalUiConfig;
 }

@@ -26,6 +26,9 @@
         <mysql.version>8.0.33</mysql.version>
         <hutool.version>5.8.23</hutool.version>
         <springdoc.version>1.7.0</springdoc.version>
+        <apigsdk.version>4.0.10</apigsdk.version>
+        <okhttp.version>4.12.0</okhttp.version>
+        <higress-sdk.version>0.0.1-SNAPSHOT</higress-sdk.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
@@ -56,12 +59,48 @@
                 <version>${hutool.version}</version>
             </dependency>
 
+            <!-- Spring Boot Starter Security -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-security</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+
+            <!-- Spring Boot Starter OAuth2 Client -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-oauth2-client</artifactId>
+            </dependency>
+
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-ui</artifactId>
                 <version>${springdoc.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>alibabacloud-apig20240327</artifactId>
+                <version>${apigsdk.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.higress.api</groupId>
+                <artifactId>higress-admin-sdk</artifactId>
+                <version>${higress-sdk.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.nacos</groupId>
+                <artifactId>nacos-maintainer-client</artifactId>
+                <version>3.0.2</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

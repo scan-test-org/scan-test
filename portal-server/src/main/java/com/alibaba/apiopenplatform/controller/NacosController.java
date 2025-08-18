@@ -1,0 +1,70 @@
+package com.alibaba.apiopenplatform.controller;
+
+import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
+import com.alibaba.apiopenplatform.dto.params.nacos.CreateNacosParam;
+import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
+import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
+import com.alibaba.apiopenplatform.dto.result.NacosResult;
+import com.alibaba.apiopenplatform.dto.result.PageResult;
+import com.alibaba.apiopenplatform.service.NacosService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+
+/**
+ * Nacos实例管理与能力市场统一控制器
+ *
+ * @author zxd
+ */
+@Tag(name = "Nacos资源管理")
+@RestController
+@RequestMapping("/nacos")
+@RequiredArgsConstructor
+@AdminAuth
+public class NacosController {
+
+    private final NacosService nacosService;
+
+    // ----------- Nacos实例管理相关 -----------
+    @Operation(summary = "获取Nacos实例列表")
+    @GetMapping
+    public PageResult<NacosResult> listNacosInstances(Pageable pageable) {
+        return nacosService.listNacosInstances(pageable);
+    }
+
+    @Operation(summary = "创建Nacos实例")
+    @PostMapping
+    public void createNacosInstance(@RequestBody @Valid CreateNacosParam param) {
+        nacosService.createNacosInstance(param);
+    }
+
+    @Operation(summary = "更新Nacos实例")
+    @PutMapping("/{nacosId}")
+    public void updateNacosInstance(@PathVariable String nacosId, @RequestBody @Valid UpdateNacosParam param) {
+        nacosService.updateNacosInstance(nacosId, param);
+    }
+
+    @Operation(summary = "删除Nacos实例")
+    @DeleteMapping("/{nacosId}")
+    public void deleteNacosInstance(@PathVariable String nacosId) {
+        nacosService.deleteNacosInstance(nacosId);
+    }
+
+    @Operation(summary = "获取Nacos实例详情")
+    @GetMapping("/{nacosId}")
+    public NacosResult getNacosInstance(@PathVariable String nacosId) {
+        return nacosService.getNacosInstance(nacosId);
+    }
+
+    @Operation(summary = "获取Nacos中的MCP Server列表")
+    @GetMapping("/{nacosId}/mcp-servers")
+    public PageResult<NacosMCPServerResult> fetchMcpServers(@PathVariable String nacosId,
+                                                            Pageable pageable) throws Exception {
+        return nacosService.fetchMcpServers(nacosId, pageable);
+    }
+
+} 
