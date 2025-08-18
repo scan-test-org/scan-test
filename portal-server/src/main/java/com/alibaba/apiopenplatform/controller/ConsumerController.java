@@ -117,6 +117,6 @@ public class ConsumerController {
     @PatchMapping("/{consumerId}/subscriptions/{productId}")
     @AdminAuth
     public SubscriptionResult approveSubscription(@PathVariable String consumerId, @PathVariable String productId) {
-        return null;
+        return consumerService.approveSubscription(consumerId, productId);
     }
 }
