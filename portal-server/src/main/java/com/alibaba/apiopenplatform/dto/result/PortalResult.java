@@ -23,8 +23,6 @@ public class PortalResult implements OutputConverter<PortalResult, Portal> {
 
     private String name;
 
-    private String title;
-
     private String description;
 
     private String adminId;

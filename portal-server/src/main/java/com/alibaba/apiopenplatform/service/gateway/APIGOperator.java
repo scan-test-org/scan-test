@@ -532,7 +532,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
                 .map(cred -> AkSkIdentityConfig.builder()
                         .ak(cred.getAk())
                         .sk(cred.getSk())
-                        .generateMode(cred.getMode().name())
+                        .generateMode("Custom")
                         .type("AkSk")
                         .build())
                 .collect(Collectors.toList());

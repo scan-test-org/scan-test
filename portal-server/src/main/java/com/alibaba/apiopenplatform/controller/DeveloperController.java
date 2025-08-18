@@ -101,8 +101,7 @@ public class DeveloperController {
     @PatchMapping("/{developerId}/status")
     public void setDeveloperStatus(@PathVariable("developerId") String developerId,
                                    @RequestBody DeveloperStatusParam param) {
-        String portalId = contextHolder.getPortal();
-        developerService.setDeveloperStatus(portalId, developerId, param.getStatus());
+        developerService.setDeveloperStatus(developerId, param.getStatus());
     }
 
     @Operation(summary = "获取当前开发者信息", description = "开发者功能：获取当前登录开发者的个人信息")
