@@ -107,4 +107,20 @@ public interface ConsumerService {
      * @return
      */
     PageResult<SubscriptionResult> listSubscriptions(String consumerId, QuerySubscriptionParam param, Pageable pageable);
+
+    /**
+     * 取消订阅API产品
+     *
+     * @param consumerId
+     * @param productId
+     */
+    void deleteSubscription(String consumerId, String productId);
+
+    /**
+     * 审批订阅API产品
+     *
+     * @param consumerId
+     * @param productId
+     */
+    SubscriptionResult approveSubscription(String consumerId, String productId);
 }
