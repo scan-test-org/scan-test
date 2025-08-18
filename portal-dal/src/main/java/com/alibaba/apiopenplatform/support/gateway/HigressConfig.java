@@ -16,15 +16,7 @@ public class HigressConfig {
     @Encrypted
     private String password;
 
-    private String host;
-
-    private int port;
-
-    private String accessToken;
-
-    private String jwtPolicy;
-
     public String buildUniqueKey() {
-        return String.format("%s:%s:%s", host, port, accessToken);
+        return String.format("%s:%s:%s", address, username, password);
     }
 }
