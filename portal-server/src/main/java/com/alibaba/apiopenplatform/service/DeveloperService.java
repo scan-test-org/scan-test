@@ -7,6 +7,7 @@ import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.entity.Developer;
+import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
@@ -97,12 +98,11 @@ public interface DeveloperService {
     /**
      * 设置开发者状态
      *
-     * @param portalId
      * @param developerId
      * @param status
      * @return
      */
-    void setDeveloperStatus(String portalId, String developerId, String status);
+    void setDeveloperStatus(String developerId, DeveloperStatus status);
 
     /**
      * 开发者修改密码

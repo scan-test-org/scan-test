@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.dto.params.developer;
 
+import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import lombok.Data;
 
 /**
@@ -12,5 +13,5 @@ public class DeveloperStatusParam {
 
     private String portalId;
 
-    private String status;
+    private DeveloperStatus status;
 } 
