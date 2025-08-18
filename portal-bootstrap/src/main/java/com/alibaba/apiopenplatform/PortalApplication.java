@@ -11,8 +11,6 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @SpringBootApplication
 @EnableJpaAuditing
-//@ComponentScan(basePackages = "com.alibaba.apiopenplatform")
-//@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 public class PortalApplication {
 
     public static void main(String[] args) {
