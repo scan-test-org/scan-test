@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build --watch & tnpx serve dist --cors -p 8000",
     "dev:local": "vite --mode devlocal",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
