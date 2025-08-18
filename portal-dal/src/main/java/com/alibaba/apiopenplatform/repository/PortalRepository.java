@@ -4,24 +4,21 @@ import com.alibaba.apiopenplatform.entity.Portal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 /**
  * @author zh
  */
-@Repository
-public interface PortalRepository extends JpaRepository<Portal, Long>, JpaSpecificationExecutor<Portal> {
+public interface PortalRepository extends BaseRepository<Portal, Long> {
 
-    @EntityGraph("portal.properties")
     Optional<Portal> findByPortalIdAndAdminId(String portalId, String adminId);
 
-    @EntityGraph("portal.properties")
+    Optional<Portal> findByPortalId(String portalId);
+
     Optional<Portal> findByNameAndAdminId(String name, String adminId);
 
-    @EntityGraph("portal.properties")
+    Optional<Portal> findByName(String name);
+
     Page<Portal> findByAdminId(String adminId, Pageable pageable);
 }

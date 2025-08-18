@@ -1,0 +1,41 @@
+package com.alibaba.apiopenplatform.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
+
+/**
+ * 全局CORS跨域配置，允许前后端分离开发环境下的跨域请求
+ * 支持所有来源、常用方法、所有请求头，允许带cookie
+ *
+ * @author zxd
+ */
+@Configuration
+public class GlobalCorsConfig implements WebMvcConfigurer {
+    /**
+     * 配置全局跨域规则
+     */
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOriginPatterns("*")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true)
+            .maxAge(3600);
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+        PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
+        resolver.setFallbackPageable(PageRequest.of(0, 100,
+                Sort.by(Sort.Direction.DESC, "createAt")));
+        argumentResolvers.add(resolver);
+    }
+} 

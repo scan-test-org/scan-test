@@ -1,38 +1,69 @@
 package com.alibaba.apiopenplatform.dto.result;
 
-import cn.hutool.core.bean.copier.CopyOptions;
-import cn.hutool.core.map.MapUtil;
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author zh
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PageResult<T> implements OutputConverter<PageResult<T>, Page<T>> {
 
     private List<T> content;
 
-    private int pageNumber;
+    private int number;
 
-    private int pageSize;
+    private int size;
 
     private long totalElements;
 
-    private int totalPages;
-
-    @Override
-    public PageResult<T> convertFrom(Page<T> source) {
-        OutputConverter.super.convertFrom(source);
-
-        setPageSize(source.getSize());
-        setPageNumber(source.getNumber());
+    public <S> PageResult<T> mapFrom(PageResult<S> source, Function<S, T> mapper) {
+        setContent(source.getContent().stream()
+                .map(mapper)
+                .collect(Collectors.toList()));
+        setSize(source.getSize());
+        setNumber(source.getNumber());
         setTotalElements(source.getTotalElements());
-        setTotalPages(source.getTotalPages());
-
         return this;
+    }
+
+    public <S> PageResult<T> convertFrom(Page<S> source, Function<S, T> mapper) {
+        setContent(source.getContent().stream()
+                .map(mapper)
+                .collect(Collectors.toList()));
+        setSize(source.getSize());
+        setNumber(source.getNumber());
+        setTotalElements(source.getTotalElements());
+        return this;
+    }
+
+    public static <T> PageResult<T> empty(int pageNumber, int pageSize) {
+        return PageResult.<T>builder()
+                .content(new ArrayList<>())
+                .number(pageNumber)
+                .size(pageSize)
+                .totalElements(0)
+                .build();
+    }
+
+    public static <T> PageResult<T> of(List<T> content, int pageNumber, int pageSize, long total) {
+        return PageResult.<T>builder()
+                .content(content)
+                .number(pageNumber)
+                .size(pageSize)
+                .totalElements(total)
+                .build();
     }
 }

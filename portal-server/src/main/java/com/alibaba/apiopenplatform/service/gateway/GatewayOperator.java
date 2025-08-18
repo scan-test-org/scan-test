@@ -1,0 +1,102 @@
+package com.alibaba.apiopenplatform.service.gateway;
+
+import com.alibaba.apiopenplatform.core.exception.BusinessException;
+import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
+import com.alibaba.apiopenplatform.dto.result.GatewayMCPServerResult;
+import com.alibaba.apiopenplatform.dto.result.*;
+import com.alibaba.apiopenplatform.entity.*;
+import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
+import com.alibaba.apiopenplatform.service.gateway.client.GatewayClient;
+import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
+import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
+import com.alibaba.apiopenplatform.support.enums.GatewayType;
+import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * @author zh
+ */
+@Slf4j
+public abstract class GatewayOperator<T> {
+
+    private final Map<String, GatewayClient> clientCache = new ConcurrentHashMap<>();
+
+    abstract public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, Pageable pageable);
+
+    abstract public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, Pageable pageable);
+
+    abstract public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable);
+
+    abstract public String fetchAPIConfig(Gateway gateway, Object config);
+
+    abstract public String fetchMcpConfig(Gateway gateway, Object conf);
+
+    abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
+
+    abstract public String createConsumer(Consumer consumer, ConsumerCredential credential, GatewayConfig config);
+
+    abstract public void updateConsumer(String consumerId, ConsumerCredential credential, GatewayConfig config);
+
+    abstract public void deleteConsumer(String consumerId, GatewayConfig config);
+
+    abstract public ConsumerAuthConfig authorizeConsumer(Gateway gateway, String consumerId, Object refConfig);
+
+    abstract public void revokeConsumerAuthorization(Gateway gateway, String consumerId, ConsumerAuthConfig authConfig);
+
+    abstract public APIResult fetchAPI(Gateway gateway, String apiId);
+
+    abstract public GatewayType getGatewayType();
+
+    @SuppressWarnings("unchecked")
+    protected T getClient(Gateway gateway) {
+        String clientKey = gateway.getGatewayType().isAPIG() ?
+                gateway.getApigConfig().buildUniqueKey() : gateway.getHigressConfig().buildUniqueKey();
+        return (T) clientCache.computeIfAbsent(
+                clientKey,
+                key -> createClient(gateway)
+        );
+    }
+
+//    @SuppressWarnings("unchecked")
+//    protected T getClient(Gateway gateway) {
+//        String clientKey = gateway.getGatewayType().isAPIG() ?
+//                gateway.getApigConfig().buildUniqueKey() : gateway.getHigressConfig().buildUniqueKey();
+//        return (T) clientCache.computeIfAbsent(
+//                clientKey,
+//                key -> createClient(gateway)
+//        );
+//    }
+
+    /**
+     * 创建网关客户端
+     */
+    private GatewayClient createClient(Gateway gateway) {
+        switch (gateway.getGatewayType()) {
+            case APIG_API:
+            case APIG_AI:
+                return new APIGClient(gateway.getApigConfig());
+            case HIGRESS:
+                return new HigressClient(gateway.getHigressConfig());
+            default:
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR,
+                        "No factory found for gateway type: " + gateway.getGatewayType());
+        }
+    }
+
+    /**
+     * 移除网关客户端
+     */
+    public void removeClient(String instanceId) {
+        GatewayClient client = clientCache.remove(instanceId);
+        try {
+            client.close();
+        } catch (Exception e) {
+            log.error("Error closing client for instance: {}", instanceId, e);
+        }
+    }
+}

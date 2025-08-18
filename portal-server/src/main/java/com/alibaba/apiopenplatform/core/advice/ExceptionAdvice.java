@@ -44,6 +44,7 @@ public class ExceptionAdvice {
         String message = e.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .collect(Collectors.joining("; "));
+        log.error("Validation failed", e);
         return ResponseEntity
                 .status(ErrorCode.INVALID_PARAMETER.getStatus())
                 .body(Response.fail(ErrorCode.INVALID_PARAMETER.getCode(), message));
@@ -51,12 +52,12 @@ public class ExceptionAdvice {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Response<Void>> handleSystemException(Exception e) {
-        String message = String.format("%s: %s", ErrorCode.INTERNAL_ERROR.getMessage(), e.getMessage());
+        log.error("System error", e);
         return ResponseEntity
                 .status(ErrorCode.INTERNAL_ERROR.getStatus())
                 .body(Response.fail(
                         ErrorCode.INTERNAL_ERROR.getCode(),
-                        message
+                        ErrorCode.INTERNAL_ERROR.getMessage(e.getMessage())
                 ));
     }
 }

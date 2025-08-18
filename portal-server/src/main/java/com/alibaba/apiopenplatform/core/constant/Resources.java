@@ -10,4 +10,23 @@ public class Resources {
     public static final String PORTAL_SETTING = "PortalSetting";
 
     public static final String PORTAL_UI = "PortalUI";
+
+    public static final String PORTAL_DOMAIN = "PortalDomain";
+
+    public static final String PRODUCT = "Product";
+
+    public static final String PRODUCT_SETTING = "ProductSetting";
+
+    public static final String DEVELOPER = "Developer";
+
+    public static final String CONSUMER = "Consumer";
+
+    public static final String CONSUMER_CREDENTIAL = "ConsumerCredential";
+
+    public static final String GATEWAY = "Gateway";
+
+    public static final String PRODUCT_REF = "ProductRef";
+
+    public static final String NACOS_INSTANCE = "NacosInstance";
+
 }
