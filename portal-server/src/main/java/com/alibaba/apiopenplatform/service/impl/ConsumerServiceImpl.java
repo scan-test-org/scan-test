@@ -1,6 +1,8 @@
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.DeveloperDeletingEvent;
 import com.alibaba.apiopenplatform.core.event.ProductDeletingEvent;
@@ -29,6 +31,7 @@ import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 import com.alibaba.apiopenplatform.support.enums.CredentialMode;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
 import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
+import cn.hutool.core.util.BooleanUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -196,6 +199,7 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public SubscriptionResult subscribeProduct(String consumerId, CreateSubscriptionParam param) {
+
         Consumer consumer = contextHolder.isDeveloper() ?
                 findDevConsumer(consumerId) : findConsumer(consumerId);
         // 勿重复订阅
@@ -217,13 +221,25 @@ public class ConsumerServiceImpl implements ConsumerService {
         ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
 
-        // 授权
-        ConsumerAuthConfig consumerAuthConfig = authorizeConsumer(consumer, credential, productRef);
-
         ProductSubscription subscription = param.convertTo();
-        subscription.setConsumerAuthConfig(consumerAuthConfig);
         subscription.setConsumerId(consumerId);
-        subscription.setStatus(SubscriptionStatus.APPROVED);
+        
+        // 检查autoApprove设置
+        PortalResult portal = portalService.getPortal(consumer.getPortalId());
+        log.info("portal: {}", JSONUtil.toJsonStr(portal));
+        boolean autoApprove = portal.getPortalSettingConfig() != null
+                && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveSubscriptions());
+        
+        if (autoApprove) {
+            // 如果autoApprove为true，立即授权并设置为APPROVED状态
+            ConsumerAuthConfig consumerAuthConfig = authorizeConsumer(consumer, credential, productRef);
+            subscription.setConsumerAuthConfig(consumerAuthConfig);
+            subscription.setStatus(SubscriptionStatus.APPROVED);
+        } else {
+            // 如果autoApprove为false，暂时不授权，设置为PENDING状态
+            subscription.setStatus(SubscriptionStatus.PENDING);
+        }
+        
         subscriptionRepository.save(subscription);
 
         SubscriptionResult r = new SubscriptionResult().convertFrom(subscription);
@@ -278,6 +294,54 @@ public class ConsumerServiceImpl implements ConsumerService {
         });
     }
 
+    @Override
+    public void deleteSubscription(String consumerId, String productId) {
+        existsConsumer(consumerId);
+
+        subscriptionRepository.findByConsumerIdAndProductId(consumerId, productId)
+                .ifPresent(subscriptionRepository::delete);
+    }
+
+    @Override
+    public SubscriptionResult approveSubscription(String consumerId, String productId) {
+        existsConsumer(consumerId);
+
+        ProductSubscription subscription = subscriptionRepository.findByConsumerIdAndProductId(consumerId, productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.SUBSCRIPTION, productId));
+        
+        // 检查订阅状态，只有PENDING状态的订阅才能被审批
+        if (subscription.getStatus() != SubscriptionStatus.PENDING) {
+            throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "只有待审批的订阅才能被审批");
+        }
+        
+        // 获取消费者和凭证信息
+        Consumer consumer = contextHolder.isDeveloper() ?
+                findDevConsumer(consumerId) : findConsumer(consumerId);
+        ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
+        
+        // 获取产品引用信息
+        ProductRefResult productRef = productService.getProductRef(productId);
+        if (productRef == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId);
+        }
+        
+        // 执行授权操作
+        ConsumerAuthConfig consumerAuthConfig = authorizeConsumer(consumer, credential, productRef);
+        
+        // 更新订阅状态和授权配置
+        subscription.setConsumerAuthConfig(consumerAuthConfig);
+        subscription.setStatus(SubscriptionStatus.APPROVED);
+        subscriptionRepository.saveAndFlush(subscription);
+
+        ProductResult product = productService.getProduct(productId);
+        SubscriptionResult result = new SubscriptionResult().convertFrom(subscription);
+        if (product != null) {
+            result.setProductName(product.getName());
+            result.setProductType(product.getType());
+        }
+        return result;
+    }
     private Consumer findConsumer(String consumerId) {
         return consumerRepository.findByConsumerId(consumerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.CONSUMER, consumerId));
