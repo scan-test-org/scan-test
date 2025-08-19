@@ -345,8 +345,8 @@ public class DeveloperOauth2Controller {
             RestTemplate restTemplate = new RestTemplate();
             org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
                     new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            factory.setConnectTimeout(10000);
-            factory.setReadTimeout(10000);
+            factory.setConnectTimeout(30000);
+            factory.setReadTimeout(30000);
             restTemplate.setRequestFactory(factory);
 
             return restTemplate;
