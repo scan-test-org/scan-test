@@ -7,14 +7,14 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * @author zh
+ * @author zxd
  */
 @Data
 public class DeveloperResult implements OutputConverter<DeveloperResult, Developer> {
 
-    private String portalId;
-
     private String developerId;
+
+    private String portalId;
 
     private String username;
 

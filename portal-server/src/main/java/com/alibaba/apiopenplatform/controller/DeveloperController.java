@@ -24,8 +24,6 @@ import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 
 /**
- * 开发者账号相关接口
- *
  * @author zxd
  */
 @Tag(name = "开发者管理", description = "提供开发者认证、管理等功能")
@@ -34,6 +32,7 @@ import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 @RequiredArgsConstructor
 @Validated
 public class DeveloperController {
+
     private final DeveloperService developerService;
     private final TokenBlacklistService tokenBlacklistService;
     private final ContextHolder contextHolder;
@@ -49,26 +48,21 @@ public class DeveloperController {
                 && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveDevelopers());
 
         if (autoApprove) {
-            // 如果自动审批，则自动登录
             AuthResponseResult authResult = developerService.generateAuthResult(developer);
-            // 返回token到响应体，前端保存到localStorage
             return authResult;
         }
-        // 如果不自动审批，则注册成功但不登录，需要等待管理员审批
-        return null; // 返回null，表示注册成功但未自动登录
+        return null;
     }
 
     @Operation(summary = "开发者登录", description = "开发者账号密码登录")
     @PostMapping("/login")
     public AuthResponseResult login(@Valid @RequestBody DeveloperLoginParam param) {
-        AuthResponseResult authResult = developerService.loginWithPassword(param.getUsername(), param.getPassword());
-        return authResult;
+        return developerService.loginWithPassword(param.getUsername(), param.getPassword());
     }
 
     @Operation(summary = "开发者登出", description = "登出")
     @PostMapping("/logout")
     public void logout(HttpServletRequest request) {
-        // 从Authorization头获取token并加入黑名单
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
@@ -77,31 +71,10 @@ public class DeveloperController {
         }
     }
 
-    @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号。providerName和providerSubject参数建议通过/list-identities接口获取。")
-    @DeleteMapping("/{developerId}/identity")
-    public void unbindExternalIdentity(@PathVariable("developerId") String developerId,
-                                       @RequestBody UnbindExternalIdentityParam param) {
-        String portalId = contextHolder.getPortal();
-        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject(), portalId);
-    }
-
-    @Operation(summary = "注销账号", description = "注销当前登录用户账号")
-    @DeleteMapping("/{developerId}")
-    public void deleteAccount(@PathVariable("developerId") String developerId) {
-        developerService.deleteDeveloperAccount(developerId);
-    }
-
     @Operation(summary = "获取门户的开发者列表", description = "管理员功能：获取当前门户下所有开发者的分页列表")
     @GetMapping
     public PageResult<DeveloperResult> listDevelopers(QueryDeveloperParam param, Pageable pageable) {
         return developerService.listDevelopers(param, pageable);
-    }
-
-    @Operation(summary = "设置开发者状态", description = "管理员审核开发者账号，status为APPROVED/PENDING等")
-    @PatchMapping("/{developerId}/status")
-    public void setDeveloperStatus(@PathVariable("developerId") String developerId,
-                                   @RequestBody DeveloperStatusParam param) {
-        developerService.setDeveloperStatus(developerId, param.getStatus());
     }
 
     @Operation(summary = "获取当前开发者信息", description = "开发者功能：获取当前登录开发者的个人信息")
@@ -132,7 +105,7 @@ public class DeveloperController {
         return "修改密码成功";
     }
 
-    @Operation(summary = "开发者更新个人信息", description = "开发者功能：更新当前登录开发者的个人信息，包括用户名、邮箱、头像等")
+    @Operation(summary = "开发者更新个人信息", description = "开发者功能：更新当前登录开发者的个人信息")
     @PutMapping("/profile")
     public String updateProfile(@Valid @RequestBody UpdateDeveloperProfileParam param) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -142,5 +115,26 @@ public class DeveloperController {
         }
         developerService.updateProfile(currentUserId, param.getUsername(), param.getEmail(), param.getAvatarUrl());
         return "更新个人信息成功";
+    }
+
+    @Operation(summary = "设置开发者状态", description = "管理员审核开发者账号，status为APPROVED/PENDING")
+    @PatchMapping("/{developerId}/status")
+    public void setDeveloperStatus(@PathVariable("developerId") String developerId,
+                                   @RequestBody DeveloperStatusParam param) {
+        developerService.setDeveloperStatus(developerId, param.getStatus());
+    }
+
+    @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号")
+    @DeleteMapping("/{developerId}/identity")
+    public void unbindExternalIdentity(@PathVariable("developerId") String developerId,
+                                       @RequestBody UnbindExternalIdentityParam param) {
+        String portalId = contextHolder.getPortal();
+        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject(), portalId);
+    }
+
+    @Operation(summary = "注销账号", description = "注销当前登录用户账号")
+    @DeleteMapping("/{developerId}")
+    public void deleteAccount(@PathVariable("developerId") String developerId) {
+        developerService.deleteDeveloperAccount(developerId);
     }
 }
