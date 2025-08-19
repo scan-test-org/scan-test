@@ -77,11 +77,11 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-gray-600">Portal名称</span>
-                <span className="font-medium">{portal.title}</span>
+                <span className="font-medium">{portal.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Portal ID</span>
-                <span className="font-medium">{portal.name}</span>
+                <span className="font-medium">{portal.portalId}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">域名</span>
@@ -93,7 +93,7 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
                 </div>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">内置认证</span>
+                <span className="text-gray-600">账号密码登录</span>
                 <Tag color={portal.portalSettingConfig?.builtinAuthEnabled ? "green" : "default"}>
                   {portal.portalSettingConfig?.builtinAuthEnabled ? "已启用" : "已禁用"}
                 </Tag>

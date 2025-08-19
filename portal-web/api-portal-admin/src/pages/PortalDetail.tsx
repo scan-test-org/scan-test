@@ -28,7 +28,7 @@ const menuItems = [
     key: "overview",
     label: "Overview",
     icon: GlobalOutlined,
-    description: "Portal概览和快速设置"
+    description: "Portal概览"
   },
   {
     key: "published-apis",

@@ -509,6 +509,13 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
                     </Collapse>
                   </>
                 )}
+                {!isOpenApi && !isMcp && (
+                  <Card>
+                    <div className="text-center py-8 text-gray-500">
+                      <p>暂无配置</p>
+                    </div>
+                  </Card>
+                  )}
               </div>
             ),
           },

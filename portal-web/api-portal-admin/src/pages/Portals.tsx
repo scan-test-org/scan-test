@@ -65,7 +65,7 @@ const PortalCard = memo(
     return (
       <Card
         className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-gray-100 hover:border-blue-300 bg-gradient-to-br from-white to-gray-50/30"
-       
+        onClick={handleCardClick}
         bodyStyle={{ padding: "20px" }}
       >
         <div className="flex items-center justify-between mb-6">
