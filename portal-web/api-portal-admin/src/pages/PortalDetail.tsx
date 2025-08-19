@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Button, Dropdown, MenuProps, Typography, Spin } from 'antd'
+import { Button, Dropdown, MenuProps, Typography, Spin, Modal, message } from 'antd'
 import { 
   LinkOutlined,
   MoreOutlined,
@@ -127,23 +127,28 @@ export default function PortalDetail() {
 
   const dropdownItems: MenuProps['items'] = [
     {
-      key: 'edit',
-      label: '编辑Portal',
-    },
-    {
-      key: 'copy',
-      label: '复制Portal',
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'delete',
-      label: '删除Portal',
+      key: "delete",
+      label: "删除",
       danger: true,
+      onClick: () => {
+        Modal.confirm({
+          title: "删除Portal",
+          content: "确定要删除该Portal吗？",
+          onOk: () => {
+            handleDeletePortal();
+          },
+        });
+      },
     },
   ]
-
+  const handleDeletePortal = () => {
+    portalApi.deletePortal(searchParams.get('id') || '').then(() => {
+      message.success('删除成功')
+      navigate('/portals')
+    }).catch((error) => {
+      message.error(error.response?.data?.message || '删除失败')
+    })
+  }
 
   if (error || !portal) {
     return (
@@ -177,12 +182,12 @@ export default function PortalDetail() {
         {/* Portal 信息 */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
-            <Title level={5} className="mb-0">{portal.title}</Title>
+            <Title level={5} className="mb-0">{portal.name}</Title>
             <Dropdown menu={{ items: dropdownItems }} trigger={['click']}>
               <Button type="text" icon={<MoreOutlined />} size="small" />
             </Dropdown>
           </div>
-          <Paragraph className="text-gray-600 mb-3" ellipsis={{ rows: 1, tooltip: portal.name }}>{portal.name}</Paragraph>
+          <Paragraph className="text-gray-600 mb-3" ellipsis={{ rows: 1, tooltip: portal.name }}>{portal.description}</Paragraph>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <LinkOutlined className="h-3 w-3" />
             <a 
