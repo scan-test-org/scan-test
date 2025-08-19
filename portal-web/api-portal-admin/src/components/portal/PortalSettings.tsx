@@ -358,7 +358,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           <div className="grid grid-cols-2 gap-6">
             <Form.Item
               name="builtinAuthEnabled"
-              label="内置认证"
+              label="账号密码登录"
               valuePropName="checked"
             >
               <Switch 

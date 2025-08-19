@@ -62,7 +62,11 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
 
   const handleUpdateDeveloperStatus = (developerId: string, status: string) => {
     portalApi.updateDeveloperStatus(portal.portalId, developerId, status).then((res) => {
-      message.success('审批成功')
+      if (status === 'PENDING') {
+        message.success('取消授权成功')
+      } else {
+        message.success('审批成功')
+      }
       fetchDevelopers()
     }).catch((err) => {
       message.error('审批失败')
