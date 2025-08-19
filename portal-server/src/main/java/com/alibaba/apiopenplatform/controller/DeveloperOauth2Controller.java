@@ -48,11 +48,7 @@ import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import javax.servlet.http.Cookie;
 import javax.annotation.PostConstruct;
 
-
 /**
- * 开发者 OAuth2 统一回调与外部身份绑定控制器
- * 支持多渠道 OAuth2 登录、外部身份绑定与解绑
- *
  * @author zxd
  */
 @Slf4j
@@ -61,6 +57,7 @@ import javax.annotation.PostConstruct;
 @RequestMapping("/developers")
 @RequiredArgsConstructor
 public class DeveloperOauth2Controller {
+
     private final DeveloperRepository developerRepository;
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     private final DeveloperService developerService;
@@ -74,46 +71,8 @@ public class DeveloperOauth2Controller {
     public void init() {
         this.restTemplate = createRestTemplateWithSSLBypass();
     }
-    
-    private RestTemplate createRestTemplateWithSSLBypass() {
-        try {
-            // 创建信任所有证书的TrustManager
-            javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[]{
-                new javax.net.ssl.X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-                }
-            };
 
-            javax.net.ssl.SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-            javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-            RestTemplate restTemplate = new RestTemplate();
-            org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
-                    new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            factory.setConnectTimeout(10000);
-            factory.setReadTimeout(10000);
-            restTemplate.setRequestFactory(factory);
-
-            return restTemplate;
-        } catch (Exception e) {
-            return new RestTemplate();
-        }
-    }
-
-    /**
-     * OIDC授权入口，支持多配置
-     * @param provider OIDC provider 名（如 github、google、aliyun、自定义）
-     * @param state 前端生成的state参数
-     * @note portalId 已自动根据域名识别，无需传递
-     */
-    @Operation(summary = "OIDC授权入口", description = "重定向到第三方登录页面。state参数格式：BINDING|{随机串}|{provider}|{token} 或 LOGIN|{provider}。portalId已自动根据域名识别，无需传递。注意：需要先配置对应的OIDC配置。")
+    @Operation(summary = "OIDC授权入口", description = "重定向到第三方登录页面")
     @GetMapping("/authorize")
     public void universalAuthorize(@RequestParam String provider, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String portalId = contextHolder.getPortal();
@@ -139,7 +98,6 @@ public class DeveloperOauth2Controller {
         }
         String redirectUri = generateRedirectUri(request);
         
-        // 如果state中包含API_PREFIX，使用它来构建回调URL
         String decodedState = URLDecoder.decode(newState, "UTF-8");
         if (decodedState.contains("API_PREFIX=")) {
             String[] parts = decodedState.split("\\|");
@@ -171,8 +129,7 @@ public class DeveloperOauth2Controller {
         response.sendRedirect(url);
     }
 
-
-    @Operation(summary = "OIDC统一回调", description = "处理第三方登录回调。state参数格式：BINDING|{随机串}|{provider}|{token} 或 LOGIN|{provider}。portalId已自动根据域名识别，无需传递。注意：此接口由第三方平台调用，不能直接测试。")
+    @Operation(summary = "OIDC统一回调", description = "处理第三方登录回调")
     @GetMapping("/callback")
     public void oidcCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
@@ -182,23 +139,22 @@ public class DeveloperOauth2Controller {
             String provider = null;
             String tokenParam = null;
             String mode = null;
-            String apiPrefix = null; // 提升到方法级别
+            String apiPrefix = null;
             String decodedState = URLDecoder.decode(state, "UTF-8");
             String[] stateParts = decodedState.split("\\|");
             if (decodedState.startsWith("BINDING|")) {
                 String[] arr = decodedState.split("\\|");
                 if (arr.length >= 4) {
-                    provider = arr[2]; // 第三段为provider
-                    tokenParam = arr[3]; // 第四段为token
+                    provider = arr[2];
+                    tokenParam = arr[3];
                     mode = "BINDING";
                 }
             } else if (decodedState.startsWith("LOGIN|")) {
                 String[] arr = decodedState.split("\\|");
                 if (arr.length >= 2) {
-                    provider = arr[1]; // 第二段为provider
+                    provider = arr[1];
                     mode = "LOGIN";
                     
-                    // 解析API_PREFIX参数
                     for (String part : arr) {
                         if (part.startsWith("API_PREFIX=")) {
                             apiPrefix = part.substring("API_PREFIX=".length());
@@ -212,7 +168,6 @@ public class DeveloperOauth2Controller {
                 response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("无法识别门户信息", "UTF-8"));
                 return;
             }
-            // 通过portalId查询对应的Portal，然后获取PortalSetting
             PortalResult portal = portalService.getPortal(portalId);
             PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
             if (portalSetting == null) {
@@ -248,7 +203,6 @@ public class DeveloperOauth2Controller {
             String providerSubject = String.valueOf(userInfoMap.get("id"));
             String displayName = (String) userInfoMap.get("name");
             
-            // 对于阿里云，使用sub字段作为providerSubject
             if (providerSubject == null || "null".equals(providerSubject)) {
                 Object subValue = userInfoMap.get("sub");
                 if (subValue != null) {
@@ -256,7 +210,6 @@ public class DeveloperOauth2Controller {
                 }
             }
             
-            // 对于GitHub，使用login字段作为displayName
             if (displayName == null || "null".equals(displayName)) {
                 Object loginValue = userInfoMap.get("login");
                 if (loginValue != null) {
@@ -264,7 +217,6 @@ public class DeveloperOauth2Controller {
                 }
             }
             
-            // 获取email字段
             String email = (String) userInfoMap.get("email");
             
             String rawInfoJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userInfoMap);
@@ -285,18 +237,16 @@ public class DeveloperOauth2Controller {
                 if (loginResult.isPresent()) {
                     String token = loginResult.get().getToken();
                     log.info("[OIDCCallback] 生成的token长度: {}", token != null ? token.length() : 0);
-                    // 将token设置到Cookie中
+                    
                     Cookie tokenCookie = new Cookie("auth_token", token);
                     tokenCookie.setPath("/");
-                    tokenCookie.setHttpOnly(false); // 允许JavaScript访问
-                    tokenCookie.setMaxAge(3600); // 1小时过期
+                    tokenCookie.setHttpOnly(false);
+                    tokenCookie.setMaxAge(3600);
                     response.addCookie(tokenCookie);
                     log.info("[OIDCCallback] 已设置auth_token Cookie");
                     
-                    // 使用API_PREFIX构建重定向URL
                     String redirectUrl;
                     if (apiPrefix != null && apiPrefix.startsWith("/")) {
-                        // 如果是相对路径，构建完整的前端URL
                         String protocol = request.getScheme();
                         String serverName = request.getHeader("Host");
                         if (serverName == null || serverName.isEmpty()) {
@@ -305,10 +255,8 @@ public class DeveloperOauth2Controller {
                         if (serverName.contains(":")) {
                             serverName = serverName.split(":")[0];
                         }
-                        // 重定向到前端根路径，而不是API路径
                         redirectUrl = protocol + "://" + serverName + "/?login=success&fromCookie=true";
                     } else {
-                        // 如果没有API_PREFIX，使用默认路径
                         redirectUrl = "/?login=success&fromCookie=true";
                     }
                     response.sendRedirect(redirectUrl);
@@ -325,9 +273,6 @@ public class DeveloperOauth2Controller {
         }
     }
 
-    /**
-     * 查询当前用户所有外部身份绑定（只返回provider、subject、displayName、rawInfoJson）
-     */
     @Operation(summary = "查询当前用户所有外部身份绑定", description = "只返回provider、subject、displayName、rawInfoJson")
     @PostMapping("/list-identities")
     public List<Map<String, Object>> listIdentities() {
@@ -350,15 +295,10 @@ public class DeveloperOauth2Controller {
         return result;
     }
 
-    /**
-     * 查询指定门户下所有已启用的 OIDC provider
-     * @note portalId 已自动根据域名识别，无需传递
-     */
-    @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回 provider、displayName、icon、enabled 等信息，供前端动态渲染登录按钮。portalId已自动根据域名识别，无需传递。")
+    @Operation(summary = "查询指定门户下所有已启用的OIDC登录方式", description = "返回provider、displayName、icon、enabled等信息")
     @PostMapping("/providers")
     public List<Map<String, Object>> listOidcProviders() {
         String portalId = contextHolder.getPortal();
-        // 通过portalId查询对应的Portal，然后获取PortalSetting
         PortalResult portal = portalService.getPortal(portalId);
         PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
         if (portalSetting == null) {
@@ -384,7 +324,37 @@ public class DeveloperOauth2Controller {
         return result;
     }
 
-    // --- 通用三方用户信息获取 ---
+    private RestTemplate createRestTemplateWithSSLBypass() {
+        try {
+            javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[]{
+                new javax.net.ssl.X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                    }
+                }
+            };
+
+            javax.net.ssl.SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+            javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+            RestTemplate restTemplate = new RestTemplate();
+            org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
+                    new org.springframework.http.client.SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(30000);
+            factory.setReadTimeout(30000);
+            restTemplate.setRequestFactory(factory);
+
+            return restTemplate;
+        } catch (Exception e) {
+            return new RestTemplate();
+        }
+    }
+
     private Map<String, Object> fetchUserInfoMap(String code, OidcConfig config, HttpServletRequest request) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client_id", config.getClientId());
@@ -420,29 +390,22 @@ public class DeveloperOauth2Controller {
         }
     }
     
-    /**
-     * 动态生成redirectUri，基于当前请求的域名
-     */
     private String generateRedirectUri(HttpServletRequest request) {
         String scheme = request.getScheme();
         String serverName = request.getServerName();
         int serverPort = request.getServerPort();
         
-        // 构建基础URL
         String baseUrl = scheme + "://" + serverName;
         if (serverPort != 80 && serverPort != 443) {
             baseUrl += ":" + serverPort;
         }
         
-        // 检查请求路径是否包含API前缀
         String requestURI = request.getRequestURI();
         
-        // 检查是否包含API前缀，或者检查state参数中的API_PREFIX
         String redirectUri;
         if (requestURI.contains("/api/v1/")) {
             redirectUri = baseUrl + "/api/v1/developers/callback";
         } else {
-            // 检查请求参数中的state
             String state = request.getParameter("state");
             if (state != null && state.contains("API_PREFIX=/api/v1")) {
                 redirectUri = baseUrl + "/api/v1/developers/callback";

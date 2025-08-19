@@ -20,15 +20,16 @@ import java.util.HashMap;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 
 /**
- * 管理员服务实现类
- *
  * @author zxd
  */
 @Service
 @RequiredArgsConstructor
 public class AdministratorServiceImpl implements AdministratorService {
+
     private final AdministratorRepository administratorRepository;
+    
     private final JwtService jwtService;
+    
     private final DeveloperService developerService;
 
     @Override
@@ -94,8 +95,7 @@ public class AdministratorServiceImpl implements AdministratorService {
     @Override
     @Transactional
     public boolean changePassword(String adminId, String oldPassword, String newPassword) {
-        Administrator admin = administratorRepository.findByAdminId(adminId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "admin", adminId));
+        Administrator admin = findAdministrator(adminId);
         
         if (!PasswordHasher.verify(oldPassword, admin.getPasswordHash())) {
             throw new BusinessException(ErrorCode.AUTH_INVALID);
@@ -115,5 +115,10 @@ public class AdministratorServiceImpl implements AdministratorService {
 
     private String generateAdminId() {
         return IdGenerator.genAdministratorId();
+    }
+
+    private Administrator findAdministrator(String adminId) {
+        return administratorRepository.findByAdminId(adminId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "admin", adminId));
     }
 } 

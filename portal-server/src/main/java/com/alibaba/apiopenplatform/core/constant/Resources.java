@@ -29,4 +29,6 @@ public class Resources {
 
     public static final String NACOS_INSTANCE = "NacosInstance";
 
+    public static final String SUBSCRIPTION = "Subscription";
+
 }

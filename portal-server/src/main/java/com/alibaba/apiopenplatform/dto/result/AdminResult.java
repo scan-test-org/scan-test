@@ -4,14 +4,19 @@ import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
 import com.alibaba.apiopenplatform.entity.Administrator;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
- * 管理员信息返回DTO
  * @author zxd
  */
 @Data
 public class AdminResult implements OutputConverter<AdminResult, Administrator> {
+
     private String adminId;
+
     private String username;
-    private String createAt;
-    private String updatedAt;
+
+    private LocalDateTime createAt;
+
+    private LocalDateTime updatedAt;
 }

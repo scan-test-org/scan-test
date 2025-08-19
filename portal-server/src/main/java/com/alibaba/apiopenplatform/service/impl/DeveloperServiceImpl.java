@@ -40,8 +40,6 @@ import javax.persistence.criteria.Predicate;
 import java.util.*;
 
 /**
- * 开发者服务实现类
- *
  * @author zxd
  */
 @Service
@@ -49,10 +47,15 @@ import java.util.*;
 @Slf4j
 public class DeveloperServiceImpl implements DeveloperService {
     private final DeveloperRepository developerRepository;
+
     private final JwtService jwtService;
+
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
+    
     private final PortalService portalService;
+    
     private final ContextHolder contextHolder;
+    
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -85,8 +88,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     public AuthResponseResult loginWithPassword(String username, String password) {
         String portalId = contextHolder.getPortal();
-        Developer developer = developerRepository.findByPortalIdAndUsername(portalId, username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
+        Developer developer = findDeveloperByPortalAndUsername(portalId, username);
         
         if (!DeveloperStatus.APPROVED.equals(developer.getStatus())) {
             throw new BusinessException(ErrorCode.ACCOUNT_PENDING);
@@ -132,8 +134,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     public void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson, String portalId) {
         validateOidcProvider(portalId, providerName);
         
-        Developer developer = findByDeveloperId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DEVELOPER_NOT_FOUND, userId));
+        Developer developer = findDeveloper(userId);
         
         Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(providerName, providerSubject);
         if (extOpt.isPresent()) {
@@ -160,8 +161,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     public void unbindExternalIdentity(String userId, String providerName, String providerSubject, String portalId) {
         validateOidcProvider(portalId, providerName);
         
-        Developer developer = developerRepository.findByDeveloperId(userId)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        Developer developer = findDeveloper(userId);
         
         List<DeveloperExternalIdentity> identities = developerExternalIdentityRepository.findByDeveloper_DeveloperId(userId);
         boolean hasBuiltin = developer.getPasswordHash() != null;
@@ -215,8 +215,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     @Transactional
     public boolean changePassword(String developerId, String oldPassword, String newPassword) {
-        Developer developer = developerRepository.findByDeveloperId(developerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", developerId));
+        Developer developer = findDeveloper(developerId);
         
         if (!PasswordHasher.verify(oldPassword, developer.getPasswordHash())) {
             throw new BusinessException(ErrorCode.AUTH_INVALID);
@@ -230,8 +229,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     @Transactional
     public boolean updateProfile(String developerId, String username, String email, String avatarUrl) {
-        Developer developer = developerRepository.findByDeveloperId(developerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "developer", developerId));
+        Developer developer = findDeveloper(developerId);
 
         if (username != null && !username.equals(developer.getUsername())) {
             if (developerRepository.findByPortalIdAndUsername(developer.getPortalId(), username).isPresent()) {
@@ -245,6 +243,14 @@ public class DeveloperServiceImpl implements DeveloperService {
         
         developerRepository.save(developer);
         return true;
+    }
+
+    @EventListener
+    @Async("taskExecutor")
+    public void handlePortalDeletion(PortalDeletingEvent event) {
+        String portalId = event.getPortalId();
+        List<Developer> developers = developerRepository.findByPortalId(portalId);
+        developers.forEach(developer -> deleteDeveloperAccount(developer.getDeveloperId()));
     }
 
     private String generateToken(Developer developer) {
@@ -313,6 +319,11 @@ public class DeveloperServiceImpl implements DeveloperService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.DEVELOPER, developerId));
     }
 
+    private Developer findDeveloperByPortalAndUsername(String portalId, String username) {
+        return developerRepository.findByPortalIdAndUsername(portalId, username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
+    }
+
     private Specification<Developer> buildSpecification(QueryDeveloperParam param) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -330,19 +341,5 @@ public class DeveloperServiceImpl implements DeveloperService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    @EventListener
-    @Async("taskExecutor")
-    public void handlePortalDeletion(PortalDeletingEvent event) {
-        String portalId = event.getPortalId();
-        try {
-            log.info("Starting to cleanup developers for portal {}", portalId);
-            List<Developer> developers = developerRepository.findByPortalId(portalId);
-            developers.forEach(developer -> deleteDeveloperAccount(developer.getDeveloperId()));
-            log.info("Completed cleanup of {} developers for portal {}", developers.size(), portalId);
-        } catch (Exception e) {
-            log.error("Failed to cleanup developers for portal {}: {}", portalId, e.getMessage());
-        }
     }
 } 
