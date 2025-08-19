@@ -122,6 +122,7 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
 
   useEffect(() => {
     // 设置源码内容
+    console.log('apiProduct.apiConfig',apiProduct.apiConfig)
     if (apiProduct.apiConfig?.spec) {
       setContent(apiProduct.apiConfig.spec);
     } else if (apiProduct.mcpConfig?.tools) {
@@ -380,9 +381,9 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
                           apiProduct.mcpConfig?.meta.mcpServerName ||
                           "—"}
                       </Descriptions.Item>
-                      <Descriptions.Item label="允许工具">
+                      {/* <Descriptions.Item label="允许工具">
                         {mcpParsed.allowTools?.join(", ") || "—"}
-                      </Descriptions.Item>
+                      </Descriptions.Item> */}
                       {/* <Descriptions.Item label="配置键数">
                         {mcpParsed.server?.config
                           ? Object.keys(mcpParsed.server.config).length

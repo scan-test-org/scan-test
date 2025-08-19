@@ -84,7 +84,7 @@ const PortalCard = memo(
               <h3 className="text-xl font-bold text-gray-800 mb-1">
                 {portal.title}
               </h3>
-              <p className="text-sm text-gray-500">{portal.name}</p>
+              <p className="text-sm text-gray-500">{portal.description}</p>
             </div>
           </div>
           <Dropdown menu={{ items: dropdownItems }} trigger={["click"]}>
@@ -164,7 +164,7 @@ const PortalCard = memo(
 
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                 <span className="text-xs font-medium text-gray-600">
-                  自动审批开发者
+                  开发者自动审批
                 </span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -183,7 +183,7 @@ const PortalCard = memo(
             <div className="space-y-3">
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                 <span className="text-xs font-medium text-gray-600">
-                  自动审批订阅
+                  订阅自动审批
                 </span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
