@@ -2,11 +2,9 @@ package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
-
 import lombok.Data;
 
 /**
- * Nacos实例结果
  * @author zxd
  */
 @Data

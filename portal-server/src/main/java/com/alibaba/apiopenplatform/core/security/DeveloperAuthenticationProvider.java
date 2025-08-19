@@ -17,9 +17,6 @@ import java.util.Collections;
 import java.util.Optional;
 
 /**
- * 开发者用户名密码认证提供者，实现 Spring Security 的 AuthenticationProvider
- * 负责开发者本地账号的认证逻辑
- *
  * @author zxd
  */
 @Component

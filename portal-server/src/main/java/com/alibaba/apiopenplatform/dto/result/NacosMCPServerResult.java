@@ -6,20 +6,19 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * Nacos MCP Server结果
  * @author zxd
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class NacosMCPServerResult extends MCPServerResult implements OutputConverter<NacosMCPServerResult, McpServerBasicInfo> {
 
     private String version;
 
     @Override
     public NacosMCPServerResult convertFrom(McpServerBasicInfo basicInfo) {
-        NacosMCPServerResult r = OutputConverter.super.convertFrom(basicInfo);
-        r.setMcpServerName(basicInfo.getName());
-        r.setVersion(basicInfo.getVersion());
+        OutputConverter.super.convertFrom(basicInfo);
+        setMcpServerName(basicInfo.getName());
+        setVersion(basicInfo.getVersion());
         return this;
     }
 } 

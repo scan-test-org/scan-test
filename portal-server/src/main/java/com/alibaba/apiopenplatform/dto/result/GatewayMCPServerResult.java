@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * 网关 MCP Server 结果基类
  * @author zxd
  */
 @Data
@@ -16,5 +15,6 @@ import lombok.Data;
         discriminatorProperty = "type"
 )
 public class GatewayMCPServerResult {
+
     protected String mcpServerName;
 } 
