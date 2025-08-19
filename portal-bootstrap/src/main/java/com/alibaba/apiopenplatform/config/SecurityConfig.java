@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.config;
 
+import cn.hutool.json.JSONUtil;
 import com.alibaba.apiopenplatform.auth.JwtService;
 import com.alibaba.apiopenplatform.core.security.JwtAuthenticationFilter;
 import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
@@ -45,9 +46,11 @@ import org.springframework.http.HttpMethod;
 @RequiredArgsConstructor
 @Slf4j
 public class SecurityConfig {
-    private static final org.slf4j.Logger OIDC_LOG = org.slf4j.LoggerFactory.getLogger(SecurityConfig.class);
+
     private final JwtService jwtService;
+
     private final TokenBlacklistService tokenBlacklistService;
+
     private final com.alibaba.apiopenplatform.service.DeveloperService developerService;
 
     private final DeveloperAuthenticationProvider developerAuthenticationProvider;
@@ -131,12 +134,7 @@ public class SecurityConfig {
         return new OidcUserService() {
             @Override
             public OidcUser loadUser(OidcUserRequest userRequest) {
-                OIDC_LOG.info("【customOidcUserService】被调用，registrationId={}, state={}",
-                        userRequest.getClientRegistration().getRegistrationId(),
-                        userRequest.getAdditionalParameters().get("state")
-                );
                 OidcUser oidcUser = super.loadUser(userRequest);
-                OIDC_LOG.info("oidcUser attributes: {}", oidcUser.getAttributes());
                 String providerName = userRequest.getClientRegistration().getRegistrationId();
                 String providerSubject = oidcUser.getName();
                 String email = oidcUser.getAttribute("email");
@@ -149,7 +147,7 @@ public class SecurityConfig {
                     objectMapper.registerModule(new JavaTimeModule());
                     rawInfoJson = objectMapper.writeValueAsString(oidcUser.getAttributes());
                 } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-                    OIDC_LOG.warn("序列化oidcUser attributes为JSON失败", e);
+                    log.warn("序列化oidcUser attributes为JSON失败", e);
                     rawInfoJson = "{}";
                 }
                 String nameAttributeKey = "sub";

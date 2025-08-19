@@ -180,8 +180,10 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             // Hmac
             List<AkSkIdentityConfig> akSkIdentityConfigs = convertToAkSkIdentityConfigs(credential.getHmacConfig());
 
+            String mark = consumer.getConsumerId().substring(Math.max(0, consumer.getConsumerId().length() - 8));
             CreateConsumerRequest.Builder builder = CreateConsumerRequest.builder()
-                    .name(consumer.getName())
+                    .name(StrUtil.format("{}-{}", consumer.getName(), mark))
+                    .description(StrUtil.format("Created by OpenAPI Platform, Developer ID: {}", consumer.getDeveloperId()))
                     .gatewayType(config.getGatewayType().getType())
                     .enable(true);
             if (apikeyIdentityConfig != null) {
@@ -221,6 +223,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             List<AkSkIdentityConfig> akSkIdentityConfigs = convertToAkSkIdentityConfigs(credential.getHmacConfig());
 
             UpdateConsumerRequest.Builder builder = UpdateConsumerRequest.builder()
+                    .enable(true)
                     .consumerId(consumerId);
 
             if (apikeyIdentityConfig != null) {

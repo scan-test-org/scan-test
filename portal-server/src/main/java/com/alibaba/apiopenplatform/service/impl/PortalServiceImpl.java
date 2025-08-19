@@ -1,5 +1,7 @@
 package com.alibaba.apiopenplatform.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -111,6 +113,11 @@ public class PortalServiceImpl implements PortalService {
                 });
 
         param.update(portal);
+        // 至少保留一种认证方式
+        PortalSettingConfig setting = portal.getPortalSettingConfig();
+        if (BooleanUtil.isFalse(setting.getBuiltinAuthEnabled()) && CollUtil.isEmpty(setting.getOidcConfigs())) {
+            throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "至少配置一种认证方式");
+        }
         portalRepository.saveAndFlush(portal);
 
         return getPortal(portal.getPortalId());
@@ -154,7 +161,7 @@ public class PortalServiceImpl implements PortalService {
                 .ifPresent(portalDomain -> {
                     // 默认域名不允许解绑
                     if (portalDomain.getType() == DomainType.DEFAULT) {
-                        throw new BusinessException(ErrorCode.DOMAIN_NOT_ALLOWED_UNBIND, domain);
+                        throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "默认域名不允许解绑");
                     }
                     portalDomainRepository.delete(portalDomain);
                 });
