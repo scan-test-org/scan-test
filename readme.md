@@ -36,11 +36,11 @@ portal-bootstrap -> portal-server -> portal-dal
 - Java 1.8
 - Spring Boot 2.7.18
 - Spring Data JPA
-- MySQL 8.0.33
+- MariaDB 3.2.0
 - Maven
 
 ## 启动准备
-在 portal-dal 的 application.yaml 配置文件中，修改 MySQL 数据库地址、用户名和密码
+在 portal-dal 的 application.yaml 配置文件中，修改数据库地址、用户名和密码（使用 MariaDB 驱动，兼容 MySQL 协议）
 
 ## 注意事项
 1. 所有依赖的版本统一在父 pom.xml 中管理

@@ -23,7 +23,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <spring-boot.version>2.7.18</spring-boot.version>
         <mybatis.version>2.3.1</mybatis.version>
-        <mysql.version>8.0.33</mysql.version>
+        <mariadb.version>3.2.0</mariadb.version>
         <hutool.version>5.8.23</hutool.version>
         <springdoc.version>1.7.0</springdoc.version>
         <apigsdk.version>4.0.10</apigsdk.version>
@@ -45,11 +45,11 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- MySQL Driver -->
+            <!-- MariaDB Driver -->
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <version>${mysql.version}</version>
+                <groupId>org.mariadb.jdbc</groupId>
+                <artifactId>mariadb-java-client</artifactId>
+                <version>${mariadb.version}</version>
             </dependency>
 
             <!-- Hutool -->
