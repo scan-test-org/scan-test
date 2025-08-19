@@ -61,7 +61,12 @@ export default function ImportGatewayModal({ visible, gatewayType, onCancel, onS
   // 处理网关分页变化
   const handleGatewayPaginationChange = (page: number, pageSize: number) => {
     const values = importForm.getFieldsValue()
-    fetchGateways({...values, gatewayType: gatewayType}, page - 1, pageSize)
+    const data = JSON.parse(sessionStorage.getItem('importFormConfig') || '');
+    if (JSON.stringify(values) === '{}') {
+      fetchGateways({...data, gatewayType: gatewayType}, page - 1, pageSize)
+    } else {
+      fetchGateways({...values, gatewayType: gatewayType}, page - 1, pageSize)
+    }
   }
 
   // 处理导入
@@ -118,6 +123,7 @@ export default function ImportGatewayModal({ visible, gatewayType, onCancel, onS
               onClick={() => {
                 importForm.validateFields().then((values) => {
                   setApigConfig(values)
+                  sessionStorage.setItem('importFormConfig', JSON.stringify(values))
                   fetchGateways({...values, gatewayType: gatewayType})
                 })
               }}

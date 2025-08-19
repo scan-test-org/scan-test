@@ -413,7 +413,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
           >
             <Select placeholder="请选择来源类型" onChange={handleSourceTypeChange}>
               <Select.Option value="GATEWAY">网关</Select.Option>
-              <Select.Option value="NACOS">Nacos</Select.Option>
+              <Select.Option value="NACOS" disabled>Nacos</Select.Option>
             </Select>
           </Form.Item>
 
