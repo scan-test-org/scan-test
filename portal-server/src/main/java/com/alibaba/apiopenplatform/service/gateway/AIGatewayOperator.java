@@ -88,13 +88,23 @@ public class AIGatewayOperator extends APIGOperator {
 
         // tools
         HttpRoute.McpServerInfo mcpServerInfo = httpRoute.getMcpServerInfo();
+        boolean fetchTool = true;
         if (mcpServerInfo.getMcpRouteConfig() != null) {
             String protocol = mcpServerInfo.getMcpRouteConfig().getProtocol();
             meta.setFromType(protocol);
 
             // HTTP转MCP需从插件获取tools配置
-            if (StrUtil.equalsIgnoreCase(protocol, "HTTP")) {
-                m.setTools(fetchMcpTools(gateway, config.getMcpRouteId()));
+            fetchTool = StrUtil.equalsIgnoreCase(protocol, "HTTP");
+        }
+
+        if (fetchTool) {
+            String toolSpec = fetchMcpTools(gateway, config.getMcpRouteId());
+            if (StrUtil.isNotBlank(toolSpec)) {
+                m.setTools(toolSpec);
+                // 默认为HTTP转MCP
+                if (StrUtil.isBlank(meta.getFromType())) {
+                    meta.setFromType("HTTP");
+                }
             }
         }
 
