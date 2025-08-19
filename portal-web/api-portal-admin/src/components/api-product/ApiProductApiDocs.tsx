@@ -232,7 +232,7 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
             : undefined,
         });
 
-        // 生成连接配置JSON
+        // 生成连接配置JSON test
         generateConnectionConfig(
           apiProduct.mcpConfig.mcpServerConfig?.domains,
           apiProduct.mcpConfig.mcpServerConfig?.path,
