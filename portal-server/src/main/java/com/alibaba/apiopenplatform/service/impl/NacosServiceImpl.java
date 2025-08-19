@@ -16,7 +16,7 @@ import com.alibaba.apiopenplatform.repository.NacosInstanceRepository;
 import com.alibaba.apiopenplatform.service.NacosService;
 import com.alibaba.apiopenplatform.support.enums.SourceType;
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
-import com.alibaba.apiopenplatform.converter.NacosToGatewayToolsConverter;
+import com.alibaba.apiopenplatform.dto.converter.NacosToGatewayToolsConverter;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.ai.model.mcp.McpServerBasicInfo;
@@ -37,8 +37,6 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
- * Nacos服务实现
- *
  * @author zxd
  */
 @Service
@@ -56,6 +54,12 @@ public class NacosServiceImpl implements NacosService {
     public PageResult<NacosResult> listNacosInstances(Pageable pageable) {
         Page<NacosInstance> nacosInstances = nacosInstanceRepository.findAll(pageable);
         return new PageResult<NacosResult>().convertFrom(nacosInstances, nacosInstance -> new NacosResult().convertFrom(nacosInstance));
+    }
+
+    @Override
+    public NacosResult getNacosInstance(String nacosId) {
+        NacosInstance nacosInstance = findNacosInstance(nacosId);
+        return new NacosResult().convertFrom(nacosInstance);
     }
 
     @Override
@@ -91,12 +95,6 @@ public class NacosServiceImpl implements NacosService {
     public void deleteNacosInstance(String nacosId) {
         NacosInstance nacosInstance = findNacosInstance(nacosId);
         nacosInstanceRepository.delete(nacosInstance);
-    }
-
-    @Override
-    public NacosResult getNacosInstance(String nacosId) {
-        NacosInstance nacosInstance = findNacosInstance(nacosId);
-        return new NacosResult().convertFrom(nacosInstance);
     }
 
     @Override
@@ -136,6 +134,27 @@ public class NacosServiceImpl implements NacosService {
         } catch (Exception e) {
             log.error("Error fetching Nacos MCP servers", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Failed to fetch Nacos MCP config");
+        }
+    }
+
+    private NacosInstance findNacosInstance(String nacosId) {
+        return nacosInstanceRepository.findByNacosId(nacosId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.NACOS_INSTANCE, nacosId));
+    }
+
+    private McpMaintainerService buildDynamicMcpService(NacosInstance nacosInstance) {
+        Properties properties = new Properties();
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, nacosInstance.getServerUrl());
+        properties.setProperty(PropertyKeyConst.USERNAME, nacosInstance.getUsername());
+        properties.setProperty(PropertyKeyConst.PASSWORD, nacosInstance.getPassword());
+        properties.setProperty(PropertyKeyConst.CONTEXT_PATH, DEFAULT_CONTEXT_PATH);
+        properties.setProperty(PropertyKeyConst.NAMESPACE, nacosInstance.getNamespace());
+
+        try {
+            return AiMaintainerFactory.createAiMaintainerService(properties);
+        } catch (Exception e) {
+            log.error("Error init Nacos AiMaintainerService", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error init Nacos AiMaintainerService");
         }
     }
 
@@ -330,26 +349,5 @@ public class NacosServiceImpl implements NacosService {
         }
         
         return endpoint.toString();
-    }
-
-    private NacosInstance findNacosInstance(String nacosId) {
-        return nacosInstanceRepository.findByNacosId(nacosId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.NACOS_INSTANCE, nacosId));
-    }
-
-    private McpMaintainerService buildDynamicMcpService(NacosInstance nacosInstance) {
-        Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, nacosInstance.getServerUrl());
-        properties.setProperty(PropertyKeyConst.USERNAME, nacosInstance.getUsername());
-        properties.setProperty(PropertyKeyConst.PASSWORD, nacosInstance.getPassword());
-        properties.setProperty(PropertyKeyConst.CONTEXT_PATH, DEFAULT_CONTEXT_PATH);
-        properties.setProperty(PropertyKeyConst.NAMESPACE, nacosInstance.getNamespace());
-
-        try {
-            return AiMaintainerFactory.createAiMaintainerService(properties);
-        } catch (Exception e) {
-            log.error("Error init Nacos AiMaintainerService", e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error init Nacos AiMaintainerService");
-        }
     }
 }

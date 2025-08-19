@@ -22,8 +22,6 @@ import javax.servlet.http.HttpServletRequest;
 import com.alibaba.apiopenplatform.entity.Administrator;
 
 /**
- * 管理员控制器，提供注册和登录等API接口
- *
  * @author zxd
  */
 @Tag(name = "管理员管理", description = "管理员初始化、登录、修改密码等相关接口")
@@ -32,21 +30,20 @@ import com.alibaba.apiopenplatform.entity.Administrator;
 @RequiredArgsConstructor
 @Validated
 public class AdministratorController {
+
     private final AdministratorService administratorService;
     private final TokenBlacklistService tokenBlacklistService;
 
-    @Operation(summary = "管理员登录", description = "管理员登录，只需用户名和密码。前端只需传username和password，后端自动校验。")
+    @Operation(summary = "管理员登录", description = "管理员登录，只需用户名和密码")
     @PostMapping("/login")
     public AuthResponseResult login(@Valid @RequestBody AdminLoginParam param) {
         return administratorService.loginWithPassword(param.getUsername(), param.getPassword())
                 .orElseThrow(() -> new RuntimeException("AUTH_FAILED"));
     }
 
-    @Operation(summary = "管理员登出",
-            description = "管理员登出，将当前token加入黑名单。前端需要清除localStorage中的token。")
+    @Operation(summary = "管理员登出", description = "管理员登出，将当前token加入黑名单")
     @PostMapping("/logout")
     public void logout(HttpServletRequest request) {
-        // 从Authorization头获取token并加入黑名单
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
@@ -55,20 +52,20 @@ public class AdministratorController {
         }
     }
 
-    @Operation(summary = "检查是否需要初始化管理员", description = "检查系统是否需要初始化管理员（全表无记录时返回true）。")
+    @Operation(summary = "检查是否需要初始化管理员", description = "检查系统是否需要初始化管理员")
     @GetMapping("/need-init")
     public Boolean needInit() {
         return administratorService.needInit();
     }
 
-    @Operation(summary = "初始化管理员", description = "仅允许首次调用（全表无记录时），前端需传username和password。")
+    @Operation(summary = "初始化管理员", description = "仅允许首次调用，前端需传username和password")
     @PostMapping("/init")
     public String initAdmin(@Valid @RequestBody AdminCreateParam param) {
         administratorService.initAdmin(param.getUsername(), param.getPassword());
         return "初始化成功";
     }
 
-    @Operation(summary = "管理员修改密码", description = "修改当前登录管理员的密码，需传递oldPassword、newPassword")
+    @Operation(summary = "管理员修改密码", description = "修改当前登录管理员的密码")
     @PatchMapping("/password")
     public String changePassword(@RequestBody ChangePasswordParam param) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

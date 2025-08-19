@@ -17,14 +17,11 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * 通用JWT认证过滤器，支持管理员和开发者多用户类型
- * 根据claims动态注入ROLE_ADMIN/ROLE_DEVELOPER权限
- * 集成Token黑名单校验
- *
  * @author zxd
  */
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private final JwtService jwtService;
     private final TokenBlacklistService tokenBlacklistService;
 
@@ -36,48 +33,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        // 对于公开接口，跳过JWT验证
         String requestURI = request.getRequestURI();
-        if (requestURI.equals("/admins/login") || 
-            requestURI.equals("/developers/login") || 
-            requestURI.equals("/developers") ||
-            requestURI.equals("/admins/init") ||
-            requestURI.equals("/admins/need-init") ||
-            requestURI.equals("/developers/authorize") ||
-            requestURI.equals("/developers/callback") ||
-            requestURI.equals("/developers/providers") ||
-            requestURI.equals("/favicon.ico") ||
-            requestURI.equals("/error") ||
-            requestURI.startsWith("/swagger-ui") ||
-            requestURI.startsWith("/v3/api-docs") ||
-            requestURI.startsWith("/portal/swagger-ui") ||
-            requestURI.startsWith("/portal/v3/api-docs")) {
+        if (isPublicEndpoint(requestURI)) {
             chain.doFilter(request, response);
             return;
         }
         
-        // 优先从Authorization头获取token，其次从Cookie获取
-        String authHeader = request.getHeader("Authorization");
-        String token = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            log.debug("从Authorization头获取到token，长度: {}", token.length());
-        } else {
-            // 从Cookie中获取auth_token
-            javax.servlet.http.Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (javax.servlet.http.Cookie cookie : cookies) {
-                    if ("auth_token".equals(cookie.getName())) {
-                        token = cookie.getValue();
-                        log.debug("从Cookie获取到auth_token，长度: {}", token != null ? token.length() : 0);
-                        break;
-                    }
-                }
-            }
-            if (token == null) {
-                log.debug("未找到auth_token Cookie");
-            }
-        }
+        String token = extractToken(request);
         
         if (token != null) {
             if (tokenBlacklistService.isBlacklisted(token)) {
@@ -87,22 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
             try {
-                Map<String, Object> claims = jwtService.parseAndValidateClaims(token);
-                Object userIdObj = claims.get("userId");
-                Object userTypeObj = claims.get("userType");
-                if (!(userIdObj instanceof String) || !(userTypeObj instanceof String)) {
-                    log.warn("JWT缺少userId或userType或类型错误");
-                    SecurityContextHolder.clearContext();
-                    unauthorized(response, "Token无效：缺少userId或userType");
-                    return;
-                }
-                String userId = (String) userIdObj;
-                String userType = ((String) userTypeObj).toUpperCase();
-                String role = "ROLE_" + userType;
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
-                        userId, null, Collections.singletonList(new SimpleGrantedAuthority(role)));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.info("JWT认证成功，userType={}, userId={}", userType, userId);
+                processToken(token);
             } catch (Exception e) {
                 log.warn("JWT认证失败: {}", e.getMessage());
                 SecurityContextHolder.clearContext();
@@ -114,6 +61,63 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         chain.doFilter(request, response);
     }
+
+    private boolean isPublicEndpoint(String requestURI) {
+        return requestURI.equals("/admins/login") || 
+               requestURI.equals("/developers/login") || 
+               requestURI.equals("/developers") ||
+               requestURI.equals("/admins/init") ||
+               requestURI.equals("/admins/need-init") ||
+               requestURI.equals("/developers/authorize") ||
+               requestURI.equals("/developers/callback") ||
+               requestURI.equals("/developers/providers") ||
+               requestURI.equals("/favicon.ico") ||
+               requestURI.equals("/error") ||
+               requestURI.startsWith("/swagger-ui") ||
+               requestURI.startsWith("/v3/api-docs") ||
+               requestURI.startsWith("/portal/swagger-ui") ||
+               requestURI.startsWith("/portal/v3/api-docs");
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            log.debug("从Authorization头获取到token，长度: {}", token.length());
+            return token;
+        }
+        
+        javax.servlet.http.Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (javax.servlet.http.Cookie cookie : cookies) {
+                if ("auth_token".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    log.debug("从Cookie获取到auth_token，长度: {}", token != null ? token.length() : 0);
+                    return token;
+                }
+            }
+        }
+        log.debug("未找到auth_token Cookie");
+        return null;
+    }
+
+    private void processToken(String token) {
+        Map<String, Object> claims = jwtService.parseAndValidateClaims(token);
+        Object userIdObj = claims.get("userId");
+        Object userTypeObj = claims.get("userType");
+        if (!(userIdObj instanceof String) || !(userTypeObj instanceof String)) {
+            log.warn("JWT缺少userId或userType或类型错误");
+            throw new IllegalArgumentException("Token无效：缺少userId或userType");
+        }
+        String userId = (String) userIdObj;
+        String userType = ((String) userTypeObj).toUpperCase();
+        String role = "ROLE_" + userType;
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userId, null, Collections.singletonList(new SimpleGrantedAuthority(role)));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        log.info("JWT认证成功，userType={}, userId={}", userType, userId);
+    }
+
     private void unauthorized(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
