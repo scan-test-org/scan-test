@@ -330,13 +330,17 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       const { sourceType, gatewayId, nacosId, apiId } = values
       const selectedApi = apiList.find(item => {
         if ('apiId' in item) {
-          return item.apiId === apiId
+          // mcp server 会返回apiId和mcpRouteId，此时mcpRouteId为唯一值，apiId不是
+          if ('mcpRouteId' in item) {
+            return item.mcpRouteId === apiId
+          } else {
+            return item.apiId === apiId
+          }
         } else if ('mcpServerName' in item) {
           return item.mcpServerName === apiId
         }
         return false
       })
-      
       const newService: LinkedService = {
         gatewayId: sourceType === 'GATEWAY' ? gatewayId : undefined, // 对于 Nacos，使用 nacosId 作为 gatewayId
         nacosId: sourceType === 'NACOS' ? nacosId : undefined,
@@ -349,7 +353,6 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
           namespaceId: selectedNacos?.namespace || 'public'
         } : undefined,
       }
-      
       apiProductApi.createApiProductRef(apiProduct.productId, newService).then((res: any) => {
         message.success('关联成功')
         setIsModalVisible(false)
@@ -502,14 +505,14 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
               >
                 {apiList.map((api: any) => (
                   <Select.Option 
-                    key={api.apiId || api.mcpServerName} 
-                    value={api.apiId || api.mcpServerName}
+                    key={apiProduct.type === 'REST_API' ? api.apiId : api.mcpRouteId} 
+                    value={apiProduct.type === 'REST_API' ? api.apiId : api.mcpRouteId}
                     label={api.apiName || api.mcpServerName}
                   >
                     <div>
                       <div className="font-medium">{api.apiName || api.mcpServerName}</div>
                       <div className="text-sm text-gray-500">
-                        {api.type} - {api.apiId || api.mcpServerName}
+                        {api.type} - {apiProduct.type === 'REST_API' ? api.apiId : api.mcpRouteId}
                       </div>
                     </div>
                   </Select.Option>
