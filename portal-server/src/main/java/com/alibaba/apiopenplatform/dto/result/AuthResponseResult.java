@@ -1,44 +1,38 @@
 package com.alibaba.apiopenplatform.dto.result;
 
+import com.alibaba.apiopenplatform.support.enums.UserType;
+import lombok.Builder;
 import lombok.Data;
 
 /**
  * @author zxd
  */
 @Data
+@Builder
 public class AuthResponseResult {
 
     private String userId;
 
     private String username;
 
-    private String userType;
-
-    private String status;
+    private UserType userType;
 
     private String token;
 
-    /**
-     * 从Developer构建认证响应
-     */
-    public static AuthResponseResult fromDeveloper(String userId, String username, String token) {
-        AuthResponseResult result = new AuthResponseResult();
-        result.setUserId(userId);
-        result.setUsername(username);
-        result.setUserType("developer");
-        result.setToken(token);
-        return result;
+    public static AuthResponseResult fromDeveloper(String developerId, String username, String token) {
+        return of(developerId, username, UserType.DEVELOPER, token);
     }
 
-    /**
-     * 从Administrator构建认证响应
-     */
-    public static AuthResponseResult fromAdmin(String userId, String username, String token) {
-        AuthResponseResult result = new AuthResponseResult();
-        result.setUserId(userId);
-        result.setUsername(username);
-        result.setUserType("admin");
-        result.setToken(token);
-        return result;
+    public static AuthResponseResult fromAdmin(String adminId, String username, String token) {
+        return of(adminId, username, UserType.ADMIN, token);
+    }
+
+    private static AuthResponseResult of(String userId, String username, UserType userType, String token) {
+        return AuthResponseResult.builder()
+                .userId(userId)
+                .username(username)
+                .userType(userType)
+                .token(token)
+                .build();
     }
 } 

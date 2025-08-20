@@ -5,6 +5,8 @@ package com.alibaba.apiopenplatform.core.constant;
  */
 public class Resources {
 
+    public static final String ADMINISTRATOR = "Administrator";
+
     public static final String PORTAL = "Portal";
 
     public static final String PORTAL_SETTING = "PortalSetting";

@@ -15,6 +15,9 @@ import org.springframework.data.domain.Pageable;
  */
 public interface GatewayService {
 
+
+
+
     /**
      * 获取APIG Gateway列表
      *

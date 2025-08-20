@@ -1,9 +1,8 @@
 package com.alibaba.apiopenplatform.config;
 
-import cn.hutool.json.JSONUtil;
-import com.alibaba.apiopenplatform.auth.JwtService;
 import com.alibaba.apiopenplatform.core.security.JwtAuthenticationFilter;
 import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
+import com.alibaba.apiopenplatform.core.utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -45,9 +45,8 @@ import org.springframework.http.HttpMethod;
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-    private final JwtService jwtService;
 
     private final TokenBlacklistService tokenBlacklistService;
 
@@ -55,59 +54,53 @@ public class SecurityConfig {
 
     private final DeveloperAuthenticationProvider developerAuthenticationProvider;
 
+    // Auth相关
+    private static final String[] AUTH_WHITELIST = {
+            "/admins/init",
+            "/admins/need-init",
+            "/admins/login",
+            "/developers",
+            "/developers/login",
+            "/developers/authorize",
+            "/developers/callback",
+            "/developers/providers"
+    };
+
+    // Swagger API文档相关
+    private static final String[] SWAGGER_WHITELIST = {
+            "/portal/swagger-ui.html",
+            "/portal/swagger-ui/**",
+            "/portal/v3/api-docs/**"
+    };
+
+    // 系统路径白名单
+    private static final String[] SYSTEM_WHITELIST = {
+            "/favicon.ico",
+            "/error"
+    };
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-            .csrf().disable()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-            .and()
-            .authorizeRequests()
+                .csrf().disable()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authorizeRequests()
+                // OPTIONS请求放行
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .antMatchers("/**").permitAll()
-//                // 管理员初始化、检测、登录接口（无需认证）
-//                .antMatchers("/admins/init", "/admins/need-init", "/admins/login").permitAll()
-//                // 开发者注册、登录接口（无需认证）
-//                .antMatchers("/developers", "/developers/login").permitAll()
-//                // OAuth2相关接口（无需认证）
-//                .antMatchers("/developers/authorize", "/developers/callback").permitAll()
-//                // 获取OIDC提供商列表（无需认证，登录前需要）
-//                .antMatchers("/developers/providers").permitAll()
-//                // 管理员接口（需要ADMIN角色）
-//                .antMatchers("/admins/**").hasRole("ADMIN")
-//                // 开发者接口（需要DEVELOPER角色）
-//                .antMatchers("/developers/profile", "/developers/password", "/developers/list-identities").hasRole("DEVELOPER")
-//                // 门户管理接口（需要ADMIN角色）
-//                .antMatchers("/portals/**").hasRole("ADMIN")
-//                // 产品管理接口（需要认证，但开发者和管理员都可以访问）
-//                .antMatchers("/products").authenticated()  // GET /products 需要认证，开发者和管理员都可以访问
-//                .antMatchers("/products/*").authenticated()  // GET /products/{productId} 需要认证，开发者和管理员都可以访问
-//                .antMatchers("/products/**").hasRole("ADMIN")  // 其他产品管理接口需要ADMIN角色
-//                // 消费者管理接口
-//                .antMatchers(HttpMethod.GET, "/consumers").authenticated()  // GET /consumers 需要认证，开发者和管理员都可以访问
-//                .antMatchers(HttpMethod.GET, "/consumers/*").authenticated()  // GET /consumers/{consumerId} 需要认证，开发者和管理员都可以访问
-//                .antMatchers(HttpMethod.POST, "/consumers").authenticated()  // POST /consumers 需要认证，开发者和管理员都可以访问
-//                .antMatchers(HttpMethod.DELETE, "/consumers/*").authenticated()  // DELETE /consumers/{consumerId} 需要认证，开发者和管理员都可以访问
-//                .antMatchers("/consumers/**").hasRole("ADMIN")  // 其他消费者管理接口需要ADMIN角色（审批等）
-//                // Nacos管理接口（需要ADMIN角色）
-//                .antMatchers("/nacos/**").hasRole("ADMIN")
-//                // 网关管理接口（需要ADMIN角色）
-//                .antMatchers("/gateways/**").hasRole("ADMIN")
-//                // MCP市场接口（需要ADMIN角色）
-//                .antMatchers("/api/mcpmarket/**").hasRole("ADMIN")
-//                // Swagger文档（开发环境可访问）
-//                .antMatchers("/portal/swagger-ui.html", "/portal/swagger-ui/**", "/portal/v3/api-docs/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
-//                // 其他所有请求需要认证
-//                .anyRequest().authenticated()
-            .and()
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-            .authenticationProvider(developerAuthenticationProvider);
+                // 认证相关接口放行
+                .antMatchers(AUTH_WHITELIST).permitAll()
+                // Swagger相关接口放行
+                .antMatchers(SWAGGER_WHITELIST).permitAll()
+                // 系统路径放行
+                .antMatchers(SYSTEM_WHITELIST).permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .authenticationProvider(developerAuthenticationProvider);
         return http.build();
-    }
-
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtService, tokenBlacklistService);
     }
 
     @Bean
@@ -115,14 +108,15 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-
     // 自定义OidcUser，合并自定义attributes（含token）
     public static class CustomOidcUser extends DefaultOidcUser {
         private final Map<String, Object> customAttributes;
+
         public CustomOidcUser(Collection<? extends GrantedAuthority> authorities, OidcIdToken idToken, OidcUserInfo userInfo, String nameAttributeKey, Map<String, Object> customAttributes) {
             super(authorities, idToken, userInfo, nameAttributeKey);
             this.customAttributes = customAttributes;
         }
+
         @Override
         public Map<String, Object> getAttributes() {
             return customAttributes != null ? customAttributes : super.getAttributes();
@@ -175,7 +169,8 @@ public class SecurityConfig {
                         boolean tokenValid = false;
                         if (token != null) {
                             try {
-                                jwtService.parseAndValidateClaims(token);
+//                                jwtService.parseAndValidateClaims(token);
+                                TokenUtil.parseUser(token);
                                 tokenValid = true;
                             } catch (Exception e) {
                                 log.info("token无效或过期: {}", e.getMessage());
@@ -210,11 +205,11 @@ public class SecurityConfig {
                     developerService.bindExternalIdentity(developerId, providerName, providerSubject, displayName, rawInfoJson, portalId);
                     // 刷新SecurityContext，确保getName()返回developerId
                     OidcUser newPrincipal = new CustomOidcUser(
-                        Collections.singleton(new SimpleGrantedAuthority("ROLE_DEVELOPER")),
-                        oidcUser.getIdToken(),
-                        oidcUser.getUserInfo(),
-                        nameAttributeKey,
-                        attributes
+                            Collections.singleton(new SimpleGrantedAuthority("ROLE_DEVELOPER")),
+                            oidcUser.getIdToken(),
+                            oidcUser.getUserInfo(),
+                            nameAttributeKey,
+                            attributes
                     ) {
                         @Override
                         public String getName() {
@@ -231,11 +226,11 @@ public class SecurityConfig {
                     String developerId = authResult.map(com.alibaba.apiopenplatform.dto.result.AuthResponseResult::getUserId).orElse(null);
                     attributes.put("token", myJwt);
                     OidcUser newPrincipal = new CustomOidcUser(
-                        Collections.singleton(new SimpleGrantedAuthority("ROLE_DEVELOPER")),
-                        oidcUser.getIdToken(),
-                        oidcUser.getUserInfo(),
-                        nameAttributeKey,
-                        attributes
+                            Collections.singleton(new SimpleGrantedAuthority("ROLE_DEVELOPER")),
+                            oidcUser.getIdToken(),
+                            oidcUser.getUserInfo(),
+                            nameAttributeKey,
+                            attributes
                     ) {
                         @Override
                         public String getName() {

@@ -62,7 +62,6 @@ public class DeveloperOauth2Controller {
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     private final DeveloperService developerService;
     private final PortalService portalService;
-    private final JwtService jwtService;
     private final ContextHolder contextHolder;
     
     private RestTemplate restTemplate;
@@ -137,7 +136,6 @@ public class DeveloperOauth2Controller {
             String portalId = contextHolder.getPortal();
             log.info("[OIDCCallback] portalId={}", portalId);
             String provider = null;
-            String tokenParam = null;
             String mode = null;
             String apiPrefix = null;
             String decodedState = URLDecoder.decode(state, "UTF-8");
@@ -146,7 +144,6 @@ public class DeveloperOauth2Controller {
                 String[] arr = decodedState.split("\\|");
                 if (arr.length >= 4) {
                     provider = arr[2];
-                    tokenParam = arr[3];
                     mode = "BINDING";
                 }
             } else if (decodedState.startsWith("LOGIN|")) {
@@ -260,11 +257,9 @@ public class DeveloperOauth2Controller {
                         redirectUrl = "/?login=success&fromCookie=true";
                     }
                     response.sendRedirect(redirectUrl);
-                    return;
                 } else {
                     log.error("[OIDCCallback] handleExternalLogin返回空结果");
                     response.sendRedirect("/?login=fail&msg=" + java.net.URLEncoder.encode("三方登录失败", "UTF-8"));
-                    return;
                 }
             }
         } catch (Exception e) {
