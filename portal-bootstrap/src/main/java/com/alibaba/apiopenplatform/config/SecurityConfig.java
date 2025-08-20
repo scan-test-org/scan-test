@@ -14,26 +14,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+ 
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+ 
 
 import java.util.*;
 
 import com.alibaba.apiopenplatform.core.security.DeveloperAuthenticationProvider;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
-import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.http.HttpMethod;
 
 /**
@@ -104,143 +93,6 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
-    }
-
-    // 自定义OidcUser，合并自定义attributes（含token）
-    public static class CustomOidcUser extends DefaultOidcUser {
-        private final Map<String, Object> customAttributes;
-
-        public CustomOidcUser(Collection<? extends GrantedAuthority> authorities, OidcIdToken idToken, OidcUserInfo userInfo, String nameAttributeKey, Map<String, Object> customAttributes) {
-            super(authorities, idToken, userInfo, nameAttributeKey);
-            this.customAttributes = customAttributes;
-        }
-
-        @Override
-        public Map<String, Object> getAttributes() {
-            return customAttributes != null ? customAttributes : super.getAttributes();
-        }
-    }
-
-    @Bean
-    public OidcUserService customOidcUserService() {
-        return new OidcUserService() {
-            @Override
-            public OidcUser loadUser(OidcUserRequest userRequest) {
-                OidcUser oidcUser = super.loadUser(userRequest);
-                String providerName = userRequest.getClientRegistration().getRegistrationId();
-                String providerSubject = oidcUser.getName();
-                String email = oidcUser.getAttribute("email");
-                String displayName = oidcUser.getAttribute("login");
-                if (displayName == null) displayName = oidcUser.getAttribute("name");
-                if (displayName == null) displayName = oidcUser.getAttribute("nickname");
-                String rawInfoJson;
-                try {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    objectMapper.registerModule(new JavaTimeModule());
-                    rawInfoJson = objectMapper.writeValueAsString(oidcUser.getAttributes());
-                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-                    log.warn("序列化oidcUser attributes为JSON失败", e);
-                    rawInfoJson = "{}";
-                }
-                String nameAttributeKey = "sub";
-                Map<String, Object> attributes = new HashMap<>(oidcUser.getAttributes());
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                boolean isBinding = false;
-                // 新增：获取当前请求token
-                String token = null;
-                try {
-                    org.springframework.web.context.request.ServletRequestAttributes attrs = (org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-                    if (attrs != null) {
-                        javax.servlet.http.HttpServletRequest req = attrs.getRequest();
-                        String authHeader = req.getHeader("Authorization");
-                        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                            token = authHeader.substring(7);
-                        }
-                    }
-                } catch (Exception e) {
-                    log.warn("获取token失败", e);
-                }
-                if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
-                    String name = authentication.getName();
-                    if (name != null && name.startsWith("dev-")) {
-                        // 新增：token有效性校验
-                        boolean tokenValid = false;
-                        if (token != null) {
-                            try {
-//                                jwtService.parseAndValidateClaims(token);
-                                TokenUtil.parseUser(token);
-                                tokenValid = true;
-                            } catch (Exception e) {
-                                log.info("token无效或过期: {}", e.getMessage());
-                            }
-                        }
-                        if (tokenValid && !TokenUtil.isTokenRevoked(token)) {
-                            isBinding = true;
-                        }
-                    }
-                }
-                String state = (String) userRequest.getAdditionalParameters().get("state");
-                String portalId = null;
-                if (state != null) {
-                    try {
-                        String decodedState = java.net.URLDecoder.decode(state, "UTF-8");
-                        String[] arr = decodedState.split("\\|");
-                        if (arr.length >= 3) {
-                            if (decodedState.startsWith("BINDING|")) {
-                                portalId = arr[2];
-                            } else if (decodedState.startsWith("LOGIN|")) {
-                                portalId = arr[1];
-                            }
-                        }
-                    } catch (Exception e) {
-                        log.warn("解析state获取portalId失败: {}", e.getMessage());
-                    }
-                }
-                if (isBinding) {
-                    String currentUserId = authentication.getName();
-                    Optional<com.alibaba.apiopenplatform.entity.Developer> devOpt = developerService.findByDeveloperId(currentUserId);
-                    String developerId = devOpt.map(com.alibaba.apiopenplatform.entity.Developer::getDeveloperId).orElse(currentUserId);
-                    developerService.bindExternalIdentity(developerId, providerName, providerSubject, displayName, rawInfoJson, portalId);
-                    // 刷新SecurityContext，确保getName()返回developerId
-                    OidcUser newPrincipal = new CustomOidcUser(
-                            Collections.singleton(new SimpleGrantedAuthority("ROLE_DEVELOPER")),
-                            oidcUser.getIdToken(),
-                            oidcUser.getUserInfo(),
-                            nameAttributeKey,
-                            attributes
-                    ) {
-                        @Override
-                        public String getName() {
-                            return developerId;
-                        }
-                    };
-                    Authentication newAuth = new OAuth2AuthenticationToken(newPrincipal, newPrincipal.getAuthorities(), providerName);
-                    SecurityContextHolder.getContext().setAuthentication(newAuth);
-                    return newPrincipal;
-                } else {
-                    Optional<com.alibaba.apiopenplatform.dto.result.AuthResponseResult> authResult = developerService.handleExternalLogin(
-                            providerName, providerSubject, email, displayName, rawInfoJson);
-                    String myJwt = authResult.map(com.alibaba.apiopenplatform.dto.result.AuthResponseResult::getToken).orElse(null);
-                    String developerId = authResult.map(com.alibaba.apiopenplatform.dto.result.AuthResponseResult::getUserId).orElse(null);
-                    attributes.put("token", myJwt);
-                    OidcUser newPrincipal = new CustomOidcUser(
-                            Collections.singleton(new SimpleGrantedAuthority("ROLE_DEVELOPER")),
-                            oidcUser.getIdToken(),
-                            oidcUser.getUserInfo(),
-                            nameAttributeKey,
-                            attributes
-                    ) {
-                        @Override
-                        public String getName() {
-                            return developerId;
-                        }
-                    };
-                    Authentication newAuth = new OAuth2AuthenticationToken(newPrincipal, newPrincipal.getAuthorities(), providerName);
-                    SecurityContextHolder.getContext().setAuthentication(newAuth);
-                    return newPrincipal;
-                }
-            }
-        };
     }
 
     @Bean

@@ -6,6 +6,8 @@ import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
 import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepository;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
+import com.alibaba.apiopenplatform.core.constant.Common;
+import com.alibaba.apiopenplatform.service.gateway.factory.HTTPClientFactory;
 import com.alibaba.apiopenplatform.service.DeveloperOAuth2Service;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.service.PortalService;
@@ -56,7 +58,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     
     @PostConstruct
     public void init() {
-        this.restTemplate = createRestTemplateWithSSLBypass();
+        this.restTemplate = HTTPClientFactory.createRestTemplate();
     }
 
     @Override
@@ -76,41 +78,32 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
 
     @Override
     public void handleCallback(String code, String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            log.info("[OIDCCallback] code={}, state={}", code, state);
-            String portalId = contextHolder.getPortal();
-            
-            if (portalId == null) {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("无法识别门户信息", "UTF-8"));
-                return;
-            }
-            
-            CallbackContext callbackContext = parseCallbackState(state);
-            OidcConfig config = findOidcConfig(portalId, callbackContext.getProvider());
-            
-            if (config == null || !config.isEnabled()) {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("OIDC配置未启用", "UTF-8"));
-                return;
-            }
-            
-            Map<String, Object> userInfoMap = fetchUserInfoMap(code, config, request);
-            if (userInfoMap == null) {
-                response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("获取用户信息失败", "UTF-8"));
-                return;
-            }
-            
-            UserInfo userInfo = extractUserInfo(userInfoMap);
-            String rawInfoJson = new ObjectMapper().writeValueAsString(userInfoMap);
-            
-            if ("BINDING".equals(callbackContext.getMode())) {
-                handleBindingMode(callbackContext.getProvider(), userInfo, rawInfoJson, portalId, response);
-            } else {
-                handleLoginMode(callbackContext.getProvider(), userInfo, rawInfoJson, callbackContext.getApiPrefix(), request, response);
-            }
-            
-        } catch (Exception e) {
-            log.error("[OIDCCallback] 处理OAuth回调时发生异常", e);
-            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("处理回调时发生异常: " + e.getMessage(), "UTF-8"));
+        String portalId = contextHolder.getPortal();
+        if (portalId == null) {
+            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("无法识别门户信息", "UTF-8"));
+            return;
+        }
+
+        CallbackContext callbackContext = parseCallbackState(state);
+        OidcConfig config = findOidcConfig(portalId, callbackContext.getProvider());
+        if (config == null || !config.isEnabled()) {
+            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("OIDC配置未启用", "UTF-8"));
+            return;
+        }
+
+        Map<String, Object> userInfoMap = fetchUserInfoMap(code, config, request);
+        if (userInfoMap == null) {
+            response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("获取用户信息失败", "UTF-8"));
+            return;
+        }
+
+        UserInfo userInfo = extractUserInfo(userInfoMap);
+        String rawInfoJson = new ObjectMapper().writeValueAsString(userInfoMap);
+
+        if ("BINDING".equals(callbackContext.getMode())) {
+            handleBindingMode(callbackContext.getProvider(), userInfo, rawInfoJson, portalId, response);
+        } else {
+            handleLoginMode(callbackContext.getProvider(), userInfo, rawInfoJson, callbackContext.getApiPrefix(), request, response);
         }
     }
 
@@ -177,13 +170,8 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     private OidcConfig findOidcConfig(String portalId, String provider) {
         PortalResult portal = portalService.getPortal(portalId);
         PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
-        
-        log.info("[findOidcConfig] portalId={}, provider={}, portalSetting={}, oidcConfigs={}", 
-                portalId, provider, portalSetting != null, 
-                portalSetting != null && portalSetting.getOidcConfigs() != null ? portalSetting.getOidcConfigs().size() : 0);
-        
+       
         if (portalSetting == null || portalSetting.getOidcConfigs() == null) {
-            log.warn("[findOidcConfig] portalSetting或oidcConfigs为空");
             return null;
         }
         
@@ -209,7 +197,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         String decodedState = URLDecoder.decode(state, "UTF-8");
         String[] stateParts = decodedState.split("\\|");
         
-        log.info("[OIDCCallback] 解析state: original={}, decoded={}, parts={}", state, decodedState, Arrays.toString(stateParts));
+        // 简化日志：不打印敏感/冗长信息
         
         CallbackContext context = new CallbackContext();
         
@@ -275,12 +263,12 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         
         if (loginResult.isPresent()) {
             String token = loginResult.get().getToken();
-            Cookie tokenCookie = new Cookie("auth_token", token);
+            Cookie tokenCookie = new Cookie(Common.AUTH_TOKEN_COOKIE, token);
             tokenCookie.setPath("/");
             tokenCookie.setHttpOnly(false); // 允许JavaScript访问
             tokenCookie.setMaxAge(3600); // 1小时过期
             response.addCookie(tokenCookie);
-            log.info("[OIDCCallback] 已设置auth_token Cookie");
+            
             String redirectUrl;
             if (apiPrefix != null && apiPrefix.startsWith("/")) {
                 String protocol = request.getScheme();
@@ -296,7 +284,6 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
                 redirectUrl = "/?login=success&fromCookie=true";
             }
             
-            log.info("[OIDCCallback] 登录成功，准备跳转: provider={}, redirectUrl={}", provider, redirectUrl);
             response.sendRedirect(redirectUrl);
         } else {
             log.warn("[OIDCCallback] 登录失败: provider={}", provider);
@@ -310,7 +297,6 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         tokenCookie.setHttpOnly(false);
         tokenCookie.setMaxAge(3600);
         response.addCookie(tokenCookie);
-        log.info("[OIDCCallback] 已设置auth_token Cookie");
     }
 
     private String buildLoginSuccessRedirectUrl(HttpServletRequest request, String apiPrefix) {
@@ -366,41 +352,27 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         
         while (retryCount < maxRetries) {
             try {
-                log.info("[fetchUserInfoMap] 尝试获取用户信息，第{}次尝试", retryCount + 1);
-                
                 ResponseEntity<Map> tokenResp = restTemplate.postForEntity(config.getTokenEndpoint(), entity, Map.class);
-                
                 String accessToken = (String) tokenResp.getBody().get("access_token");
                 if (accessToken == null) {
-                    log.warn("[fetchUserInfoMap] 获取access_token失败");
                     return null;
                 }
-                
                 HttpHeaders userHeaders = new HttpHeaders();
                 userHeaders.setBearerAuth(accessToken);
                 userHeaders.set("User-Agent", "Portal-Management/1.0");
                 HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
-                
                 ResponseEntity<Map> userResp = restTemplate.exchange(config.getUserInfoEndpoint(), HttpMethod.GET, userEntity, Map.class);
-                
-                log.info("[fetchUserInfoMap] 成功获取用户信息");
                 return userResp.getBody();
-                
             } catch (Exception e) {
                 retryCount++;
-                log.warn("[fetchUserInfoMap] 第{}次尝试失败: {}", retryCount, e.getMessage());
-                
                 if (retryCount >= maxRetries) {
-                    log.error("[fetchUserInfoMap] 所有重试都失败了，抛出异常", e);
                     throw e;
                 }
-                
-                // 等待一段时间后重试
                 try {
-                    Thread.sleep(2000 * retryCount); // 递增等待时间：2秒、4秒、6秒
+                    Thread.sleep(2000L * retryCount);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
-                    throw new RuntimeException("重试等待被中断", ie);
+                    throw new RuntimeException("重试中断", ie);
                 }
             }
         }
@@ -408,36 +380,6 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         return null;
     }
 
-    private RestTemplate createRestTemplateWithSSLBypass() {
-        try {
-            javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[]{
-                new javax.net.ssl.X509TrustManager() {
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-                    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-                    }
-                }
-            };
-
-            javax.net.ssl.SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-            javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-            RestTemplate restTemplate = new RestTemplate();
-            org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
-                    new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            factory.setConnectTimeout(60000);  // 增加到60秒
-            factory.setReadTimeout(60000);     // 增加到60秒
-            restTemplate.setRequestFactory(factory);
-
-            return restTemplate;
-        } catch (Exception e) {
-            return new RestTemplate();
-        }
-    }
 
     // 内部类
     private static class CallbackContext {
