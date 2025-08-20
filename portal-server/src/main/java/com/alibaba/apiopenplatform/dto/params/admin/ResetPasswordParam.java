@@ -8,7 +8,7 @@ import lombok.Data;
  * @author zxd
  */
 @Data
-public class ChangePasswordParam {
+public class ResetPasswordParam {
 
     private String oldPassword;
 

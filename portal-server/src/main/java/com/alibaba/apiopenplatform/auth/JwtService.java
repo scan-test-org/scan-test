@@ -58,23 +58,4 @@ public class JwtService {
         }
         return jwt.getPayloads().toBean(Map.class);
     }
-
-    // 以下方法当前未被业务调用，如需可启用
-    // public JWT parse(String token) {
-    //     return JWTUtil.parseToken(token);
-    // }
-
-    // public String generateTokenWithCustomExpire(String userType, String userId, Map<String, Object> extraClaims, long expireMillis) {
-    //     long now = System.currentTimeMillis();
-    //     Map<String, Object> claims = new java.util.HashMap<>();
-    //     claims.put("userType", userType);
-    //     claims.put("userId", userId);
-    //     if (extraClaims != null) claims.putAll(extraClaims);
-    //     return JWT.create()
-    //             .addPayloads(claims)
-    //             .setIssuedAt(new Date(now))
-    //             .setExpiresAt(new Date(now + expireMillis))
-    //             .setSigner(JWTSignerUtil.hs256(secret.getBytes()))
-    //             .sign();
-    // }
 } 

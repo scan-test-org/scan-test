@@ -1,6 +1,8 @@
 package com.alibaba.apiopenplatform.controller;
 
 import cn.hutool.core.util.BooleanUtil;
+import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
+import com.alibaba.apiopenplatform.core.annotation.DeveloperAuth;
 import com.alibaba.apiopenplatform.dto.params.developer.*;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.service.DeveloperService;
@@ -19,7 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
-import com.alibaba.apiopenplatform.dto.params.admin.ChangePasswordParam;
+import com.alibaba.apiopenplatform.dto.params.admin.ResetPasswordParam;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 
@@ -48,8 +50,7 @@ public class DeveloperController {
                 && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveDevelopers());
 
         if (autoApprove) {
-            AuthResponseResult authResult = developerService.generateAuthResult(developer);
-            return authResult;
+            return developerService.generateAuthResult(developer);
         }
         return null;
     }
@@ -62,6 +63,7 @@ public class DeveloperController {
 
     @Operation(summary = "开发者登出", description = "登出")
     @PostMapping("/logout")
+    @DeveloperAuth
     public void logout(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -79,6 +81,7 @@ public class DeveloperController {
 
     @Operation(summary = "获取当前开发者信息", description = "开发者功能：获取当前登录开发者的个人信息")
     @GetMapping("/profile")
+    @DeveloperAuth
     public DeveloperResult getCurrentDeveloperInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserId = authentication != null ? authentication.getName() : null;
@@ -95,7 +98,8 @@ public class DeveloperController {
 
     @Operation(summary = "开发者修改密码", description = "修改当前登录开发者的密码")
     @PatchMapping("/password")
-    public String changePassword(@RequestBody ChangePasswordParam param) {
+    @DeveloperAuth
+    public String changePassword(@RequestBody ResetPasswordParam param) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserId = authentication != null ? authentication.getName() : null;
         if (currentUserId == null) {
@@ -107,6 +111,7 @@ public class DeveloperController {
 
     @Operation(summary = "开发者更新个人信息", description = "开发者功能：更新当前登录开发者的个人信息")
     @PutMapping("/profile")
+    @DeveloperAuth
     public String updateProfile(@Valid @RequestBody UpdateDeveloperProfileParam param) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserId = authentication != null ? authentication.getName() : null;
@@ -119,6 +124,7 @@ public class DeveloperController {
 
     @Operation(summary = "设置开发者状态", description = "管理员审核开发者账号，status为APPROVED/PENDING")
     @PatchMapping("/{developerId}/status")
+    @AdminAuth
     public void setDeveloperStatus(@PathVariable("developerId") String developerId,
                                    @RequestBody DeveloperStatusParam param) {
         developerService.setDeveloperStatus(developerId, param.getStatus());

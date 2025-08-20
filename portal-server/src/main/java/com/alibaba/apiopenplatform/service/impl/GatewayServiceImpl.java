@@ -47,10 +47,6 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     private final ContextHolder contextHolder;
 
-    private ConsumerRefRepository consumerRefRepository;
-
-    private ConsumerCredentialRepository consumerCredentialRepository;
-
     public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable) {
         return gatewayOperators.get(param.getGatewayType()).fetchGateways(param, pageable);
     }
@@ -65,8 +61,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
         if (gateway.getGatewayType().isHigress()) {
             gateway.setGatewayId(IdGenerator.genHigressGatewayId());
         }
-//        gateway.setAdminId(contextHolder.getUser());
-        gateway.setAdminId("admin-68888f2a58740e1f306d9980");
+        gateway.setAdminId(contextHolder.getUser());
         gatewayRepository.save(gateway);
     }
 

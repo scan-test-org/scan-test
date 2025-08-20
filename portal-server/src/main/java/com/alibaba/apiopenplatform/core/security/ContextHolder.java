@@ -1,5 +1,8 @@
 package com.alibaba.apiopenplatform.core.security;
 
+import cn.hutool.core.util.EnumUtil;
+import com.alibaba.apiopenplatform.core.constant.Common;
+import com.alibaba.apiopenplatform.support.enums.UserType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
@@ -15,7 +18,7 @@ import org.springframework.stereotype.Component;
 public class ContextHolder {
 
     private final ThreadLocal<String> portalContext = new ThreadLocal<>();
-    
+
     public String getPortal() {
         return portalContext.get();
     }
@@ -26,36 +29,6 @@ public class ContextHolder {
 
     public void clearPortal() {
         portalContext.remove();
-    }
-
-    /**
-     * 用户类型枚举
-     */
-    public enum UserType {
-        /**
-         * 管理员用户
-         */
-        ADMIN,
-
-        /**
-         * 开发者用户
-         */
-        DEVELOPER;
-
-        /**
-         * 从字符串转换为枚举值
-         *
-         * @param value 字符串值
-         * @return 用户类型枚举
-         * @throws IllegalArgumentException 如果转换失败
-         */
-        public static UserType fromString(String value) {
-            try {
-                return valueOf(value.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Unsupported user type: " + value, e);
-            }
-        }
     }
 
     /**
@@ -82,18 +55,13 @@ public class ContextHolder {
         Authentication authentication = getAuthenticationFromContext();
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .filter(authority -> authority.startsWith("ROLE_"))
+                .filter(authority -> authority.startsWith(Common.ROLE_PREFIX))
                 .map(authority -> authority.substring(5))
-                .map(UserType::fromString)
+                .map(role -> EnumUtil.likeValueOf(UserType.class, role))
                 .findFirst()
                 .orElseThrow(() -> new AuthenticationCredentialsNotFoundException("User type not found in authentication"));
     }
 
-    /**
-     * 判断当前用户是否为管理员
-     *
-     * @return true如果是管理员，否则false
-     */
     public boolean isAdministrator() {
         try {
             return getCurrentUserType() == UserType.ADMIN;
@@ -102,11 +70,6 @@ public class ContextHolder {
         }
     }
 
-    /**
-     * 判断当前用户是否为开发者
-     *
-     * @return true如果是开发者，否则false
-     */
     public boolean isDeveloper() {
         try {
             return getCurrentUserType() == UserType.DEVELOPER;
