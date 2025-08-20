@@ -10,6 +10,8 @@ import com.aliyun.sdk.service.apig20240327.AsyncClient;
 import darabonba.core.client.ClientOverrideConfiguration;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.function.Function;
 
 /**
@@ -51,7 +53,20 @@ public class APIGClient extends GatewayClient {
                 .credentialsProvider(provider)
                 .overrideConfiguration(
                         ClientOverrideConfiguration.create()
-                                .setEndpointOverride(String.format("apig.%s.aliyuncs.com", config.getRegion()))
+                                .setEndpointOverride(getEndpoint(config.getRegion()))
                 ).build();
+    }
+
+    private String getEndpoint(String region) {
+        String internalEndpoint = String.format("apig-vpc.%s.aliyuncs.com", region);
+        String publicEndpoint = String.format("apig.%s.aliyuncs.com", region);
+
+        // 优先尝试内网endpoint
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(internalEndpoint, 443), 1000); // 1秒超时
+            return internalEndpoint;
+        } catch (Exception e) {
+            return publicEndpoint;
+        }
     }
 }
