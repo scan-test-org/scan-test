@@ -21,6 +21,7 @@ import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.repository.SubscriptionRepository;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DomainType;
+import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import com.alibaba.apiopenplatform.support.portal.PortalUiConfig;
 import lombok.RequiredArgsConstructor;
@@ -115,8 +116,15 @@ public class PortalServiceImpl implements PortalService {
         param.update(portal);
         // 至少保留一种认证方式
         PortalSettingConfig setting = portal.getPortalSettingConfig();
-        if (BooleanUtil.isFalse(setting.getBuiltinAuthEnabled()) && CollUtil.isEmpty(setting.getOidcConfigs())) {
-            throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "至少配置一种认证方式");
+        if (BooleanUtil.isFalse(setting.getBuiltinAuthEnabled())) {
+            boolean enabledOidc = Optional.ofNullable(setting.getOidcConfigs())
+                    .filter(CollUtil::isNotEmpty)
+                    .map(configs -> configs.stream().anyMatch(OidcConfig::isEnabled))
+                    .orElse(false);
+
+            if (!enabledOidc) {
+                throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "至少配置一种认证方式");
+            }
         }
         portalRepository.saveAndFlush(portal);
 

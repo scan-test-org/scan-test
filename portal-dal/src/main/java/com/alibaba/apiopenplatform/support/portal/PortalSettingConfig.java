@@ -12,8 +12,6 @@ public class PortalSettingConfig {
 
     private Boolean builtinAuthEnabled = true;
 
-    private Boolean oidcAuthEnabled = false;
-
     private List<OidcConfig> oidcConfigs;
 
     private Boolean autoApproveDevelopers = false;
