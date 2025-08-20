@@ -20,28 +20,5 @@ public interface ProductRefRepository extends JpaRepository<ProductRef, Long>, J
 
     Optional<ProductRef> findFirstByProductId(String productId);
 
-    /**
-     * 根据Nacos ID查找API引用列表
-     */
-    List<ProductRef> findByNacosId(String nacosId);
-
-    /**
-     * 根据产品ID和网关ID查找API引用列表
-     */
-    List<ProductRef> findByProductIdAndGatewayId(String productId, String gatewayId);
-
-    /**
-     * 根据产品ID和Nacos ID查找API引用列表
-     */
-    List<ProductRef> findByProductIdAndNacosId(String productId, String nacosId);
-
-    /**
-     * 根据数据源类型查找API引用列表
-     */
-    List<ProductRef> findBySourceType(SourceType sourceType);
-
-    /**
-     * 根据产品ID和数据源类型查找API引用
-     */
-    Optional<ProductRef> findByProductIdAndSourceType(String productId, SourceType sourceType);
+    boolean existsByGatewayId(String gatewayId);
 }
