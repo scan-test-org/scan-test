@@ -18,7 +18,7 @@ interface ApiProduct {
   name: string;
   description: string;
   status: string;
-  version: string;
+  // version: string;
   endpoints: number;
   lastUpdated: string;
   category: string;
@@ -48,7 +48,7 @@ function APIsPage() {
               name: item.name,
               description: item.description,
               status: item.status === ProductStatus.ENABLE ? 'active' : 'inactive',
-              version: 'v1.0.0',
+              // version: 'v1.0.0',
               endpoints: 0,
               lastUpdated: new Date().toISOString().slice(0, 10),
               category: item.category,

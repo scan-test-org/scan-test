@@ -200,7 +200,7 @@ function ConsumersPage() {
             <Input.TextArea
               placeholder="描述（可选）"
               value={addForm.description}
-              maxLength={256}
+              maxLength={64}
               onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))}
               disabled={addLoading}
               rows={3}

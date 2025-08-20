@@ -322,7 +322,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       title: '操作',
       key: 'action',
       render: (record: ConsumerCredential) => (
-        <Popconfirm title="确定要删除所有API Key凭证吗？" onConfirm={() => handleDeleteCredential('API_KEY', record)}>
+        <Popconfirm title="确定要删除该API Key凭证吗？" onConfirm={() => handleDeleteCredential('API_KEY', record)}>
           <Button type="link" danger size="small" icon={<DeleteOutlined />}>删除</Button>
         </Popconfirm>
       ),
@@ -363,7 +363,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       title: '操作',
       key: 'action',
       render: (record: ConsumerCredential) => (
-        <Popconfirm title="确定要删除所有AK/SK凭证吗？" onConfirm={() => handleDeleteCredential('HMAC', record)}>
+        <Popconfirm title="确定要删除该AK/SK凭证吗？" onConfirm={() => handleDeleteCredential('HMAC', record)}>
           <Button type="link" danger size="small" icon={<DeleteOutlined />}>删除</Button>
         </Popconfirm>
       ),
@@ -391,6 +391,9 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
                   <Button type="link" size="small" icon={<EditOutlined />} onClick={openSourceModal}>
                     编辑
                   </Button>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {currentSource === 'Default' ? '' : `${currentSource}`}
                 </div>
                 <div className="text-sm text-gray-600">
                   {currentSource === 'Default' ? 'Authorization: Bearer <token>' : `${currentKey}: <value>`}

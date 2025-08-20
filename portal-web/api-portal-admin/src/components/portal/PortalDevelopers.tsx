@@ -227,37 +227,38 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
+      width: 200,
     },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: string) => (
-        <Badge status={status === 'APPROVED' ? 'success' : 'default'} text={status === 'APPROVED' ? '可用' : '待审核'} />
-      )
-    },
+    // {
+    //   title: '状态',
+    //   dataIndex: 'status',
+    //   key: 'status',
+    //   width: 120,
+    //   render: (status: string) => (
+    //     <Badge status={status === 'APPROVED' ? 'success' : 'default'} text={status === 'APPROVED' ? '可用' : '待审核'} />
+    //   )
+    // },
     {
       title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      dataIndex: 'createAt',
+      key: 'createAt',
       width: 150,
       render: (date: string) => formatDateTime(date)
     },
-    {
-      title: '操作',
-      key: 'action',
-      width: 120,
-      render: (_: any, record: Consumer) => record.status !== 'APPROVED' && (
-        <Button 
-          onClick={() => handleConsumerStatusUpdate(record.consumerId)} 
-          type="link" 
-          icon={<EditOutlined />}
-        >
-          审批
-        </Button>
-      ),
-    },
+    // {
+    //   title: '操作',
+    //   key: 'action',
+    //   width: 120,
+    //   render: (_: any, record: Consumer) => record.status !== 'APPROVED' && (
+    //     <Button 
+    //       onClick={() => handleConsumerStatusUpdate(record.consumerId)} 
+    //       type="link" 
+    //       icon={<EditOutlined />}
+    //     >
+    //       审批
+    //     </Button>
+    //   ),
+    // },
   ]
 
   return (
