@@ -10,6 +10,7 @@ import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import org.springframework.data.domain.Pageable;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
 /**
@@ -18,6 +19,14 @@ import java.util.Optional;
  * @author zxd
  */
 public interface DeveloperService {
+
+    /**
+     * 开发者注册
+     *
+     * @param param 开发者注册参数
+     * @return 注册结果，如果自动审批则返回认证结果，否则返回null
+     */
+    AuthResponseResult registerDeveloper(DeveloperCreateParam param);
 
     Optional<Developer> findByDeveloperId(String developerId);
 
@@ -65,9 +74,8 @@ public interface DeveloperService {
      * @param userId          当前开发者ID
      * @param providerName    第三方类型
      * @param providerSubject 第三方唯一标识
-     * @param portalId        门户唯一标识
      */
-    void unbindExternalIdentity(String userId, String providerName, String providerSubject, String portalId);
+    void unbindExternalIdentity(String userId, String providerName, String providerSubject);
 
     /**
      * 注销开发者账号（删除账号及所有外部身份）
@@ -132,4 +140,37 @@ public interface DeveloperService {
      * @param event
      */
     void handlePortalDeletion(PortalDeletingEvent event);
+
+    /**
+     * 开发者登出
+     *
+     * @param request HTTP请求
+     */
+    void logout(HttpServletRequest request);
+
+    /**
+     * 获取当前登录开发者信息
+     *
+     * @return 开发者信息
+     */
+    DeveloperResult getCurrentDeveloperInfo();
+
+    /**
+     * 当前开发者修改密码
+     *
+     * @param oldPassword 旧密码
+     * @param newPassword 新密码
+     * @return 是否成功
+     */
+    boolean changeCurrentDeveloperPassword(String oldPassword, String newPassword);
+
+    /**
+     * 当前开发者更新个人信息
+     *
+     * @param username 用户名
+     * @param email 邮箱
+     * @param avatarUrl 头像URL
+     * @return 是否成功
+     */
+    boolean updateCurrentDeveloperProfile(String username, String email, String avatarUrl);
 }

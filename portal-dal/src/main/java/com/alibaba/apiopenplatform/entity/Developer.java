@@ -34,7 +34,7 @@ public class Developer extends BaseEntity implements Serializable {
     @Column(nullable = false, unique = true, length = 64)
     private String developerId;
 
-    @Column(nullable = true, length = 64)  // 移除unique=true，因为现在是组合唯一
+    @Column(nullable = true, length = 64)
     private String username;
 
     @Column(nullable = true)

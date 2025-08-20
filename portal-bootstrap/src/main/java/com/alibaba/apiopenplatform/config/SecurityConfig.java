@@ -1,7 +1,6 @@
 package com.alibaba.apiopenplatform.config;
 
 import com.alibaba.apiopenplatform.core.security.JwtAuthenticationFilter;
-import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
 import com.alibaba.apiopenplatform.core.utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +47,6 @@ import org.springframework.http.HttpMethod;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    private final TokenBlacklistService tokenBlacklistService;
-
     private final com.alibaba.apiopenplatform.service.DeveloperService developerService;
 
     private final DeveloperAuthenticationProvider developerAuthenticationProvider;
@@ -85,7 +82,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf().disable()
                 .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
                 .authorizeRequests()
                 // OPTIONS请求放行
@@ -176,7 +174,7 @@ public class SecurityConfig {
                                 log.info("token无效或过期: {}", e.getMessage());
                             }
                         }
-                        if (tokenValid && !tokenBlacklistService.isBlacklisted(token)) {
+                        if (tokenValid && !TokenUtil.isTokenRevoked(token)) {
                             isBinding = true;
                         }
                     }
