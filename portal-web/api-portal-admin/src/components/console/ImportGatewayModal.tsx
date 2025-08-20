@@ -31,7 +31,7 @@ export default function ImportGatewayModal({ visible, gatewayType, onCancel, onS
 
 
   // 获取网关列表
-  const fetchGateways = async (values: any, page = 0, size = 10) => {
+  const fetchGateways = async (values: any, page = 1, size = 10) => {
     setGatewayLoading(true)
     try {
       const res = await gatewayApi.getApigGateway({
@@ -42,7 +42,7 @@ export default function ImportGatewayModal({ visible, gatewayType, onCancel, onS
       
       setGatewayList(res.data?.content || [])
       setGatewayPagination({
-        current: page + 1,
+        current: page,
         pageSize: size,
         total: res.data?.totalElements || 0,
       })
@@ -63,9 +63,9 @@ export default function ImportGatewayModal({ visible, gatewayType, onCancel, onS
     const values = importForm.getFieldsValue()
     const data = JSON.parse(sessionStorage.getItem('importFormConfig') || '');
     if (JSON.stringify(values) === '{}') {
-      fetchGateways({...data, gatewayType: gatewayType}, page - 1, pageSize)
+      fetchGateways({...data, gatewayType: gatewayType}, page, pageSize)
     } else {
-      fetchGateways({...values, gatewayType: gatewayType}, page - 1, pageSize)
+      fetchGateways({...values, gatewayType: gatewayType}, page, pageSize)
     }
   }
 

@@ -32,7 +32,7 @@ function ConsumerDetailPage() {
     if (!consumerId) return;
     try {
       const params = {
-        page: 0,
+        page: 1,
         size: 100,
         ...searchParams
       };

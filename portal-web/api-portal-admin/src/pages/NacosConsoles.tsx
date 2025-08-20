@@ -42,7 +42,7 @@ export default function NacosConsoles() {
     setLoading(true)
     try {
       const response = await nacosApi.getNacos({
-        page: currentPage - 1,
+        page: currentPage,
         size: pageSize
       })
       setNacosInstances(response.data.content || [])

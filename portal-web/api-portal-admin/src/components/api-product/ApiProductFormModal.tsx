@@ -111,12 +111,12 @@ export default function ApiProductFormModal({
           </Select>
         </Form.Item>
         
-        <Form.Item
+        {/* <Form.Item
           label="分类"
           name="category"
         >
           <Input placeholder="请输入分类" />
-        </Form.Item>
+        </Form.Item> */}
       </Form>
     </Modal>
   )

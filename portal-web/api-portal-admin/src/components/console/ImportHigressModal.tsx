@@ -21,10 +21,9 @@ export default function ImportHigressModal({ visible, onCancel, onSuccess }: Imp
         description: values.description,
         gatewayType: 'HIGRESS',
         higressConfig: {
-          host: values.host,
-          port: parseInt(values.port),
-          accessToken: values.accessToken,
-          jwtPolicy: values.jwtPolicy
+          address: values.address,
+          username: values.username,
+          password: values.password,
         }
       }
 
@@ -74,33 +73,26 @@ export default function ImportHigressModal({ visible, onCancel, onSuccess }: Imp
         </Form.Item>
 
         <Form.Item 
-          label="主机地址" 
-          name="host" 
-          rules={[{ required: true, message: '请输入主机地址' }]}
+          label="服务地址" 
+          name="address" 
+          rules={[{ required: true, message: '请输入服务地址' }]}
         >
           <Input placeholder="例如：higress.example.com" />
         </Form.Item>
 
         <Form.Item 
-          label="端口" 
-          name="port" 
-          rules={[{ required: true, message: '请输入端口号' }]}
+          label="用户名" 
+          name="username" 
+          rules={[{ required: true, message: '请输入用户名' }]}
         >
           <Input placeholder="例如：8080" />
         </Form.Item>
 
         <Form.Item 
-          label="访问令牌" 
-          name="accessToken" 
+          label="密码" 
+          name="password" 
         >
-          <Input.Password placeholder="请输入访问令牌" />
-        </Form.Item>
-
-        <Form.Item 
-          label="JWT 策略" 
-          name="jwtPolicy" 
-        >
-          <Input placeholder="请输入 JWT 策略" />
+          <Input.Password placeholder="请输入密码" />
         </Form.Item>
 
         <div className="flex justify-end space-x-2 pt-4">

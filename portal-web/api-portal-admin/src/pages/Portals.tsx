@@ -257,7 +257,7 @@ export default function Portals() {
     total: 0,
   });
 
-  const fetchPortals = useCallback((page = 0, size = 12) => {
+  const fetchPortals = useCallback((page = 1, size = 12) => {
     setLoading(true);
     portalApi.getPortals({ page, size }).then((res: any) => {
       const list = res?.data?.content || [];
@@ -273,7 +273,7 @@ export default function Portals() {
       }));
       setPortals(portals);
       setPagination({
-        current: page + 1,
+        current: page,
         pageSize: size,
         total: res?.data?.totalElements || 0,
       });
@@ -291,7 +291,7 @@ export default function Portals() {
 
   // 处理分页变化
   const handlePaginationChange = (page: number, pageSize: number) => {
-    fetchPortals(page - 1, pageSize);
+    fetchPortals(page, pageSize);
   };
 
   const handleCreatePortal = useCallback(() => {
@@ -357,7 +357,7 @@ export default function Portals() {
             key={portal.portalId}
             portal={portal}
             onNavigate={handlePortalClick}
-            fetchPortals={() => fetchPortals(pagination.current - 1, pagination.pageSize)}
+            fetchPortals={() => fetchPortals(pagination.current, pagination.pageSize)}
           />
         ))}
       </div>
@@ -394,18 +394,18 @@ export default function Portals() {
             <Input placeholder="请输入Portal名称" />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="title"
             label="标题"
             rules={[{ required: true, message: "请输入Portal标题" }]}
           >
             <Input placeholder="请输入Portal标题" />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             name="description"
             label="描述"
-            rules={[{ required: true, message: "请输入描述" }]}
+            rules={[{ message: "请输入描述" }]}
           >
             <Input.TextArea rows={3} placeholder="请输入Portal描述" />
           </Form.Item>

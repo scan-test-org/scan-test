@@ -26,13 +26,13 @@ export default function Consoles() {
   const apigAiGateways = gateways.filter(g => g.gatewayType === 'APIG_AI')
   const higressGateways = gateways.filter(g => g.gatewayType === 'HIGRESS')
 
-  const fetchGatewaysConsoles = useCallback(async (page = 0, size = 10) => {
+  const fetchGatewaysConsoles = useCallback(async (page = 1, size = 10) => {
     setLoading(true)
     try {
       const res = await gatewayApi.getGateways({ page, size })
       setGateways(res.data?.content || [])
       setPagination({
-        current: page + 1,
+        current: page,
         pageSize: size,
         total: res.data?.totalElements || 0,
       })
@@ -44,12 +44,12 @@ export default function Consoles() {
   }, [])
 
   useEffect(() => {
-    fetchGatewaysConsoles(0, 10)
+    fetchGatewaysConsoles(1, 10)
   }, [fetchGatewaysConsoles])
 
   // 处理导入成功
   const handleImportSuccess = () => {
-    fetchGatewaysConsoles(pagination.current - 1, pagination.pageSize)
+    fetchGatewaysConsoles(pagination.current, pagination.pageSize)
   }
 
   // 处理网关类型选择
@@ -65,7 +65,7 @@ export default function Consoles() {
 
   // 处理分页变化
   const handlePaginationChange = (page: number, pageSize: number) => {
-    fetchGatewaysConsoles(page - 1, pageSize)
+    fetchGatewaysConsoles(page, pageSize)
   }
 
   const handleDeleteGateway = async (gatewayId: string) => {
@@ -76,7 +76,7 @@ export default function Consoles() {
         try {
           await gatewayApi.deleteGateway(gatewayId)
           message.success('删除成功')
-          fetchGatewaysConsoles(pagination.current - 1, pagination.pageSize)
+          fetchGatewaysConsoles(pagination.current, pagination.pageSize)
         } catch (error) {
           message.error('删除失败')
         }
@@ -132,19 +132,19 @@ export default function Consoles() {
       key: 'gatewayName',
     },
     {
-      title: '主机地址',
-      dataIndex: 'host',
-      key: 'host',
+      title: '服务地址',
+      dataIndex: 'address',
+      key: 'address',
       render: (_: any, record: Gateway) => {
-        return record.higressConfig?.host || '-'
+        return record.higressConfig?.address || '-'
       }
     },
     {
-      title: '端口',
-      dataIndex: 'port',
-      key: 'port',
+      title: '用户名',
+      dataIndex: 'username',
+      key: 'username',
       render: (_: any, record: Gateway) => {
-        return record.higressConfig?.port || '-'
+        return record.higressConfig?.username || '-'
       }
     },
     {

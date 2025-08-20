@@ -40,7 +40,7 @@ function ConsumersPage() {
     try {
       const res = await getConsumers(
         { name: searchName },
-        { page: page - 1, size: pageSize }
+        { page: page, size: pageSize }
       );
       setConsumers(res.data?.content || []);
       setTotal(res.data?.totalElements || 0);
