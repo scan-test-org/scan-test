@@ -44,7 +44,8 @@ public class PageResult<T> implements OutputConverter<PageResult<T>, Page<T>> {
                 .map(mapper)
                 .collect(Collectors.toList()));
         setSize(source.getSize());
-        setNumber(source.getNumber());
+        // 由Pageable转换时修正
+        setNumber(source.getNumber() + 1);
         setTotalElements(source.getTotalElements());
         return this;
     }
@@ -52,7 +53,7 @@ public class PageResult<T> implements OutputConverter<PageResult<T>, Page<T>> {
     public static <T> PageResult<T> empty(int pageNumber, int pageSize) {
         return PageResult.<T>builder()
                 .content(new ArrayList<>())
-                .number(pageNumber)
+                .number(pageNumber + 1)
                 .size(pageSize)
                 .totalElements(0)
                 .build();
@@ -61,7 +62,7 @@ public class PageResult<T> implements OutputConverter<PageResult<T>, Page<T>> {
     public static <T> PageResult<T> of(List<T> content, int pageNumber, int pageSize, long total) {
         return PageResult.<T>builder()
                 .content(content)
-                .number(pageNumber)
+                .number(pageNumber + 1)
                 .size(pageSize)
                 .totalElements(total)
                 .build();
