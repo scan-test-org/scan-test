@@ -139,6 +139,11 @@ public class ProductServiceImpl implements ProductService {
             return;
         }
 
+        // 未关联不允许发布
+        if (getProductRef(productId) == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId);
+        }
+
         ProductPublication productPublication = new ProductPublication();
         productPublication.setPortalId(portalId);
         productPublication.setProductId(productId);
@@ -224,6 +229,11 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProductRef(String productId) {
         ProductRef productRef = productRefRepository.findFirstByProductId(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId));
+
+        // 已发布的产品不允许解绑
+        if (publicationRepository.existsByProductId(productId)) {
+            throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "API产品已发布");
+        }
 
         productRefRepository.delete(productRef);
     }

@@ -13,6 +13,7 @@ import com.alibaba.apiopenplatform.entity.*;
 import com.alibaba.apiopenplatform.repository.ConsumerCredentialRepository;
 import com.alibaba.apiopenplatform.repository.ConsumerRefRepository;
 import com.alibaba.apiopenplatform.repository.GatewayRepository;
+import com.alibaba.apiopenplatform.repository.ProductRefRepository;
 import com.alibaba.apiopenplatform.service.GatewayService;
 import com.alibaba.apiopenplatform.service.gateway.GatewayOperator;
 import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 public class GatewayServiceImpl implements GatewayService, ApplicationContextAware {
 
     private final GatewayRepository gatewayRepository;
+    private final ProductRefRepository productRefRepository;
 
     private Map<GatewayType, GatewayOperator> gatewayOperators;
 
@@ -82,6 +84,11 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     @Override
     public void deleteGateway(String gatewayId) {
         Gateway gateway = findGateway(gatewayId);
+        // 已有Product引用时不允许删除
+        if (productRefRepository.existsByGatewayId(gatewayId)) {
+            throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "网关已被Product引用");
+        }
+
         gatewayRepository.delete(gateway);
     }
 
