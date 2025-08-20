@@ -51,7 +51,7 @@ public class GatewayResult implements OutputConverter<GatewayResult, Gateway> {
 
     @Data
     public static class HigressConfigResult implements OutputConverter<HigressConfigResult, HigressConfig> {
-        private String host;
-        private int port;
+        private String address;
+        private String username;
     }
 }
