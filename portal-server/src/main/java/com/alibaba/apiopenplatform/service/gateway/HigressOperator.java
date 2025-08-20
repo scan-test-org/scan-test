@@ -93,7 +93,7 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
         c.setPath("/" + higressMCPConfig.getName());
         c.setDomains(higressMCPConfig.getDomains().stream().map(domain -> MCPConfigResult.Domain.builder()
                         .domain(domain)
-                        .protocol("HTTPS")
+                        .protocol("https")
                         .build())
                 .collect(Collectors.toList()));
         m.setMcpServerConfig(c);

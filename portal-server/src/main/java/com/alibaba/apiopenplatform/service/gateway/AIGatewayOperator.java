@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,9 @@ public class AIGatewayOperator extends APIGOperator {
             c.setDomains(httpRoute.getDomainInfos().stream()
                     .map(domainInfo -> MCPConfigResult.Domain.builder()
                             .domain(domainInfo.getName())
-                            .protocol(domainInfo.getProtocol())
+                            .protocol(Optional.ofNullable(domainInfo.getProtocol())
+                                    .map(String::toLowerCase)
+                                    .orElse(null))
                             .build())
                     .collect(Collectors.toList()));
         }
