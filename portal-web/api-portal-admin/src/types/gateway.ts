@@ -14,10 +14,9 @@ export interface ApigConfig {
 }
 
 export interface HigressConfig {
-  host: string
-  port: number
-  accessToken: string
-  jwtPolicy: string
+  username: string
+  address: string
+  password: string
 }
 
 export type GatewayType = 'APIG_API' | 'APIG_AI' | 'HIGRESS'

@@ -35,7 +35,7 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
     setLoading(true)
     apiProductApi.getApiProducts({
       portalId: portal.portalId,
-      page: currentPage - 1,
+      page: currentPage,
       size: pageSize
     }).then((res) => {
       setApiProducts(res.data.content)
@@ -49,7 +49,7 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
     if (isModalVisible) {
       setModalLoading(true)
       apiProductApi.getApiProducts({
-        page: 0,
+        page: 1,
         size: 500 // 获取所有可用的API
       }).then((res) => {
         // 过滤掉已发布在该门户里的api

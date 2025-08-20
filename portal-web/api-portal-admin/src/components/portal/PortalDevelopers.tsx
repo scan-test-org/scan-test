@@ -49,7 +49,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
 
   const fetchDevelopers = () => {
     portalApi.getDeveloperList(portal.portalId, {
-      page: pagination.current - 1, // 后端从0开始
+      page: pagination.current, // 后端从0开始
       size: pagination.pageSize
     }).then((res) => {
       setDevelopers(res.data.content)
@@ -109,7 +109,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
   }
 
   const fetchConsumers = (developerId: string, page: number, size: number) => {
-    portalApi.getConsumerList(portal.portalId, developerId, { page: page - 1, size }).then((res) => {
+    portalApi.getConsumerList(portal.portalId, developerId, { page: page, size }).then((res) => {
       setConsumers(res.data.content || [])
       setConsumerPagination(prev => ({
         ...prev,

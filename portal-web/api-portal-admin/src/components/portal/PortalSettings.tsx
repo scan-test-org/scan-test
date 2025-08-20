@@ -332,13 +332,13 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           >
             <Input placeholder="请输入Portal ID" />
           </Form.Item>
-          <Form.Item
+          {/* <Form.Item
             name="title"
             label="标题"
             rules={[{ required: true, message: '请输入Portal标题' }]}
           >
             <Input placeholder="请输入Portal标题" />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item
             name="description"
             label="描述"

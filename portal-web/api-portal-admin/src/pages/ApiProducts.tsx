@@ -130,14 +130,14 @@ export default function ApiProducts() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ApiProduct | null>(null);
 
-  const fetchApiProducts = useCallback((page = 0, size = 12, extraFilters?: { type?: string }) => {
+  const fetchApiProducts = useCallback((page = 1, size = 12, extraFilters?: { type?: string }) => {
     setLoading(true);
     const effective = extraFilters ?? filters;
     apiProductApi.getApiProducts({ page, size, ...effective }).then((res: any) => {
       const products = res.data.content;
       setApiProducts(products);
       setPagination({
-        current: page + 1,
+        current: page,
         pageSize: size,
         total: res.data.totalElements || 0,
       });
@@ -204,7 +204,7 @@ export default function ApiProducts() {
 
   // 处理分页变化
   const handlePaginationChange = (page: number, pageSize: number) => {
-    fetchApiProducts(page - 1, pageSize);
+    fetchApiProducts(page, pageSize);
   };
 
   // 直接使用服务端返回的列表
@@ -230,7 +230,7 @@ export default function ApiProducts() {
   const handleModalSuccess = () => {
     setModalVisible(false);
     setEditingProduct(null);
-    fetchApiProducts(pagination.current - 1, pagination.pageSize);
+    fetchApiProducts(pagination.current, pagination.pageSize);
   };
 
   // 处理模态框取消
@@ -291,7 +291,7 @@ export default function ApiProducts() {
                 key={product.productId}
                 product={product}
                 onNavigate={handleNavigateToProduct}
-                handleRefresh={() => fetchApiProducts(pagination.current - 1, pagination.pageSize)}
+                handleRefresh={() => fetchApiProducts(pagination.current, pagination.pageSize)}
                 onEdit={handleEdit}
               />
             ))}

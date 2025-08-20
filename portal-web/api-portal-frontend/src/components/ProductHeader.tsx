@@ -52,7 +52,7 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
   const fetchConsumers = async () => {
     try {
       setLoading(true);
-      const response = await getConsumers({}, { page: 0, size: 100 });
+      const response = await getConsumers({}, { page: 1, size: 100 });
       if (response.data) {
         setConsumers(response.data.content || response.data);
       }

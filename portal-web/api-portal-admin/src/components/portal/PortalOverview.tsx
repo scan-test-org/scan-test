@@ -19,14 +19,14 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
 
   useEffect(() => {
     portalApi.getDeveloperList(portal.portalId, {
-      page: 0, // 后端从0开始
+      page: 1,
       size: 10
     }).then((res: any) => {
       setDeveloperCount(res.data.totalElements || 0)
     })
     apiProductApi.getApiProducts({
       portalId: portal.portalId,
-      page: 0,
+      page: 1,
       size: 10
     }).then((res: any) => {
       setApiCount(res.data.totalElements || 0)

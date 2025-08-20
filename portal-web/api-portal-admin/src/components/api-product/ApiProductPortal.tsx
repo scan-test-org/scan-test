@@ -49,7 +49,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
     setLoading(true)
     try {
       const res = await apiProductApi.getApiProductPublications(apiProduct.productId, {
-        page: currentPage - 1,
+        page: currentPage,
         size: pageSize
       })
       setPublishedPortals(res.data.content || [])
@@ -66,7 +66,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
     setPortalLoading(true)
     try {
       const res = await portalApi.getPortals({
-        page: 0,
+        page: 1,
         size: 500 // 获取所有门户
       })
       setAllPortals(res.data.content?.map((item: any) => ({
