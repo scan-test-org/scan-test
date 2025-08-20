@@ -24,24 +24,71 @@ import java.util.Collections;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    // 白名单路径
+    private static final String[] WHITELIST_PATHS = {
+            "/admins/init",
+            "/admins/need-init", 
+            "/admins/login",
+            "/developers",
+            "/developers/login",
+            "/developers/authorize",
+            "/developers/callback",
+            "/developers/providers",
+            "/portal/swagger-ui.html",
+            "/portal/swagger-ui/**",
+            "/portal/v3/api-docs/**",
+            "/favicon.ico",
+            "/error"
+    };
+
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request,
                                     @NotNull HttpServletResponse response,
                                     @NotNull FilterChain chain)
             throws IOException, ServletException {
 
+        // 检查是否是白名单路径
+        if (isWhitelistPath(request.getRequestURI())) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         try {
             String token = TokenUtil.getTokenFromRequest(request);
             if (token != null) {
-                authenticateRequest(token);
+                // 检查token是否被撤销
+                if (TokenUtil.isTokenRevoked(token)) {
+                    log.debug("Token已被撤销: {}", token);
+                    SecurityContextHolder.clearContext();
+                } else {
+                    try {
+                        authenticateRequest(token);
+                    } catch (Exception e) {
+                        log.debug("Token认证失败: {}", e.getMessage());
+                        SecurityContextHolder.clearContext();
+                    }
+                }
             }
         } catch (Exception e) {
+            log.debug("Token处理异常: {}", e.getMessage());
             SecurityContextHolder.clearContext();
-            log.warn("认证处理异常: {}", e.getMessage());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
-            return;
         }
         chain.doFilter(request, response);
+    }
+
+    private boolean isWhitelistPath(String requestURI) {
+        for (String whitelistPath : WHITELIST_PATHS) {
+            if (whitelistPath.endsWith("/**")) {
+                // 处理通配符路径
+                String basePath = whitelistPath.substring(0, whitelistPath.length() - 2);
+                if (requestURI.startsWith(basePath)) {
+                    return true;
+                }
+            } else if (requestURI.equals(whitelistPath)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void authenticateRequest(String token) {

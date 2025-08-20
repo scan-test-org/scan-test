@@ -27,7 +27,7 @@ public class TokenUtil {
 
     private static long JWT_EXPIRE_MILLIS;
 
-    private static final Set<String> INVALID_TOKENS = ConcurrentHashMap.newKeySet();
+    private static final Map<String, Long> INVALID_TOKENS = new ConcurrentHashMap<>();
 
     private static String getJwtSecret() {
         if (JWT_SECRET == null) {
@@ -132,7 +132,7 @@ public class TokenUtil {
                             .findFirst())
                     .orElse(null);
         }
-        if (StrUtil.isBlank(token) || INVALID_TOKENS.contains(token)) {
+        if (StrUtil.isBlank(token) || isTokenRevoked(token)) {
             return null;
         }
 
@@ -140,7 +140,21 @@ public class TokenUtil {
     }
 
     public static void revokeToken(String token) {
-        INVALID_TOKENS.add(token);
+        if (StrUtil.isBlank(token)) {
+            return;
+        }
+        long expireAt = getTokenExpireTime(token);
+        INVALID_TOKENS.put(token, expireAt);
+        cleanExpiredTokens();
+    }
+
+    private static long getTokenExpireTime(String token) {
+        JWT jwt = JWTUtil.parseToken(token);
+        Object expObj = jwt.getPayloads().get(JWT.EXPIRES_AT);
+        if (ObjectUtil.isNotNull(expObj)) {
+            return Long.parseLong(expObj.toString()) * 1000; // JWT过期时间是秒，转换为毫秒
+        }
+        return System.currentTimeMillis() + getJwtExpireMillis(); // 默认过期时间
     }
 
     public static void revokeToken(HttpServletRequest request) {
@@ -151,6 +165,27 @@ public class TokenUtil {
     }
 
     public static boolean isTokenRevoked(String token) {
-        return INVALID_TOKENS.contains(token);
+        if (StrUtil.isBlank(token)) {
+            return false;
+        }
+        Long expireAt = INVALID_TOKENS.get(token);
+        if (expireAt == null) {
+            return false;
+        }
+        if (expireAt <= System.currentTimeMillis()) {
+            INVALID_TOKENS.remove(token);
+            return false;
+        }
+        return true;
+    }
+
+    private static void cleanExpiredTokens() {
+        long now = System.currentTimeMillis();
+        INVALID_TOKENS.entrySet().removeIf(entry -> entry.getValue() <= now);
+    }
+
+    public static int getRevokedTokenCount() {
+        cleanExpiredTokens();
+        return INVALID_TOKENS.size();
     }
 }
