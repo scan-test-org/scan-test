@@ -119,7 +119,7 @@ ProductCard.displayName = 'ProductCard'
 export default function ApiProducts() {
   const navigate = useNavigate();
   const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
-  const [filters, setFilters] = useState<{ type?: string }>({});
+  const [filters, setFilters] = useState<{ type?: string, name?: string }>({});
   const [loading, setLoading] = useState(true); // 初始状态为 loading
   const [pagination, setPagination] = useState({
     current: 1,
@@ -147,7 +147,7 @@ export default function ApiProducts() {
   }, [filters]);
 
   useEffect(() => {
-    fetchApiProducts(0, 12);
+    fetchApiProducts(1, 12);
   }, [fetchApiProducts]);
 
   // 预设的产品类型（无 "All"）
@@ -160,12 +160,12 @@ export default function ApiProducts() {
 
   // 高级搜索配置
   const searchParamsList: SearchParam[] = useMemo(() => [
-    // {
-    //   label: '产品名称',
-    //   name: 'name',
-    //   placeholder: '请输入产品名称',
-    //   type: 'input'
-    // },
+    {
+      label: '产品名称',
+      name: 'name',
+      placeholder: '请输入产品名称',
+      type: 'input'
+    },
     // {
     //   label: '产品分类',
     //   name: 'category',
@@ -187,19 +187,16 @@ export default function ApiProducts() {
 
   // 搜索处理函数（仅服务端过滤）
   const handleSearch = (searchName: string, searchValue: string) => {
-    if (searchName === 'type') {
-      // 记录筛选并服务端查询
-      const next = { ...filters, type: searchValue || undefined };
+      const next = { [searchName]: searchValue || undefined };
       setFilters(next);
-      fetchApiProducts(0, pagination.pageSize, next);
-    }
+      fetchApiProducts(1, pagination.pageSize, next);
   };
 
   const handleClearSearch = () => {
     // 清空筛选并重新请求列表
     const cleared = {} as { type?: string };
     setFilters(cleared);
-    fetchApiProducts(0, pagination.pageSize, cleared);
+    fetchApiProducts(1, pagination.pageSize, cleared);
   };
 
   // 处理分页变化

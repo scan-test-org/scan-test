@@ -275,7 +275,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="font-medium">{linkedService.sourceType === 'GATEWAY' ? '网关ID:' : 'Nacos实例ID:'}</span>
-            <span className="ml-2">{linkedService.gatewayId}</span>
+            <span className="ml-2">{linkedService.gatewayId || linkedService.nacosId}</span>
           </div>
           <div>
             <span className="font-medium">来源类型:</span>
@@ -416,7 +416,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
           >
             <Select placeholder="请选择来源类型" onChange={handleSourceTypeChange}>
               <Select.Option value="GATEWAY">网关</Select.Option>
-              <Select.Option value="NACOS" disabled>Nacos</Select.Option>
+              <Select.Option value="NACOS" disabled={apiProduct.type === 'REST_API'}>Nacos</Select.Option>
             </Select>
           </Form.Item>
 
@@ -505,14 +505,14 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
               >
                 {apiList.map((api: any) => (
                   <Select.Option 
-                    key={apiProduct.type === 'REST_API' ? api.apiId : api.mcpRouteId} 
-                    value={apiProduct.type === 'REST_API' ? api.apiId : api.mcpRouteId}
+                    key={apiProduct.type === 'REST_API' ? api.apiId : (api.mcpRouteId || api.mcpServerName)} 
+                    value={apiProduct.type === 'REST_API' ? api.apiId : (api.mcpRouteId || api.mcpServerName)}
                     label={api.apiName || api.mcpServerName}
                   >
                     <div>
                       <div className="font-medium">{api.apiName || api.mcpServerName}</div>
                       <div className="text-sm text-gray-500">
-                        {api.type} - {apiProduct.type === 'REST_API' ? api.apiId : api.mcpRouteId}
+                        {api.type} - {apiProduct.type === 'REST_API' ? api.apiId : (api.mcpRouteId || api.mcpServerName)}
                       </div>
                     </div>
                   </Select.Option>
