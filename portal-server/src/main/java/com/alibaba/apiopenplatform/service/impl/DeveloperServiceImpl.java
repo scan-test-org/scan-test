@@ -16,7 +16,6 @@ import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.core.utils.PasswordHasher;
-import com.alibaba.apiopenplatform.auth.JwtService;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepository;
 import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
@@ -50,7 +49,6 @@ import javax.servlet.http.HttpServletRequest;
 public class DeveloperServiceImpl implements DeveloperService {
     private final DeveloperRepository developerRepository;
 
-    private final JwtService jwtService;
 
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     
@@ -126,14 +124,11 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     @Transactional
     public Optional<AuthResponseResult> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson) {
-        log.info("[handleExternalLogin] providerName={}, providerSubject={}, email={}, displayName={}", providerName, providerSubject, email, displayName);
-        
         Optional<DeveloperExternalIdentity> extOpt = developerExternalIdentityRepository.findByProviderAndSubject(providerName, providerSubject);
         Developer developer;
         
         if (extOpt.isPresent()) {
             developer = extOpt.get().getDeveloper();
-            log.info("[handleExternalLogin] 已绑定外部身份，developerId={}, username={}", developer.getDeveloperId(), developer.getUsername());
         } else {
             developer = createExternalDeveloper(providerName, providerSubject, email, displayName, rawInfoJson);
         }
@@ -172,7 +167,6 @@ public class DeveloperServiceImpl implements DeveloperService {
                 .developer(developer)
                 .build();
         developerExternalIdentityRepository.save(ext);
-        log.info("[bindExternalIdentity] 绑定成功，userId={}, providerName={}, providerSubject={}", userId, providerName, providerSubject);
     }
 
     @Override
@@ -194,7 +188,6 @@ public class DeveloperServiceImpl implements DeveloperService {
         }
         
         developerExternalIdentityRepository.deleteByProviderAndSubjectAndDeveloper_DeveloperId(providerName, providerSubject, userId);
-        log.info("[unbindExternalIdentity] 解绑成功，userId={}, providerName={}, providerSubject={}", userId, providerName, providerSubject);
     }
 
     @Override
@@ -274,10 +267,8 @@ public class DeveloperServiceImpl implements DeveloperService {
     }
 
     private String generateToken(Developer developer) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", developer.getDeveloperId());
-        claims.put("userType", "developer");
-        return jwtService.generateToken("developer", developer.getDeveloperId(), claims);
+        // 统一使用 TokenUtil，确保 userType 按枚举大写（DEVELOPER），与鉴权角色映射一致
+        return TokenUtil.generateDeveloperToken(developer.getDeveloperId());
     }
 
     private Developer createExternalDeveloper(String providerName, String providerSubject, String email, String displayName, String rawInfoJson) {
@@ -302,8 +293,6 @@ public class DeveloperServiceImpl implements DeveloperService {
                 .developer(developer)
                 .build();
         developerExternalIdentityRepository.save(ext);
-        
-        log.info("[createExternalDeveloper] 新注册开发者，developerId={}, username={}", developer.getDeveloperId(), developer.getUsername());
         return developer;
     }
 
