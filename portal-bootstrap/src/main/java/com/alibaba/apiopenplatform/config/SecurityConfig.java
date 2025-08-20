@@ -1,7 +1,6 @@
 package com.alibaba.apiopenplatform.config;
 
 import com.alibaba.apiopenplatform.core.security.JwtAuthenticationFilter;
-import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
 import com.alibaba.apiopenplatform.core.utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,8 +46,6 @@ import org.springframework.http.HttpMethod;
 @Slf4j
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-    private final TokenBlacklistService tokenBlacklistService;
 
     private final com.alibaba.apiopenplatform.service.DeveloperService developerService;
 
@@ -176,7 +173,7 @@ public class SecurityConfig {
                                 log.info("token无效或过期: {}", e.getMessage());
                             }
                         }
-                        if (tokenValid && !tokenBlacklistService.isBlacklisted(token)) {
+                        if (tokenValid && !TokenUtil.isTokenRevoked(token)) {
                             isBinding = true;
                         }
                     }

@@ -6,7 +6,6 @@ import com.alibaba.apiopenplatform.core.annotation.DeveloperAuth;
 import com.alibaba.apiopenplatform.dto.params.developer.*;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.service.DeveloperService;
-import com.alibaba.apiopenplatform.core.security.TokenBlacklistService;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.service.PortalService;
@@ -16,14 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Optional;
 import com.alibaba.apiopenplatform.dto.params.admin.ResetPasswordParam;
-import com.alibaba.apiopenplatform.core.exception.BusinessException;
-import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 
 /**
  * @author zxd
@@ -36,23 +30,13 @@ import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 public class DeveloperController {
 
     private final DeveloperService developerService;
-    private final TokenBlacklistService tokenBlacklistService;
     private final ContextHolder contextHolder;
     private final PortalService portalService;
 
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
     public AuthResponseResult register(@Valid @RequestBody DeveloperCreateParam param) {
-        Developer developer = developerService.createDeveloper(param);
-        String portalId = contextHolder.getPortal();
-        PortalResult portal = portalService.getPortal(portalId);
-        boolean autoApprove = portal.getPortalSettingConfig() != null
-                && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveDevelopers());
-
-        if (autoApprove) {
-            return developerService.generateAuthResult(developer);
-        }
-        return null;
+        return developerService.registerDeveloper(param);
     }
 
     @Operation(summary = "开发者登录", description = "开发者账号密码登录")
@@ -65,12 +49,7 @@ public class DeveloperController {
     @PostMapping("/logout")
     @DeveloperAuth
     public void logout(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            long expireAt = System.currentTimeMillis() + 3600_000L;
-            tokenBlacklistService.add(token, expireAt);
-        }
+        developerService.logout(request);
     }
 
     @Operation(summary = "获取门户的开发者列表", description = "管理员功能：获取当前门户下所有开发者的分页列表")
@@ -83,29 +62,14 @@ public class DeveloperController {
     @GetMapping("/profile")
     @DeveloperAuth
     public DeveloperResult getCurrentDeveloperInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserId = authentication != null ? authentication.getName() : null;
-        if (currentUserId == null) {
-            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
-        }
-        Optional<Developer> devOpt = developerService.findByDeveloperId(currentUserId);
-        if (!devOpt.isPresent()) {
-            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
-        }
-        Developer developer = devOpt.get();
-        return new DeveloperResult().convertFrom(developer);
+        return developerService.getCurrentDeveloperInfo();
     }
 
     @Operation(summary = "开发者修改密码", description = "修改当前登录开发者的密码")
     @PatchMapping("/password")
     @DeveloperAuth
     public String changePassword(@RequestBody ResetPasswordParam param) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserId = authentication != null ? authentication.getName() : null;
-        if (currentUserId == null) {
-            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
-        }
-        developerService.changePassword(currentUserId, param.getOldPassword(), param.getNewPassword());
+        developerService.changeCurrentDeveloperPassword(param.getOldPassword(), param.getNewPassword());
         return "修改密码成功";
     }
 
@@ -113,12 +77,7 @@ public class DeveloperController {
     @PutMapping("/profile")
     @DeveloperAuth
     public String updateProfile(@Valid @RequestBody UpdateDeveloperProfileParam param) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUserId = authentication != null ? authentication.getName() : null;
-        if (currentUserId == null) {
-            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
-        }
-        developerService.updateProfile(currentUserId, param.getUsername(), param.getEmail(), param.getAvatarUrl());
+        developerService.updateCurrentDeveloperProfile(param.getUsername(), param.getEmail(), param.getAvatarUrl());
         return "更新个人信息成功";
     }
 
@@ -132,14 +91,15 @@ public class DeveloperController {
 
     @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号")
     @DeleteMapping("/{developerId}/identity")
+    @DeveloperAuth
     public void unbindExternalIdentity(@PathVariable("developerId") String developerId,
                                        @RequestBody UnbindExternalIdentityParam param) {
-        String portalId = contextHolder.getPortal();
-        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject(), portalId);
+        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject());
     }
 
     @Operation(summary = "注销账号", description = "注销当前登录用户账号")
     @DeleteMapping("/{developerId}")
+    @DeveloperAuth
     public void deleteAccount(@PathVariable("developerId") String developerId) {
         developerService.deleteDeveloperAccount(developerId);
     }
