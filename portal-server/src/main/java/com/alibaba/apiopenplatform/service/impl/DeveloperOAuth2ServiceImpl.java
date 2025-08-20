@@ -1,5 +1,6 @@
 package com.alibaba.apiopenplatform.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.entity.Developer;
@@ -53,9 +54,9 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     private final DeveloperService developerService;
     private final PortalService portalService;
     private final ContextHolder contextHolder;
-    
+
     private RestTemplate restTemplate;
-    
+
     @PostConstruct
     public void init() {
         this.restTemplate = HTTPClientFactory.createRestTemplate();
@@ -65,12 +66,12 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     public void handleAuthorize(String provider, String state, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String portalId = contextHolder.getPortal();
         OidcConfig config = findOidcConfig(portalId, provider);
-        
+
         if (config == null || !config.isEnabled()) {
             log.error("[OIDC配置未启用] provider={}", provider);
             throw new BusinessException(ErrorCode.OIDC_CONFIG_DISABLED);
         }
-        
+
         String redirectUri = generateRedirectUri(request);
         String url = buildAuthorizationUrl(config, redirectUri, state);
         response.sendRedirect(url);
@@ -111,14 +112,14 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     public List<Map<String, Object>> listCurrentUserIdentities() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = (String) authentication.getPrincipal();
-        
+
         Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
         if (!devOpt.isPresent()) {
             throw new BusinessException(ErrorCode.DEVELOPER_UNAUTHORIZED);
         }
-        
+
         List<DeveloperExternalIdentity> identities = developerExternalIdentityRepository.findByDeveloper_DeveloperId(devOpt.get().getDeveloperId());
-        
+
         return identities.stream()
                 .map(this::convertToMap)
                 .collect(Collectors.toList());
@@ -129,12 +130,11 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         String portalId = contextHolder.getPortal();
         PortalResult portal = portalService.getPortal(portalId);
         PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
-        
-        if (portalSetting == null) {
-            log.error("[PortalSetting不存在] portalId={}", portalId);
-            return new ArrayList<>();
+
+        if (CollUtil.isEmpty(portalSetting.getOidcConfigs())) {
+            return Collections.emptyList();
         }
-        
+
         return portalSetting.getOidcConfigs().stream()
                 .filter(OidcConfig::isEnabled)
                 .map(this::convertOidcConfigToMap)
@@ -146,14 +146,14 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         String scheme = request.getScheme();
         String serverName = request.getServerName();
         int serverPort = request.getServerPort();
-        
+
         String baseUrl = scheme + "://" + serverName;
         if (serverPort != 80 && serverPort != 443) {
             baseUrl += ":" + serverPort;
         }
-        
+
         String requestURI = request.getRequestURI();
-        
+
         if (requestURI.contains("/api/v1/")) {
             return baseUrl + "/api/v1/developers/callback";
         } else {
@@ -170,16 +170,16 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     private OidcConfig findOidcConfig(String portalId, String provider) {
         PortalResult portal = portalService.getPortal(portalId);
         PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
-       
+
         if (portalSetting == null || portalSetting.getOidcConfigs() == null) {
             return null;
         }
-        
+
         return portalSetting.getOidcConfigs().stream()
-                .filter(config -> config != null && 
-                               config.getProvider() != null && 
-                               provider.equals(config.getProvider()) && 
-                               config.isEnabled())
+                .filter(config -> config != null &&
+                        config.getProvider() != null &&
+                        provider.equals(config.getProvider()) &&
+                        config.isEnabled())
                 .findFirst()
                 .orElse(null);
     }
@@ -196,11 +196,11 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     private CallbackContext parseCallbackState(String state) throws UnsupportedEncodingException {
         String decodedState = URLDecoder.decode(state, "UTF-8");
         String[] stateParts = decodedState.split("\\|");
-        
+
         // 简化日志：不打印敏感/冗长信息
-        
+
         CallbackContext context = new CallbackContext();
-        
+
         if (decodedState.startsWith("BINDING|")) {
             if (stateParts.length >= 4) {
                 context.setMode("BINDING");
@@ -210,7 +210,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
             if (stateParts.length >= 3) {  // 修复：只需要3个部分
                 context.setMode("LOGIN");
                 context.setProvider(stateParts[1]);
-                
+
                 for (String part : stateParts) {
                     if (part.startsWith("API_PREFIX=")) {
                         context.setApiPrefix(part.substring("API_PREFIX=".length()));
@@ -219,7 +219,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
                 }
             }
         }
-        
+
         return context;
     }
 
@@ -231,7 +231,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
                 providerSubject = String.valueOf(subValue);
             }
         }
-        
+
         String displayName = (String) userInfoMap.get("name");
         if (displayName == null || "null".equals(displayName)) {
             Object loginValue = userInfoMap.get("login");
@@ -239,28 +239,28 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
                 displayName = String.valueOf(loginValue);
             }
         }
-        
+
         String email = (String) userInfoMap.get("email");
-        
+
         return new UserInfo(providerSubject, displayName, email);
     }
 
     private void handleBindingMode(String provider, UserInfo userInfo, String rawInfoJson, String portalId, HttpServletResponse response) throws IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = (String) authentication.getPrincipal();
-        
-        developerService.bindExternalIdentity(userId, provider, userInfo.getProviderSubject(), 
+
+        developerService.bindExternalIdentity(userId, provider, userInfo.getProviderSubject(),
                 userInfo.getDisplayName(), rawInfoJson, portalId);
-        
+
         response.sendRedirect("/settings/account?bind=success");
     }
 
-    private void handleLoginMode(String provider, UserInfo userInfo, String rawInfoJson, String apiPrefix, 
-                                HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void handleLoginMode(String provider, UserInfo userInfo, String rawInfoJson, String apiPrefix,
+                                 HttpServletRequest request, HttpServletResponse response) throws IOException {
         Optional<AuthResponseResult> loginResult = developerService.handleExternalLogin(
-                provider, userInfo.getProviderSubject(), userInfo.getEmail(), 
+                provider, userInfo.getProviderSubject(), userInfo.getEmail(),
                 userInfo.getDisplayName(), rawInfoJson);
-        
+
         if (loginResult.isPresent()) {
             String token = loginResult.get().getToken();
             Cookie tokenCookie = new Cookie(Common.AUTH_TOKEN_COOKIE, token);
@@ -268,7 +268,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
             tokenCookie.setHttpOnly(false); // 允许JavaScript访问
             tokenCookie.setMaxAge(3600); // 1小时过期
             response.addCookie(tokenCookie);
-            
+
             String redirectUrl;
             if (apiPrefix != null && apiPrefix.startsWith("/")) {
                 String protocol = request.getScheme();
@@ -283,7 +283,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
             } else {
                 redirectUrl = "/?login=success&fromCookie=true";
             }
-            
+
             response.sendRedirect(redirectUrl);
         } else {
             log.warn("[OIDCCallback] 登录失败: provider={}", provider);
@@ -341,15 +341,15 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         String redirectUri = generateRedirectUri(request);
         params.add("redirect_uri", redirectUri);
         params.add("grant_type", "authorization_code");
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.set("User-Agent", "Portal-Management/1.0");
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
-        
+
         int maxRetries = 3;
         int retryCount = 0;
-        
+
         while (retryCount < maxRetries) {
             try {
                 ResponseEntity<Map> tokenResp = restTemplate.postForEntity(config.getTokenEndpoint(), entity, Map.class);
@@ -376,7 +376,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -388,12 +388,29 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         private String apiPrefix;
 
         // getters and setters
-        public String getMode() { return mode; }
-        public void setMode(String mode) { this.mode = mode; }
-        public String getProvider() { return provider; }
-        public void setProvider(String provider) { this.provider = provider; }
-        public String getApiPrefix() { return apiPrefix; }
-        public void setApiPrefix(String apiPrefix) { this.apiPrefix = apiPrefix; }
+        public String getMode() {
+            return mode;
+        }
+
+        public void setMode(String mode) {
+            this.mode = mode;
+        }
+
+        public String getProvider() {
+            return provider;
+        }
+
+        public void setProvider(String provider) {
+            this.provider = provider;
+        }
+
+        public String getApiPrefix() {
+            return apiPrefix;
+        }
+
+        public void setApiPrefix(String apiPrefix) {
+            this.apiPrefix = apiPrefix;
+        }
     }
 
     private static class UserInfo {
@@ -407,8 +424,16 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
             this.email = email;
         }
 
-        public String getProviderSubject() { return providerSubject; }
-        public String getDisplayName() { return displayName; }
-        public String getEmail() { return email; }
+        public String getProviderSubject() {
+            return providerSubject;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public String getEmail() {
+            return email;
+        }
     }
 }
