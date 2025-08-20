@@ -15,15 +15,15 @@ function GettingStartedPage() {
     },
     {
       title: '浏览API',
-      description: '探索可用的API服务',
+      description: '探索可用的API产品',
       icon: <ApiOutlined />,
       content: '查看API文档，了解功能特性，选择合适的API。'
     },
     {
       title: '开始集成',
-      description: '获取API密钥并开始使用',
+      description: '获取消费者密钥并开始使用',
       icon: <RocketOutlined />,
-      content: '申请API密钥，按照文档进行集成开发。'
+      content: '申请消费者密钥，按照文档进行集成开发。'
     }
   ];
 
@@ -34,7 +34,7 @@ function GettingStartedPage() {
           快速开始
         </Title>
         <Paragraph className="text-xl text-gray-600 max-w-2xl mx-auto">
-          在几分钟内开始使用我们的API服务，构建强大的应用程序
+          在几分钟内开始使用我们的API产品，构建强大的应用程序
         </Paragraph>
       </div>
 
@@ -80,7 +80,7 @@ function GettingStartedPage() {
 
       <Alert
         message="需要帮助？"
-        description="我们的技术支持团队随时为您提供帮助，确保您能够顺利集成和使用我们的API服务。"
+        description="我们的技术支持团队随时为您提供帮助，确保您能够顺利集成和使用我们的API产品。"
         type="info"
         showIcon
         action={

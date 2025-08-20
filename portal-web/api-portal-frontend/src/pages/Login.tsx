@@ -72,7 +72,7 @@ const Login: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-6">
           <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900">登录 AI 开发平台</h2>
+          <h2 className="text-2xl font-bold text-gray-900">登录 AI 开放平台</h2>
         </div>
 
         {/* 账号密码登录表单 */}
