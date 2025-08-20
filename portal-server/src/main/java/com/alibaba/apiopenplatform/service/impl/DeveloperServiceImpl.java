@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.DeveloperDeletingEvent;
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
+import com.alibaba.apiopenplatform.core.utils.TokenUtil;
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
 import com.alibaba.apiopenplatform.dto.params.developer.QueryDeveloperParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
@@ -68,7 +69,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Transactional
     public AuthResponseResult registerDeveloper(DeveloperCreateParam param) {
         Developer developer = createDeveloper(param);
-        
+
         // 检查是否自动审批
         String portalId = contextHolder.getPortal();
         PortalResult portal = portalService.getPortal(portalId);
@@ -106,36 +107,20 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     public AuthResponseResult loginWithPassword(String username, String password) {
         String portalId = contextHolder.getPortal();
-        log.info("[loginWithPassword] 开始登录: portalId={}, username={}", portalId, username);
+        Developer developer = findDeveloperByPortalAndUsername(portalId, username);
         
-        try {
-            Developer developer = findDeveloperByPortalAndUsername(portalId, username);
-            log.info("[loginWithPassword] 找到开发者: developerId={}, status={}, authType={}", 
-                    developer.getDeveloperId(), developer.getStatus(), developer.getAuthType());
-            
-            if (!DeveloperStatus.APPROVED.equals(developer.getStatus())) {
-                log.warn("[loginWithPassword] 账号状态不是APPROVED: status={}", developer.getStatus());
-                throw new BusinessException(ErrorCode.ACCOUNT_PENDING);
-            }
-            if ("EXTERNAL".equals(developer.getAuthType()) || developer.getPasswordHash() == null) {
-                log.warn("[loginWithPassword] 账号类型不支持密码登录: authType={}, hasPassword={}", 
-                        developer.getAuthType(), developer.getPasswordHash() != null);
-                throw new BusinessException(ErrorCode.ACCOUNT_EXTERNAL_ONLY);
-            }
-            if (!PasswordHasher.verify(password, developer.getPasswordHash())) {
-                log.warn("[loginWithPassword] 密码验证失败");
-                throw new BusinessException(ErrorCode.AUTH_INVALID);
-            }
-            
-            String token = generateToken(developer);
-            log.info("[loginWithPassword] 登录成功: developerId={}, tokenLength={}", 
-                    developer.getDeveloperId(), token != null ? token.length() : 0);
-            return AuthResponseResult.fromDeveloper(developer.getDeveloperId(), developer.getUsername(), token);
-            
-        } catch (Exception e) {
-            log.error("[loginWithPassword] 登录异常: username={}, error={}", username, e.getMessage(), e);
-            throw e;
+        if (!DeveloperStatus.APPROVED.equals(developer.getStatus())) {
+            throw new BusinessException(ErrorCode.ACCOUNT_PENDING);
         }
+        if ("EXTERNAL".equals(developer.getAuthType()) || developer.getPasswordHash() == null) {
+            throw new BusinessException(ErrorCode.ACCOUNT_EXTERNAL_ONLY);
+        }
+        if (!PasswordHasher.verify(password, developer.getPasswordHash())) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID);
+        }
+        
+        String token = TokenUtil.generateDeveloperToken(developer.getDeveloperId());
+        return AuthResponseResult.fromDeveloper(developer.getDeveloperId(), developer.getUsername(), token);
     }
 
     @Override
@@ -292,11 +277,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", developer.getDeveloperId());
         claims.put("userType", "developer");
-        
-        String token = jwtService.generateToken("developer", developer.getDeveloperId(), claims);
-        log.info("[generateToken] 生成token: developerId={}, tokenLength={}", 
-                developer.getDeveloperId(), token != null ? token.length() : 0);
-        return token;
+        return jwtService.generateToken("developer", developer.getDeveloperId(), claims);
     }
 
     private Developer createExternalDeveloper(String providerName, String providerSubject, String email, String displayName, String rawInfoJson) {
@@ -406,4 +387,4 @@ public class DeveloperServiceImpl implements DeveloperService {
         String currentUserId = contextHolder.getUser();
         return updateProfile(currentUserId, username, email, avatarUrl);
     }
-} 
+}
