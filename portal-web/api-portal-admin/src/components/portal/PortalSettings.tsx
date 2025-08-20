@@ -569,9 +569,9 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           <p className="text-gray-600">配置Portal的基本设置和高级选项</p>
         </div>
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={handleReset}>
+          {/* <Button icon={<ReloadOutlined />} onClick={handleReset}>
             重置
-          </Button>
+          </Button> */}
           <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSave}>
             保存设置
           </Button>
