@@ -35,7 +35,7 @@ const Register: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">⬛</div>
-          <h2 className="text-2xl font-bold text-gray-900">注册 AI Portal</h2>
+          <h2 className="text-2xl font-bold text-gray-900">注册 AI Portal - 前台</h2>
         </div>
         
         <Form
