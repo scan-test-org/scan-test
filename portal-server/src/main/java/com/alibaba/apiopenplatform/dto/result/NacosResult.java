@@ -20,6 +20,8 @@ public class NacosResult implements OutputConverter<NacosResult, NacosInstance> 
 
     private String username;
 
+    private String accessKey;
+
     private String description;
 
     private String adminId;

@@ -32,6 +32,12 @@ public class UpdateNacosParam implements InputConverter<NacosInstance> {
     @Size(max = 128, message = "密码长度不能超过128个字符")
     private String password;
 
+    @Size(max = 128, message = "AccessKey 长度不能超过128个字符")
+    private String accessKey;
+
+    @Size(max = 256, message = "SecretKey 长度不能超过256个字符")
+    private String secretKey;
+
     @Size(max = 512, message = "描述长度不能超过512个字符")
     private String description;
-} 
+    }

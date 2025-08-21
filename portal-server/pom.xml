@@ -111,6 +111,13 @@
             <version>3.0.2</version>
         </dependency>
 
+        <!-- 阿里云 MSE SDK -->
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>mse20190531</artifactId>
+            <version>7.21.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15to18</artifactId>
