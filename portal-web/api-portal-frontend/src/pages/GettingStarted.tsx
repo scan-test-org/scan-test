@@ -1,6 +1,6 @@
-import { Card, Typography, Steps, Button, Space, Alert } from "antd";
+import { Card, Typography, Steps, Space, Alert } from "antd";
 import { UserOutlined, ApiOutlined, RocketOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 
 const { Title, Paragraph } = Typography;
