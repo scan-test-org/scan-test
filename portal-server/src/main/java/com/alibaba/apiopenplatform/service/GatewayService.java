@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
@@ -30,8 +29,6 @@ import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import org.springframework.data.domain.Pageable;
 
-/**
- */
 public interface GatewayService {
 
     /**
@@ -50,7 +47,6 @@ public interface GatewayService {
      * @param param
      */
     void importGateway(ImportGatewayParam param);
-
 
     GatewayResult getGateway(String gatewayId);
 

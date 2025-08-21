@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.filter;
 
 import cn.hutool.core.util.StrUtil;
@@ -34,8 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- */
 @Slf4j
 @RequiredArgsConstructor
 public class PortalResolvingFilter extends OncePerRequestFilter {

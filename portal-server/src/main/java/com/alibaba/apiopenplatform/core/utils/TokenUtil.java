@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.utils;
 
 import cn.hutool.core.map.MapUtil;

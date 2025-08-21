@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.support.enums.DomainType;
@@ -29,8 +28,6 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
-/**
- */
 @Entity
 @Table(name = "portal_domain",
         uniqueConstraints = {

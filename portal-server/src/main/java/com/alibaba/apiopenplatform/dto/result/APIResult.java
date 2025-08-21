@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
@@ -25,8 +24,6 @@ import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.aliyun.sdk.service.apig20240327.models.HttpApiApiInfo;
 import lombok.Data;
 
-/**
- */
 @Data
 public class APIResult implements OutputConverter<APIResult, HttpApiApiInfo> {
 

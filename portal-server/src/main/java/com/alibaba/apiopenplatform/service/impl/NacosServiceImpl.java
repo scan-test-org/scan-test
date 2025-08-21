@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.impl;
 
 import com.alibaba.apiopenplatform.core.constant.Resources;
@@ -69,8 +68,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-/**
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor

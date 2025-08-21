@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
@@ -39,8 +38,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-/**
- */
 @Tag(name = "Nacos资源管理", description = "Nacos实例管理与能力市场统一控制器")
 @RestController
 @RequestMapping("/nacos")

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.EnumUtil;
@@ -50,8 +49,6 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- */
 @Service
 @RequiredArgsConstructor
 @SuppressWarnings("unchecked")

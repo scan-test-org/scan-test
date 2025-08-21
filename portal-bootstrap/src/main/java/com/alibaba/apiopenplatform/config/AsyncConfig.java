@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.config;
 
 import org.springframework.context.annotation.Bean;
@@ -28,8 +27,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
-/**
- */
 @Configuration
 @EnableAsync
 public class AsyncConfig {

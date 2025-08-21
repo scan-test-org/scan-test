@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.converter.GatewayConfigConverter;
@@ -27,8 +26,6 @@ import lombok.*;
 
 import javax.persistence.*;
 
-/**
- */
 @Entity
 @Table(name = "consumer_ref")
 @Data

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.converter.ConsumerAuthConfigConverter;
@@ -28,8 +27,6 @@ import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 
-/**
- */
 @Entity
 @Table(name = "product_subscription",
         uniqueConstraints = {

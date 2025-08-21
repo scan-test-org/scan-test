@@ -17,13 +17,10 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.consumer;
 
 import lombok.Data;
 
-/**
- */
 @Data
 public class JwtConfig {
 

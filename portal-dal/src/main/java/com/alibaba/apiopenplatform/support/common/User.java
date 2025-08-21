@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.common;
 
 import com.alibaba.apiopenplatform.support.enums.UserType;
 import lombok.Builder;
 import lombok.Data;
 
-/**
- */
 @Data
 @Builder
 public class User {

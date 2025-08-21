@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.aliyun.mse20190531.models.ListClustersResponseBody.ListClustersResponseBodyData;

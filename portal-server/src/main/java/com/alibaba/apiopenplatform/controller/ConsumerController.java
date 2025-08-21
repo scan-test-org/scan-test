@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
@@ -42,8 +41,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-/**
- */
 @Tag(name = "Consumer管理", description = "提供Consumer注册、审批、产品订阅等管理功能")
 @RestController
 @RequestMapping("/consumers")

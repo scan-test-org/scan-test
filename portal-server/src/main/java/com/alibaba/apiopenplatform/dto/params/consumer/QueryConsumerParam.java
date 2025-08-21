@@ -17,13 +17,10 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.consumer;
 
 import lombok.Data;
 
-/**
- */
 @Data
 public class QueryConsumerParam {
 

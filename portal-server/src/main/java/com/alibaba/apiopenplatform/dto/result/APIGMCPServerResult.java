@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import cn.hutool.core.collection.CollUtil;
@@ -32,8 +31,6 @@ import lombok.EqualsAndHashCode;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class APIGMCPServerResult extends GatewayMCPServerResult implements OutputConverter<APIGMCPServerResult, HttpRoute> {

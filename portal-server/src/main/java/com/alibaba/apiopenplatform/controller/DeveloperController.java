@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.controller;
 
 import cn.hutool.core.util.BooleanUtil;
@@ -39,8 +38,6 @@ import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
 import com.alibaba.apiopenplatform.dto.params.admin.ResetPasswordParam;
 
-/**
- */
 @Tag(name = "开发者管理", description = "提供开发者认证、管理等功能")
 @RestController
 @RequestMapping("/developers")

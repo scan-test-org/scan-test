@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.converter;
 
 import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 
 import javax.persistence.Converter;
 
-/**
- */
 @Converter(autoApply = true)
 public class HmacConfigConverter extends JsonConverter<HmacConfig> {
 

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.config;
 
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
@@ -29,8 +28,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
-/**
- */
 @Configuration
 @RequiredArgsConstructor
 public class FilterConfig {

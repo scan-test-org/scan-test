@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
@@ -26,8 +25,6 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/**
- */
 @Data
 public class ProductPublicationResult implements OutputConverter<ProductPublicationResult, ProductPublication> {
 

@@ -28,7 +28,7 @@
     <packaging>pom</packaging>
     <name>portal-management</name>
     <description>API Open Platform Portal Management</description>
-    <url>https://github.com/higress-group/portal-management</url>
+    <url>https://github.com/alibaba/portal-management</url>
     
     <licenses>
         <license>

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.product;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
@@ -30,9 +29,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-
-/**
- */
 @Data
 public class CreateProductParam implements InputConverter<Product> {
 

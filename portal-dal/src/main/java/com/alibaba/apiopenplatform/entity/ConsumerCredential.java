@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.converter.ApiKeyConfigConverter;
@@ -29,9 +28,6 @@ import com.alibaba.apiopenplatform.support.consumer.JwtConfig;
 import lombok.Data;
 
 import javax.persistence.*;
-
-/**
- */
 
 @Entity
 @Table(name = "consumer_credential",

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.security;
 
 import com.alibaba.apiopenplatform.service.DeveloperService;
@@ -33,8 +32,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 
-/**
- */
 @Component
 @RequiredArgsConstructor
 public class DeveloperAuthenticationProvider implements AuthenticationProvider {

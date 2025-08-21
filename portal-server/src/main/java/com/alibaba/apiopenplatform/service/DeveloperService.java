@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
@@ -151,7 +150,6 @@ public interface DeveloperService {
      * @return
      */
     boolean updateProfile(String developerId, String username, String email, String avatarUrl);
-
 
     /**
      * 清理门户资源

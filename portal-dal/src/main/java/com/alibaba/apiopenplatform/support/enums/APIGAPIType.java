@@ -17,14 +17,11 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/**
- */
 @Getter
 @RequiredArgsConstructor
 public enum APIGAPIType {

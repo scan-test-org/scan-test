@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.gateway.client;
 
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -34,8 +33,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.function.Function;
 
-/**
- */
 @Slf4j
 public class APIGClient extends GatewayClient {
 

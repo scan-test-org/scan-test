@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.consumer;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
@@ -26,8 +25,6 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 
-/**
- */
 @Data
 public class CreateSubscriptionParam implements InputConverter<ProductSubscription> {
 

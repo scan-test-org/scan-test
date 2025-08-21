@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.portal;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
@@ -28,9 +27,6 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-
-/**
- */
 @Schema(description = "创建门户参数")
 @Data
 public class CreatePortalParam implements InputConverter<Portal> {

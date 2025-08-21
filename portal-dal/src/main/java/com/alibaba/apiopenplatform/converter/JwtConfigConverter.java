@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.converter;
 
 import com.alibaba.apiopenplatform.support.consumer.JwtConfig;
 
 import javax.persistence.Converter;
 
-/**
- */
 @Converter(autoApply = true)
 public class JwtConfigConverter extends JsonConverter<JwtConfig> {
 

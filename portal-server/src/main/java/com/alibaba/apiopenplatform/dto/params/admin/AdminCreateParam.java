@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.admin;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;

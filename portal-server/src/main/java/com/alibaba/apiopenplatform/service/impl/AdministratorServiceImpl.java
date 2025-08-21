@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.impl;
 
 import com.alibaba.apiopenplatform.core.constant.Resources;
@@ -36,8 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 
-/**
- */
 @Service
 @RequiredArgsConstructor
 public class AdministratorServiceImpl implements AdministratorService {

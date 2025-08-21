@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.repository;
 
 import com.alibaba.apiopenplatform.entity.ProductSubscription;
@@ -25,8 +24,6 @@ import com.alibaba.apiopenplatform.entity.ProductSubscription;
 import java.util.List;
 import java.util.Optional;
 
-/**
- */
 public interface SubscriptionRepository extends BaseRepository<ProductSubscription, Long> {
 
     Optional<ProductSubscription> findByConsumerIdAndProductId(String consumerId, String productId);

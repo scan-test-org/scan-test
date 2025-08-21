@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
@@ -31,8 +30,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Map;
 
-/**
- */
 public interface ProductService {
 
     /**

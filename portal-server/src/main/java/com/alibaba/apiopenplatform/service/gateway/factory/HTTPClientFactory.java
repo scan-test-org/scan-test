@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.gateway.factory;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +28,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- */
 @Slf4j
 public class HTTPClientFactory {
 

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.response;
 
 import lombok.Data;
@@ -25,8 +24,6 @@ import lombok.experimental.Accessors;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-/**
- */
 @Data
 @Accessors(chain = true)
 @NoArgsConstructor

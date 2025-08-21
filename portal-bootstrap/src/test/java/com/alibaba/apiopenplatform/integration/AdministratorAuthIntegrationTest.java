@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.integration;
 
 import com.alibaba.apiopenplatform.dto.params.admin.AdminCreateParam;
@@ -164,9 +163,7 @@ public class AdministratorAuthIntegrationTest {
         assertThat(respAfter.getBody().getData()).isEqualTo(false);
         assertThat(respAfter.getBody().getMessage()).isNotNull();
 
-        
     }
-
 
     @Test
     void testChangePasswordSuccessAndFail() {

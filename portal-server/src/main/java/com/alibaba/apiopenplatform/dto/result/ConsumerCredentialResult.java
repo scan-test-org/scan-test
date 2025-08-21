@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
@@ -27,8 +26,6 @@ import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 import com.alibaba.apiopenplatform.support.consumer.JwtConfig;
 import lombok.Data;
 
-/**
- */
 @Data
 public class ConsumerCredentialResult implements OutputConverter<ConsumerCredentialResult, ConsumerCredential> {
 

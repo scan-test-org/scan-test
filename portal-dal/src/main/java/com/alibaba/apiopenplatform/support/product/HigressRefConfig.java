@@ -17,13 +17,10 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.product;
 
 import lombok.Data;
 
-/**
- */
 @Data
 public class HigressRefConfig {
 

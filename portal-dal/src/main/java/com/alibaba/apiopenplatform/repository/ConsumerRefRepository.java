@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.repository;
 
 import com.alibaba.apiopenplatform.entity.ConsumerRef;
@@ -33,8 +32,6 @@ import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
-/**
- */
 @Repository
 public interface ConsumerRefRepository extends JpaRepository<ConsumerRef, Long>, JpaSpecificationExecutor<ConsumerRef> {
 

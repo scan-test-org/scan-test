@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.security;
 
 import cn.hutool.core.util.EnumUtil;
@@ -31,8 +30,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-/**
- */
 @Component
 public class ContextHolder {
 

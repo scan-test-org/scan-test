@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
@@ -25,8 +24,6 @@ import com.alibaba.nacos.api.ai.model.mcp.McpServerBasicInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-/**
- */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class NacosMCPServerResult extends MCPServerResult implements OutputConverter<NacosMCPServerResult, McpServerBasicInfo> {

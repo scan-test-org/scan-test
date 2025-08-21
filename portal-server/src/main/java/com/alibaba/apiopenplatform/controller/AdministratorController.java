@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
@@ -39,8 +38,6 @@ import io.swagger.v3.oas.annotations.Operation;
 
 import javax.servlet.http.HttpServletRequest;
 
-/**
- */
 @Tag(name = "管理员管理", description = "管理员初始化、登录、修改密码等相关接口")
 @RestController
 @RequestMapping("/admins")

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.developer;
 
 import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;

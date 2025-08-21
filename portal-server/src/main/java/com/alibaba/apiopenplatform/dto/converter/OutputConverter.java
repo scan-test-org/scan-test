@@ -17,14 +17,11 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.converter;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 
-/**
- */
 public interface OutputConverter<Target extends OutputConverter<Target, Source>, Source> {
 
     /**
