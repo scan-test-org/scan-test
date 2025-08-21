@@ -1,0 +1,12 @@
+Portal Management
+Copyright 2024 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+This software contains code derived from the following projects:
+- Spring Boot (https://spring.io/projects/spring-boot) - Apache License 2.0
+- Spring Security (https://spring.io/projects/spring-security) - Apache License 2.0
+- MariaDB Java Client (https://github.com/MariaDB/mariadb-connector-j) - LGPL 2.1
+- Hutool (https://hutool.cn) - Mulan PSL v2
+
