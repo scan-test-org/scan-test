@@ -13,7 +13,6 @@ import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,17 +25,17 @@ public abstract class GatewayOperator<T> {
 
     private final Map<String, GatewayClient> clientCache = new ConcurrentHashMap<>();
 
-    abstract public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, Pageable pageable);
+    abstract public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, int page, int size);
 
-    abstract public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, Pageable pageable);
+    abstract public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, int page, int size);
 
-    abstract public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable);
+    abstract public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, int page, int size);
 
     abstract public String fetchAPIConfig(Gateway gateway, Object config);
 
     abstract public String fetchMcpConfig(Gateway gateway, Object conf);
 
-    abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
+    abstract public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, int page, int size);
 
     abstract public String createConsumer(Consumer consumer, ConsumerCredential credential, GatewayConfig config);
 

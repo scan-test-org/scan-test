@@ -36,8 +36,6 @@ import org.springframework.http.HttpMethod;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    private final com.alibaba.apiopenplatform.service.DeveloperService developerService;
-
     private final DeveloperAuthenticationProvider developerAuthenticationProvider;
 
     // Auth相关

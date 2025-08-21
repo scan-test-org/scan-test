@@ -10,8 +10,6 @@ import com.alibaba.apiopenplatform.dto.params.gateway.ImportGatewayParam;
 import com.alibaba.apiopenplatform.dto.params.gateway.QueryAPIGParam;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.entity.*;
-import com.alibaba.apiopenplatform.repository.ConsumerCredentialRepository;
-import com.alibaba.apiopenplatform.repository.ConsumerRefRepository;
 import com.alibaba.apiopenplatform.repository.GatewayRepository;
 import com.alibaba.apiopenplatform.repository.ProductRefRepository;
 import com.alibaba.apiopenplatform.service.GatewayService;
@@ -29,7 +27,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -49,8 +46,8 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     private final ContextHolder contextHolder;
 
-    public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable) {
-        return gatewayOperators.get(param.getGatewayType()).fetchGateways(param, pageable);
+    public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, int page, int size) {
+        return gatewayOperators.get(param.getGatewayType()).fetchGateways(param, page, size);
     }
 
     public void importGateway(ImportGatewayParam param) {
@@ -93,7 +90,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public PageResult<APIResult> fetchAPIs(String gatewayId, String apiType, Pageable pageable) {
+    public PageResult<APIResult> fetchAPIs(String gatewayId, String apiType, int page, int size) {
         Gateway gateway = findGateway(gatewayId);
         GatewayType gatewayType = gateway.getGatewayType();
 
@@ -101,15 +98,15 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
             APIGAPIType type = EnumUtil.fromString(APIGAPIType.class, apiType);
             switch (type) {
                 case REST:
-                    return fetchRESTAPIs(gatewayId, pageable);
+                    return fetchRESTAPIs(gatewayId, page, size);
                 case HTTP:
-                    return fetchHTTPAPIs(gatewayId, pageable);
+                    return fetchHTTPAPIs(gatewayId, page, size);
                 default:
             }
         }
 
         if (gatewayType.isHigress()) {
-            return fetchRoutes(gatewayId, pageable);
+            return fetchRoutes(gatewayId, page, size);
         }
 
         throw new BusinessException(ErrorCode.INTERNAL_ERROR,
@@ -117,26 +114,26 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
     }
 
     @Override
-    public PageResult<APIResult> fetchHTTPAPIs(String gatewayId, Pageable pageable) {
+    public PageResult<APIResult> fetchHTTPAPIs(String gatewayId, int page, int size) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchHTTPAPIs(gateway, pageable);
+        return getOperator(gateway).fetchHTTPAPIs(gateway, page, size);
     }
 
     @Override
-    public PageResult<APIResult> fetchRESTAPIs(String gatewayId, Pageable pageable) {
+    public PageResult<APIResult> fetchRESTAPIs(String gatewayId, int page, int size) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchRESTAPIs(gateway, pageable);
+        return getOperator(gateway).fetchRESTAPIs(gateway, page, size);
     }
 
     @Override
-    public PageResult<APIResult> fetchRoutes(String gatewayId, Pageable pageable) {
+    public PageResult<APIResult> fetchRoutes(String gatewayId, int page, int size) {
         return null;
     }
 
     @Override
-    public PageResult<GatewayMCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable) {
+    public PageResult<GatewayMCPServerResult> fetchMcpServers(String gatewayId, int page, int size) {
         Gateway gateway = findGateway(gatewayId);
-        return getOperator(gateway).fetchMcpServers(gateway, pageable);
+        return getOperator(gateway).fetchMcpServers(gateway, page, size);
     }
 
     @Override
@@ -153,7 +150,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     @Override
     public String createConsumer(Consumer consumer, ConsumerCredential credential, GatewayConfig config) {
-       return gatewayOperators.get(config.getGatewayType()).createConsumer(consumer, credential, config);
+        return gatewayOperators.get(config.getGatewayType()).createConsumer(consumer, credential, config);
     }
 
     @Override

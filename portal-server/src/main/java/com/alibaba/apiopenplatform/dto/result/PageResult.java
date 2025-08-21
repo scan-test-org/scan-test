@@ -53,7 +53,7 @@ public class PageResult<T> implements OutputConverter<PageResult<T>, Page<T>> {
     public static <T> PageResult<T> empty(int pageNumber, int pageSize) {
         return PageResult.<T>builder()
                 .content(new ArrayList<>())
-                .number(pageNumber + 1)
+                .number(pageNumber)
                 .size(pageSize)
                 .totalElements(0)
                 .build();
@@ -62,7 +62,7 @@ public class PageResult<T> implements OutputConverter<PageResult<T>, Page<T>> {
     public static <T> PageResult<T> of(List<T> content, int pageNumber, int pageSize, long total) {
         return PageResult.<T>builder()
                 .content(content)
-                .number(pageNumber + 1)
+                .number(pageNumber)
                 .size(pageSize)
                 .totalElements(total)
                 .build();

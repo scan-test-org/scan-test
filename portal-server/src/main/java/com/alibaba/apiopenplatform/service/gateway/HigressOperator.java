@@ -18,7 +18,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
@@ -35,22 +34,22 @@ import java.util.stream.Collectors;
 public class HigressOperator extends GatewayOperator<HigressClient> {
 
     @Override
-    public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, Pageable pageable) {
+    public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, int page, int size) {
         throw new UnsupportedOperationException("Higress gateway does not support HTTP APIs");
     }
 
     @Override
-    public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, Pageable pageable) {
+    public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, int page, int size) {
         throw new UnsupportedOperationException("Higress gateway does not support REST APIs");
     }
 
     @Override
-    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, int page, int size) {
         HigressClient client = getClient(gateway);
 
         Map<String, String> queryParams = MapBuilder.<String, String>create()
-                .put("pageNum", String.valueOf(pageable.getPageNumber()))
-                .put("pageSize", String.valueOf(pageable.getPageSize()))
+                .put("pageNum", String.valueOf(page))
+                .put("pageSize", String.valueOf(size))
                 .build();
 
         HigressPageResponse<HigressMCPConfig> response = client.execute("/v1/mcpServer",
@@ -64,7 +63,7 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
                 .map(s -> new HigressMCPServerResult().convertFrom(s))
                 .collect(Collectors.toList());
 
-        return PageResult.of(mcpServers, pageable.getPageNumber(), pageable.getPageSize(), response.getTotal());
+        return PageResult.of(mcpServers, page, size, response.getTotal());
     }
 
     @Override
@@ -111,7 +110,7 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
     }
 
     @Override
-    public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable) {
+    public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, int page, int size) {
         throw new UnsupportedOperationException("Higress gateway does not support fetching Gateways");
     }
 

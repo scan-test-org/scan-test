@@ -15,13 +15,9 @@ import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
 import com.aliyun.sdk.service.apig20240327.models.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -34,18 +30,18 @@ import java.util.stream.Collectors;
 public class AIGatewayOperator extends APIGOperator {
 
     @Override
-    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
-        PageResult<APIResult> page = fetchAPIs(gateway, APIGAPIType.MCP, PageRequest.of(0, 1));
-        if (page.getTotalElements() == 0) {
-            return PageResult.empty(pageable.getPageNumber(), pageable.getPageSize());
+    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, int page, int size) {
+        PageResult<APIResult> apiPage = fetchAPIs(gateway, APIGAPIType.MCP, 0, 1);
+        if (apiPage.getTotalElements() == 0) {
+            return PageResult.empty(page, size);
         }
 
         // MCP Server定义在一个API下
-        String apiId = page.getContent().get(0).getApiId();
+        String apiId = apiPage.getContent().get(0).getApiId();
         try {
-            PageResult<HttpRoute> routesPage = fetchHttpRoutes(gateway, apiId, pageable);
+            PageResult<HttpRoute> routesPage = fetchHttpRoutes(gateway, apiId, page, size);
             if (routesPage.getTotalElements() == 0) {
-                return PageResult.empty(pageable.getPageNumber(), pageable.getPageSize());
+                return PageResult.empty(page, size);
             }
 
             return PageResult.<APIGMCPServerResult>builder().build()
