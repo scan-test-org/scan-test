@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
@@ -16,7 +35,6 @@ import java.util.Optional;
 /**
  * 开发者服务接口，定义注册、登录、查找等核心方法
  *
- * @author zxd
  */
 public interface DeveloperService {
 
@@ -132,7 +150,6 @@ public interface DeveloperService {
      * @return
      */
     boolean updateProfile(String developerId, String username, String email, String avatarUrl);
-
 
     /**
      * 清理门户资源
