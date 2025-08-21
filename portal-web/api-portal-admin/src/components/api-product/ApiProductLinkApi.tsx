@@ -193,7 +193,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         setApiList(mcpServers)
       }
     } catch (error) {
-      console.error('获取API列表失败:', error)
+      // console.error('获取API列表失败:', error)
     } finally {
       setApiLoading(false)
     }
