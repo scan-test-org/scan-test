@@ -1,12 +1,16 @@
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.nacos.CreateNacosParam;
+import com.alibaba.apiopenplatform.dto.params.nacos.QueryNacosNamespaceParam;
+import com.alibaba.apiopenplatform.dto.params.nacos.QueryNacosParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
+import com.alibaba.apiopenplatform.dto.result.MseNacosResult;
 import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
 import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import org.springframework.data.domain.Pageable;
+import com.alibaba.apiopenplatform.dto.result.NacosNamespaceResult;
 
 /**
  * Nacos服务接口，定义Nacos实例管理和MCP服务器配置相关操作
@@ -71,4 +75,23 @@ public interface NacosService {
      * @return MCP Server配置信息
      */
     String fetchMcpConfig(String nacosId, NacosRefConfig nacosRefConfig);
+
+    /**
+     * 从阿里云MSE获取Nacos集群列表
+     *
+     * @param param
+     * @param pageable
+     * @return
+     */
+    PageResult<MseNacosResult> fetchNacos(QueryNacosParam param, Pageable pageable);
+
+    /**
+     * 通过直连信息获取命名空间列表（复用前端的创建/更新参数结构）
+     *
+     * @param param CreateNacosParam/UpdateNacosParam 字段集合（此处使用 CreateNacosParam 承载）
+     * @param pageable 分页
+     * @return 命名空间分页
+     * @throws Exception 连接或查询异常
+     */
+    PageResult<NacosNamespaceResult> fetchNamespaces(QueryNacosNamespaceParam param, Pageable pageable) throws Exception;
 }

@@ -6,11 +6,15 @@ import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.dto.params.nacos.CreateNacosParam;
+import com.alibaba.apiopenplatform.dto.params.nacos.QueryNacosNamespaceParam;
+import com.alibaba.apiopenplatform.dto.params.nacos.QueryNacosParam;
 import com.alibaba.apiopenplatform.dto.params.nacos.UpdateNacosParam;
 import com.alibaba.apiopenplatform.dto.result.NacosMCPServerResult;
+import com.alibaba.apiopenplatform.dto.result.NacosNamespaceResult;
 import com.alibaba.apiopenplatform.dto.result.NacosResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.MCPConfigResult;
+import com.alibaba.apiopenplatform.dto.result.MseNacosResult;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
 import com.alibaba.apiopenplatform.repository.NacosInstanceRepository;
 import com.alibaba.apiopenplatform.service.NacosService;
@@ -27,11 +31,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.alibaba.nacos.maintainer.client.ai.AiMaintainerFactory;
 import com.alibaba.nacos.maintainer.client.ai.McpMaintainerService;
+import com.alibaba.nacos.maintainer.client.naming.NamingMaintainerFactory;
+import com.alibaba.nacos.maintainer.client.naming.NamingMaintainerService;
+import com.alibaba.nacos.api.exception.NacosException;
+import com.aliyun.mse20190531.Client;
+import com.aliyun.mse20190531.models.ListClustersRequest;
+import com.aliyun.mse20190531.models.ListClustersResponse;
+import com.aliyun.mse20190531.models.ListClustersResponseBody;
+import com.aliyun.teautil.models.RuntimeOptions;
 import com.alibaba.nacos.api.ai.model.mcp.McpServerDetailInfo;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -98,6 +111,50 @@ public class NacosServiceImpl implements NacosService {
     }
 
     @Override
+    public PageResult<MseNacosResult> fetchNacos(QueryNacosParam param, Pageable pageable) {
+        try {
+            // 创建MSE客户端
+            Client client = new Client(param.toClientConfig());
+            
+            // 构建请求
+            ListClustersRequest request = new ListClustersRequest()
+                            .setRegionId(param.getRegionId())
+                            .setPageNum(pageable.getPageNumber() + 1)
+                            .setPageSize(pageable.getPageSize());
+            
+            RuntimeOptions runtime = new RuntimeOptions();
+            
+            // 调用MSE API获取集群列表
+            ListClustersResponse response =
+                    client.listClustersWithOptions(request, runtime);
+            
+            // 转换响应结果，并过滤掉 clusterType 为 "Nacos-Ans" 的实例
+             Optional<List<MseNacosResult>> nacosResults = Optional.ofNullable(response.getBody())
+                    .map(ListClustersResponseBody::getData)
+                    .map(clusters -> clusters.stream()
+                            .filter(cluster -> {
+                                String type = cluster.getClusterType();
+                                return (type == null || "Nacos-Ans".equalsIgnoreCase(type))
+                                    && cluster.getVersionCode().startsWith("NACOS_3");
+                            })
+                            .map(MseNacosResult::fromListClustersResponseBodyData)
+                            .collect(Collectors.toList())
+                    );
+
+            if (nacosResults.isPresent()) {
+                    // 返回分页结果
+                int total = response.getBody() != null && response.getBody().getTotalCount() != null ? 
+                        response.getBody().getTotalCount().intValue() : 0;
+                return PageResult.of(nacosResults.get(), pageable.getPageNumber(), pageable.getPageSize(), total);
+            }
+            return PageResult.empty(pageable.getPageNumber(), pageable.getPageSize());
+        } catch (Exception e) {
+            log.error("Error fetching Nacos clusters from MSE", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Failed to fetch Nacos clusters from MSE: " + e.getMessage());
+        }
+    }
+
+    @Override
     public PageResult<NacosMCPServerResult> fetchMcpServers(String nacosId, Pageable pageable) throws Exception {
         NacosInstance nacosInstance = findNacosInstance(nacosId);
 
@@ -118,6 +175,38 @@ public class NacosServiceImpl implements NacosService {
     }
 
     @Override
+    public PageResult<NacosNamespaceResult> fetchNamespaces(QueryNacosNamespaceParam param, Pageable pageable) throws Exception {
+        NacosInstance nacosInstance = new NacosInstance();
+        nacosInstance.setServerUrl(param.getServerUrl());
+        nacosInstance.setUsername(param.getUsername());
+        nacosInstance.setPassword(param.getPassword());
+        nacosInstance.setNamespace(param.getNamespace());
+        nacosInstance.setAccessKey(param.getAccessKey());
+        nacosInstance.setSecretKey(param.getSecretKey());
+
+        NamingMaintainerService namingService = buildDynamicNamingService(nacosInstance);
+        List<?> namespaces;
+        try {
+            namespaces = namingService.getNamespaceList();
+        } catch (NacosException e) {
+            log.error("Error fetching namespaces from Nacos by params", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Failed to fetch namespaces: " + e.getErrMsg());
+        }
+
+        if (namespaces == null || namespaces.isEmpty()) {
+            return PageResult.empty(pageable.getPageNumber(), pageable.getPageSize());
+        }
+
+        List<com.alibaba.apiopenplatform.dto.result.NacosNamespaceResult> list = namespaces.stream()
+                .map(o -> new com.alibaba.apiopenplatform.dto.result.NacosNamespaceResult().convertFrom(o))
+                .skip(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .collect(Collectors.toList());
+
+        return PageResult.of(list, pageable.getPageNumber(), pageable.getPageSize(), namespaces.size());
+    }
+
+    @Override
     public String fetchMcpConfig(String nacosId, NacosRefConfig nacosRefConfig) {
         NacosInstance nacosInstance = findNacosInstance(nacosId);
 
@@ -134,27 +223,6 @@ public class NacosServiceImpl implements NacosService {
         } catch (Exception e) {
             log.error("Error fetching Nacos MCP servers", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Failed to fetch Nacos MCP config");
-        }
-    }
-
-    private NacosInstance findNacosInstance(String nacosId) {
-        return nacosInstanceRepository.findByNacosId(nacosId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.NACOS_INSTANCE, nacosId));
-    }
-
-    private McpMaintainerService buildDynamicMcpService(NacosInstance nacosInstance) {
-        Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, nacosInstance.getServerUrl());
-        properties.setProperty(PropertyKeyConst.USERNAME, nacosInstance.getUsername());
-        properties.setProperty(PropertyKeyConst.PASSWORD, nacosInstance.getPassword());
-        properties.setProperty(PropertyKeyConst.CONTEXT_PATH, DEFAULT_CONTEXT_PATH);
-        properties.setProperty(PropertyKeyConst.NAMESPACE, nacosInstance.getNamespace());
-
-        try {
-            return AiMaintainerFactory.createAiMaintainerService(properties);
-        } catch (Exception e) {
-            log.error("Error init Nacos AiMaintainerService", e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error init Nacos AiMaintainerService");
         }
     }
 
@@ -349,5 +417,67 @@ public class NacosServiceImpl implements NacosService {
         }
         
         return endpoint.toString();
+    }
+
+    private NacosInstance findNacosInstance(String nacosId) {
+        return nacosInstanceRepository.findByNacosId(nacosId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.NACOS_INSTANCE, nacosId));
+    }
+
+    private McpMaintainerService buildDynamicMcpService(NacosInstance nacosInstance) {
+        Properties properties = new Properties();
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, nacosInstance.getServerUrl());
+        if (Objects.nonNull(nacosInstance.getUsername())) {
+            properties.setProperty(PropertyKeyConst.USERNAME, nacosInstance.getUsername());
+        }
+
+        if (Objects.nonNull(nacosInstance.getPassword())) {
+            properties.setProperty(PropertyKeyConst.PASSWORD, nacosInstance.getPassword());
+        }
+        properties.setProperty(PropertyKeyConst.CONTEXT_PATH, DEFAULT_CONTEXT_PATH);
+        properties.setProperty(PropertyKeyConst.NAMESPACE, nacosInstance.getNamespace());
+        if (Objects.nonNull(nacosInstance.getAccessKey())) {
+            properties.setProperty(PropertyKeyConst.ACCESS_KEY, nacosInstance.getAccessKey());
+        }
+
+        if (Objects.nonNull(nacosInstance.getSecretKey())) {
+            properties.setProperty(PropertyKeyConst.SECRET_KEY, nacosInstance.getSecretKey());
+        }
+
+        try {
+            return AiMaintainerFactory.createAiMaintainerService(properties);
+        } catch (Exception e) {
+            log.error("Error init Nacos AiMaintainerService", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error init Nacos AiMaintainerService");
+        }
+    }
+
+    private NamingMaintainerService buildDynamicNamingService(NacosInstance nacosInstance) {
+        Properties properties = new Properties();
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, nacosInstance.getServerUrl());
+        if (Objects.nonNull(nacosInstance.getUsername())) {
+            properties.setProperty(PropertyKeyConst.USERNAME, nacosInstance.getUsername());
+        }
+
+        if (Objects.nonNull(nacosInstance.getPassword())) {
+            properties.setProperty(PropertyKeyConst.PASSWORD, nacosInstance.getPassword());
+        }
+        properties.setProperty(PropertyKeyConst.CONTEXT_PATH, DEFAULT_CONTEXT_PATH);
+        properties.setProperty(PropertyKeyConst.NAMESPACE, nacosInstance.getNamespace());
+
+        if (Objects.nonNull(nacosInstance.getAccessKey())) {
+            properties.setProperty(PropertyKeyConst.ACCESS_KEY, nacosInstance.getAccessKey());
+        }
+
+        if (Objects.nonNull(nacosInstance.getSecretKey())) {
+            properties.setProperty(PropertyKeyConst.SECRET_KEY, nacosInstance.getSecretKey());
+        }
+
+        try {
+            return NamingMaintainerFactory.createNamingMaintainerService(properties);
+        } catch (Exception e) {
+            log.error("Error init Nacos NamingMaintainerService", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error init Nacos NamingMaintainerService");
+        }
     }
 }

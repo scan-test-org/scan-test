@@ -22,11 +22,16 @@ public class CreateNacosParam implements InputConverter<NacosInstance> {
     @NotBlank(message = "服务器地址不能为空")
     private String serverUrl;
 
+    @NotBlank(message = "命名空间不能为空")
     private String namespace;
 
     private String username;
 
     private String password;
 
+    private String accessKey;
+
+    private String secretKey;
+
     private String description;
-} 
+}

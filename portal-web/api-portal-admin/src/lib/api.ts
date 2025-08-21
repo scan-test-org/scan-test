@@ -195,6 +195,10 @@ export const nacosApi = {
   getNacos: (params?: any) => {
     return api.get(`/nacos`, { params })
   },
+  // 从阿里云 MSE 获取 Nacos 集群列表
+  getMseNacos: (params: { regionId: string; accessKey: string; secretKey: string; page?: number; size?: number }) => {
+    return api.get(`/nacos/mse`, { params })
+  },
   createNacos: (data: any) => {
     return api.post(`/nacos`, data)
   },
@@ -208,5 +212,12 @@ export const nacosApi = {
     return api.get(`/nacos/${nacosId}/mcp-servers`, {
       params: data
     })
+  },
+  // 通过直连信息获取 Nacos 命名空间列表
+  fetchNamespacesByParam: (
+    body: { nacosName: string; serverUrl: string; username?: string; password?: string; accessKey?: string; secretKey?: string; namespace: string },
+    params?: { page?: number; size?: number }
+  ) => {
+    return api.post(`/nacos/namespaces`, body, { params })
   }
 }

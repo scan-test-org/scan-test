@@ -44,7 +44,11 @@ public class NacosInstance extends BaseEntity {
     @Column(name = "password", length = 128)
     private String password;
 
+    @Column(name = "access_key", length = 128)
+    private String accessKey;
 
+    @Column(name = "secret_key", length = 256)
+    private String secretKey;
 
     @Column(name = "description", length = 512)
     private String description;
