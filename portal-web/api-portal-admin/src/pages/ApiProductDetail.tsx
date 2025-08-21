@@ -138,7 +138,7 @@ export default function ApiProductDetail() {
       message.success('删除成功')
       navigate('/api-products')
     }).catch((error) => {
-      message.error(error.response?.data?.message || '删除失败')
+      // message.error(error.response?.data?.message || '删除失败')
     })
   }
 

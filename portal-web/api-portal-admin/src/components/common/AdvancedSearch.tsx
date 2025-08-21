@@ -31,6 +31,12 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const [tagList, setTagList] = useState<Array<SearchParam & { value: string }>>([]);
 
   useEffect(() => {
+    setActiveSearchValue(''); // 清空输入框
+    setTagList([]); // 清空关联标签
+    onSearch(activeSearchName, '');
+  }, [activeSearchName]);
+
+  useEffect(() => {
     if (searchParamsList.length > 0) {
       setActiveSearchName(searchParamsList[0].name);
     }

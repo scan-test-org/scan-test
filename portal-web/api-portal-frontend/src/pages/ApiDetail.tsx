@@ -252,7 +252,7 @@ function ApiDetailPage() {
         category={apiData.category}
         icon={apiData.icon || undefined}
         defaultIcon="/logo.png"
-        version="v1.0.0"
+        // version="v1.0.0"
         enabled={apiData.enabled}
         showVersion={true}
         showEnabled={false}

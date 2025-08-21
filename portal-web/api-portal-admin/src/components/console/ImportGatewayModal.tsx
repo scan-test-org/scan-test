@@ -47,7 +47,7 @@ export default function ImportGatewayModal({ visible, gatewayType, onCancel, onS
         total: res.data?.totalElements || 0,
       })
     } catch (error) {
-      message.error('获取网关列表失败')
+      // message.error('获取网关列表失败')
     } finally {
       setGatewayLoading(false)
     }
@@ -84,7 +84,7 @@ export default function ImportGatewayModal({ visible, gatewayType, onCancel, onS
       handleCancel()
       onSuccess()
     }).catch((error) => {
-      message.error(error.response?.data?.message || '导入失败！')
+      // message.error(error.response?.data?.message || '导入失败！')
     })
   }
 

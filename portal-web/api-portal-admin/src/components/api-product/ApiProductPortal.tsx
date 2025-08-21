@@ -56,7 +56,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
       setTotal(res.data.totalElements || 0)
     } catch (error) {
       console.error('获取已发布门户失败:', error)
-      message.error('获取已发布门户失败')
+      // message.error('获取已发布门户失败')
     } finally {
       setLoading(false)
     }
@@ -75,7 +75,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
       })) || [])
     } catch (error) {
       console.error('获取门户列表失败:', error)
-      message.error('获取门户列表失败')
+      // message.error('获取门户列表失败')
     } finally {
       setPortalLoading(false)
     }
@@ -172,7 +172,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
           fetchPublishedPortals()
         }).catch((error) => {
           console.error('移除失败:', error)
-          message.error('移除失败')
+          // message.error('移除失败')
         })
       },
     })
@@ -197,7 +197,7 @@ export function ApiProductPortal({ apiProduct }: ApiProductPortalProps) {
       fetchPublishedPortals()
     } catch (error) {
       console.error('发布失败:', error)
-      message.error('发布失败')
+      // message.error('发布失败')
     } finally {
       setModalLoading(false)
     }
