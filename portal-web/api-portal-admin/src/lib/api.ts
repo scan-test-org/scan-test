@@ -41,7 +41,12 @@ api.interceptors.response.use(
 
 export default api
 
-
+// 用户相关API
+export const authApi = {
+  getNeedInit: () => {
+    return api.get('/admins/need-init')
+  }
+}
 // Portal相关API
 export const portalApi = {
   // 获取portal列表
