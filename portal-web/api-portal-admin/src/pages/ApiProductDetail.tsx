@@ -73,7 +73,7 @@ export default function ApiProductDetail() {
 
   useEffect(() => {
     fetchApiProduct()
-  }, [])
+  }, [validTab])
 
   // 同步URL参数和activeTab状态
   useEffect(() => {

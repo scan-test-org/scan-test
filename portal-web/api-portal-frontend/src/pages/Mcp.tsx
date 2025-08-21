@@ -112,11 +112,20 @@ function McpPage() {
             >
               <div className="flex items-start space-x-4 mb-2">
                 {/* Server Icon */}
-                <Avatar
-                  size={48}
-                  src={server.icon}
-                >
-                </Avatar>
+                {server.icon ? (
+                  <Avatar
+                    size={48}
+                    src={server.icon}
+                  />
+                ) : (
+                  <Avatar
+                    size={48}
+                    className="bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg"
+                    style={{ fontSize: "18px", fontWeight: "600" }}
+                  >
+                    {server.name[0]}
+                  </Avatar>
+                )}
 
                 {/* Server Info */}
                 <div className="flex-1 min-w-0">
