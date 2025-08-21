@@ -53,11 +53,11 @@ const Login: React.FC = () => {
       return;
     }
     try {
-      const response = await api.post("/admins/login", {
+      const response = await api.post("/admins/init", {
         username: values.username,
         password: values.password,
       });
-      if (response.data.token) {
+      if (response.data.adminId) {
         setIsRegister(false); // 初始化成功后切换到登录状态
       }
     } catch {
