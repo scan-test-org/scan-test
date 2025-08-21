@@ -43,16 +43,16 @@ import java.util.stream.Collectors;
 public class APIGOperator extends GatewayOperator<APIGClient> {
 
     @Override
-    public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, Pageable pageable) {
-        return fetchAPIs(gateway, APIGAPIType.HTTP, pageable);
+    public PageResult<APIResult> fetchHTTPAPIs(Gateway gateway, int page, int size) {
+        return fetchAPIs(gateway, APIGAPIType.HTTP, page, size);
     }
 
-    public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, Pageable pageable) {
-        return fetchAPIs(gateway, APIGAPIType.REST, pageable);
+    public PageResult<APIResult> fetchRESTAPIs(Gateway gateway, int page, int size) {
+        return fetchAPIs(gateway, APIGAPIType.REST, page, size);
     }
 
     @Override
-    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, Pageable pageable) {
+    public PageResult<? extends GatewayMCPServerResult> fetchMcpServers(Gateway gateway, int page, int size) {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
     }
 
@@ -102,7 +102,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
     }
 
-    public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable) {
+    public PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, int page, int size) {
         APIGClient client = new APIGClient(param.convertTo());
 
         List<GatewayResult> gateways = new ArrayList<>();
@@ -110,8 +110,8 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             ListGatewaysResponse response = client.execute(c -> {
                 ListGatewaysRequest request = ListGatewaysRequest.builder()
                         .gatewayType(param.getGatewayType().getType())
-                        .pageNumber(pageable.getPageNumber())
-                        .pageSize(pageable.getPageSize())
+                        .pageNumber(page)
+                        .pageSize(size)
                         .build();
                 try {
                     return c.listGateways(request).get();
@@ -133,7 +133,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             }
 
             int total = Math.toIntExact(response.getBody().getData().getTotalSize());
-            return PageResult.of(gateways, pageable.getPageNumber(), pageable.getPageSize(), total);
+            return PageResult.of(gateways, page, size, total);
         } catch (Exception e) {
             log.error("Error fetching Gateways", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Gateways，Cause：" + e.getMessage());
@@ -405,7 +405,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         }
     }
 
-    protected PageResult<APIResult> fetchAPIs(Gateway gateway, APIGAPIType type, Pageable pageable) {
+    protected PageResult<APIResult> fetchAPIs(Gateway gateway, APIGAPIType type, int page, int size) {
         APIGClient client = getClient(gateway);
         try {
             List<APIResult> apis = new ArrayList<>();
@@ -414,8 +414,8 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
                         .gatewayId(gateway.getGatewayId())
                         .gatewayType(gateway.getGatewayType().getType())
                         .types(type.getType())
-                        .pageNumber(pageable.getPageNumber())
-                        .pageSize(pageable.getPageSize())
+                        .pageNumber(page)
+                        .pageSize(size)
                         .build();
                 try {
                     return c.listHttpApis(request).get();
@@ -436,22 +436,22 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             }
 
             int total = response.getBody().getData().getTotalSize();
-            return PageResult.of(apis, pageable.getPageNumber(), pageable.getPageSize(), total);
+            return PageResult.of(apis, page, size, total);
         } catch (Exception e) {
             log.error("Error fetching APIs", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching APIs，Cause：" + e.getMessage());
         }
     }
 
-    public PageResult<HttpRoute> fetchHttpRoutes(Gateway gateway, String apiId, Pageable pageable) {
+    public PageResult<HttpRoute> fetchHttpRoutes(Gateway gateway, String apiId, int page, int size) {
         APIGClient client = getClient(gateway);
         try {
             ListHttpApiRoutesResponse response = client.execute(c -> {
                 ListHttpApiRoutesRequest request = ListHttpApiRoutesRequest.builder()
                         .gatewayId(gateway.getGatewayId())
                         .httpApiId(apiId)
-                        .pageNumber(pageable.getPageNumber())
-                        .pageSize(pageable.getPageSize())
+                        .pageNumber(page)
+                        .pageSize(size)
                         .build();
                 try {
                     return c.listHttpApiRoutes(request).get();
@@ -464,7 +464,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             }
             List<HttpRoute> httpRoutes = response.getBody().getData().getItems();
             int total = response.getBody().getData().getTotalSize();
-            return PageResult.of(httpRoutes, pageable.getPageNumber(), pageable.getPageSize(), total);
+            return PageResult.of(httpRoutes, page, size, total);
         } catch (Exception e) {
             log.error("Error fetching HTTP Roues", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching HTTP Roues，Cause：" + e.getMessage());

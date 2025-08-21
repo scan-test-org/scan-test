@@ -15,17 +15,15 @@ import org.springframework.data.domain.Pageable;
  */
 public interface GatewayService {
 
-
-
-
     /**
      * 获取APIG Gateway列表
      *
      * @param param
-     * @param pageable
+     * @param page
+     * @param size
      * @return
      */
-    PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, Pageable pageable);
+    PageResult<GatewayResult> fetchGateways(QueryAPIGParam param, int page, int size);
 
     /**
      * 导入Gateway
@@ -57,18 +55,19 @@ public interface GatewayService {
      *
      * @param gatewayId
      * @param apiType
-     * @param pageable
+     * @param page
+     * @param size
      * @return
      */
-    PageResult<APIResult> fetchAPIs(String gatewayId, String apiType, Pageable pageable);
+    PageResult<APIResult> fetchAPIs(String gatewayId, String apiType, int page, int size);
 
-    PageResult<APIResult> fetchHTTPAPIs(String gatewayId, Pageable pageable);
+    PageResult<APIResult> fetchHTTPAPIs(String gatewayId, int page, int size);
 
-    PageResult<APIResult> fetchRESTAPIs(String gatewayId, Pageable pageable);
+    PageResult<APIResult> fetchRESTAPIs(String gatewayId, int page, int size);
 
-    PageResult<APIResult> fetchRoutes(String gatewayId, Pageable pageable);
+    PageResult<APIResult> fetchRoutes(String gatewayId, int page, int size);
 
-    PageResult<GatewayMCPServerResult> fetchMcpServers(String gatewayId, Pageable pageable);
+    PageResult<GatewayMCPServerResult> fetchMcpServers(String gatewayId, int page, int size);
 
     String fetchAPIConfig(String gatewayId, Object config);
 

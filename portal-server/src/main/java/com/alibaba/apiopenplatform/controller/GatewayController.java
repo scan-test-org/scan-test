@@ -30,8 +30,8 @@ public class GatewayController {
     @Operation(summary = "获取APIG Gateway列表")
     @GetMapping("/apig")
     public PageResult<GatewayResult> fetchGateways(@Valid QueryAPIGParam param,
-                                                   Pageable pageable) {
-        return gatewayService.fetchGateways(param, pageable);
+                                                   int page, int size) {
+        return gatewayService.fetchGateways(param, page, size);
     }
 
     @Operation(summary = "获取导入的Gateway列表")
@@ -55,8 +55,8 @@ public class GatewayController {
     @Operation(summary = "获取REST API列表")
     @GetMapping("/{gatewayId}/rest-apis")
     public PageResult<APIResult> fetchRESTAPIs(@PathVariable String gatewayId,
-                                               Pageable pageable) {
-        return gatewayService.fetchRESTAPIs(gatewayId, pageable);
+                                               int page, int size) {
+        return gatewayService.fetchRESTAPIs(gatewayId, page, size);
     }
 
 //    @Operation(summary = "获取API列表")
@@ -70,7 +70,7 @@ public class GatewayController {
     @Operation(summary = "获取MCP Server列表")
     @GetMapping("/{gatewayId}/mcp-servers")
     public PageResult<GatewayMCPServerResult> fetchMcpServers(@PathVariable String gatewayId,
-                                                       Pageable pageable) {
-        return gatewayService.fetchMcpServers(gatewayId, pageable);
+                                                              int page, int size) {
+        return gatewayService.fetchMcpServers(gatewayId, page, size);
     }
 }
