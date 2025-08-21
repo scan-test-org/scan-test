@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import cn.hutool.core.collection.CollUtil;
@@ -33,8 +32,6 @@ import lombok.Data;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- */
 @Data
 public class PortalResult implements OutputConverter<PortalResult, Portal> {
 

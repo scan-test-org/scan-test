@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.repository;
 
 import com.alibaba.apiopenplatform.entity.Portal;
@@ -27,8 +26,6 @@ import org.springframework.data.jpa.repository.EntityGraph;
 
 import java.util.Optional;
 
-/**
- */
 public interface PortalRepository extends BaseRepository<Portal, Long> {
 
     Optional<Portal> findByPortalIdAndAdminId(String portalId, String adminId);

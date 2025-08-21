@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.converter.APIGConfigConverter;
@@ -30,8 +29,6 @@ import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 
-/**
- */
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "gateway",

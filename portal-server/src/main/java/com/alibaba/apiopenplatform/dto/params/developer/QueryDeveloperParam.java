@@ -17,14 +17,11 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.developer;
 
 import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import lombok.Data;
 
-/**
- */
 @Data
 public class QueryDeveloperParam {
 

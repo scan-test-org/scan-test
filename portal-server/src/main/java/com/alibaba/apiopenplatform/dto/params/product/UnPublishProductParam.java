@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.product;
 
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 
-/**
- */
 @Data
 public class UnPublishProductParam {
 

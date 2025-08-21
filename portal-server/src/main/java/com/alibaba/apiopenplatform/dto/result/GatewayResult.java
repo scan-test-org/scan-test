@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
@@ -32,8 +31,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- */
 @Data
 @Builder
 @AllArgsConstructor

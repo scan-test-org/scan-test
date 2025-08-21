@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.gateway.client;
 
 import cn.hutool.core.map.MapBuilder;
@@ -35,8 +34,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
-/**
- */
 @Slf4j
 public class HigressClient extends GatewayClient {
 

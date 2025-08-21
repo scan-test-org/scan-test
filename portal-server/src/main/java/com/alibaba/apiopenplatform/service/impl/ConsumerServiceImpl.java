@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.StrUtil;
@@ -75,8 +74,6 @@ import java.util.stream.Collectors;
 import com.alibaba.apiopenplatform.support.enums.SubscriptionStatus;
 import com.alibaba.apiopenplatform.repository.ConsumerRefRepository;
 
-/**
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -290,7 +287,6 @@ public class ConsumerServiceImpl implements ConsumerService {
 
         subscriptionRepository.deleteByConsumerIdAndProductId(consumerId, productId);
     }
-
 
     @Override
     public PageResult<SubscriptionResult> listSubscriptions(String consumerId, QuerySubscriptionParam param, Pageable pageable) {

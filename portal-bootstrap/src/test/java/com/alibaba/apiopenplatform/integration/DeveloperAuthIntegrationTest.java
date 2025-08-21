@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.integration;
 
 import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;

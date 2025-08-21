@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.converter.PortalSettingConfigConverter;
@@ -31,8 +30,6 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- */
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "portal",

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.service.DeveloperOAuth2Service;

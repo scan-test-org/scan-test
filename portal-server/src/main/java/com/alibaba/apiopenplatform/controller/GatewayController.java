@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.controller;
 
 import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
@@ -34,9 +33,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-
-/**
- */
 @Tag(name = "网关资源管理")
 @RestController
 @RequestMapping("/gateways")

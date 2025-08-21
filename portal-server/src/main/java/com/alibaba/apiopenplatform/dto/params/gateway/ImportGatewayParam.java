@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.gateway;
 
 import cn.hutool.core.util.StrUtil;
@@ -33,8 +32,6 @@ import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-/**
- */
 @Data
 public class ImportGatewayParam implements InputConverter<Gateway> {
 

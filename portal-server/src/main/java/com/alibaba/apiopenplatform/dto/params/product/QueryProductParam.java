@@ -17,14 +17,11 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.product;
 
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import lombok.Data;
 
-/**
- */
 @Data
 public class QueryProductParam {
 

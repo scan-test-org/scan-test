@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.config;
 
 import lombok.RequiredArgsConstructor;
@@ -30,8 +29,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- */
 @Configuration
 public class RestTemplateConfig {
 

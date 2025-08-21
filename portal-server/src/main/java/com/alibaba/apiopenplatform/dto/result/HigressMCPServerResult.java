@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
@@ -25,8 +24,6 @@ import com.alibaba.apiopenplatform.service.gateway.HigressOperator.HigressMCPCon
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-/**
- */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class HigressMCPServerResult extends GatewayMCPServerResult implements OutputConverter<HigressMCPServerResult, HigressMCPConfig> {

@@ -17,14 +17,11 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.consumer;
 
 import com.alibaba.apiopenplatform.support.enums.SubscriptionStatus;
 import lombok.Data;
 
-/**
- */
 @Data
 public class QuerySubscriptionParam {
 

@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.converter;
 
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 
 import javax.persistence.Converter;
 
-/**
- */
 @Converter
 public class NacosRefConfigConverter extends JsonConverter<NacosRefConfig> {
 

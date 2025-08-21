@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.gateway;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
@@ -28,8 +27,6 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-/**
- */
 @Data
 public class QueryAPIGParam implements InputConverter<APIGConfig> {
 

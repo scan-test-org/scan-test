@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.portal;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
@@ -28,8 +27,6 @@ import lombok.Data;
 
 import javax.validation.constraints.Size;
 
-/**
- */
 @Data
 public class UpdatePortalParam implements InputConverter<Portal> {
 

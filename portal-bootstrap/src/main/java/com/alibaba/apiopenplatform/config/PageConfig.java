@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.config;
 
 import org.springframework.context.annotation.Bean;
@@ -30,8 +29,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
-/**
- */
 @Configuration
 public class PageConfig {
     @Bean

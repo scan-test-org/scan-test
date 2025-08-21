@@ -17,14 +17,11 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.gateway;
 
 import com.alibaba.apiopenplatform.support.common.Encrypted;
 import lombok.Data;
 
-/**
- */
 @Data
 public class APIGConfig {
 

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.security;
 
 import com.alibaba.apiopenplatform.core.constant.Common;
@@ -38,8 +37,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 
-/**
- */
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

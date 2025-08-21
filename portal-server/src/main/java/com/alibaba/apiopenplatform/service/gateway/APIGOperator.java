@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.core.codec.Base64;
@@ -53,8 +52,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-/**
- */
 @RequiredArgsConstructor
 @Service
 @Slf4j
@@ -560,5 +557,4 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
                 .collect(Collectors.toList());
     }
 }
-
 

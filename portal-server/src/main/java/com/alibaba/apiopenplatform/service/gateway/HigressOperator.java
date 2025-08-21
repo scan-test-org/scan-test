@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.gateway;
 
 import cn.hutool.core.map.MapBuilder;
@@ -46,8 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- */
 @Service
 @Slf4j
 public class HigressOperator extends GatewayOperator<HigressClient> {

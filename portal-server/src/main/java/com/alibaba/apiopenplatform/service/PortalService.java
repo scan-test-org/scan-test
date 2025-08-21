@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.portal.*;
@@ -27,8 +26,6 @@ import com.alibaba.apiopenplatform.dto.params.consumer.QuerySubscriptionParam;
 import com.alibaba.apiopenplatform.dto.result.SubscriptionResult;
 import org.springframework.data.domain.Pageable;
 
-/**
- */
 public interface PortalService {
 
     /**
@@ -85,7 +82,6 @@ public interface PortalService {
      * @return
      */
     String resolvePortal(String domain);
-
 
     /**
      * 为门户绑定域名

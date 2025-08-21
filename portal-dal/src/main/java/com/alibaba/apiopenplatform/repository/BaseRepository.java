@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.repository;
 
 import com.alibaba.apiopenplatform.entity.ProductPublication;

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.StrUtil;
@@ -62,8 +61,6 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -242,7 +239,6 @@ public class ProductServiceImpl implements ProductService {
                 .map(productRef -> new ProductRefResult().convertFrom(productRef))
                 .orElse(null);
     }
-
 
     @Override
     public void deleteProductRef(String productId) {

@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
 import com.alibaba.apiopenplatform.entity.NacosInstance;
 import lombok.Data;
 
-/**
- */
 @Data
 public class NacosResult implements OutputConverter<NacosResult, NacosInstance> {
 

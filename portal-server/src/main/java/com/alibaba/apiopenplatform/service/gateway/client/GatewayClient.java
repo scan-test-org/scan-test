@@ -17,11 +17,8 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.gateway.client;
 
-/**
- */
 public abstract class GatewayClient {
 
     public void close() {

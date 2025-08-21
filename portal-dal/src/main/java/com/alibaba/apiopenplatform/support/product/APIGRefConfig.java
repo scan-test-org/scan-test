@@ -17,14 +17,10 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.product;
 
 import lombok.Data;
 
-
-/**
- */
 @Data
 public class APIGRefConfig {
 
@@ -37,6 +33,5 @@ public class APIGRefConfig {
      */
     private String mcpRouteId;
     private String mcpServerName;
-
 
 }

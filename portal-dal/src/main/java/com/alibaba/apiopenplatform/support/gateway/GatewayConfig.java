@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.gateway;
 
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import lombok.Builder;
 import lombok.Data;
 
-/**
- */
 @Data
 @Builder
 public class GatewayConfig {

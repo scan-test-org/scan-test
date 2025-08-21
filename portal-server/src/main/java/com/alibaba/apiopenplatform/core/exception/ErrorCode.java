@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-/**
- */
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {
@@ -48,7 +45,6 @@ public enum ErrorCode {
     PRODUCT_API_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT_API_NOT_FOUND", "API产品[%s]未关联API配置"),
     PRODUCT_API_EXISTS(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT_API_EXISTS", "API产品[%s]已关联API配置"),
     PRODUCT_TYPE_NOT_MATCH(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT_TYPE_NOT_MATCH", "API产品[%s]类型不匹配"),
-
 
     EXTERNAL_IDENTITY_BOUND(HttpStatus.CONFLICT, "EXTERNAL_IDENTITY_BOUND", "该外部账号已被其他用户绑定"),
 

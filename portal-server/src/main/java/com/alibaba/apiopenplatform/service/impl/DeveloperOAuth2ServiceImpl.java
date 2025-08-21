@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -398,7 +397,6 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
 
         return null;
     }
-
 
     // 内部类
     private static class CallbackContext {

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.repository;
 
 import com.alibaba.apiopenplatform.entity.Consumer;
@@ -27,8 +26,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
-/**
- */
 public interface ConsumerRepository extends BaseRepository<Consumer, Long> {
 
     Optional<Consumer> findByConsumerId(String consumerId);

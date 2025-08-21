@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.result;
 
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
@@ -28,8 +27,6 @@ import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
 import com.alibaba.apiopenplatform.support.product.NacosRefConfig;
 import lombok.Data;
 
-/**
- */
 @Data
 public class ProductRefResult implements OutputConverter<ProductRefResult, ProductRef> {
 

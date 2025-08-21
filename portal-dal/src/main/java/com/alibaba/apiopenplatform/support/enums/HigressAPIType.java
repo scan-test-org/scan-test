@@ -17,14 +17,11 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/**
- */
 @RequiredArgsConstructor
 @Getter
 public enum HigressAPIType {

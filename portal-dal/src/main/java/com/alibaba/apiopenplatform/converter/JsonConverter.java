@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.converter;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -31,8 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.persistence.AttributeConverter;
 import java.lang.reflect.Field;
 
-/**
- */
 @Slf4j
 public abstract class JsonConverter<T> implements AttributeConverter<T, String> {
 

@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.consumer;
 
 import com.alibaba.apiopenplatform.dto.converter.InputConverter;
@@ -27,8 +26,6 @@ import com.alibaba.apiopenplatform.support.consumer.HmacConfig;
 import com.alibaba.apiopenplatform.support.consumer.JwtConfig;
 import lombok.Data;
 
-/**
- */
 @Data
 public class UpdateCredentialParam implements InputConverter<ConsumerCredential> {
 

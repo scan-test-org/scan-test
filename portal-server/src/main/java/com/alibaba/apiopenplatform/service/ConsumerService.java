@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.params.consumer.QueryConsumerParam;
@@ -32,8 +31,6 @@ import com.alibaba.apiopenplatform.dto.params.consumer.CreateSubscriptionParam;
 import com.alibaba.apiopenplatform.dto.params.consumer.QuerySubscriptionParam;
 import org.springframework.data.domain.Pageable;
 
-/**
- */
 public interface ConsumerService {
 
     /**
@@ -52,7 +49,6 @@ public interface ConsumerService {
      * @return
      */
     PageResult<ConsumerResult> listConsumers(QueryConsumerParam param, Pageable pageable);
-
 
     /**
      * 查询Consumer

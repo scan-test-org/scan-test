@@ -17,11 +17,8 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.constant;
 
-/**
- */
 public class Common {
 
     // Token相关
@@ -35,7 +32,5 @@ public class Common {
 
     // Cookie相关
     public static final String AUTH_TOKEN_COOKIE = "auth_token";
-
-
 
 }

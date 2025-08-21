@@ -17,11 +17,8 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.enums;
 
-/**
- */
 public enum UserType {
     /**
      * 管理员用户

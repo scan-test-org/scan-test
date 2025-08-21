@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.support.enums.ConsumerStatus;
@@ -27,8 +26,6 @@ import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 
-/**
- */
 @Entity
 @Table(name = "consumer",
         uniqueConstraints = {

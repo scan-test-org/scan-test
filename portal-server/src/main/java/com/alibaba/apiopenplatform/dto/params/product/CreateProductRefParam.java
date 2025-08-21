@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.dto.params.product;
 
 import cn.hutool.core.util.StrUtil;
@@ -32,8 +31,6 @@ import lombok.Data;
 import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 
-/**
- */
 @Data
 public class CreateProductRefParam implements InputConverter<ProductRef> {
 

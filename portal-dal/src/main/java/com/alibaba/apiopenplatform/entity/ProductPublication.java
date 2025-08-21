@@ -17,16 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
-
-/**
- */
 
 @EqualsAndHashCode(callSuper = true)
 @Entity

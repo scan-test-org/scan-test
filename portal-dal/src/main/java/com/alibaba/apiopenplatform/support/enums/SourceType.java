@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.enums;
 
 /**
@@ -35,7 +34,6 @@ public enum SourceType {
      * 来自Nacos注册中心
      */
     NACOS;
-
 
     public boolean isGateway() {
         return this == GATEWAY;

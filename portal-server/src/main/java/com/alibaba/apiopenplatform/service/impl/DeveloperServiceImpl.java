@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.util.BooleanUtil;
@@ -60,14 +59,11 @@ import javax.persistence.criteria.Predicate;
 import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 
-/**
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class DeveloperServiceImpl implements DeveloperService {
     private final DeveloperRepository developerRepository;
-
 
     private final DeveloperExternalIdentityRepository developerExternalIdentityRepository;
     

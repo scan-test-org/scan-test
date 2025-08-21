@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.repository;
 
 import com.alibaba.apiopenplatform.entity.NacosInstance;
@@ -28,8 +27,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- */
 @Repository
 public interface NacosInstanceRepository extends BaseRepository<NacosInstance, Long> {
 

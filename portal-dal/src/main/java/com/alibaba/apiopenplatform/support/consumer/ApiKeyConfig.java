@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.consumer;
 
 import com.alibaba.apiopenplatform.support.enums.CredentialMode;
@@ -25,8 +24,6 @@ import lombok.Data;
 
 import java.util.List;
 
-/**
- */
 @Data
 public class ApiKeyConfig {
 

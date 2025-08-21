@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import com.alibaba.apiopenplatform.converter.APIGRefConfigConverter;
@@ -32,8 +31,6 @@ import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 
-/**
- */
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "product_ref")

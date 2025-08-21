@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.common;
 
 import cn.hutool.core.util.CharsetUtil;
@@ -27,8 +26,6 @@ import cn.hutool.crypto.symmetric.AES;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- */
 @Slf4j
 public class Encryptor {
 

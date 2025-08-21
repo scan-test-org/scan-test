@@ -17,15 +17,12 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.support.portal;
 
 import lombok.Data;
 
 import java.util.List;
 
-/**
- */
 @Data
 public class PortalSettingConfig {
 

@@ -17,13 +17,10 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.utils;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-/**
- */
 public class PasswordHasher {
 
     private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder();

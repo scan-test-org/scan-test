@@ -17,14 +17,11 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.core.event;
 
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
-/**
- */
 @Getter
 public class DeveloperDeletingEvent extends ApplicationEvent {
 

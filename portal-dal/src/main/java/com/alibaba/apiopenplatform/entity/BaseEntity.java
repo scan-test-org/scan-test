@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package com.alibaba.apiopenplatform.entity;
 
 import lombok.Data;
@@ -29,8 +28,6 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- */
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Data
