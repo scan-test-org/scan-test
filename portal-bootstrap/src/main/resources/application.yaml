@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://${db.host}:${db.port}/${db.name}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+    username: ${db.username}
+    password: ${db.password}
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+db:
+   host: YourDBHost
+   port: 3306
+   name: YourDBName
+   username: YourDBUser
+   password: YourDBPassword
+
+# Encryptor
+encryption:
+  root-key: portalmanagement
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /portal/v3/api-docs
+  swagger-ui:
+    path: /portal/swagger-ui.html
+    disable-swagger-default-url: true
+  packages-to-scan: com.alibaba.apiopenplatform.controller
+
+jwt:
+  secret: YourJWTSecret
+  expiration: 2h
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  level:
+    root: INFO
+    com.alibaba.apiopenplatform: INFO
