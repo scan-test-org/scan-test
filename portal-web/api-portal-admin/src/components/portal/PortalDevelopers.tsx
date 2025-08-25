@@ -69,7 +69,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
       }
       fetchDevelopers()
     }).catch((err) => {
-      message.error('审批失败')
+      // message.error('审批失败')
     })
   }
 
@@ -94,7 +94,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
           message.success('删除成功')
           fetchDevelopers()
         }).catch((err) => {
-          message.error('删除失败')
+          // message.error('删除失败')
         })
       },
     })
@@ -141,7 +141,7 @@ export function PortalDevelopers({ portal }: PortalDevelopersProps) {
         message.success('审批成功')
         fetchConsumers(currentDeveloper.developerId, consumerPagination.current, consumerPagination.pageSize)
       }).catch((err) => {
-        message.error('审批失败')
+        // message.error('审批失败')
       })
     }
   }

@@ -58,7 +58,7 @@ export default function NacosConsoles() {
       setTotal(response.data.totalElements || 0)
     } catch (error) {
       console.error('获取Nacos实例列表失败:', error)
-      message.error('获取Nacos实例列表失败')
+      // message.error('获取Nacos实例列表失败')
     } finally {
       setLoading(false)
     }
@@ -95,7 +95,7 @@ export default function NacosConsoles() {
       fetchNacosInstances()
     } catch (error) {
       console.error('删除失败:', error)
-      message.error('删除失败')
+      // message.error('删除失败')
     }
   }
 
@@ -125,7 +125,7 @@ export default function NacosConsoles() {
       fetchNacosInstances()
     } catch (error) {
       console.error('操作失败:', error)
-      message.error('操作失败')
+      // message.error('操作失败')
     }
   }
 
@@ -167,7 +167,7 @@ export default function NacosConsoles() {
       }))
       setNamespaceOptions(opts)
     } catch (e: any) {
-      message.error(e?.response?.data?.message || '获取命名空间失败')
+      // message.error(e?.response?.data?.message || '获取命名空间失败')
     } finally {
       setNamespaceLoading(false)
     }

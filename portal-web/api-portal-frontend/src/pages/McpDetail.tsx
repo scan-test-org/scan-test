@@ -28,6 +28,8 @@ import {
   FromTypeMap, 
   SourceMap 
 } from "../lib/statusUtils";
+import remarkGfm from 'remark-gfm';
+import 'react-markdown-editor-lite/lib/index.css'
 
 function McpDetail() {
   const { mcpName } = useParams();
@@ -274,8 +276,8 @@ function McpDetail() {
                   key: "overview",
                   label: "Overview",
                   children: data.document ? (
-                    <div className="prose max-w-none">
-                      <ReactMarkdown>{data.document}</ReactMarkdown>
+                    <div className="prose custom-html-style h-[500px] overflow-auto">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.document}</ReactMarkdown>
                     </div>
                   ) : (
                     <div className="text-gray-500 text-center py-8">

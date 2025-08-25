@@ -31,7 +31,7 @@ const Callback: React.FC = () => {
         }
       })
       .catch(() => {
-        message.error("登录失败，请重试");
+        // message.error("登录失败，请重试");
       });
   }, [location.search]);
 

@@ -146,7 +146,7 @@ export default function PortalDetail() {
       message.success('删除成功')
       navigate('/portals')
     }).catch((error) => {
-      message.error(error.response?.data?.message || '删除失败')
+      // message.error(error.response?.data?.message || '删除失败')
     })
   }
 

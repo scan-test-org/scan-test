@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Table, Tag, Alert, Descriptions, Button, Modal } from "antd";
+import { Card, Table, Tag, Alert, Descriptions, Button, Modal, Tabs } from "antd";
 
 import { FileTextOutlined } from "@ant-design/icons";
 import { Layout } from "../components/Layout";
@@ -9,6 +9,9 @@ import api from "../lib/api";
 import type { Product, ApiResponse } from "../types";
 import MonacoEditor from "react-monaco-editor";
 import { getStatusText, getCategoryText } from "../lib/statusUtils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from 'remark-gfm';
+import 'react-markdown-editor-lite/lib/index.css'
 
 interface ApiEndpoint {
   key: string;
@@ -252,29 +255,51 @@ function ApiDetailPage() {
         category={apiData.category}
         icon={apiData.icon || undefined}
         defaultIcon="/logo.png"
-        version="v1.0.0"
+        // version="v1.0.0"
         enabled={apiData.enabled}
         showVersion={true}
         showEnabled={false}
       />
 
-      <Card title="基本信息" className="mb-6">
-        <Descriptions column={2} bordered size="small">
-          <Descriptions.Item label="产品ID">{apiData.productId}</Descriptions.Item>
-          <Descriptions.Item label="类型">{apiData.type}</Descriptions.Item>
-          <Descriptions.Item label="状态">{getStatusText(apiData.status)}</Descriptions.Item>
-          <Descriptions.Item label="分类">{getCategoryText(apiData.category)}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">{formatDate(apiData.createAt)}</Descriptions.Item>
-          <Descriptions.Item label="启用状态">
-            {apiData.enabled ? '已启用' : '未启用'}
-          </Descriptions.Item>
-          {apiData.apiConfig && (
-            <>
-              <Descriptions.Item label="API源">{apiData.apiConfig.meta.source}</Descriptions.Item>
-              <Descriptions.Item label="API类型">{apiData.apiConfig.meta.type}</Descriptions.Item>
-            </>
-          )}
-        </Descriptions>
+      <Card className="mb-6">
+      <Tabs
+          defaultActiveKey="basicInfo"
+          items={[
+            {
+              key: "basicInfo",
+              label: "基本信息",
+              children:  <Descriptions column={2} bordered size="small">
+              <Descriptions.Item label="产品ID">{apiData.productId}</Descriptions.Item>
+              <Descriptions.Item label="类型">{apiData.type}</Descriptions.Item>
+              <Descriptions.Item label="状态">{getStatusText(apiData.status)}</Descriptions.Item>
+              <Descriptions.Item label="分类">{getCategoryText(apiData.category)}</Descriptions.Item>
+              <Descriptions.Item label="创建时间">{formatDate(apiData.createAt)}</Descriptions.Item>
+              <Descriptions.Item label="启用状态">
+                {apiData.enabled ? '已启用' : '未启用'}
+              </Descriptions.Item>
+              {apiData.apiConfig && (
+                <>
+                  <Descriptions.Item label="API源">{apiData.apiConfig.meta.source}</Descriptions.Item>
+                  <Descriptions.Item label="API类型">{apiData.apiConfig.meta.type}</Descriptions.Item>
+                </>
+              )}
+            </Descriptions>
+            },
+            {
+              key: "overview",
+              label: "使用指南",
+              children: apiData.document ? (
+                <div className="prose custom-html-style h-[500px] overflow-auto">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{apiData.document}</ReactMarkdown>
+                </div>
+              ) : (
+                <div className="text-gray-500 text-center py-8">
+                  暂无文档内容
+                </div>
+              ),
+            },
+          ]}/>
+       
       </Card>
 
       <Card 

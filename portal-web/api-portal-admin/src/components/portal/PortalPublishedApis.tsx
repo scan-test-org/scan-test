@@ -171,7 +171,7 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
           fetchApiProducts()
           setIsModalVisible(false)
         }).catch((error) => {
-          message.error('移除失败')
+          // message.error('移除失败')
         })
       },
     })
@@ -194,7 +194,7 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
       fetchApiProducts()
       setIsModalVisible(false)
     } catch (error) {
-      message.error('发布失败')
+      // message.error('发布失败')
     } finally {
       setModalLoading(false)
     }

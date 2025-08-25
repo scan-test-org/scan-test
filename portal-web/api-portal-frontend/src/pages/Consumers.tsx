@@ -45,7 +45,7 @@ function ConsumersPage() {
       setConsumers(res.data?.content || []);
       setTotal(res.data?.totalElements || 0);
     } catch {
-      message.error("获取消费者列表失败");
+      // message.error("获取消费者列表失败");
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ function ConsumersPage() {
           message.success("删除成功");
           fetchConsumers();
         } catch {
-          message.error("删除失败");
+          // message.error("删除失败");
         }
       },
     });
@@ -83,7 +83,7 @@ function ConsumersPage() {
       setAddForm({ name: '', description: '' });
       fetchConsumers();
     } catch {
-      message.error('新增失败');
+      // message.error('新增失败');
     } finally {
       setAddLoading(false);
     }
@@ -198,7 +198,7 @@ function ConsumersPage() {
           </div>
           <div>
             <Input.TextArea
-              placeholder="描述（可选）"
+              placeholder="描述（可选），长度限制64"
               value={addForm.description}
               maxLength={64}
               onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))}

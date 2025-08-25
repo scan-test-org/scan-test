@@ -250,6 +250,7 @@ public class NacosServiceImpl implements NacosService {
         
         if (detail.getLocalServerConfig() != null) {
             serverConfig.setRawConfig(detail.getLocalServerConfig());
+            serverConfig.setTransportMode(MCPConfigResult.MCPTransportMode.LOCAL);
         } else if (detail.getRemoteServerConfig() != null || (detail.getBackendEndpoints() != null && !detail.getBackendEndpoints().isEmpty())) {
             Object remoteConfig = buildRemoteConnectionConfig(detail);
             serverConfig.setRawConfig(remoteConfig);

@@ -18,6 +18,7 @@ const SourceMap: Record<string, string> = {
   APIG_AI: "AI网关",
   HIGRESS: "Higress",
   NACOS: "Nacos",
+  APIG_API: "API网关"
 };
 
 interface ApiProductApiDocsProps {
@@ -340,7 +341,7 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
         items={[
           {
             key: "overview",
-            label: "结构化",
+            label: "API配置",
             children: (
               <div className="space-y-4">
                 {isOpenApi && (
@@ -351,8 +352,9 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
                       size="small"
                       className="mb-4"
                     >
-                      <Descriptions.Item label="API源">
-                        {apiProduct.apiConfig?.meta.source}
+                      {/* 'APIG_API' | 'HIGRESS' | 'APIG_AI' */}
+                      <Descriptions.Item label="API来源">
+                        {SourceMap[apiProduct.apiConfig?.meta.source || '']}
                       </Descriptions.Item>
                       <Descriptions.Item label="API类型">
                         {apiProduct.apiConfig?.meta.type}

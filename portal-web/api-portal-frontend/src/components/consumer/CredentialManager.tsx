@@ -116,7 +116,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       }
     } catch (error) {
       console.error('创建凭证失败:', error);
-      message.error('创建凭证失败');
+      // message.error('创建凭证失败');
     } finally {
       setCredentialLoading(false);
     }
@@ -156,18 +156,32 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       }
     } catch (error) {
       console.error('删除凭证失败:', error);
-      message.error('删除凭证失败');
+      // message.error('删除凭证失败');
     }
   };
-
-  const handleCopyCredential = async (text: string) => {
+  const handleCopyCredential = (text: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px'; // 避免影响页面布局
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+  
     try {
-      await navigator.clipboard.writeText(text);
-      message.success('已复制到剪贴板');
-    } catch {
-      message.error('复制失败');
+      const success = document.execCommand('copy');
+      if (success) {
+        message.success('已复制到剪贴板');
+      } else {
+        // message.error('复制失败，请手动复制内容');
+      }
+    } catch (err) {
+      // message.error('复制失败，请手动复制内容');
+    } finally {
+      document.body.removeChild(textArea); // 清理 DOM
     }
   };
+  
 
   const resetCredentialForm = () => {
     credentialForm.resetFields();
@@ -223,7 +237,7 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
       }
     } catch (error) {
       console.error('更新凭证来源失败:', error);
-      message.error('更新凭证来源失败');
+      // message.error('更新凭证来源失败');
     }
   };
 

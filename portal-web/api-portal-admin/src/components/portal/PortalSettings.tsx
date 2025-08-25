@@ -57,7 +57,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       onRefresh?.()
     } catch (error) {
       console.error('保存设置失败:', error)
-      message.error('保存设置失败')
+      // message.error('保存设置失败')
     } finally {
       setLoading(false)
     }
@@ -91,7 +91,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       
     } catch (error) {
       console.error('绑定域名失败:', error)
-      message.error('绑定域名失败')
+      // message.error('绑定域名失败')
     } finally {
       setDomainLoading(false)
     }
@@ -117,7 +117,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           onRefresh?.()
         } catch (error) {
           console.error('解绑域名失败:', error)
-          message.error('解绑域名失败')
+          // message.error('解绑域名失败')
         }
       },
     })
@@ -176,7 +176,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       onRefresh?.()
     } catch (error) {
       console.error('保存OIDC配置失败:', error)
-      message.error('保存OIDC配置失败')
+      // message.error('保存OIDC配置失败')
       // 如果保存失败，回滚本地状态
     } finally {
       setOidcLoading(false)
@@ -213,7 +213,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
           onRefresh?.()
         } catch (error) {
           console.error('删除OIDC配置失败:', error)
-          message.error('删除OIDC配置失败')
+          // message.error('删除OIDC配置失败')
         }
       },
     })
