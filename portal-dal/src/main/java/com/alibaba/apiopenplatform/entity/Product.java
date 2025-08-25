@@ -19,6 +19,7 @@
 
 package com.alibaba.apiopenplatform.entity;
 
+import com.alibaba.apiopenplatform.support.enums.ProductStatus;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -65,4 +66,8 @@ public class Product extends BaseEntity {
 
     @Column(name = "category", length = 64)
     private String category;
+
+    @Column(name = "status", length = 64)
+    @Enumerated(EnumType.STRING)
+    private ProductStatus status = ProductStatus.PENDING;
 }

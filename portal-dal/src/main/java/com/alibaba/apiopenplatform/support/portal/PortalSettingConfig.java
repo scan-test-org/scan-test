@@ -32,5 +32,5 @@ public class PortalSettingConfig {
 
     private Boolean autoApproveDevelopers = false;
 
-    private Boolean autoApproveSubscriptions = false;
+    private Boolean autoApproveSubscriptions = true;
 }

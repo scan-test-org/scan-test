@@ -19,6 +19,7 @@
 
 package com.alibaba.apiopenplatform.dto.params.product;
 
+import com.alibaba.apiopenplatform.support.enums.ProductStatus;
 import com.alibaba.apiopenplatform.support.enums.ProductType;
 import lombok.Data;
 
@@ -32,4 +33,6 @@ public class QueryProductParam {
     private String name;
 
     private String category;
+
+    private ProductStatus status;
 }

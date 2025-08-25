@@ -65,6 +65,8 @@ public class MCPConfigResult {
          * for nacos
          */
         private Object rawConfig;
+
+        private MCPTransportMode transportMode = MCPTransportMode.REMOTE;
     }
 
     @Data
@@ -72,5 +74,10 @@ public class MCPConfigResult {
     public static class Domain {
         private String domain;
         private String protocol;
+    }
+
+    public enum MCPTransportMode {
+        LOCAL,
+        REMOTE
     }
 }
