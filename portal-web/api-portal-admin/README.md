@@ -50,12 +50,12 @@ src/
 ## 部署方式
 1. 构建本地镜像
 ```bash
-docker buildx build --platform linux/amd64 -t /daofeng/api-portal-admin:latest .
+docker buildx build --platform linux/amd64 -t api-portal-admin:latest .
 ```
 
 2. 推送镜像到ACR
 ```bash
-docker push /daofeng/api-portal-admin:latest
+docker push api-portal-admin:latest
 ```
 
 3. ACK 对应的无状态重新部署

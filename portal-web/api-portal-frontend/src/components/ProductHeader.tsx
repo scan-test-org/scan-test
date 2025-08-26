@@ -57,7 +57,7 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
         setConsumers(response.data.content || response.data);
       }
     } catch (error) {
-      message.error('获取消费者列表失败');
+      // message.error('获取消费者列表失败');
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
       form.resetFields();
     } catch (error) {
       console.error('申请订阅失败:', error);
-      message.error('申请提交失败，请重试');
+      // message.error('申请提交失败，请重试');
     }
   };
 

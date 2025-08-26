@@ -48,7 +48,7 @@ export default function ImportMseNacosModal({ visible, onCancel, onPrefill }: Im
       setList(res.data?.content || [])
       setPagination({ current: page + 1, pageSize: size, total: res.data?.totalElements || 0 })
     } catch (e: any) {
-      message.error(e?.response?.data?.message || '获取 MSE Nacos 列表失败')
+      // message.error(e?.response?.data?.message || '获取 MSE Nacos 列表失败')
     } finally {
       setLoading(false)
     }

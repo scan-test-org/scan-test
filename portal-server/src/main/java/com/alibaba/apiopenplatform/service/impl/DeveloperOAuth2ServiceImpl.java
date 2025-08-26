@@ -184,7 +184,6 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         }
     }
 
-    // 私有辅助方法
     private OidcConfig findOidcConfig(String portalId, String provider) {
         PortalResult portal = portalService.getPortal(portalId);
         PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
@@ -214,9 +213,6 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     private CallbackContext parseCallbackState(String state) throws UnsupportedEncodingException {
         String decodedState = URLDecoder.decode(state, "UTF-8");
         String[] stateParts = decodedState.split("\\|");
-
-        // 简化日志：不打印敏感/冗长信息
-
         CallbackContext context = new CallbackContext();
 
         if (decodedState.startsWith("BINDING|")) {
@@ -306,30 +302,6 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         } else {
             log.warn("[OIDCCallback] 登录失败: provider={}", provider);
             response.sendRedirect("/?login=fail&msg=" + URLEncoder.encode("三方登录失败", "UTF-8"));
-        }
-    }
-
-    private void setAuthCookie(HttpServletResponse response, String token) {
-        Cookie tokenCookie = new Cookie("auth_token", token);
-        tokenCookie.setPath("/");
-        tokenCookie.setHttpOnly(false);
-        tokenCookie.setMaxAge(3600);
-        response.addCookie(tokenCookie);
-    }
-
-    private String buildLoginSuccessRedirectUrl(HttpServletRequest request, String apiPrefix) {
-        if (apiPrefix != null && apiPrefix.startsWith("/")) {
-            String protocol = request.getScheme();
-            String serverName = request.getHeader("Host");
-            if (serverName == null || serverName.isEmpty()) {
-                serverName = request.getServerName();
-            }
-            if (serverName.contains(":")) {
-                serverName = serverName.split(":")[0];
-            }
-            return protocol + "://" + serverName + "/?login=success&fromCookie=true";
-        } else {
-            return "/?login=success&fromCookie=true";
         }
     }
 

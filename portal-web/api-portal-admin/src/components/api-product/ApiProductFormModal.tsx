@@ -63,7 +63,6 @@ export default function ApiProductFormModal({
         // 表单验证错误，不需要显示错误消息
         return
       }
-      message.error(error?.message || (isEditMode ? '更新失败' : '创建失败'))
     } finally {
       setLoading(false)
     }

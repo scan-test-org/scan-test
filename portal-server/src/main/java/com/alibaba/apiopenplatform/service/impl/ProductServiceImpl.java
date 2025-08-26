@@ -155,6 +155,9 @@ public class ProductServiceImpl implements ProductService {
             return;
         }
 
+        Product product = findProduct(productId);
+        product.setStatus(ProductStatus.PUBLISHED);
+
         // 未关联不允许发布
         if (getProductRef(productId) == null) {
             throw new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId);
@@ -165,6 +168,7 @@ public class ProductServiceImpl implements ProductService {
         productPublication.setProductId(productId);
 
         publicationRepository.save(productPublication);
+        productRepository.save(product);
     }
 
     @Override
@@ -230,6 +234,7 @@ public class ProductServiceImpl implements ProductService {
         productRef.setProductId(productId);
         syncConfig(product, productRef);
 
+        productRepository.save(product);
         productRefRepository.save(productRef);
     }
 
@@ -274,6 +279,7 @@ public class ProductServiceImpl implements ProductService {
                 productRef.setMcpConfig(mcpConfig);
             }
         }
+        product.setStatus(ProductStatus.READY);
         productRef.setEnabled(true);
     }
 
@@ -322,6 +328,10 @@ public class ProductServiceImpl implements ProductService {
 
             if (StrUtil.isNotBlank(param.getCategory())) {
                 predicates.add(cb.equal(root.get("category"), param.getCategory()));
+            }
+
+            if (param.getStatus() != null) {
+                predicates.add(cb.equal(root.get("status"), param.getStatus()));
             }
 
             if (StrUtil.isNotBlank(param.getName())) {

@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { getToken, removeToken } from './utils'
+import {  message } from 'antd'
+
 
 
 const api: AxiosInstance = axios.create({
@@ -31,6 +33,7 @@ api.interceptors.response.use(
     return response.data
   },
   (error) => {
+    message.error(error.response?.data?.message || '请求发生错误');
     if (error.response?.status === 403 || error.response?.status === 401) {
       removeToken()
       window.location.href = '/login'
@@ -39,9 +42,15 @@ api.interceptors.response.use(
   }
 )
 
+
 export default api
 
-
+// 用户相关API
+export const authApi = {
+  getNeedInit: () => {
+    return api.get('/admins/need-init')
+  }
+}
 // Portal相关API
 export const portalApi = {
   // 获取portal列表

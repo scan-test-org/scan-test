@@ -193,7 +193,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         setApiList(mcpServers)
       }
     } catch (error) {
-      console.error('获取API列表失败:', error)
+      // console.error('获取API列表失败:', error)
     } finally {
       setApiLoading(false)
     }
@@ -222,7 +222,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       setApiList(mcpServers)
     } catch (error) {
       console.error('获取Nacos MCP Server列表失败:', error)
-      message.error('获取Nacos MCP Server列表失败')
+      // message.error('获取Nacos MCP Server列表失败')
     } finally {
       setApiLoading(false)
     }
@@ -297,7 +297,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
             setLinkedService(null)
             setIsModalVisible(true)
           }).catch((err: any) => {
-            message.error('删除现有关联失败')
+            // message.error('删除现有关联失败')
           })
         }
       })
@@ -319,7 +319,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
           message.success('解除关联成功')
           fetchLinkedService()
         }).catch((err: any) => {
-          message.error('解除关联失败')
+          // message.error('解除关联失败')
         })
       }
     })
@@ -363,7 +363,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         setApiList([])
         setSourceType('GATEWAY')
       }).catch((err: any) => {
-        message.error('关联失败')
+        // message.error('关联失败')
       })
     })
   }

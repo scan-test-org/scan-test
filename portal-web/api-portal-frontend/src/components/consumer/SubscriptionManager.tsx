@@ -42,7 +42,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
       }
     } catch (error) {
       console.error('获取产品列表失败:', error);
-      message.error('获取产品列表失败');
+      // message.error('获取产品列表失败');
     } finally {
       setProductLoading(false);
     }
@@ -62,7 +62,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
       onSubscriptionsChange();
     } catch (error) {
       console.error('订阅失败:', error);
-      message.error('订阅失败');
+      // message.error('订阅失败');
     }
   };
 
@@ -73,7 +73,7 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
       onSubscriptionsChange();
     } catch (error) {
       console.error('取消订阅失败:', error);
-      message.error('取消订阅失败');
+      // message.error('取消订阅失败');
     }
   };
 

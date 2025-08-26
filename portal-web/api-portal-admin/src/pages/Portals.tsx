@@ -145,7 +145,7 @@ const PortalCard = memo(
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+              {/* <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                 <span className="text-xs font-medium text-gray-600">
                   OIDC登录
                 </span>
@@ -160,7 +160,7 @@ const PortalCard = memo(
                     ? "支持"
                     : "不支持"}
                 </span>
-              </div>
+              </div> */}
 
               <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                 <span className="text-xs font-medium text-gray-600">
@@ -316,7 +316,7 @@ export default function Portals() {
 
       fetchPortals()
     } catch (error: any) {
-      message.error(error?.message || "创建失败");
+      // message.error(error?.message || "创建失败");
     } finally {
       setLoading(false);
     }

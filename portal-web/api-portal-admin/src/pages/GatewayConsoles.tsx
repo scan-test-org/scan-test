@@ -37,7 +37,7 @@ export default function Consoles() {
         total: res.data?.totalElements || 0,
       })
     } catch (error) {
-      message.error('获取网关列表失败')
+      // message.error('获取网关列表失败')
     } finally {
       setLoading(false)
     }
@@ -78,7 +78,7 @@ export default function Consoles() {
           message.success('删除成功')
           fetchGatewaysConsoles(pagination.current, pagination.pageSize)
         } catch (error) {
-          message.error('删除失败')
+          // message.error('删除失败')
         }
       },
     })

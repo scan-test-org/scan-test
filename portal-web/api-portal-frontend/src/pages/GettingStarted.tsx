@@ -1,6 +1,6 @@
-import { Card, Typography, Steps, Button, Space, Alert } from "antd";
+import { Card, Typography, Steps, Space, Alert } from "antd";
 import { UserOutlined, ApiOutlined, RocketOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import { Layout } from "../components/Layout";
 
 const { Title, Paragraph } = Typography;
@@ -55,25 +55,29 @@ function GettingStartedPage() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <Card title="开发者文档" extra={<Link to="/apis"><Button type="link">查看</Button></Link>}>
+        <Card title="开发者文档" 
+          // extra={<Link to="/apis"><Button type="link">查看</Button></Link>}
+          >
           <Paragraph>
             详细的API文档，包含所有端点的说明、参数和响应示例。
           </Paragraph>
           <Space>
-            <Button type="primary" icon={<ApiOutlined />}>
+            {/* <Button type="primary" icon={<ApiOutlined />}>
               浏览API
-            </Button>
+            </Button> */}
           </Space>
         </Card>
 
-        <Card title="SDK和工具" extra={<Button type="link">下载</Button>}>
+        <Card title="SDK和工具" 
+          // extra={<Button type="link">下载</Button>}
+        >
           <Paragraph>
             提供多种编程语言的SDK，简化API集成过程。
           </Paragraph>
           <Space>
-            <Button type="default" icon={<RocketOutlined />}>
+            {/* <Button type="default" icon={<RocketOutlined />}>
               下载SDK
-            </Button>
+            </Button> */}
           </Space>
         </Card>
       </div>
@@ -83,11 +87,11 @@ function GettingStartedPage() {
         description="我们的技术支持团队随时为您提供帮助，确保您能够顺利集成和使用我们的API产品。"
         type="info"
         showIcon
-        action={
-          <Button size="small" type="link">
-            联系支持
-          </Button>
-        }
+        // action={
+        //   <Button size="small" type="link">
+        //     联系支持
+        //   </Button>
+        // }
       />
     </Layout>
   );

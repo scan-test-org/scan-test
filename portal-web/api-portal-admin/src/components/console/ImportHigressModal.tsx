@@ -32,7 +32,7 @@ export default function ImportHigressModal({ visible, onCancel, onSuccess }: Imp
       handleCancel()
       onSuccess()
     } catch (error: any) {
-      message.error(error.response?.data?.message || '导入失败！')
+      // message.error(error.response?.data?.message || '导入失败！')
     } finally {
       setLoading(false)
     }
