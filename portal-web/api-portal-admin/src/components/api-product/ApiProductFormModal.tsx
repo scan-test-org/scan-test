@@ -28,10 +28,8 @@ export default function ApiProductFormModal({
 
  // 初始化时加载已有头像
  useEffect(() => {
-  console.log('visible',visible)
   if (visible && isEditMode && initialData) {
     // 1. 先设置所有字段（name、description、type）
-    console.log('initialData',initialData)
     form.setFieldsValue(initialData)
 
     // 2. 再单独处理 icon 字段
@@ -192,7 +190,7 @@ export default function ApiProductFormModal({
           name="icon"
         >
           <Upload
-            listType="picture-circle"
+            listType="picture-card"
             beforeUpload={() => false} // ✅ 关键：阻止自动上传
             fileList={fileList}
             onPreview={handlePreview}

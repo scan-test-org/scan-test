@@ -32,7 +32,12 @@ function McpPage() {
   useEffect(() => {
     fetchMcpServers();
   }, []);
-
+  const revertIcon = (icon: string) => {
+    const startIndex = icon.indexOf("value=") + 6;
+    const endIndex = icon.length - 1;
+    const URL = icon.substring(startIndex, endIndex).trim();
+    return URL;
+  }
   const fetchMcpServers = async () => {
     setLoading(true);
     try {
@@ -117,7 +122,7 @@ function McpPage() {
                 {server.icon ? (
                   <Avatar
                     size={48}
-                    src={server.icon}
+                    src={revertIcon(server.icon)}
                   />
                 ) : (
                   <Avatar
