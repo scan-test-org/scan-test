@@ -17,14 +17,14 @@ const ProductCard = memo(({ product, onNavigate, handleRefresh, onEdit }: {
   onEdit: (product: ApiProduct) => void;
 }) => {
   const getTypeIcon = (icon: string, type: string) => {
-    if (icon) {
+    if (icon && icon.includes("value=")) {
       const startIndex = icon.indexOf("value=") + 6;
       const endIndex = icon.length - 1;
       const base64Data = icon.substring(startIndex, endIndex).trim();
       return <img src={base64Data} alt="icon" style={{ borderRadius: '8px', minHeight: '40px' }} />
     } else {
-      return type === "REST_API" ? <ApiOutlined className="h-4 w-4" /> : <ClockCircleOutlined className="h-4 w-4" />
-    }
+       return type === "REST_API" ? <ApiOutlined className="h-4 w-4" /> : <ClockCircleOutlined className="h-4 w-4" />
+     }
   }
 
   const getTypeBadgeVariant = (type: string) => {
