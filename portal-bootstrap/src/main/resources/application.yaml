@@ -13,11 +13,11 @@ spring:
         format_sql: true
 
 db:
-   host: rm-uf6pc9n1jzi2478l4eo.mysql.rds.aliyuncs.com
+   host: YourDBHost
    port: 3306
-   name: portal_db
-   username: portal_test
-   password: portal-Go
+   name: YourDBName
+   username: YourDBUser
+   password: YourDBPassword
 
 # Encryptor
 encryption:
@@ -33,7 +33,7 @@ springdoc:
   packages-to-scan: com.alibaba.apiopenplatform.controller
 
 jwt:
-  secret: 4GsGNFwqzqMk3CFZqcq9IjJWrTtv+fYNbB4Baexg67A=
+  secret: YourJWTSecret
   expiration: 2h
 
 logging:

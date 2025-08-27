@@ -11,12 +11,12 @@ npm run build
 
 2. 构建本地镜像
 ```bash
-docker buildx build --platform linux/amd64 -t registry.cn-shanghai.aliyuncs.com/daofeng/api-portal-frontend:latest .
+docker buildx build --platform linux/amd64 -t api-portal-frontend:latest .
 ```
 
 3. 推送镜像到ACR
 ```bash
-docker push registry.cn-shanghai.aliyuncs.com/daofeng/api-portal-frontend:latest
+docker push api-portal-frontend:latest
 ```
 
 4. ACK 对应的无状态重新部署
