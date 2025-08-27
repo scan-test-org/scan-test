@@ -21,6 +21,7 @@ interface McpServer {
   category: string;
   creator: string;
   icon?: string;
+  mcpConfig?: any
 }
 
 function McpPage() {
@@ -31,7 +32,12 @@ function McpPage() {
   useEffect(() => {
     fetchMcpServers();
   }, []);
-
+  const revertIcon = (icon: string) => {
+    const startIndex = icon.indexOf("value=") + 6;
+    const endIndex = icon.length - 1;
+    const URL = icon.substring(startIndex, endIndex).trim();
+    return URL;
+  }
   const fetchMcpServers = async () => {
     setLoading(true);
     try {
@@ -51,6 +57,7 @@ function McpPage() {
               category: item.category,
               creator: 'Unknown', // Product类型中没有creator属性，使用默认值
               icon: item.icon || undefined,
+              mcpConfig: item.mcpConfig
             };
           });
         setMcpServers(mapped);
@@ -115,7 +122,7 @@ function McpPage() {
                 {server.icon ? (
                   <Avatar
                     size={48}
-                    src={server.icon}
+                    src={revertIcon(server.icon)}
                   />
                 ) : (
                   <Avatar
@@ -134,14 +141,9 @@ function McpPage() {
                       {server.name}
                     </Title>
                     <Tag color="green" className="text-xs">
-                      Local
+                      {server.mcpConfig?.mcpServerConfig?.transportMode || 'REMOTE'}
                     </Tag>
                   </div>
-
-                  {/* <div className="text-sm text-gray-500 mb-2">
-                    创建者: {server.creator}
-                  </div> */}
-
                   </div>
                 </div>
                   <Paragraph className="text-sm text-gray-600 mb-3 line-clamp-2">

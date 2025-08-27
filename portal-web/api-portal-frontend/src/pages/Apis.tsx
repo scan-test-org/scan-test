@@ -35,6 +35,12 @@ function APIsPage() {
     fetchApiProducts();
   }, []);
 
+  const revertIcon = (icon: string) => {
+    const startIndex = icon.indexOf("value=") + 6;
+    const endIndex = icon.length - 1;
+    const URL = icon.substring(startIndex, endIndex).trim();
+    return URL;
+  }
   const fetchApiProducts = async () => {
     setLoading(true);
     try {
@@ -132,13 +138,14 @@ function APIsPage() {
                 {/* API Icon */}
                 <Avatar
                   size={48}
+                  src={product.icon ? revertIcon(product.icon) : undefined}
                   style={{ 
                     backgroundColor: getApiIconColor(product.name),
                     fontSize: '18px',
                     fontWeight: 'bold'
                   }}
                 >
-                  {product.icon || getApiIcon(product.name)}
+                  {revertIcon(product.icon || '') || getApiIcon(product.name)}
                 </Avatar>
 
                 {/* API Info */}
