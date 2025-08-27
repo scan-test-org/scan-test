@@ -35,7 +35,6 @@ const Login: React.FC = () => {
       });
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userInfo', response.data);
-      console.log('11111')
       navigate('/portals');
     } catch {
       setError("账号或密码错误");
