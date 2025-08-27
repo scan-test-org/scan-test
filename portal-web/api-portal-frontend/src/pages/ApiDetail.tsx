@@ -272,7 +272,7 @@ function ApiDetailPage() {
               <Descriptions.Item label="产品ID">{apiData.productId}</Descriptions.Item>
               <Descriptions.Item label="类型">{apiData.type}</Descriptions.Item>
               <Descriptions.Item label="状态">{getStatusText(apiData.status)}</Descriptions.Item>
-              <Descriptions.Item label="分类">{getCategoryText(apiData.category)}</Descriptions.Item>
+              {/* <Descriptions.Item label="分类">{getCategoryText(apiData.category)}</Descriptions.Item> */}
               <Descriptions.Item label="创建时间">{formatDate(apiData.createAt)}</Descriptions.Item>
               <Descriptions.Item label="启用状态">
                 {apiData.enabled ? '已启用' : '未启用'}

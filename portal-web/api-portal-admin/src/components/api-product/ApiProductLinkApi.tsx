@@ -259,8 +259,8 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       <div className="space-y-4">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-medium">{getServiceName(linkedService)}</h3>
-            <p className="text-sm text-gray-500">{getServiceType()}</p>
+            <h3 className="text-lg font-medium">名称：{getServiceName(linkedService)}</h3>
+            <p className="text-sm text-gray-500">类型：{getServiceType()}</p>
           </div>
           <Button 
             type="primary" 
@@ -274,14 +274,13 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
+            <span className="font-medium">来源类型:</span>
+            <span className="ml-2">网关</span>
+          </div>
+          <div>
             <span className="font-medium">{linkedService.sourceType === 'GATEWAY' ? '网关ID:' : 'Nacos实例ID:'}</span>
             <span className="ml-2">{linkedService.gatewayId || linkedService.nacosId}</span>
           </div>
-          <div>
-            <span className="font-medium">来源类型:</span>
-            <span className="ml-2">{linkedService.sourceType}</span>
-          </div>
-          
         </div>
       </div>
     )
