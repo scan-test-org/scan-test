@@ -57,6 +57,7 @@ export interface RestApiProduct extends BaseProduct {
 }
 
 // MCP Server 产品
+// @ts-ignore
 export interface McpServerProduct extends BaseProduct {
   apiSpec: null;
   mcpSpec?: McpServerConfig; // 保持向后兼容

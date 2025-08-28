@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Table, Tag, Alert, Descriptions, Button, Modal, Tabs } from "antd";
+import { Card, Table, Tag, Alert, Button, Modal } from "antd";
 
 import { FileTextOutlined } from "@ant-design/icons";
 import { Layout } from "../components/Layout";
@@ -8,7 +8,6 @@ import { ProductHeader } from "../components/ProductHeader";
 import api from "../lib/api";
 import type { Product, ApiResponse } from "../types";
 import MonacoEditor from "react-monaco-editor";
-import { getStatusText, getCategoryText } from "../lib/statusUtils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import 'react-markdown-editor-lite/lib/index.css'
@@ -172,25 +171,6 @@ function ApiDetailPage() {
     setCurrentSpec(spec);
     setIsSpecModalVisible(true);
   };
-
-
-
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
   const columns = [
     {
       title: '方法',
