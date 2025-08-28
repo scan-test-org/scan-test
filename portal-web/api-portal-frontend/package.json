@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "prepare": "husky",
+    "serve": "npm run build && npm start",
     "type-check": "tsc -b"
   },
   "dependencies": {
