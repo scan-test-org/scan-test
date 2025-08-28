@@ -4,9 +4,6 @@
   HiMarket AI 开放平台
 </h1>
 
-
-本指南帮助用户快速在本地启动 portal-bootstrap（Java 后端）、以及 portal-web/api-portal-admin 和 portal-web/api-portal-frontend 两个前端项目。
-
 ## HiMarket 是什么？
 
 HiMarket 是一个开箱即用的 AI 开放平台解决方案，可以用于构建企业级的 AI 能力市场与开发者生态中心。
@@ -70,7 +67,7 @@ npm install
 npm run dev
 ```
 
-本地访问地址参考控制台输出（一般为 http://localhost:5174）
+本地访问地址参考控制台输出，一般为 http://localhost:5174
 
 #### 2. portal-web/api-portal-frontend
 
@@ -80,7 +77,7 @@ npm install
 npm run dev
 ```
 
-本地访问地址同上，（一般为 http://${portal_frontend_domain}:5173）
+本地访问地址同上，一般为 http://${portal_frontend_domain}:5173
 
 在本地开发过程中，portal_frontend_domain 需要配置域名解析（本地修改 /etc/hosts 文件），在 HiMarket 的设计中，门户域名是解析到对应门户 ID 的依据。
 
@@ -109,10 +106,9 @@ npm run dev
 - Published API Products。管理门户中发布的 API Product。
 - Developers。管理门户的 Developer，以及 Developer 关联的 Consumer。
 - Settings。
-
-- - 配置门户的基本信息。
-- 控制门户中 Developer 的注册审批是否自动通过、API Product 订阅是否自动通过。
-- 门户支持的三方登录。支持标准的 OIDC 配置，如 Aliyun、Google、Github 等。
+  - 配置门户的基本信息。
+  - 控制门户中 Developer 的注册审批是否自动通过、API Product 订阅是否自动通过。
+  - 门户支持的三方登录。支持标准的 OIDC 配置，如 Aliyun、Google、Github 等。
 
 #### 创建 API Product
 
