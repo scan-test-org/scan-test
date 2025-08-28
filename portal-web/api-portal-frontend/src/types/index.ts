@@ -45,7 +45,9 @@ export interface BaseProduct {
   category: ProductCategory;
   productType: ProductType;
   productName: string;
-  mcpConfig: any
+  mcpConfig: any;
+  updatedAt: string;
+  lastUpdated: string;
 }
 
 // REST API 产品

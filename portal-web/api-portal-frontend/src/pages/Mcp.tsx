@@ -17,11 +17,11 @@ interface McpServer {
   status: string;
   version: string;
   endpoints: number;
-  lastUpdated: string;
   category: string;
   creator: string;
   icon?: string;
-  mcpConfig?: any
+  mcpConfig?: any;
+  updatedAt: string;
 }
 
 function McpPage() {
@@ -53,11 +53,11 @@ function McpPage() {
               status: item.status === ProductStatus.ENABLE ? 'active' : 'inactive',
               version: 'v1.0.0',
               endpoints: 0,
-              lastUpdated: new Date().toISOString().slice(0, 10),
               category: item.category,
               creator: 'Unknown', // Product类型中没有creator属性，使用默认值
               icon: item.icon || undefined,
-              mcpConfig: item.mcpConfig
+              mcpConfig: item.mcpConfig,
+              updatedAt: item.updatedAt?.slice(0, 10) || ''
             };
           });
         setMcpServers(mapped);
@@ -155,7 +155,7 @@ function McpPage() {
                       {getCategoryText(server.category || 'OFFICIAL')}
                     </Tag> */}
                     <div className="text-xs text-gray-400">
-                      更新 {server.lastUpdated}
+                      更新 {server.updatedAt}
                     </div>
                   </div>
             </Card>
