@@ -40,13 +40,13 @@ cd himarket
 
 #### 启动方式
 
-1. 先打包：
+先打包：
 
 ```bash
 mvn clean package
 ```
 
-1. 再启动：
+再启动：
 
 ```bash
 java -Ddb.host=xxxx.mysql.rds.aliyuncs.com \
@@ -180,7 +180,7 @@ HiMarket 门户是多租户设计，通过域名来识别不同的门户实例�
 
 ### 交流群
 
-![image](https://img.alicdn.com/imgextra/i2/O1CN01fZefEP1aPWkzG3A19_!!6000000003322-0-tps-720-405.jpg)
+![image](https://github.com/user-attachments/assets/2092b427-33bb-462d-a22a-7c369e81c572)
 
 ### 技术分享
 
