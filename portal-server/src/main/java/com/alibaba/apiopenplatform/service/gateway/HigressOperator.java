@@ -36,12 +36,15 @@ import com.alibaba.apiopenplatform.service.gateway.client.APIGClient;
 import com.alibaba.apiopenplatform.service.gateway.client.HigressClient;
 import com.alibaba.apiopenplatform.support.consumer.ApiKeyConfig;
 import com.alibaba.apiopenplatform.support.consumer.ConsumerAuthConfig;
+import com.alibaba.apiopenplatform.support.consumer.HigressAuthConfig;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import com.alibaba.apiopenplatform.support.gateway.HigressConfig;
 import com.alibaba.apiopenplatform.support.product.HigressRefConfig;
+
 import java.util.ArrayList;
 import java.util.Optional;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -147,13 +150,13 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
         HigressConfig higressConfig = config.getHigressConfig();
         HigressClient client = new HigressClient(higressConfig);
 
-	  client.execute("/v1/consumers",
-		  HttpMethod.POST,
-		  null,
-		  buildHigressConsumer(consumer.getConsumerId(), credential.getApiKeyConfig()),
-		  String.class);
+        client.execute("/v1/consumers",
+                HttpMethod.POST,
+                null,
+                buildHigressConsumer(consumer.getConsumerId(), credential.getApiKeyConfig()),
+                String.class);
 
-	  return consumer.getConsumerId();
+        return consumer.getConsumerId();
     }
 
     @Override
@@ -182,31 +185,40 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
 
     @Override
     public ConsumerAuthConfig authorizeConsumer(Gateway gateway, String consumerId, Object refConfig) {
-	  HigressRefConfig config = (HigressRefConfig) refConfig;
-	  HigressClient client = getClient(gateway);
+        HigressRefConfig config = (HigressRefConfig) refConfig;
+        HigressClient client = getClient(gateway);
 
-	  String mcpServerName = config.getMcpServerName();
-	  client.execute("/v1/mcpServer/consumers/",
-		  HttpMethod.PUT,
-		  null,
-		  buildAuthHigressConsumer(mcpServerName, consumerId),
-		  Void.class);
+        String mcpServerName = config.getMcpServerName();
+        client.execute("/v1/mcpServer/consumers/",
+                HttpMethod.PUT,
+                null,
+                buildAuthHigressConsumer(mcpServerName, consumerId),
+                Void.class);
 
-	  return ConsumerAuthConfig.builder().apigAuthorizationRuleIds(Collections.singletonList(mcpServerName)).build();
+        HigressAuthConfig higressAuthConfig = HigressAuthConfig.builder()
+                .resourceType("MCP_SERVER")
+                .resourceName(mcpServerName)
+                .build();
+
+        return ConsumerAuthConfig.builder()
+                .higressAuthConfig(higressAuthConfig)
+                .build();
     }
 
     @Override
     public void revokeConsumerAuthorization(Gateway gateway, String consumerId, ConsumerAuthConfig authConfig) {
-	  HigressClient client = getClient(gateway);
+        HigressClient client = getClient(gateway);
 
-	  String mcpServerName = Optional.ofNullable(authConfig.getApigAuthorizationRuleIds()).flatMap(list->list.stream().findFirst())
-          .orElseThrow(() -> new BusinessException(ErrorCode.INTERNAL_ERROR, "Error deleting Consumer Authorization"));
+        HigressAuthConfig higressAuthConfig = authConfig.getHigressAuthConfig();
+        if (higressAuthConfig == null) {
+            return;
+        }
 
-	  client.execute("/v1/mcpServer/consumers/",
-		  HttpMethod.DELETE,
-		  null,
-		  buildAuthHigressConsumer(mcpServerName, consumerId),
-		  Void.class);
+        client.execute("/v1/mcpServer/consumers/",
+                HttpMethod.DELETE,
+                null,
+                buildAuthHigressConsumer(higressAuthConfig.getResourceName(), consumerId),
+                Void.class);
     }
 
     @Override
@@ -237,7 +249,7 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
 
     public HigressConsumerConfig buildHigressConsumer(String consumerId, ApiKeyConfig apiKeyConfig) {
 
-	  String source = mapSource(apiKeyConfig.getSource());
+        String source = mapSource(apiKeyConfig.getSource());
 
         List<String> apiKeys = apiKeyConfig.getCredentials().stream()
                 .map(ApiKeyConfig.ApiKeyCredential::getApiKey)
@@ -275,26 +287,26 @@ public class HigressOperator extends GatewayOperator<HigressClient> {
         private T data;
     }
 
-  public HigressAuthConsumerConfig buildAuthHigressConsumer(String gatewayName, String consumerId){
-	  return HigressAuthConsumerConfig.builder()
-          .mcpServerName(gatewayName)
-          .consumers(Collections.singletonList(consumerId))
-          .build();
-	}
+    public HigressAuthConsumerConfig buildAuthHigressConsumer(String gatewayName, String consumerId) {
+        return HigressAuthConsumerConfig.builder()
+                .mcpServerName(gatewayName)
+                .consumers(Collections.singletonList(consumerId))
+                .build();
+    }
 
-  @Data
-  @Builder
-  public static class HigressAuthConsumerConfig {
-	private String mcpServerName;
-	private List<String> consumers;
-  }
+    @Data
+    @Builder
+    public static class HigressAuthConsumerConfig {
+        private String mcpServerName;
+        private List<String> consumers;
+    }
 
-  private String mapSource(String source) {
-	if (StringUtils.isBlank(source)) return null;
-	if ("Default".equalsIgnoreCase(source)) return "BEARER";
-	if ("HEADER".equalsIgnoreCase(source)) return "HEADER";
-	if ("QueryString".equalsIgnoreCase(source)) return "QUERY";
-	return source;
-  }
+    private String mapSource(String source) {
+        if (StringUtils.isBlank(source)) return null;
+        if ("Default".equalsIgnoreCase(source)) return "BEARER";
+        if ("HEADER".equalsIgnoreCase(source)) return "HEADER";
+        if ("QueryString".equalsIgnoreCase(source)) return "QUERY";
+        return source;
+    }
 
 }
