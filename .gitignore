@@ -35,3 +35,5 @@ build/
 .DS_Store
 
 /front-auth-app
+
+package-lock.json
