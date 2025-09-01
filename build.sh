@@ -22,6 +22,7 @@ cd ..
 cd portal-web/api-portal-frontend
 echo "=== Building frontend ==="
 rm -rf ./dist
+npm install --force
 npm run build
 docker buildx build \
     -t api-portal-frontend:$VERSION \
@@ -32,6 +33,7 @@ docker buildx build \
 cd ../api-portal-admin
 echo "=== Building admin ==="
 rm -rf ./dist
+npm install --force
 npm run build
 docker buildx build \
     -t api-portal-admin:$VERSION \
