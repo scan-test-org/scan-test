@@ -129,7 +129,6 @@ export default function ApiProductFormModal({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      console.log("表单数据:", values); // ✅ 检查 icon 是否为 Base64 字符串
       setLoading(true);
 
       const { icon, ...otherValues } = values;

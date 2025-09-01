@@ -79,7 +79,6 @@ export const ProductHeader: React.FC<ProductHeaderProps> = ({
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      console.log('申请订阅:', values);
       
       // 调用申请订阅API
       await subscribeProduct(values.consumerId, id || mcpName || '');

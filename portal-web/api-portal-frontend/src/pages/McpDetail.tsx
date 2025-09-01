@@ -149,9 +149,7 @@ function McpDetail() {
 
   useEffect(() => {
     const fetchDetail = async () => {
-      console.log("useEffect 触发，mcpName:", mcpName);
       if (!mcpName) {
-        console.log("mcpName 为空，返回");
         return;
       }
       setLoading(true);
@@ -188,14 +186,12 @@ function McpDetail() {
             }
           }
         } else {
-          console.log("API 响应失败:", response);
           setError(response.message || "数据加载失败");
         }
       } catch (error) {
         console.error("API请求失败:", error);
         setError("加载失败，请稍后重试");
       } finally {
-        console.log("请求完成，设置 loading 为 false");
         setLoading(false);
       }
     };

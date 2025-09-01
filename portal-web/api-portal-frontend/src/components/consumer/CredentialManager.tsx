@@ -269,13 +269,11 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
     
     if (type === 'apiKey') {
       const apiKey = Array.from({ length: 16 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-      console.log('生成API Key:', apiKey);
       
       // 确保表单字段已经渲染并设置值
       const setValue = () => {
         try {
           credentialForm.setFieldsValue({ customApiKey: apiKey });
-          console.log('API Key已设置到表单');
         } catch (error) {
           console.error('设置API Key失败:', error);
         }
@@ -292,7 +290,6 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
     } else {
       const ak = Array.from({ length: 16 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
       const sk = Array.from({ length: 32 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-      console.log('生成AK:', ak, 'SK:', sk);
       
       // 确保表单字段已经渲染并设置值
       const setValue = () => {
@@ -301,7 +298,6 @@ export function CredentialManager({ consumerId }: CredentialManagerProps) {
             customAccessKey: ak, 
             customSecretKey: sk 
           });
-          console.log('AK/SK已设置到表单');
         } catch (error) {
           console.error('设置AK/SK失败:', error);
         }

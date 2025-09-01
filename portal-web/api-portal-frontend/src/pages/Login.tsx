@@ -61,7 +61,6 @@ const Login: React.FC = () => {
   // 跳转到 OIDC 授权
   const handleOidcLogin = (provider: string) => {
     const stateRaw = `LOGIN|${provider}|API_PREFIX=${api.defaults.baseURL}`;
-    console.log('stateRaw===', stateRaw);
     const state = encodeURIComponent(stateRaw);
     window.location.href = `${api.defaults.baseURL}/developers/authorize?provider=${provider}&state=${state}`
   };
