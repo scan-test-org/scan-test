@@ -111,11 +111,9 @@ function ApiDetailPage() {
               }
             }
             
-            console.log('解析到的端点:', endpointsList);
             if (endpointsList.length > 0) {
               setEndpoints(endpointsList);
             } else {
-              console.log('未解析到端点，使用默认端点');
               setDefaultEndpoints();
             }
           } catch (error) {

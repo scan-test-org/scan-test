@@ -19,19 +19,27 @@
 
 package com.alibaba.apiopenplatform.dto.result;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
-@Data
-@Schema(
-        oneOf = {
-                APIGMCPServerResult.class,
-                HigressMCPServerResult.class,
-                AdpMCPServerResult.class
-        },
-        discriminatorProperty = "type"
-)
-public class GatewayMCPServerResult {
+import java.util.List;
 
-    protected String mcpServerName;
-} 
+@Data
+public class AdpMcpServerListResult {
+
+    private Integer code;
+    
+    private String message;
+    
+    private String msg;
+    
+    private AdpMcpServerListData data;
+    
+    @Data
+    public static class AdpMcpServerListData {
+        private List<AdpMCPServerResult> records;
+        private Integer total;
+        private Integer size;
+        private Integer current;
+    }
+}

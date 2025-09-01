@@ -132,7 +132,6 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
   // 确保 subscriptions 始终是数组
   const safeSubscriptions = Array.isArray(subscriptions) ? subscriptions : [];
 
-  console.log('safeSubscriptions', safeSubscriptions);
   return (
     <>
       <Card>
