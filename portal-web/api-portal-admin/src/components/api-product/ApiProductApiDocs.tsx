@@ -125,7 +125,6 @@ export function ApiProductApiDocs({ apiProduct }: ApiProductApiDocsProps) {
 
   useEffect(() => {
     // 设置源码内容
-    console.log('apiProduct.apiConfig',apiProduct.apiConfig)
     if (apiProduct.apiConfig?.spec) {
       setContent(apiProduct.apiConfig.spec);
     } else if (apiProduct.mcpConfig?.tools) {

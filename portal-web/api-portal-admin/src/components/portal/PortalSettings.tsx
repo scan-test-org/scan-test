@@ -37,7 +37,6 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     try {
       const values = await form.validateFields()
       const { builtinAuthEnabled, oidcAuthEnabled, autoApproveDevelopers, autoApproveSubscriptions, frontendRedirectUrl, ...rest } = values
-      console.log('保存设置:', values)
       
       // 调用API保存设置
       const updateData = {

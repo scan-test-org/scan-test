@@ -155,8 +155,6 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
     
     if (!gateway) return
 
-    console.log('gatewayId', gatewayId);
-    
     setApiLoading(true)
     try {
       if (gateway.gatewayType === 'APIG_API') {

@@ -266,7 +266,6 @@ export default function ImportGatewayModal({ visible, gatewayType, onCancel, onS
                   
                   setApigConfig(processedValues)
                   sessionStorage.setItem('importFormConfig', JSON.stringify(processedValues))
-                  console.log('处理后的参数:', processedValues)
                   fetchAdpGateways({...processedValues, gatewayType: gatewayType})
                 })
               }}
