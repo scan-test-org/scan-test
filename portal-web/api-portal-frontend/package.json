@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode devlocal",
+    "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -47,6 +47,5 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^4.5.14"
-  },
-  "repository": "git@gitlab.alibaba-inc.com:paas-apps/api-portal-frontend.git"
+  }
 }

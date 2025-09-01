@@ -1,5 +1,6 @@
+<a name="readme-top"></a>
 <h1 align="center">
-    <img src="https://img.alicdn.com/imgextra/i2/O1CN01NwxLDd20nxfGBjxmZ_!!6000000006895-2-tps-960-290.png" alt="Higress" width="240" height="72.5">
+    <img width="406" height="96" alt="image" src="https://github.com/user-attachments/assets/e0956234-1a97-42c6-852d-411fa02c3f01" />
   <br>
   HiMarket AI 开放平台
 </h1>
@@ -175,6 +176,11 @@ HiMarket 门户是多租户设计，通过域名来识别不同的门户实例�
 #### 发起调用
 
 携带消费者的凭证，配置门户中 MCP Server 的连接地址，即可发起对 MCP Server 的调用。
+
+### 阿里云开箱即用
+阿里云计算巢支持了该项目开箱即用版本，可以使用下面链接一键部署社区版：
+
+[![Deploy on AlibabaCloud ComputeNest](https://service-info-public.oss-cn-hangzhou.aliyuncs.com/computenest.svg)](https://computenest.console.aliyun.com/service/instance/create/cn-hangzhou?type=user&ServiceName=HiMarket%20AI%20%E5%BC%80%E6%94%BE%E5%B9%B3%E5%8F%B0)
 
 ## 社区
 
