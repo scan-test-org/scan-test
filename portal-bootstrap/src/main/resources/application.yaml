@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mariadb://${db.host}:${db.port}/${db.name}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+    url: jdbc:mariadb://${db.host}:${db.port}/${db.name}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&compatibilityMode=mysql&useInformationSchema=true
     username: ${db.username}
     password: ${db.password}
     driver-class-name: org.mariadb.jdbc.Driver
@@ -11,6 +11,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: UTC
+    database-platform: org.hibernate.dialect.MySQL8Dialect
 
 db:
    host: YourDBHost
