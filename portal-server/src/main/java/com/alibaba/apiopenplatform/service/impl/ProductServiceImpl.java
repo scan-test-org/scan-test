@@ -247,6 +247,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProductRef(String productId) {
+        Product product = findProduct(productId);
+        product.setStatus(ProductStatus.PENDING);
+
         ProductRef productRef = productRefRepository.findFirstByProductId(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId));
 
@@ -256,6 +259,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         productRefRepository.delete(productRef);
+        productRepository.save(product);
     }
 
     private void syncConfig(Product product, ProductRef productRef) {
