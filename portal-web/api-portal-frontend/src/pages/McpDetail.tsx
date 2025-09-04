@@ -120,7 +120,7 @@ function McpDetail() {
       let endpoint = `${baseUrl}${path}`;
 
       if (mcpConfig?.meta?.source === 'ADP_AI_GATEWAY') {
-        endpoint = `http://<higress-gateway-ip>/mcp-servers${path}`;
+        endpoint = `${baseUrl}/mcp-servers${path}`;
       }
 
       const httpConfig = `{

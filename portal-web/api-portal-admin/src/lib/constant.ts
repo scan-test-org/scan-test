@@ -3,7 +3,7 @@ export const GATEWAY_TYPE_LABELS = {
   APIG_API: 'API网关',
   HIGRESS: 'Higress网关',
   APIG_AI: 'AI网关',
-  ADP_AI_GATEWAY: '专有云 AI网关'
+  ADP_AI_GATEWAY: '专有云 AI 网关'
 } as const
 
 // Gateway类型选项
