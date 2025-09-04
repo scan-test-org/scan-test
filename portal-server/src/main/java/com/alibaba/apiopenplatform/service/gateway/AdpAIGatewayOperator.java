@@ -213,6 +213,11 @@ public class AdpAIGatewayOperator extends GatewayOperator {
     }
 
     @Override
+    public String getDashboard(Gateway gateway) {
+        return null;
+    }
+
+    @Override
     public PageResult<GatewayResult> fetchGateways(Object param, int page, int size) {
         if (!(param instanceof QueryAdpAIGatewayParam)) {
             throw new BusinessException(ErrorCode.INVALID_PARAMETER, "param");
