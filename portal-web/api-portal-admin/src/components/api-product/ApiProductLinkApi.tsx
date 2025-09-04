@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import type { ApiProduct } from '@/types/api-product'
 import { apiProductApi, gatewayApi, nacosApi } from '@/lib/api'
 import { getServiceName } from '@/lib/utils'
+import { getGatewayTypeLabel } from '@/lib/constant'
 
 interface ApiProductLinkApiProps {
   apiProduct: ApiProduct
@@ -282,6 +283,9 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       if (linkedService.higressRefConfig) {
         return 'MCP Server (HIGRESS)'
       }
+      if (linkedService.adpAIGatewayRefConfig) {
+        return 'MCP Server (专有云AI网关)'
+      }
       return '未知类型'
     }
 
@@ -475,7 +479,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                     <div>
                       <div className="font-medium">{gateway.gatewayName}</div>
                       <div className="text-sm text-gray-500">
-                        {gateway.gatewayId} - {gateway.gatewayType}
+                        {gateway.gatewayId} - {getGatewayTypeLabel(gateway.gatewayType as any)}
                       </div>
                     </div>
                   </Select.Option>
