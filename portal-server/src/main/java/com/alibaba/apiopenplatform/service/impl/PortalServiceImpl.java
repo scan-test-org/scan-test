@@ -235,6 +235,15 @@ public class PortalServiceImpl implements PortalService {
         return new PageResult<SubscriptionResult>().convertFrom(page, s -> new SubscriptionResult().convertFrom(s));
     }
 
+    @Override
+    public String getDefaultPortal() {
+        Portal portal = portalRepository.findFirst().orElse(null);
+        if (portal == null) {
+            return null;
+        }
+        return portal.getPortalId();
+    }
+
     private Portal findPortal(String portalId) {
         return portalRepository.findByPortalId(portalId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
