@@ -559,7 +559,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 loading={apiLoading}
                 showSearch
                 filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                  (option?.value as unknown as string)?.toLowerCase().includes(input.toLowerCase())
                 }
                 optionLabelProp="label"
               >
