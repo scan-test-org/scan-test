@@ -465,14 +465,14 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 loading={gatewayLoading}
                 showSearch
                 filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                  (option?.value as unknown as string)?.toLowerCase().includes(input.toLowerCase())
                 }
                 onChange={handleGatewayChange}
                 optionLabelProp="label"
               >
                 {gateways.map(gateway => (
-                  <Select.Option 
-                    key={gateway.gatewayId} 
+                  <Select.Option
+                    key={gateway.gatewayId}
                     value={gateway.gatewayId}
                     label={gateway.gatewayName}
                   >
@@ -494,12 +494,12 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
               label="Nacos实例"
               rules={[{ required: true, message: '请选择Nacos实例' }]}
             >
-              <Select 
-                placeholder="请选择Nacos实例" 
+              <Select
+                placeholder="请选择Nacos实例"
                 loading={nacosLoading}
                 showSearch
                 filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                  (option?.value as unknown as string)?.toLowerCase().includes(input.toLowerCase())
                 }
                 onChange={handleNacosChange}
                 optionLabelProp="label"
