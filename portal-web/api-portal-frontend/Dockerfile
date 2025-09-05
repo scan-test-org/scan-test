@@ -8,4 +8,4 @@ WORKDIR /app
 
 COPY dist/ /app
 
-CMD ["/bin/bash", "/home/admin/bin/start.sh"]
+CMD ["/bin/sh", "/home/admin/bin/start.sh"]

@@ -1,0 +1,14 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  labels:
+    app: api-portal-server
+  name: api-portal-server
+data:
+  SERVER_PORT: "8080"
+  # External Database Configuration
+  DB_HOST: "rm-bp1kp86mbm7009g7hjo.mysql.rds.aliyuncs.com"
+  DB_PORT: "3306"
+  DB_NAME: "portal_db"
+  DB_USERNAME: "portal_test"
+  DB_PASSWORD: "portal-Go"

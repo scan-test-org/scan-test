@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-portal-server
+  labels:
+    app: api-portal-server
+spec:
+  replicas: {{ .Values.api_portal_server.replicaCount }}
+  selector:
+    matchLabels:
+      app: api-portal-server
+  template:
+    metadata:
+      labels:
+        app: api-portal-server
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "product-api-portal.serviceAccountName" . }}
+      containers:
+        - name: api-portal-server
+          image: "{{ .Values.hub }}/{{ .Values.api_portal_server.image.repository }}:{{ .Values.api_portal_server.image.tag}}"
+          imagePullPolicy: {{ .Values.api_portal_server.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api_portal_server.serverPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: api-portal-server
+{{/*          {{- with .Values.livenessProbe }}*/}}
+{{/*          livenessProbe:*/}}
+{{/*            {{- toYaml . | nindent 12 }}*/}}
+{{/*          {{- end }}*/}}
+{{/*          {{- with .Values.readinessProbe }}*/}}
+{{/*          readinessProbe:*/}}
+{{/*            {{- toYaml . | nindent 12 }}*/}}
+{{/*          {{- end }}*/}}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

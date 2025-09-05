@@ -237,7 +237,7 @@ public class PortalServiceImpl implements PortalService {
 
     @Override
     public String getDefaultPortal() {
-        Portal portal = portalRepository.findFirst().orElse(null);
+        Portal portal = portalRepository.findFirstByOrderByIdAsc().orElse(null);
         if (portal == null) {
             return null;
         }
