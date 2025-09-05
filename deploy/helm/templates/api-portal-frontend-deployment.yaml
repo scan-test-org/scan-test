@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-portal-frontend
+  labels:
+    app: api-portal-frontend
+spec:
+  replicas: {{ .Values.api_portal_frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: api-portal-frontend
+  template:
+    metadata:
+      labels:
+        app: api-portal-frontend
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "product-api-portal.serviceAccountName" . }}
+      containers:
+        - name: api-portal-frontend
+          image: "{{ .Values.hub }}/{{ .Values.api_portal_frontend.image.repository }}:{{ .Values.api_portal_frontend.image.tag}}"
+          imagePullPolicy: {{ .Values.api_portal_frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api_portal_frontend.serverPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: api-portal-frontend
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
