@@ -326,7 +326,7 @@ function McpDetail() {
                                 ) => (
                                   <div key={i} className="mb-2">
                                     <div>
-                                      <strong>域名:</strong> {d.domain}
+                                      <strong>域名/IP:</strong> {d.domain}
                                     </div>
                                     <div>
                                       <strong>协议:</strong> {d.protocol}
