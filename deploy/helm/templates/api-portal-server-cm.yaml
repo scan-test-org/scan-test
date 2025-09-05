@@ -7,8 +7,8 @@ metadata:
 data:
   SERVER_PORT: "8080"
   # External Database Configuration
-  DB_HOST: "rm-bp1kp86mbm7009g7hjo.mysql.rds.aliyuncs.com"
-  DB_PORT: "3306"
+  DB_HOST: "your-mysql-host"
+  DB_PORT: "your-db-port"
   DB_NAME: "portal_db"
-  DB_USERNAME: "portal_test"
-  DB_PASSWORD: "portal-Go"
+  DB_USERNAME: "portal_user"
+  DB_PASSWORD: "your_password"
