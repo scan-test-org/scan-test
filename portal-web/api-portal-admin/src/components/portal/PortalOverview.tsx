@@ -1,4 +1,4 @@
-import { Card, Row, Col, Statistic, Progress, Tag, Table, Tooltip } from 'antd'
+import { Card, Row, Col, Statistic, Tag, Tooltip } from 'antd'
 import { 
   UserOutlined, 
   ApiOutlined,
@@ -67,7 +67,7 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
             />
           </Card>
         </Col>
-        
+
       </Row>
 
       {/* 详细信息 */}
@@ -126,7 +126,7 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
         <Card title="OIDC认证配置">
           <div className="space-y-4">
             {portal.portalSettingConfig?.oidcConfigs.map((config) => (
-              <div key={config.id} className="border rounded-lg p-4">
+              <div key={config.provider} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium">{config.name}</h4>
                   <Tag color={config.enabled ? "green" : "default"}>
@@ -141,18 +141,18 @@ export function PortalOverview({ portal }: PortalOverviewProps) {
                   <div>
                     <span className="text-gray-600">Client ID:</span>
                     <span className="ml-2 font-medium" style={{ maxWidth: 280, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'bottom', whiteSpace: 'nowrap' }}>
-                      <Tooltip title={config.clientId} placement="top" color="#000">
-                        {config.clientId}
+                      <Tooltip title={config.authCodeConfig?.clientId} placement="top" color="#000">
+                        {config.authCodeConfig?.clientId}
                       </Tooltip>
                     </span>
                   </div>
                   <div>
                     <span className="text-gray-600">授权范围:</span>
-                    <span className="ml-2 font-medium">{config.scopes}</span>
+                    <span className="ml-2 font-medium">{config.authCodeConfig?.scopes}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">重定向URI:</span>
-                    <span className="ml-2 font-medium">{config.redirectUri}</span>
+                    <span className="ml-2 font-medium">{config.authCodeConfig?.redirectUri}</span>
                   </div>
                 </div>
               </div>

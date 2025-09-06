@@ -1,8 +1,4 @@
-export interface OidcConfig {
-  id: string;
-  provider: string;
-  name: string;
-  logoUrl: string;
+export interface AuthCodeConfig {
   clientId: string;
   clientSecret: string;
   scopes: string;
@@ -11,7 +7,15 @@ export interface OidcConfig {
   userInfoEndpoint: string;
   jwkSetUri: string;
   redirectUri: string;
+}
+
+export interface OidcConfig {
+  provider: string;
+  name: string;
+  logoUrl: string;
   enabled: boolean;
+  grantType: string;
+  authCodeConfig: AuthCodeConfig;
 }
 
 export interface PortalSettingConfig {

@@ -1,7 +1,7 @@
 import { Card, Form, Input, Select, Switch, Button, Divider, Space, Tag, Table, Modal, message, Tabs } from 'antd'
-import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
-import { useState, useEffect, useMemo } from 'react'
-import { Portal, OidcConfig } from '@/types'
+import { SaveOutlined, PlusOutlined, DeleteOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { useState, useMemo } from 'react'
+import { Portal, OidcConfig, AuthCodeConfig } from '@/types'
 import { portalApi } from '@/lib/api'
 
 interface PortalSettingsProps {
@@ -60,10 +60,6 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleReset = () => {
-    form.resetFields()
   }
 
   // 域名管理相关函数
@@ -130,10 +126,13 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
   }
 
   const handleEditOidc = (oidc: OidcConfig) => {
+    const formValues = {
+      ...oidc,
+      ...oidc.authCodeConfig
+    }
     setEditingOidc(oidc)
     setOidcModalVisible(true)
-    oidcForm.setFieldsValue(oidc)
-    
+    oidcForm.setFieldsValue(formValues)
   }
 
   const oidcConfigs = useMemo(() => {
@@ -146,17 +145,44 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       setOidcLoading(true)
       const values = await oidcForm.validateFields()
       
+      // 构造嵌套结构
+      const authCodeConfig: AuthCodeConfig = {
+        clientId: values.clientId,
+        clientSecret: values.clientSecret,
+        scopes: values.scopes,
+        authorizationEndpoint: values.authorizationEndpoint,
+        tokenEndpoint: values.tokenEndpoint,
+        userInfoEndpoint: values.userInfoEndpoint,
+        jwkSetUri: values.jwkSetUri,
+        redirectUri: values.redirectUri
+      }
+      
       let updatedOidcConfigs: OidcConfig[]
       
       if (editingOidc) {
         // 编辑现有配置
-        updatedOidcConfigs = oidcConfigs?.map(config => 
-          config.id === editingOidc.id ? { ...values, id: editingOidc.id } : config
+        const updatedConfig: OidcConfig = {
+          provider: values.provider,
+          name: values.name,
+          logoUrl: values.logoUrl,
+          enabled: values.enabled,
+          grantType: 'AUTHORIZATION_CODE',
+          authCodeConfig
+        }
+        updatedOidcConfigs = oidcConfigs.map(config => 
+          config.provider === editingOidc.provider ? updatedConfig : config
         )
       } else {
         // 添加新配置
-        const newId = `${values.provider}_${Date.now()}`
-        updatedOidcConfigs = [...oidcConfigs, { ...values, id: newId }]
+        const newConfig: OidcConfig = {
+          provider: values.provider,
+          name: values.name,
+          logoUrl: values.logoUrl,
+          enabled: values.enabled,
+          grantType: 'AUTHORIZATION_CODE',
+          authCodeConfig
+        }
+        updatedOidcConfigs = [...oidcConfigs, newConfig]
       }
       
       
@@ -188,7 +214,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     oidcForm.resetFields()
   }
 
-  const handleDeleteOidc = async (oidcId: string, oidcName: string) => {
+  const handleDeleteOidc = async (provider: string, oidcName: string) => {
     Modal.confirm({
       title: '确认删除',
       icon: <ExclamationCircleOutlined />,
@@ -198,7 +224,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
       cancelText: '取消',
       async onOk() {
         try {
-          const updatedOidcConfigs = oidcConfigs.filter(config => config.id !== oidcId)
+          const updatedOidcConfigs = oidcConfigs.filter(config => config.provider !== provider)
           
           await portalApi.updatePortal(portal.portalId, {
             ...portal,
@@ -277,10 +303,11 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
     },
     {
       title: 'Client ID',
-      dataIndex: 'clientId',
       key: 'clientId',
-      render: (clientId: string) => (
-        <span className="font-mono text-xs">{clientId.substring(0, 20)}...</span>
+      render: (record: OidcConfig) => (
+        <span className="font-mono text-xs">
+          {record.authCodeConfig?.clientId?.substring(0, 20)}...
+        </span>
       )
     },
     {
@@ -309,7 +336,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
             type="link" 
             danger 
             icon={<DeleteOutlined />}
-            onClick={() => handleDeleteOidc(record.id, record.name)}
+            onClick={() => handleDeleteOidc(record.provider, record.name)}
           >
             删除
           </Button>
@@ -419,7 +446,7 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
             <Table 
               columns={oidcColumns} 
               dataSource={oidcConfigs}
-              rowKey="id"
+              rowKey="provider"
               pagination={false}
               size="small"
             />
@@ -660,7 +687,10 @@ export function PortalSettings({ portal, onRefresh }: PortalSettingsProps) {
               label="提供商"
               rules={[{ required: true, message: '请输入提供商名称' }]}
             >
-              <Input placeholder="如: aliyun, google, github" />
+              <Input 
+                placeholder="如: aliyun, google, github" 
+                disabled={editingOidc !== null}
+              />
             </Form.Item>
             <Form.Item
               name="name"
