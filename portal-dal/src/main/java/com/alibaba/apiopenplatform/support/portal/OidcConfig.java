@@ -27,7 +27,6 @@ import lombok.Data;
  */
 @Data
 public class OidcConfig {
-    private String id; // 唯一标识
     private String provider; // 平台标识，如 github、google、aliyun、oidc
     private String name; // 显示名，如“GitHub登录”、“公司SSO”
     private String logoUrl; // 登录按钮logo

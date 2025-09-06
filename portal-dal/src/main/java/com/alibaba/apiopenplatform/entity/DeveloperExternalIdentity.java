@@ -53,10 +53,10 @@ public class DeveloperExternalIdentity {
     @Column(nullable = false, length = 128)
     private String subject;
 
-    @Column(nullable = true, length = 128)
+    @Column(length = 128)
     private String displayName;
 
     @Lob
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "text")
     private String rawInfoJson;
 } 
