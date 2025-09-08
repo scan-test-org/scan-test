@@ -75,7 +75,7 @@ const Login: React.FC = () => {
           <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-4" />
         </div>
         <h2 className="text-2xl font-bold mb-6 text-gray-900 text-center">
-          {isRegister ? "注册Admin账号 - 后台" : "登录AI开放平台 - 后台"}
+          {isRegister ? "注册Admin账号" : "登录HiMarket"}
         </h2>
 
         {/* 登录表单 */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { HomeOutlined, GlobalOutlined, AppstoreOutlined, DesktopOutlined, UserOutlined, MenuOutlined, SettingOutlined } from '@ant-design/icons'
+import { GlobalOutlined, AppstoreOutlined, DesktopOutlined, UserOutlined, MenuOutlined, SettingOutlined } from '@ant-design/icons'
 import { Button, Skeleton } from 'antd'
 import { isAuthenticated, removeToken } from '../lib/utils'
 
@@ -127,7 +127,7 @@ const Layout: React.FC<LayoutProps> = ({ loading = false }) => {
                 className="hover:bg-gray-100"
               />
             </div>
-          <span className="text-2xl font-bold">AI开放平台</span>
+          <span className="text-2xl font-bold">HiMarket</span>
         </div>
         {/* 顶部右侧用户信息或登录按钮 */}
         {isLoggedIn ? (

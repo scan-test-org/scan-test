@@ -6,7 +6,6 @@ export interface AuthCodeConfig {
   tokenEndpoint: string;
   userInfoEndpoint: string;
   jwkSetUri: string;
-  redirectUri: string;
 }
 
 export interface OidcConfig {
@@ -14,7 +13,7 @@ export interface OidcConfig {
   name: string;
   logoUrl: string;
   enabled: boolean;
-  grantType: string;
+  grantType: 'AUTHORIZATION_CODE';
   authCodeConfig: AuthCodeConfig;
 }
 

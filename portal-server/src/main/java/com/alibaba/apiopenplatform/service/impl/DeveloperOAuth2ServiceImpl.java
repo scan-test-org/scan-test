@@ -31,6 +31,7 @@ import com.alibaba.apiopenplatform.service.gateway.factory.HTTPClientFactory;
 import com.alibaba.apiopenplatform.service.DeveloperOAuth2Service;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.service.PortalService;
+import com.alibaba.apiopenplatform.support.auth.AuthCodeConfig;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -202,10 +203,11 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     }
 
     private String buildAuthorizationUrl(OidcConfig config, String redirectUri, String state) throws UnsupportedEncodingException {
-        return config.getAuthorizationEndpoint()
-                + "?client_id=" + config.getClientId()
+        AuthCodeConfig authConfig = config.getAuthCodeConfig();
+        return authConfig.getAuthorizationEndpoint()
+                + "?client_id=" + authConfig.getClientId()
                 + "&redirect_uri=" + URLEncoder.encode(redirectUri, "UTF-8")
-                + "&scope=" + URLEncoder.encode(config.getScopes(), "UTF-8")
+                + "&scope=" + URLEncoder.encode(authConfig.getScopes(), "UTF-8")
                 + "&response_type=code"
                 + "&state=" + URLEncoder.encode(state, "UTF-8");
     }
@@ -323,7 +325,8 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         return map;
     }
 
-    private Map<String, Object> fetchUserInfoMap(String code, OidcConfig config, HttpServletRequest request) {
+    private Map<String, Object> fetchUserInfoMap(String code, OidcConfig oidcConfig, HttpServletRequest request) {
+        AuthCodeConfig config = oidcConfig.getAuthCodeConfig();
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("client_id", config.getClientId());
         params.add("client_secret", config.getClientSecret());
