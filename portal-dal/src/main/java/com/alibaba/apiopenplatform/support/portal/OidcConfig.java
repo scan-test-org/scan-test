@@ -19,7 +19,6 @@
 
 package com.alibaba.apiopenplatform.support.portal;
 
-import com.alibaba.apiopenplatform.support.auth.AuthCodeConfig;
 import com.alibaba.apiopenplatform.support.enums.GrantType;
 import lombok.Data;
 

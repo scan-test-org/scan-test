@@ -1,4 +1,4 @@
-package com.alibaba.apiopenplatform.support.auth;
+package com.alibaba.apiopenplatform.support.portal;
 
 import lombok.Data;
 

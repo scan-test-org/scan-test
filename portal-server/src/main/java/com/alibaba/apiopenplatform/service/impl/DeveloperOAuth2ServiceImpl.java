@@ -31,7 +31,7 @@ import com.alibaba.apiopenplatform.service.gateway.factory.HTTPClientFactory;
 import com.alibaba.apiopenplatform.service.DeveloperOAuth2Service;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.service.PortalService;
-import com.alibaba.apiopenplatform.support.auth.AuthCodeConfig;
+import com.alibaba.apiopenplatform.support.portal.AuthCodeConfig;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
