@@ -14,9 +14,9 @@ services:
       - ./mysql/data:/var/lib/mysql
     restart: always
 
-  api-portal-server:
-    image: api-portal-server:1.0.0
-    container_name: api-portal-server
+  himarket-server:
+    image: himarket-server:1.0.0
+    container_name: himarket-server
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -29,24 +29,24 @@ services:
       - mysql
     restart: always
 
-  api-portal-admin:
-    image: api-portal-admin:1.0.0
-    container_name: api-portal-admin
+  himarket-admin:
+    image: himarket-admin:1.0.0
+    container_name: himarket-admin
     environment:
-      - API_PORTAL_SERVER=http://api-portal-server:8080
+      - API_PORTAL_SERVER=http://himarket-server:8080
     ports:
       - "5174:8000"
     depends_on:
-      - api-portal-server
+      - himarket-server
     restart: always
 
-  api-portal-frontend:
-    image: api-portal-frontend:1.0.0
-    container_name: api-portal-frontend
+  himarket-frontend:
+    image: himarket-frontend:1.0.0
+    container_name: himarket-frontend
     environment:
-      - API_PORTAL_SERVER=http://api-portal-server:8080
+      - API_PORTAL_SERVER=http://himarket-server:8080
     ports:
       - "5173:8000"
     depends_on:
-      - api-portal-server
+      - himarket-server
     restart: always

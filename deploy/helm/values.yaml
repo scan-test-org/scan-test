@@ -2,7 +2,7 @@ hub: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group
 
 frontend:
   image:
-    repository: api-portal-frontend
+    repository: himarket-frontend
     tag: "1.0.0"
     pullPolicy: Always
   service:
@@ -13,7 +13,7 @@ frontend:
 
 admin:
   image:
-    repository: api-portal-admin
+    repository: himarket-admin
     tag: "1.0.0"
     pullPolicy: Always
   service:
@@ -24,7 +24,7 @@ admin:
 
 server:
   image:
-    repository: api-portal-server
+    repository: himarket-server
     tag: "1.0.0"
     pullPolicy: Always
   service:

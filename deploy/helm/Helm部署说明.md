@@ -14,9 +14,9 @@ Helm 会部署三个应用，分别为：
 **镜像说明：**
 
 默认使用公开镜像仓库的镜像：
-- `himarket-server`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-server:1.0.0`
-- `himarket-admin`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-admin:1.0.0`
-- `himarket-frontend`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-frontend:1.0.0`
+- `himarket-server`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/himarket-server:1.0.0`
+- `himarket-admin`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/himarket-admin:1.0.0`
+- `himarket-frontend`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/himarket-frontend:1.0.0`
 
 如需使用自定义镜像，可修改 `values.yaml` 中的镜像配置，或通过 `--set` 参数指定：
 ```bash
