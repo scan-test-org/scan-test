@@ -5,10 +5,7 @@ metadata:
     app: himarket-server
   name: himarket-server
 data:
+  # 应用基本配置（非敏感信息）
   SERVER_PORT: "8080"
-  # External Database Configuration
-  DB_HOST: "{{ .Values.database.host }}"
-  DB_PORT: "{{ .Values.database.port }}"
-  DB_NAME: "{{ .Values.database.name }}"
-  DB_USERNAME: "{{ .Values.database.username }}"
-  DB_PASSWORD: "{{ .Values.database.password }}"
+  # 其他非敏感配置可以在这里添加
+  # 所有敏感的数据库配置已移至 himarket-server-secret

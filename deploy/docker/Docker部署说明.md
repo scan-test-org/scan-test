@@ -50,7 +50,7 @@ services:
     image: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-admin:1.0.0
     container_name: api-portal-admin
     environment:
-      - API_PORTAL_SERVER=http://api-portal-server:8080
+      - HIMARKET_SERVER=http://api-portal-server:8080
     ports:
       - "5174:8000"
     depends_on:
@@ -61,7 +61,7 @@ services:
     image: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-frontend:1.0.0
     container_name: api-portal-frontend
     environment:
-      - API_PORTAL_SERVER=http://api-portal-server:8080
+      - HIMARKET_SERVER=http://api-portal-server:8080
     ports:
       - "5173:8000"
     depends_on:
