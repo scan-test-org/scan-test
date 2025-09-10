@@ -19,21 +19,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "himarket.serviceAccountName" . }}
-      {{- if .Values.mysql.enabled }}
-      # 等待 MySQL 就绪后再启动应用
-      initContainers:
-        - name: wait-for-mysql
-          image: busybox:1.35  # 轻量级镜像
-          command: ['sh', '-c']
-          args:
-            - |
-              echo "等待 MySQL 就绪..."
-              until nc -z mysql-headless-svc 3306; do
-                echo "MySQL 未就绪，等待 5 秒..."
-                sleep 5
-              done
-              echo "MySQL 已就绪！"
-      {{- end }}
       containers:
         - name: server
           image: "{{ .Values.hub }}/{{ .Values.server.image.repository }}:{{ .Values.server.image.tag}}"

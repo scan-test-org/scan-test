@@ -138,8 +138,8 @@ spec:
                 - -p{{ $userPassword }}
                 - -e
                 - "SELECT 1"
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: 1
+            periodSeconds: 1
             timeoutSeconds: 5
 
   volumeClaimTemplates:
