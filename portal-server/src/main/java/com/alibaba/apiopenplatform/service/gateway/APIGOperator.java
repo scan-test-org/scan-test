@@ -421,6 +421,31 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         }
     }
 
+    protected ModelAPIResult fetchModelAPI(Gateway gateway, String apiId) {
+        APIGClient client = getClient(gateway);
+        try {
+            GetHttpApiResponse response = client.execute(c -> {
+                GetHttpApiRequest request = GetHttpApiRequest.builder()
+                        .httpApiId(apiId)
+                        .build();
+                try {
+                    return c.getHttpApi(request).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+
+            HttpApiApiInfo apiInfo = response.getBody().getData();
+            return new ModelAPIResult().convertFrom(apiInfo);
+        } catch (Exception e) {
+            log.error("Error fetching Model API", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Model API，Cause：" + e.getMessage());
+        }
+    }
+
     public ServiceResult fetchService(Gateway gateway, String serviceId) {
         APIGClient client = getClient(gateway);
         try {

@@ -83,7 +83,7 @@ public class AIGatewayOperator extends APIGOperator {
     public String fetchModelConfig(Gateway gateway, Object conf) {
         APIGRefConfig config = (APIGRefConfig) conf;
 
-        APIResult modelAPI = fetchAPI(gateway, config.getApiId());
+        ModelAPIResult modelAPI = fetchModelAPI(gateway, config.getApiId());
 
         PageResult<HttpRoute> httpRoutes = fetchHttpRoutes(gateway, config.getApiId(), 1, 100);
 
@@ -244,7 +244,7 @@ public class AIGatewayOperator extends APIGOperator {
         }
     }
 
-    private String extractProtocol(ServiceResult service, APIResult modelAPI) {
+    private String extractProtocol(ServiceResult service, ModelAPIResult modelAPI) {
         if (service != null && service.getAiServiceConfig() != null) {
             try {
                 cn.hutool.json.JSONObject obj = JSONUtil.parseObj(service.getAiServiceConfig());
@@ -266,7 +266,7 @@ public class AIGatewayOperator extends APIGOperator {
         return null;
     }
 
-    private java.util.List<String> extractProtocols(ServiceResult service, APIResult modelAPI) {
+    private java.util.List<String> extractProtocols(ServiceResult service, ModelAPIResult modelAPI) {
         java.util.List<String> list = new java.util.ArrayList<>();
         if (service != null && service.getAiServiceConfig() != null) {
             try {
