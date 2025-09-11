@@ -73,6 +73,12 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
+    public PageResult<APIResult> fetchModelServers(Gateway gateway, int page, int size) {
+        // 纯 APIG_API 不支持模型服务
+        throw new UnsupportedOperationException("APIG does not support Model Servers");
+    }
+
+    @Override
     public String fetchAPIConfig(Gateway gateway, Object config) {
         APIGClient client = getClient(gateway);
 
@@ -116,6 +122,11 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     @Override
     public String fetchMcpConfig(Gateway gateway, Object conf) {
         throw new UnsupportedOperationException("APIG does not support MCP Servers");
+    }
+
+    @Override
+    public String fetchModelConfig(Gateway gateway, Object config) {
+        throw new UnsupportedOperationException("APIG does not support Model APIs");
     }
 
     @Override
@@ -407,6 +418,31 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
         } catch (Exception e) {
             log.error("Error fetching API", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching API，Cause：" + e.getMessage());
+        }
+    }
+
+    public ServiceResult fetchService(Gateway gateway, String serviceId) {
+        APIGClient client = getClient(gateway);
+        try {
+            GetServiceResponse response = client.execute(c -> {
+                GetServiceRequest request = GetServiceRequest.builder()
+                        .serviceId(serviceId)
+                        .build();
+                try {
+                    return c.getService(request).get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            if (response.getStatusCode() != 200) {
+                throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
+            }
+
+            com.aliyun.sdk.service.apig20240327.models.Service service = response.getBody().getData();
+            return new ServiceResult().convertFrom(service);
+        } catch (Exception e) {
+            log.error("Error fetching Service", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Service，Cause：" + e.getMessage());
         }
     }
 

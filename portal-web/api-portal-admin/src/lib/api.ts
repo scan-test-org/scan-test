@@ -213,6 +213,12 @@ export const gatewayApi = {
     return api.get(`/gateways/${gatewayId}/mcp-servers`, {
       params: data
     })
+  },
+  // 获取网关的Model API列表
+  getGatewayModelServers: (gatewayId: string, data: any) => {
+    return api.get(`/gateways/${gatewayId}/model-servers`, {
+      params: data
+    })
   }
 } 
 

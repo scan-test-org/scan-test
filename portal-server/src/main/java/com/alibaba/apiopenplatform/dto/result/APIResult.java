@@ -22,7 +22,11 @@ package com.alibaba.apiopenplatform.dto.result;
 import com.alibaba.apiopenplatform.dto.converter.OutputConverter;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.aliyun.sdk.service.apig20240327.models.HttpApiApiInfo;
+import com.aliyun.sdk.service.apig20240327.models.HttpApiDeployConfig;
 import lombok.Data;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 @Data
 public class APIResult implements OutputConverter<APIResult, HttpApiApiInfo> {
@@ -31,10 +35,33 @@ public class APIResult implements OutputConverter<APIResult, HttpApiApiInfo> {
 
     private String apiName;
 
+    private List<String> aiProtocols;
+
+    protected String basePath;
+
+    protected List<HttpApiDeployConfig.CustomDomainInfos> customDomains;
+
+    protected List<HttpApiDeployConfig.ServiceConfigs> serviceConfigs;
+
+
     @Override
     public APIResult convertFrom(HttpApiApiInfo apiInfo) {
         setApiId(apiInfo.getHttpApiId());
         setApiName(apiInfo.getName());
+
+        if (!CollectionUtils.isEmpty(apiInfo.getAiProtocols())) {
+            setAiProtocols(apiInfo.getAiProtocols());
+        }
+
+        setBasePath(apiInfo.getBasePath());
+
+        if (!CollectionUtils.isEmpty(apiInfo.getDeployConfigs())) {
+            HttpApiDeployConfig httpApiDeployConfig = apiInfo.getDeployConfigs().get(0);
+            setCustomDomains(httpApiDeployConfig.getCustomDomainInfos());
+
+            setServiceConfigs(httpApiDeployConfig.getServiceConfigs());
+        }
+
         return this;
     }
 }
