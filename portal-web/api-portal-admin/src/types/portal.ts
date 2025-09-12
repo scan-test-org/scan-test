@@ -17,6 +17,42 @@ export interface OidcConfig {
   authCodeConfig: AuthCodeConfig;
 }
 
+// OAuth2 相关类型定义
+export enum GrantType {
+  AUTHORIZATION_CODE = 'AUTHORIZATION_CODE',
+  JWT_BEARER = 'JWT_BEARER'
+}
+
+export enum PublicKeyFormat {
+  PEM = 'PEM',
+  JWK = 'JWK'
+}
+
+export interface PublicKeyConfig {
+  kid: string;
+  format: PublicKeyFormat;
+  algorithm: string;
+  value: string;
+}
+
+export interface JwtBearerConfig {
+  publicKeys: PublicKeyConfig[];
+}
+
+export interface IdentityMapping {
+  userIdField: string;
+  userNameField: string;
+  customFields?: { [key: string]: string };
+}
+
+export interface OAuth2Config {
+  provider: string;
+  name: string;
+  grantType: GrantType;
+  jwtBearerConfig?: JwtBearerConfig;
+  identityMapping: IdentityMapping;
+}
+
 export interface PortalSettingConfig {
   builtinAuthEnabled: boolean;
   oidcAuthEnabled: boolean;
@@ -24,6 +60,7 @@ export interface PortalSettingConfig {
   autoApproveSubscriptions: boolean;
   frontendRedirectUrl: string;
   oidcConfigs: OidcConfig[];
+  oauth2Configs: OAuth2Config[];
 }
 
 export interface PortalUiConfig {
