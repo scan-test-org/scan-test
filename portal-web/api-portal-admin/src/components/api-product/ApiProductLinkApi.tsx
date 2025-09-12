@@ -478,9 +478,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 placeholder="请选择网关实例" 
                 loading={gatewayLoading}
                 showSearch
-                filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-                }
+                optionFilterProp="label"
                 onChange={handleGatewayChange}
                 optionLabelProp="label"
               >
@@ -512,9 +510,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 placeholder="请选择Nacos实例" 
                 loading={nacosLoading}
                 showSearch
-                filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-                }
+                optionFilterProp="label"
                 onChange={handleNacosChange}
                 optionLabelProp="label"
               >
@@ -547,7 +543,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 loading={apiLoading && nacosNamespaces.length === 0}
                 onChange={handleNamespaceChange}
                 showSearch
-                filterOption={(input, option) => (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())}
+                optionFilterProp="label"
                 optionLabelProp="label"
               >
                 {nacosNamespaces.map(ns => (
@@ -572,9 +568,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 placeholder={apiProduct.type === 'REST_API' ? '请选择REST API' : '请选择MCP Server'} 
                 loading={apiLoading}
                 showSearch
-                filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-                }
+                optionFilterProp="label"
                 optionLabelProp="label"
               >
                 {apiList.map((api: any) => (
