@@ -17,14 +17,7 @@ Helm 会部署三个应用，分别为：
 - `himarket-server`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/himarket-server:1.0.0`
 - `himarket-admin`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/himarket-admin:1.0.0`
 - `himarket-frontend`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/himarket-frontend:1.0.0`
-
-如需使用自定义镜像，可修改 `values.yaml` 中的镜像配置，或通过 `--set` 参数指定：
-```bash
-helm install himarket . --namespace himarket --create-namespace \
-  --set server.image.repository=your-custom-server-image \
-  --set admin.image.repository=your-custom-admin-image \
-  --set frontend.image.repository=your-custom-frontend-image
-```
+- (可选) `mysql`: `opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/mysql:1.0.0`
 
 ## 🗄️ 数据库配置
 
