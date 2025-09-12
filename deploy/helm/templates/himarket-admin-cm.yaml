@@ -5,4 +5,4 @@ metadata:
     app: himarket-admin
   name: himarket-admin
 data:
-  API_PORTAL_SERVER: "http://himarket-server"
+  HIMARKET_SERVER: "http://himarket-server"
