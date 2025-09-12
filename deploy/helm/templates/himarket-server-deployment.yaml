@@ -30,8 +30,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: himarket-server        # 非敏感配置
+{{- if .Values.mysql.enabled }}
             - secretRef:
-                name: himarket-server-secret # 敏感配置（包括数据库连接）
+                name: himarket-server-secret # 内置MySQL的敏感配置
+{{- end }}
 {{/*          {{- with .Values.livenessProbe }}*/}}
 {{/*          livenessProbe:*/}}
 {{/*            {{- toYaml . | nindent 12 }}*/}}
