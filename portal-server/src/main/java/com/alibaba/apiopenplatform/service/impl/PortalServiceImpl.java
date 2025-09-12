@@ -21,6 +21,7 @@ package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -80,7 +81,7 @@ public class PortalServiceImpl implements PortalService {
     public PortalResult createPortal(CreatePortalParam param) {
         portalRepository.findByName(param.getName())
                 .ifPresent(portal -> {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, portal.getName());
+                    throw new BusinessException(ErrorCode.CONFLICT, StrUtil.format("{}:{}已存在", Resources.PORTAL, portal.getName()));
                 });
 
         String portalId = IdGenerator.genPortalId();
@@ -115,7 +116,7 @@ public class PortalServiceImpl implements PortalService {
     @Override
     public void existsPortal(String portalId) {
         portalRepository.findByPortalId(portalId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL));
     }
 
     @Override
@@ -149,7 +150,7 @@ public class PortalServiceImpl implements PortalService {
                 .filter(name -> !name.equals(portal.getName()))
                 .flatMap(portalRepository::findByName)
                 .ifPresent(p -> {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, p.getName());
+                    throw new BusinessException(ErrorCode.CONFLICT, StrUtil.format("{}:{}已存在", Resources.PORTAL, portal.getName()));
                 });
 
         param.update(portal);
@@ -162,7 +163,7 @@ public class PortalServiceImpl implements PortalService {
                     .orElse(false);
 
             if (!enabledOidc) {
-                throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "至少配置一种认证方式");
+                throw new BusinessException(ErrorCode.INVALID_REQUEST, "至少配置一种认证方式");
             }
         }
         portalRepository.saveAndFlush(portal);
@@ -194,7 +195,7 @@ public class PortalServiceImpl implements PortalService {
         existsPortal(portalId);
         portalDomainRepository.findByPortalIdAndDomain(portalId, param.getDomain())
                 .ifPresent(portalDomain -> {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL_DOMAIN, param.getDomain());
+                    throw new BusinessException(ErrorCode.CONFLICT, StrUtil.format("{}:{}已存在", Resources.PORTAL_DOMAIN, portalDomain.getDomain()));
                 });
 
         PortalDomain portalDomain = param.convertTo();
@@ -210,7 +211,7 @@ public class PortalServiceImpl implements PortalService {
                 .ifPresent(portalDomain -> {
                     // 默认域名不允许解绑
                     if (portalDomain.getType() == DomainType.DEFAULT) {
-                        throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "默认域名不允许解绑");
+                        throw new BusinessException(ErrorCode.INVALID_REQUEST, "默认域名不允许解绑");
                     }
                     portalDomainRepository.delete(portalDomain);
                 });
@@ -246,6 +247,6 @@ public class PortalServiceImpl implements PortalService {
 
     private Portal findPortal(String portalId) {
         return portalRepository.findByPortalId(portalId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL));
     }
 }

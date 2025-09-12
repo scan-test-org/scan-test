@@ -26,7 +26,7 @@ import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
 import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepository;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
-import com.alibaba.apiopenplatform.core.constant.Common;
+import com.alibaba.apiopenplatform.core.constant.CommonConstants;
 import com.alibaba.apiopenplatform.service.gateway.factory.HTTPClientFactory;
 import com.alibaba.apiopenplatform.service.DeveloperOAuth2Service;
 import com.alibaba.apiopenplatform.service.DeveloperService;
@@ -86,11 +86,6 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
         String portalId = contextHolder.getPortal();
         OidcConfig config = findOidcConfig(portalId, provider);
 
-        if (config == null || !config.isEnabled()) {
-            log.error("[OIDC配置未启用] provider={}", provider);
-            throw new BusinessException(ErrorCode.OIDC_CONFIG_DISABLED);
-        }
-
         String redirectUri = generateRedirectUri(request);
         String url = buildAuthorizationUrl(config, redirectUri, state);
         response.sendRedirect(url);
@@ -131,13 +126,9 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
     public List<Map<String, Object>> listCurrentUserIdentities() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = (String) authentication.getPrincipal();
+        developerService.existsDeveloper(userId);
 
-        Optional<Developer> devOpt = developerRepository.findByDeveloperId(userId);
-        if (!devOpt.isPresent()) {
-            throw new BusinessException(ErrorCode.DEVELOPER_UNAUTHORIZED);
-        }
-
-        List<DeveloperExternalIdentity> identities = developerExternalIdentityRepository.findByDeveloper_DeveloperId(devOpt.get().getDeveloperId());
+        List<DeveloperExternalIdentity> identities = developerExternalIdentityRepository.findByDeveloper_DeveloperId(userId);
 
         return identities.stream()
                 .map(this::convertToMap)
@@ -279,7 +270,7 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
 
         if (loginResult.isPresent()) {
             String token = loginResult.get().getToken();
-            Cookie tokenCookie = new Cookie(Common.AUTH_TOKEN_COOKIE, token);
+            Cookie tokenCookie = new Cookie(CommonConstants.AUTH_TOKEN_COOKIE, token);
             tokenCookie.setPath("/");
             tokenCookie.setHttpOnly(false); // 允许JavaScript访问
             tokenCookie.setMaxAge(3600); // 1小时过期

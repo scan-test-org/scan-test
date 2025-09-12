@@ -37,6 +37,7 @@ import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AdministratorServiceImpl implements AdministratorService {
 
     private final AdministratorRepository administratorRepository;
@@ -46,10 +47,10 @@ public class AdministratorServiceImpl implements AdministratorService {
     @Override
     public AuthResponseResult login(String username, String password) {
         Administrator admin = administratorRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_INVALID));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.ADMINISTRATOR));
 
         if (!PasswordHasher.verify(password, admin.getPasswordHash())) {
-            throw new BusinessException(ErrorCode.AUTH_INVALID);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "用户名或密码错误");
         }
 
         String token = TokenUtil.generateAdminToken(admin.getAdminId());
@@ -62,16 +63,12 @@ public class AdministratorServiceImpl implements AdministratorService {
     }
 
     @Override
-    @Transactional
     public AdminResult initAdmin(String username, String password) {
-        if (!needInit()) {
-            throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.ADMINISTRATOR, null);
-        }
-
-        Administrator admin = new Administrator();
-        admin.setAdminId(generateAdminId());
-        admin.setUsername(username);
-        admin.setPasswordHash(PasswordHasher.hash(password));
+        Administrator admin = Administrator.builder()
+                .adminId(generateAdminId())
+                .username(username)
+                .passwordHash(PasswordHasher.hash(password))
+                .build();
         administratorRepository.save(admin);
         return new AdminResult().convertFrom(admin);
     }
@@ -88,7 +85,7 @@ public class AdministratorServiceImpl implements AdministratorService {
         Administrator admin = findAdministrator(contextHolder.getUser());
 
         if (!PasswordHasher.verify(oldPassword, admin.getPasswordHash())) {
-            throw new BusinessException(ErrorCode.AUTH_INVALID);
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "用户名或密码错误");
         }
 
         admin.setPasswordHash(PasswordHasher.hash(newPassword));
@@ -101,6 +98,6 @@ public class AdministratorServiceImpl implements AdministratorService {
 
     private Administrator findAdministrator(String adminId) {
         return administratorRepository.findByAdminId(adminId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.ADMINISTRATOR, adminId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.ADMINISTRATOR));
     }
 } 

@@ -31,6 +31,10 @@ public class Resources {
 
     public static final String PORTAL_DOMAIN = "PortalDomain";
 
+    public static final String OAUTH2_CONFIG = "OAuth2Config";
+
+    public static final String PUBLIC_KEY = "PublicKey";
+
     public static final String PRODUCT = "Product";
 
     public static final String PRODUCT_SETTING = "ProductSetting";

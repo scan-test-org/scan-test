@@ -28,4 +28,10 @@ public class OAuth2Config {
      * JWT断言配置
      */
     private JwtBearerConfig jwtBearerConfig;
+
+    /**
+     * 身份映射
+     */
+    private IdentityMapping identityMapping;
+
 }

@@ -19,14 +19,12 @@
 
 package com.alibaba.apiopenplatform.controller;
 
-import cn.hutool.core.util.BooleanUtil;
 import com.alibaba.apiopenplatform.core.annotation.AdminAuth;
 import com.alibaba.apiopenplatform.core.annotation.DeveloperAuth;
 import com.alibaba.apiopenplatform.dto.params.developer.*;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
-import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,19 +44,17 @@ import com.alibaba.apiopenplatform.dto.params.admin.ResetPasswordParam;
 public class DeveloperController {
 
     private final DeveloperService developerService;
-    private final ContextHolder contextHolder;
-    private final PortalService portalService;
 
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
-    public AuthResponseResult register(@Valid @RequestBody DeveloperCreateParam param) {
+    public AuthResponseResult register(@Valid @RequestBody CreateDeveloperParam param) {
         return developerService.registerDeveloper(param);
     }
 
     @Operation(summary = "开发者登录", description = "开发者账号密码登录")
     @PostMapping("/login")
     public AuthResponseResult login(@Valid @RequestBody DeveloperLoginParam param) {
-        return developerService.loginWithPassword(param.getUsername(), param.getPassword());
+        return developerService.login(param.getUsername(), param.getPassword());
     }
 
     @Operation(summary = "开发者登出", description = "登出")
@@ -92,8 +88,8 @@ public class DeveloperController {
     @Operation(summary = "开发者更新个人信息", description = "开发者功能：更新当前登录开发者的个人信息")
     @PutMapping("/profile")
     @DeveloperAuth
-    public String updateProfile(@Valid @RequestBody UpdateDeveloperProfileParam param) {
-        developerService.updateCurrentDeveloperProfile(param.getUsername(), param.getEmail(), param.getAvatarUrl());
+    public String updateProfile(@Valid @RequestBody UpdateDeveloperParam param) {
+        developerService.updateProfile(param);
         return "更新个人信息成功";
     }
 
@@ -101,7 +97,7 @@ public class DeveloperController {
     @PatchMapping("/{developerId}/status")
     @AdminAuth
     public void setDeveloperStatus(@PathVariable("developerId") String developerId,
-                                   @RequestBody DeveloperStatusParam param) {
+                                   @RequestBody UpdateDeveloperStatusParam param) {
         developerService.setDeveloperStatus(developerId, param.getStatus());
     }
 

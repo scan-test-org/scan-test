@@ -17,19 +17,21 @@
  * under the License.
  */
 
-package com.alibaba.apiopenplatform.dto.params.developer;
+package com.alibaba.apiopenplatform.service;
 
-import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
-import lombok.Data;
+import com.alibaba.apiopenplatform.dto.result.AuthResult;
 
 /**
- * 开发者状态参数
- *
+ * @author zh
  */
-@Data
-public class DeveloperStatusParam {
+public interface OAuth2Service {
 
-    private String portalId;
+    /**
+     * JWT Bearer认证
+     *
+     * @param
+     * @return
+     */
+    AuthResult authenticate(String jwtToken);
 
-    private DeveloperStatus status;
-} 
+}

@@ -20,16 +20,13 @@
 package com.alibaba.apiopenplatform.entity;
 
 import javax.persistence.*;
-import java.util.Date;
+
+import com.alibaba.apiopenplatform.support.enums.DeveloperAuthType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-/**
- * 开发者外部身份实体类，映射第三方认证信息
- *
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -55,6 +52,9 @@ public class DeveloperExternalIdentity {
 
     @Column(length = 128)
     private String displayName;
+
+    @Column(length = 32)
+    private DeveloperAuthType authType;
 
     @Lob
     @Column(nullable = false, columnDefinition = "text")

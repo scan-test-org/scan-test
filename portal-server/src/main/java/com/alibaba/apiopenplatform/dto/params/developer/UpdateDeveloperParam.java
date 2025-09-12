@@ -17,21 +17,28 @@
  * under the License.
  */
 
-package com.alibaba.apiopenplatform.core.exception;
+package com.alibaba.apiopenplatform.dto.params.developer;
 
-import lombok.Getter;
-import org.springframework.http.HttpStatus;
+import com.alibaba.apiopenplatform.dto.converter.InputConverter;
+import com.alibaba.apiopenplatform.entity.Developer;
+import lombok.Data;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Size;
 
-@Getter
-public class BusinessException extends RuntimeException {
-    private final HttpStatus status;
-    private final String code;
-    private final String message;
-
-    public BusinessException(ErrorCode errorCode, Object... args) {
-        super(errorCode.getMessage(args));
-        this.status = errorCode.getStatus();
-        this.code = errorCode.name();
-        this.message = errorCode.getMessage(args);
-    }
-}
+/**
+ * 开发者更新个人信息请求参数
+ *
+ */
+@Data
+public class UpdateDeveloperParam implements InputConverter<Developer> {
+    
+    @Size(max = 64, message = "用户名长度不能超过64个字符")
+    private String username;
+    
+    @Email(message = "邮箱格式不正确")
+    @Size(max = 128, message = "邮箱长度不能超过128个字符")
+    private String email;
+    
+    @Size(max = 256, message = "头像URL长度不能超过256个字符")
+    private String avatarUrl;
+} 

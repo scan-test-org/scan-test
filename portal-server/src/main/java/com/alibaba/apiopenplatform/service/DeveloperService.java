@@ -20,37 +20,52 @@
 package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
-import com.alibaba.apiopenplatform.dto.params.developer.DeveloperCreateParam;
+import com.alibaba.apiopenplatform.dto.params.developer.CreateDeveloperParam;
+import com.alibaba.apiopenplatform.dto.params.developer.CreateExternalDeveloperParam;
 import com.alibaba.apiopenplatform.dto.params.developer.QueryDeveloperParam;
+import com.alibaba.apiopenplatform.dto.params.developer.UpdateDeveloperParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
-import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
 import org.springframework.data.domain.Pageable;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
-/**
- * 开发者服务接口，定义注册、登录、查找等核心方法
- *
- */
 public interface DeveloperService {
 
     /**
      * 开发者注册
      *
-     * @param param 开发者注册参数
-     * @return 注册结果，如果自动审批则返回认证结果，否则返回null
+     * @param param
+     * @return
      */
-    AuthResponseResult registerDeveloper(DeveloperCreateParam param);
+    AuthResponseResult registerDeveloper(CreateDeveloperParam param);
 
-    Optional<Developer> findByDeveloperId(String developerId);
+    /**
+     * 创建开发者
+     *
+     * @param param
+     * @return
+     */
+    DeveloperResult createDeveloper(CreateDeveloperParam param);
 
-    Developer createDeveloper(DeveloperCreateParam param);
+    /**
+     * 开发者登录
+     *
+     * @param username
+     * @param password
+     * @return
+     */
+    AuthResponseResult login(String username, String password);
 
-    AuthResponseResult loginWithPassword(String username, String password);
+    /**
+     * 校验Developer
+     *
+     * @param developerId
+     */
+    void existsDeveloper(String developerId);
 
     /**
      * 外部身份登录/绑定入口
@@ -79,14 +94,6 @@ public interface DeveloperService {
     void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson, String portalId);
 
     /**
-     * 为开发者生成认证结果（用于注册后自动登录）
-     *
-     * @param developer 开发者实体
-     * @return 认证结果
-     */
-    AuthResponseResult generateAuthResult(Developer developer);
-
-    /**
      * 解绑外部身份（第三方登录）
      *
      * @param userId          当前开发者ID
@@ -96,13 +103,28 @@ public interface DeveloperService {
     void unbindExternalIdentity(String userId, String providerName, String providerSubject);
 
     /**
+     * 获取外部开发者详情
+     *
+     * @param provider
+     * @param subject
+     * @return
+     */
+    DeveloperResult getExternalDeveloper(String provider, String subject);
+
+    /**
+     * 外部账号创建开发者
+     *
+     * @param param
+     * @return
+     */
+    DeveloperResult createExternalDeveloper(CreateExternalDeveloperParam param);
+
+    /**
      * 注销开发者账号（删除账号及所有外部身份）
      *
      * @param userId 当前开发者ID
      */
     void deleteDeveloperAccount(String userId);
-
-    boolean hasDeveloper(String portalId, String developerId);
 
     /**
      * 查询开发者详情
@@ -138,18 +160,15 @@ public interface DeveloperService {
      * @param newPassword
      * @return
      */
-    boolean changePassword(String developerId, String oldPassword, String newPassword);
+    boolean resetPassword(String developerId, String oldPassword, String newPassword);
 
     /**
      * 开发者更新个人信息
      *
-     * @param developerId
-     * @param username
-     * @param email
-     * @param avatarUrl
+     * @param param
      * @return
      */
-    boolean updateProfile(String developerId, String username, String email, String avatarUrl);
+    boolean updateProfile(UpdateDeveloperParam param);
 
     /**
      * 清理门户资源
@@ -180,14 +199,4 @@ public interface DeveloperService {
      * @return 是否成功
      */
     boolean changeCurrentDeveloperPassword(String oldPassword, String newPassword);
-
-    /**
-     * 当前开发者更新个人信息
-     *
-     * @param username 用户名
-     * @param email 邮箱
-     * @param avatarUrl 头像URL
-     * @return 是否成功
-     */
-    boolean updateCurrentDeveloperProfile(String username, String email, String avatarUrl);
 }

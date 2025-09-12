@@ -23,16 +23,13 @@ import com.alibaba.apiopenplatform.dto.converter.InputConverter;
 import com.alibaba.apiopenplatform.entity.Developer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-/**
- * 开发者注册/创建参数DTO
- *
- */
 @Data
 @NoArgsConstructor
-public class DeveloperCreateParam implements InputConverter<Developer> {
+public class CreateDeveloperParam implements InputConverter<Developer> {
 
     @NotBlank(message = "用户名不能为空")
     @Size(max = 64, message = "用户名长度不能超过64个字符")

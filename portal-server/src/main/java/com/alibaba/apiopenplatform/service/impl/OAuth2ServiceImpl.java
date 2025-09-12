@@ -1,0 +1,292 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.alibaba.apiopenplatform.service.impl;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.EnumUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
+import cn.hutool.jwt.JWT;
+import cn.hutool.jwt.JWTUtil;
+import cn.hutool.jwt.signers.JWTSigner;
+import cn.hutool.jwt.signers.JWTSignerUtil;
+import com.alibaba.apiopenplatform.core.constant.JwtConstants;
+import com.alibaba.apiopenplatform.core.constant.Resources;
+import com.alibaba.apiopenplatform.core.exception.BusinessException;
+import com.alibaba.apiopenplatform.core.exception.ErrorCode;
+import com.alibaba.apiopenplatform.core.security.ContextHolder;
+import com.alibaba.apiopenplatform.core.utils.TokenUtil;
+import com.alibaba.apiopenplatform.dto.params.developer.CreateExternalDeveloperParam;
+import com.alibaba.apiopenplatform.dto.result.AuthResult;
+import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
+import com.alibaba.apiopenplatform.dto.result.PortalResult;
+import com.alibaba.apiopenplatform.service.DeveloperService;
+import com.alibaba.apiopenplatform.service.OAuth2Service;
+import com.alibaba.apiopenplatform.service.PortalService;
+import com.alibaba.apiopenplatform.support.enums.DeveloperAuthType;
+import com.alibaba.apiopenplatform.support.enums.GrantType;
+import com.alibaba.apiopenplatform.support.enums.JwtAlgorithm;
+import com.alibaba.apiopenplatform.support.portal.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.math.BigInteger;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.RSAPublicKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.*;
+import java.util.Base64;
+
+/**
+ * @author zh
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class OAuth2ServiceImpl implements OAuth2Service {
+
+    private final PortalService portalService;
+
+    private final DeveloperService developerService;
+
+    private final ContextHolder contextHolder;
+
+    @Override
+    public AuthResult authenticate(String jwtToken) {
+        // 解析JWT
+        JWT jwt = JWTUtil.parseToken(jwtToken);
+        String kid = (String) jwt.getHeader(JwtConstants.HEADER_KID);
+        if (StrUtil.isBlank(kid)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWT header缺少字段kid");
+        }
+        String provider = (String) jwt.getPayload(JwtConstants.PAYLOAD_PROVIDER);
+        if (StrUtil.isBlank(provider)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWT payload缺少字段provider");
+        }
+
+        // 根据provider确定OAuth2配置
+        PortalResult portal = portalService.getPortal(contextHolder.getPortal());
+        List<OAuth2Config> oauth2Configs = Optional.ofNullable(portal.getPortalSettingConfig())
+                .map(PortalSettingConfig::getOauth2Configs)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.OAUTH2_CONFIG));
+
+        OAuth2Config oAuth2Config = oauth2Configs.stream()
+                // JWT Bearer模式
+                .filter(config -> config.getGrantType() == GrantType.JWT_BEARER)
+                .filter(config -> config.getJwtBearerConfig() != null
+                        && CollUtil.isNotEmpty(config.getJwtBearerConfig().getPublicKeys()))
+                // provider标识
+                .filter(config -> config.getProvider().equals(provider))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, StrUtil.format("{}:{}", Resources.OAUTH2_CONFIG, provider)));
+
+        // 根据kid找到对应公钥
+        JwtBearerConfig jwtConfig = oAuth2Config.getJwtBearerConfig();
+        PublicKeyConfig publicKeyConfig = jwtConfig.getPublicKeys().stream()
+                .filter(key -> kid.equals(key.getKid()))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, StrUtil.format("{}:{}", Resources.PUBLIC_KEY, kid)));
+
+        // 验签
+        if (!verifySignature(jwt, publicKeyConfig)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWT签名验证失败");
+        }
+
+        // 验证Claims
+        validateJwtClaims(jwt);
+
+        // Developer
+        String developerId = createOrGetDeveloper(jwt, oAuth2Config);
+
+        // 生成Access Token
+        String accessToken = TokenUtil.generateDeveloperToken(developerId);
+        log.info("JWT Bearer认证成功，provider: {}, developer: {}", oAuth2Config.getProvider(), developerId);
+        return AuthResult.builder()
+                .accessToken(accessToken)
+                .build();
+    }
+
+    private boolean verifySignature(JWT jwt, PublicKeyConfig keyConfig) {
+        // 加载公钥
+        PublicKey publicKey = loadPublicKey(keyConfig);
+
+        // 验证JWT
+        JWTSigner signer = createJWTSigner(keyConfig.getAlgorithm(), publicKey);
+        return jwt.setSigner(signer).verify();
+    }
+
+    private JWTSigner createJWTSigner(String algorithm, PublicKey publicKey) {
+        JwtAlgorithm alg = EnumUtil.fromString(JwtAlgorithm.class, algorithm.toUpperCase());
+
+        switch (alg) {
+            case RS256:
+                return JWTSignerUtil.rs256(publicKey);
+            case RS384:
+                return JWTSignerUtil.rs384(publicKey);
+            case RS512:
+                return JWTSignerUtil.rs512(publicKey);
+            case ES256:
+                return JWTSignerUtil.es256(publicKey);
+            case ES384:
+                return JWTSignerUtil.es384(publicKey);
+            case ES512:
+                return JWTSignerUtil.es512(publicKey);
+            default:
+                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "不支持的JWT签名算法");
+        }
+    }
+
+    private void validateJwtClaims(JWT jwt) {
+        // 过期时间
+        Object expObj = jwt.getPayload(JwtConstants.PAYLOAD_EXP);
+        Long exp = Convert.toLong(expObj);
+        // 签发时间
+        Object iatObj = jwt.getPayload(JwtConstants.PAYLOAD_IAT);
+        Long iat = Convert.toLong(iatObj);
+
+        if (iat == null || exp == null || iat > exp) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWT payload中exp或iat不合法");
+        }
+
+        long currentTime = System.currentTimeMillis() / 1000;
+        if (exp <= currentTime) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWT已过期");
+        }
+    }
+
+    private String createOrGetDeveloper(JWT jwt, OAuth2Config config) {
+        IdentityMapping identityMapping = config.getIdentityMapping();
+        // userId & userName
+        String userIdField = StrUtil.isBlank(identityMapping.getUserIdField()) ?
+                JwtConstants.PAYLOAD_USER_ID : identityMapping.getUserIdField();
+        String userNameField = StrUtil.isBlank(identityMapping.getUserNameField()) ?
+                JwtConstants.PAYLOAD_USER_NAME : identityMapping.getUserNameField();
+        Object userIdObj = jwt.getPayload(userIdField);
+        Object userNameObj = jwt.getPayload(userNameField);
+
+        String userId = Convert.toStr(userIdObj);
+        String userName = Convert.toStr(userNameObj);
+        if (StrUtil.isBlank(userId) || StrUtil.isBlank(userName)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWT payload中缺少用户ID字段或用户名称");
+        }
+
+        // 复用已有的Developer，否则创建
+        return Optional.ofNullable(developerService.getExternalDeveloper(config.getProvider(), userId))
+                .map(DeveloperResult::getDeveloperId)
+                .orElseGet(() -> {
+                    CreateExternalDeveloperParam param = CreateExternalDeveloperParam.builder()
+                            .provider(config.getProvider())
+                            .subject(userId)
+                            .displayName(userName)
+                            .authType(DeveloperAuthType.OAUTH2)
+                            .build();
+
+                    return developerService.createExternalDeveloper(param).getDeveloperId();
+                });
+    }
+
+    /**
+     * 加载公钥
+     */
+    private PublicKey loadPublicKey(PublicKeyConfig config) {
+        switch (config.getFormat()) {
+            case PEM:
+                return loadPublicKeyFromPem(config.getValue());
+            case JWK:
+                return loadPublicKeyFromJwk(config.getValue());
+            default:
+                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "公钥格式不支持");
+        }
+    }
+
+    private PublicKey loadPublicKeyFromPem(String pemContent) {
+        // 清理PEM格式标记和空白字符
+        String publicKeyPEM = pemContent
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                .replace("-----END RSA PUBLIC KEY-----", "")
+                .replaceAll("\\s", "");
+
+        if (StrUtil.isBlank(publicKeyPEM)) {
+            throw new IllegalArgumentException("PEM内容为空");
+        }
+
+        try {
+            // Base64解码
+            byte[] decoded = Base64.getDecoder().decode(publicKeyPEM);
+
+            // 公钥对象
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            return keyFactory.generatePublic(spec);
+        } catch (Exception e) {
+            log.error("PEM公钥解析失败", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "PEM公钥解析失败: " + e.getMessage());
+        }
+    }
+
+    private PublicKey loadPublicKeyFromJwk(String jwkContent) {
+        JSONObject jwk = JSONUtil.parseObj(jwkContent);
+
+        // 验证必需字段
+        String kty = getRequiredField(jwk, "kty");
+        if (!"RSA".equals(kty)) {
+            throw new IllegalArgumentException("当前仅支持RSA类型的JWK");
+        }
+
+        return loadRSAPublicKeyFromJwk(jwk);
+    }
+
+    private PublicKey loadRSAPublicKeyFromJwk(JSONObject jwk) {
+        // 获取必需的RSA参数
+        String nStr = getRequiredField(jwk, "n");
+        String eStr = getRequiredField(jwk, "e");
+
+        try {
+            // Base64解码参数
+            byte[] nBytes = Base64.getUrlDecoder().decode(nStr);
+            byte[] eBytes = Base64.getUrlDecoder().decode(eStr);
+
+            // 构建RSA公钥
+            BigInteger modulus = new BigInteger(1, nBytes);
+            BigInteger exponent = new BigInteger(1, eBytes);
+
+            RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            return keyFactory.generatePublic(spec);
+        } catch (Exception e) {
+            log.error("JWK RSA参数解析失败", e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "JWK RSA参数解析失败: " + e.getMessage());
+        }
+    }
+
+    private String getRequiredField(JSONObject jwk, String fieldName) {
+        String value = jwk.getStr(fieldName);
+        if (StrUtil.isBlank(value)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWK中缺少字段: " + fieldName);
+        }
+        return value;
+    }
+}

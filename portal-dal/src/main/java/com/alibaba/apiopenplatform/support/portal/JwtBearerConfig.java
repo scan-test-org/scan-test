@@ -2,6 +2,8 @@ package com.alibaba.apiopenplatform.support.portal;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author zh
  */
@@ -11,5 +13,5 @@ public class JwtBearerConfig {
     /**
      * JWT公钥
      */
-    private String publicKeys;
+    private List<PublicKeyConfig> publicKeys;
 }

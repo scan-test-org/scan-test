@@ -19,7 +19,7 @@
 
 package com.alibaba.apiopenplatform.core.constant;
 
-public class Common {
+public class CommonConstants {
 
     // Token相关
     public static final String AUTHORIZATION_HEADER = "Authorization";
