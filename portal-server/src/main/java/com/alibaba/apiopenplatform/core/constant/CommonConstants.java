@@ -33,4 +33,8 @@ public class CommonConstants {
     // Cookie相关
     public static final String AUTH_TOKEN_COOKIE = "auth_token";
 
+    // HTTP
+    public static final Integer HTTP_PORT = 80;
+    public static final Integer HTTPS_PORT = 443;
+
 }

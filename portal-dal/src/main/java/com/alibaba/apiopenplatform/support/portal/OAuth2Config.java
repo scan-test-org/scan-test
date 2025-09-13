@@ -32,6 +32,6 @@ public class OAuth2Config {
     /**
      * 身份映射
      */
-    private IdentityMapping identityMapping;
+    private IdentityMapping identityMapping = new IdentityMapping();
 
 }

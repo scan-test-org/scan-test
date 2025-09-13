@@ -21,6 +21,11 @@ public class IdentityMapping {
     private String userNameField;
 
     /**
+     * 映射Developer Email
+     */
+    private String emailField;
+
+    /**
      * 自定义字段映射（预留扩展）
      */
     private Map<String, String> customFields;

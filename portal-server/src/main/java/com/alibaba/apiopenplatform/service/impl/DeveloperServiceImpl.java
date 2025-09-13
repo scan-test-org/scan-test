@@ -207,6 +207,7 @@ public class DeveloperServiceImpl implements DeveloperService {
                 .developerId(IdGenerator.genDeveloperId())
                 .portalId(contextHolder.getPortal())
                 .username(buildExternalName(param.getProvider(), param.getSubject()))
+                .email(param.getEmail())
                 // 默认APPROVED
                 .status(DeveloperStatus.APPROVED)
                 .build();

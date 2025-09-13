@@ -53,4 +53,9 @@ public class OidcConfig {
      * 授权码模式配置
      */
     private AuthCodeConfig authCodeConfig;
+
+    /**
+     * 身份映射
+     */
+    private IdentityMapping identityMapping = new IdentityMapping();
 }
