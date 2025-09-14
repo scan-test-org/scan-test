@@ -15,5 +15,5 @@ public class IdpResult {
     /**
      * 提供商名称
      */
-    private String name;
+    private String displayName;
 }

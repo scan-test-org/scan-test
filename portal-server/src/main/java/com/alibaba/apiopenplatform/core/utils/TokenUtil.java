@@ -200,8 +200,7 @@ public class TokenUtil {
         INVALID_TOKENS.entrySet().removeIf(entry -> entry.getValue() <= now);
     }
 
-    public static int getRevokedTokenCount() {
-        cleanExpiredTokens();
-        return INVALID_TOKENS.size();
+    public static long getTokenExpiresIn() {
+        return getJwtExpireMillis() / 1000;
     }
 }

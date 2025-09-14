@@ -5,6 +5,7 @@ import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSON;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
@@ -104,14 +105,13 @@ public class OidcServiceImpl implements OidcService {
 
         // 获取用户信息，优先使用ID Token，降级到UserInfo端点
         Map<String, Object> userInfo = getUserInfo(tokenResult, oidcConfig);
+        log.info("Get OIDC user info: {}", userInfo);
 
         // 处理用户认证逻辑
         String developerId = createOrGetDeveloper(userInfo, oidcConfig);
         String accessToken = TokenUtil.generateDeveloperToken(developerId);
 
-        return AuthResult.builder()
-                .accessToken(accessToken)
-                .build();
+        return AuthResult.of(accessToken, TokenUtil.getTokenExpiresIn());
     }
 
     @Override
@@ -125,7 +125,8 @@ public class OidcServiceImpl implements OidcService {
                         .filter(OidcConfig::isEnabled)
                         .map(config -> IdpResult.builder()
                                 .provider(config.getProvider())
-                                .name(config.getName())
+                                .displayName(config.getName())
+//                                .enabled(true)
                                 .build())
                         .collect(Collectors.toList()))
                 .orElse(Collections.emptyList());
@@ -133,16 +134,18 @@ public class OidcServiceImpl implements OidcService {
 
     private String buildRedirectUri(String apiPrefix, HttpServletRequest request) {
         String scheme = request.getScheme();
-        String serverName = request.getServerName();
-        int serverPort = request.getServerPort();
+        String serverName = "localhost";
+        String requestURI = request.getRequestURL().toString();
+        log.info("zhaoh-test-uri:{}", requestURI);
+        int serverPort = 5173;
 
         String baseUrl = scheme + "://" + serverName;
         if (serverPort != CommonConstants.HTTP_PORT && serverPort != CommonConstants.HTTPS_PORT) {
             baseUrl += ":" + serverPort;
         }
 
-        // 注：需与回调接口保持一致
-        return baseUrl + apiPrefix + "/developers/oidc/callback";
+        // 重定向到前端的Callback接口
+        return baseUrl + "/oidc/callback";
     }
 
     private OidcConfig findOidcConfig(String provider) {
@@ -187,9 +190,6 @@ public class OidcServiceImpl implements OidcService {
         AuthCodeConfig authCodeConfig = oidcConfig.getAuthCodeConfig();
         String redirectUri = buildRedirectUri(state.getApiPrefix(), request);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(IdpConstants.GRANT_TYPE, GrantType.AUTHORIZATION_CODE.getType());
         params.add(IdpConstants.CODE, code);
@@ -197,9 +197,9 @@ public class OidcServiceImpl implements OidcService {
         params.add(IdpConstants.CLIENT_ID, authCodeConfig.getClientId());
         params.add(IdpConstants.CLIENT_SECRET, authCodeConfig.getClientSecret());
 
-        log.info("Request tokens at: {}", authCodeConfig.getTokenEndpoint());
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
-        return executeRequest(authCodeConfig.getTokenEndpoint(), HttpMethod.POST, null, requestEntity, IdpTokenResult.class);
+        log.info("Request tokens at: {}, params: {}", authCodeConfig.getTokenEndpoint(), params);
+//        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
+        return executeRequest(authCodeConfig.getTokenEndpoint(), HttpMethod.POST, null, params, IdpTokenResult.class);
     }
 
     private Map<String, Object> getUserInfo(IdpTokenResult tokenResult, OidcConfig oidcConfig) {
@@ -301,13 +301,13 @@ public class OidcServiceImpl implements OidcService {
     private <T> T executeRequest(String url, HttpMethod method, HttpHeaders headers, Object body, Class<T> responseType) {
         HttpEntity<?> requestEntity = new HttpEntity<>(body, headers);
         log.info("Executing HTTP request to: {}", url);
-        ResponseEntity<T> response = restTemplate.exchange(
+        ResponseEntity<String> response = restTemplate.exchange(
                 url,
                 method,
                 requestEntity,
-                responseType
+                String.class
         );
 
-        return response.getBody();
+        return JSONUtil.toBean(response.getBody(), responseType);
     }
 }

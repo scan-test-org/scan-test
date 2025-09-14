@@ -8,11 +8,11 @@ export function cn(...inputs: ClassValue[]) {
 
 // Token 相关函数
 export const getToken = (): string | null => {
-  return localStorage.getItem('token')
+  return localStorage.getItem('access_token')
 }
 
 export const removeToken = (): void => {
-  localStorage.removeItem('token')
+  localStorage.removeItem('access_token')
   localStorage.removeItem('userInfo')
 }
 

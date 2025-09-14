@@ -1,7 +1,7 @@
 import {Card, Form, Input, Select, Switch, Button, Divider, Space, Tag, Table, Modal, message, Tabs} from 'antd'
 import {SaveOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutlined} from '@ant-design/icons'
 import {useState, useMemo} from 'react'
-import {Portal, ThirdPartyAuthConfig, AuthenticationType} from '@/types'
+import {Portal, ThirdPartyAuthConfig, AuthenticationType, OidcConfig, OAuth2Config} from '@/types'
 import {portalApi} from '@/lib/api'
 import {ThirdPartyAuthManager} from './ThirdPartyAuthManager'
 
@@ -26,7 +26,7 @@ export function PortalSettings({portal, onRefresh}: PortalSettingsProps) {
         try {
             setLoading(true)
             const values = await form.validateFields()
-
+            
             await portalApi.updatePortal(portal.portalId, {
                 name: values.name,
                 title: values.title,
@@ -46,7 +46,6 @@ export function PortalSettings({portal, onRefresh}: PortalSettingsProps) {
             message.success('Portal设置保存成功')
             onRefresh?.()
         } catch (error) {
-            console.error('保存Portal设置失败:', error)
             message.error('保存Portal设置失败')
         } finally {
             setLoading(false)
@@ -65,7 +64,6 @@ export function PortalSettings({portal, onRefresh}: PortalSettingsProps) {
             message.success('设置已更新')
             onRefresh?.()
         } catch (error) {
-            console.error(`更新${key}设置失败:`, error)
             message.error('设置更新失败')
         }
     }
@@ -92,7 +90,7 @@ export function PortalSettings({portal, onRefresh}: PortalSettingsProps) {
             setDomainModalVisible(false)
 
         } catch (error) {
-            console.error('绑定域名失败:', error)
+            message.error('绑定域名失败')
         } finally {
             setDomainLoading(false)
         }
@@ -117,70 +115,73 @@ export function PortalSettings({portal, onRefresh}: PortalSettingsProps) {
                     message.success('域名解绑成功')
                     onRefresh?.()
                 } catch (error) {
-                    console.error('解绑域名失败:', error)
+                    message.error('解绑域名失败')
                 }
             },
         })
     }
 
-    // 第三方认证配置数据迁移和管理
-    const migrateToThirdPartyAuth = (portal: Portal): ThirdPartyAuthConfig[] => {
-        const thirdPartyConfigs: ThirdPartyAuthConfig[] = []
+    // 简单地合并OIDC和OAuth2配置用于统一显示
+    const thirdPartyAuthConfigs = useMemo((): ThirdPartyAuthConfig[] => {
+        const configs: ThirdPartyAuthConfig[] = []
         
-        // 迁移现有的OIDC配置
+        // 添加OIDC配置
         if (portal.portalSettingConfig?.oidcConfigs) {
             portal.portalSettingConfig.oidcConfigs.forEach(oidcConfig => {
-                thirdPartyConfigs.push({
-                    provider: oidcConfig.provider,
-                    name: oidcConfig.name,
-                    type: AuthenticationType.OIDC,
-                    enabled: oidcConfig.enabled,
-                    oidcConfig: {
-                        grantType: 'AUTHORIZATION_CODE',
-                        authCodeConfig: oidcConfig.authCodeConfig
-                    }
+                configs.push({
+                    ...oidcConfig,
+                    type: AuthenticationType.OIDC
                 })
             })
         }
         
-        // 迁移现有的OAuth2配置
+        // 添加OAuth2配置
         if (portal.portalSettingConfig?.oauth2Configs) {
             portal.portalSettingConfig.oauth2Configs.forEach(oauth2Config => {
-                thirdPartyConfigs.push({
-                    provider: oauth2Config.provider,
-                    name: oauth2Config.name,
-                    type: AuthenticationType.OAUTH2,
-                    enabled: true, // OAuth2配置默认启用
-                    oauth2Config: {
-                        grantType: oauth2Config.grantType,
-                        jwtBearerConfig: oauth2Config.jwtBearerConfig,
-                        identityMapping: oauth2Config.identityMapping
-                    }
+                configs.push({
+                    ...oauth2Config,
+                    type: AuthenticationType.OAUTH2
                 })
             })
         }
         
-        return thirdPartyConfigs
-    }
-
-    const thirdPartyAuthConfigs = useMemo(() => {
-        // 优先使用新的thirdPartyAuthConfigs，否则从旧配置迁移
-        if (portal.portalSettingConfig?.thirdPartyAuthConfigs) {
-            return portal.portalSettingConfig.thirdPartyAuthConfigs
-        }
-        return migrateToThirdPartyAuth(portal)
-    }, [portal])
+        return configs
+    }, [portal.portalSettingConfig?.oidcConfigs, portal.portalSettingConfig?.oauth2Configs])
 
     // 第三方认证配置保存函数
     const handleSaveThirdPartyAuth = async (configs: ThirdPartyAuthConfig[]) => {
-        await portalApi.updatePortal(portal.portalId, {
-            ...portal,
-            portalSettingConfig: {
-                ...portal.portalSettingConfig,
-                thirdPartyAuthConfigs: configs
+        try {
+            // 简单分离OIDC和OAuth2配置，去掉type字段
+            const oidcConfigs = configs
+                .filter(config => config.type === AuthenticationType.OIDC)
+                .map(config => {
+                    const { type, ...oidcConfig } = config as (OidcConfig & { type: AuthenticationType.OIDC })
+                    return oidcConfig
+                })
+
+            const oauth2Configs = configs
+                .filter(config => config.type === AuthenticationType.OAUTH2)
+                .map(config => {
+                    const { type, ...oauth2Config } = config as (OAuth2Config & { type: AuthenticationType.OAUTH2 })
+                    return oauth2Config
+                })
+            
+            const updateData = {
+                ...portal,
+                portalSettingConfig: {
+                    ...portal.portalSettingConfig,
+                    // 直接保存分离的配置数组
+                    oidcConfigs: oidcConfigs,
+                    oauth2Configs: oauth2Configs
+                }
             }
-        })
-        onRefresh?.()
+            
+            await portalApi.updatePortal(portal.portalId, updateData)
+            
+            onRefresh?.()
+        } catch (error) {
+            throw error
+        }
     }
 
     // 域名表格列定义
@@ -298,13 +299,6 @@ export function PortalSettings({portal, onRefresh}: PortalSettingsProps) {
                                 onChange={(checked) => handleSettingUpdate('autoApproveSubscriptions', checked)}
                             />
                         </Form.Item>
-                        {/* <Form.Item
-              name="frontendRedirectUrl"
-              label="前端重定向URL"
-              className="col-span-2"
-            >
-              <Input placeholder="http://portal.example.com/callback" />
-            </Form.Item> */}
                     </div>
 
                     {/* 第三方认证管理 */}

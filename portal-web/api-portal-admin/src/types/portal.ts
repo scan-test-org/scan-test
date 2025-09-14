@@ -6,21 +6,21 @@ export interface AuthCodeConfig {
   tokenEndpoint: string;
   userInfoEndpoint: string;
   jwkSetUri: string;
+  // OIDC issuer地址（用于自动发现模式）
+  issuer?: string;
   // 可选的身份映射配置
-  identityMapping?: {
-    userIdField?: string;
-    userNameField?: string;
-    emailField?: string;
-  };
+  identityMapping?: IdentityMapping;
 }
 
 export interface OidcConfig {
   provider: string;
   name: string;
-  logoUrl: string;
+  logoUrl?: string | null;
   enabled: boolean;
   grantType: 'AUTHORIZATION_CODE';
   authCodeConfig: AuthCodeConfig;
+  // 根级别的身份映射配置（匹配实际后端格式）
+  identityMapping?: IdentityMapping;
 }
 
 // 第三方认证相关类型定义
@@ -51,43 +51,26 @@ export interface JwtBearerConfig {
 }
 
 export interface IdentityMapping {
-  userIdField: string;
-  userNameField: string;
-  customFields?: { [key: string]: string };
+  userIdField?: string | null;
+  userNameField?: string | null;
+  emailField?: string | null;
+  customFields?: { [key: string]: string } | null;
 }
 
-// 独立的OAuth2配置（用于第三方认证配置中）
-export interface OAuth2AuthConfig {
-  grantType: GrantType;
-  jwtBearerConfig?: JwtBearerConfig;
-  identityMapping: IdentityMapping;
-}
-
-// 旧的OAuth2配置（向后兼容）
+// OAuth2配置（使用现有格式）
 export interface OAuth2Config {
   provider: string;
   name: string;
+  enabled: boolean;
   grantType: GrantType;
   jwtBearerConfig?: JwtBearerConfig;
-  identityMapping: IdentityMapping;
+  identityMapping?: IdentityMapping;
 }
 
-// 统一的第三方认证配置
-export interface ThirdPartyAuthConfig {
-  provider: string;
-  name: string;
-  type: AuthenticationType;
-  enabled: boolean;
-  
-  // OIDC配置（当type为OIDC时使用）
-  oidcConfig?: {
-    grantType: 'AUTHORIZATION_CODE';
-    authCodeConfig: AuthCodeConfig;
-  };
-  
-  // OAuth2配置（当type为OAUTH2时使用）
-  oauth2Config?: OAuth2AuthConfig;
-}
+// 为了UI显示方便，给配置添加类型标识的联合类型
+export type ThirdPartyAuthConfig = 
+  | (OidcConfig & { type: AuthenticationType.OIDC })
+  | (OAuth2Config & { type: AuthenticationType.OAUTH2 })
 
 export interface PortalSettingConfig {
   builtinAuthEnabled: boolean;
@@ -96,12 +79,9 @@ export interface PortalSettingConfig {
   autoApproveSubscriptions: boolean;
   frontendRedirectUrl: string;
   
-  // 向后兼容的旧字段（逐步废弃）
+  // 第三方认证配置（分离存储）
   oidcConfigs?: OidcConfig[];
   oauth2Configs?: OAuth2Config[];
-  
-  // 新的统一第三方认证配置
-  thirdPartyAuthConfigs: ThirdPartyAuthConfig[];
 }
 
 export interface PortalUiConfig {

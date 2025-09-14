@@ -24,8 +24,6 @@ import com.alibaba.apiopenplatform.core.annotation.DeveloperAuth;
 import com.alibaba.apiopenplatform.dto.params.developer.*;
 import com.alibaba.apiopenplatform.dto.result.*;
 import com.alibaba.apiopenplatform.service.DeveloperService;
-import com.alibaba.apiopenplatform.core.security.ContextHolder;
-import com.alibaba.apiopenplatform.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -47,13 +45,13 @@ public class DeveloperController {
 
     @Operation(summary = "开发者注册", description = "注册新开发者账号")
     @PostMapping
-    public AuthResponseResult register(@Valid @RequestBody CreateDeveloperParam param) {
+    public AuthResult register(@Valid @RequestBody CreateDeveloperParam param) {
         return developerService.registerDeveloper(param);
     }
 
     @Operation(summary = "开发者登录", description = "开发者账号密码登录")
     @PostMapping("/login")
-    public AuthResponseResult login(@Valid @RequestBody DeveloperLoginParam param) {
+    public AuthResult login(@Valid @RequestBody DeveloperLoginParam param) {
         return developerService.login(param.getUsername(), param.getPassword());
     }
 

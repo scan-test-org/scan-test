@@ -20,9 +20,8 @@
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
+import com.alibaba.apiopenplatform.dto.result.AuthResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
-import com.alibaba.apiopenplatform.entity.Developer;
 import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
 import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepository;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
@@ -34,8 +33,6 @@ import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.portal.AuthCodeConfig;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
-import com.alibaba.apiopenplatform.core.exception.BusinessException;
-import com.alibaba.apiopenplatform.core.exception.ErrorCode;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -264,12 +261,12 @@ public class DeveloperOAuth2ServiceImpl implements DeveloperOAuth2Service {
 
     private void handleLoginMode(String provider, UserInfo userInfo, String rawInfoJson, String apiPrefix,
                                  HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Optional<AuthResponseResult> loginResult = developerService.handleExternalLogin(
+        Optional<AuthResult> loginResult = developerService.handleExternalLogin(
                 provider, userInfo.getProviderSubject(), userInfo.getEmail(),
                 userInfo.getDisplayName(), rawInfoJson);
 
         if (loginResult.isPresent()) {
-            String token = loginResult.get().getToken();
+            String token = loginResult.get().getAccessToken();
             Cookie tokenCookie = new Cookie(CommonConstants.AUTH_TOKEN_COOKIE, token);
             tokenCookie.setPath("/");
             tokenCookie.setHttpOnly(false); // 允许JavaScript访问

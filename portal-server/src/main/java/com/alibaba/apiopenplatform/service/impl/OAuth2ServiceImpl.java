@@ -73,7 +73,11 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     private final ContextHolder contextHolder;
 
     @Override
-    public AuthResult authenticate(String jwtToken) {
+    public AuthResult authenticate(String grantType, String jwtToken) {
+        if (!GrantType.JWT_BEARER.getType().equals(grantType)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "不支持的授权模式");
+        }
+
         // 解析JWT
         JWT jwt = JWTUtil.parseToken(jwtToken);
         String kid = (String) jwt.getHeader(JwtConstants.HEADER_KID);
@@ -122,9 +126,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
         // 生成Access Token
         String accessToken = TokenUtil.generateDeveloperToken(developerId);
         log.info("JWT Bearer认证成功，provider: {}, developer: {}", oAuth2Config.getProvider(), developerId);
-        return AuthResult.builder()
-                .accessToken(accessToken)
-                .build();
+        return AuthResult.of(accessToken, TokenUtil.getTokenExpiresIn());
     }
 
     private boolean verifySignature(JWT jwt, PublicKeyConfig keyConfig) {

@@ -22,7 +22,7 @@ public class OidcController {
 
     @GetMapping("/authorize")
     public void authorize(@RequestParam String provider,
-                          @RequestParam(required = false, defaultValue = "/api/v1") String apiPrefix,
+                          @RequestParam(defaultValue = "/api/v1") String apiPrefix,
                           HttpServletRequest request,
                           HttpServletResponse response) throws IOException {
         String authUrl = oidcService.buildAuthorizationUrl(provider, apiPrefix, request);

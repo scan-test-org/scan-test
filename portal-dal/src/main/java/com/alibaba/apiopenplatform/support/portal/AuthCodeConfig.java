@@ -20,6 +20,11 @@ public class AuthCodeConfig {
     private String scopes;
 
     /**
+     * Issuer
+     */
+    private String issuer;
+
+    /**
      * 授权端点
      */
     private String authorizationEndpoint;

@@ -24,7 +24,7 @@ import com.alibaba.apiopenplatform.dto.params.developer.CreateDeveloperParam;
 import com.alibaba.apiopenplatform.dto.params.developer.CreateExternalDeveloperParam;
 import com.alibaba.apiopenplatform.dto.params.developer.QueryDeveloperParam;
 import com.alibaba.apiopenplatform.dto.params.developer.UpdateDeveloperParam;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
+import com.alibaba.apiopenplatform.dto.result.AuthResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
@@ -41,7 +41,7 @@ public interface DeveloperService {
      * @param param
      * @return
      */
-    AuthResponseResult registerDeveloper(CreateDeveloperParam param);
+    AuthResult registerDeveloper(CreateDeveloperParam param);
 
     /**
      * 创建开发者
@@ -58,7 +58,7 @@ public interface DeveloperService {
      * @param password
      * @return
      */
-    AuthResponseResult login(String username, String password);
+    AuthResult login(String username, String password);
 
     /**
      * 校验Developer
@@ -77,7 +77,7 @@ public interface DeveloperService {
      * @param rawInfoJson     第三方原始信息JSON
      * @return 登录结果
      */
-    Optional<AuthResponseResult> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson);
+    Optional<AuthResult> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson);
 
     /**
      * 绑定外部身份（不切换登录态，仅写数据库）

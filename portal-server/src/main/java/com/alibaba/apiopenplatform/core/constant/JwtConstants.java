@@ -89,7 +89,7 @@ public class JwtConstants {
     /**
      * 用户名（默认身份映射字段）
      */
-    public static final String PAYLOAD_USER_NAME = "userName";
+    public static final String PAYLOAD_USER_NAME = "name";
 
     /**
      * 邮箱（默认身份映射字段）

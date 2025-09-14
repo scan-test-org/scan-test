@@ -23,7 +23,7 @@ import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.core.utils.TokenUtil;
 import com.alibaba.apiopenplatform.dto.result.AdminResult;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
+import com.alibaba.apiopenplatform.dto.result.AuthResult;
 import com.alibaba.apiopenplatform.entity.Administrator;
 import com.alibaba.apiopenplatform.repository.AdministratorRepository;
 import com.alibaba.apiopenplatform.service.AdministratorService;
@@ -45,7 +45,7 @@ public class AdministratorServiceImpl implements AdministratorService {
     private final ContextHolder contextHolder;
 
     @Override
-    public AuthResponseResult login(String username, String password) {
+    public AuthResult login(String username, String password) {
         Administrator admin = administratorRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.ADMINISTRATOR));
 
@@ -54,7 +54,7 @@ public class AdministratorServiceImpl implements AdministratorService {
         }
 
         String token = TokenUtil.generateAdminToken(admin.getAdminId());
-        return AuthResponseResult.fromAdmin(admin.getAdminId(), admin.getUsername(), token);
+        return AuthResult.of(token, TokenUtil.getTokenExpiresIn());
     }
 
     @Override

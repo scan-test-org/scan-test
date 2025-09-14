@@ -20,6 +20,11 @@ public class OAuth2Config {
     private String name;
 
     /**
+     * 是否启用
+     */
+    private boolean enabled = true;
+
+    /**
      * 授权模式
      */
     private GrantType grantType;

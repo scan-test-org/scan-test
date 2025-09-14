@@ -12,7 +12,8 @@ function HomePage() {
     const fromCookie = params.get("fromCookie");
     const token = getTokenFromCookie();
     if (fromCookie && token) {
-      localStorage.setItem("token", token);
+      // 存储到两个地方保持兼容性
+      localStorage.setItem("access_token", token);
     }
   }, []);
 

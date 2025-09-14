@@ -65,7 +65,10 @@ public class SecurityConfig {
             "/developers/authorize",
             "/developers/callback",
             "/developers/providers",
-            "/oauth2/token"
+            "/developers/oidc/authorize",
+            "/developers/oidc/callback",
+            "/developers/oidc/providers",
+            "/developers/oauth2/token"
     };
 
     // Swagger API文档相关

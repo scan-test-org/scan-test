@@ -29,7 +29,7 @@ import com.alibaba.apiopenplatform.dto.params.developer.CreateDeveloperParam;
 import com.alibaba.apiopenplatform.dto.params.developer.CreateExternalDeveloperParam;
 import com.alibaba.apiopenplatform.dto.params.developer.QueryDeveloperParam;
 import com.alibaba.apiopenplatform.dto.params.developer.UpdateDeveloperParam;
-import com.alibaba.apiopenplatform.dto.result.AuthResponseResult;
+import com.alibaba.apiopenplatform.dto.result.AuthResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
@@ -79,7 +79,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    public AuthResponseResult registerDeveloper(CreateDeveloperParam param) {
+    public AuthResult registerDeveloper(CreateDeveloperParam param) {
         DeveloperResult developer = createDeveloper(param);
 
         // 检查是否自动审批
@@ -90,7 +90,10 @@ public class DeveloperServiceImpl implements DeveloperService {
 
         if (autoApprove) {
             String token = generateToken(developer.getDeveloperId());
-            return AuthResponseResult.fromDeveloper(developer.getDeveloperId(), developer.getUsername(), token);
+            return AuthResult.builder()
+                    .accessToken(token)
+                    .expiresIn(TokenUtil.getTokenExpiresIn())
+                    .build();
         }
         return null;
     }
@@ -118,7 +121,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     }
 
     @Override
-    public AuthResponseResult login(String username, String password) {
+    public AuthResult login(String username, String password) {
         String portalId = contextHolder.getPortal();
         Developer developer = developerRepository.findByPortalIdAndUsername(portalId, username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER));
@@ -132,7 +135,10 @@ public class DeveloperServiceImpl implements DeveloperService {
         }
 
         String token = generateToken(developer.getDeveloperId());
-        return AuthResponseResult.fromDeveloper(developer.getDeveloperId(), developer.getUsername(), token);
+        return AuthResult.builder()
+                .accessToken(token)
+                .expiresIn(TokenUtil.getTokenExpiresIn())
+                .build();
     }
 
     @Override
@@ -142,7 +148,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     }
 
     @Override
-    public Optional<AuthResponseResult> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson) {
+    public Optional<AuthResult> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson) {
         Optional<DeveloperExternalIdentity> extOpt = externalRepository.findByProviderAndSubject(providerName, providerSubject);
         Developer developer;
 
@@ -153,7 +159,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         }
 
         String token = generateToken(developer.getDeveloperId());
-        return Optional.of(AuthResponseResult.fromDeveloper(developer.getDeveloperId(), developer.getUsername(), token));
+        return Optional.of(AuthResult.of(token, TokenUtil.getTokenExpiresIn()));
     }
 
     @Override

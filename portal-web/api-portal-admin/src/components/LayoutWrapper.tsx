@@ -9,7 +9,7 @@ const LayoutWrapper: React.FC = () => {
 
   // 权限验证
   const isAuthenticated = () => {
-    return localStorage.getItem('token') !== null;
+    return localStorage.getItem('access_token') !== null;
   };
 
   // 当前是否是登录页面
@@ -36,11 +36,7 @@ const LayoutWrapper: React.FC = () => {
     return <Outlet />;
   }
 
-  return (
-    <Layout loading={loading}>
-      <Outlet />
-    </Layout>
-  );
+  return <Layout loading={loading} />;
 };
 
 export default LayoutWrapper;

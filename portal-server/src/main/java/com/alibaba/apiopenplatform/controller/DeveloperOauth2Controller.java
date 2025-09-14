@@ -43,6 +43,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/developers")
 @RequiredArgsConstructor
+@Deprecated
 public class DeveloperOauth2Controller {
 
     private final DeveloperOAuth2Service developerOAuth2Service;

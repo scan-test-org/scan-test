@@ -30,8 +30,9 @@ public interface OAuth2Service {
      * JWT Bearer认证
      *
      * @param
+     * @param grantType
      * @return
      */
-    AuthResult authenticate(String jwtToken);
+    AuthResult authenticate(String grantType, String jwtToken);
 
 }

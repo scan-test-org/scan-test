@@ -89,7 +89,7 @@ export function PublicKeyManager({provider, publicKeys, onSave}: PublicKeyManage
       setModalVisible(false)
       message.success(editingIndex !== null ? '公钥更新成功' : '公钥添加成功')
     } catch (error) {
-      console.error('保存公钥失败:', error)
+      message.error('保存公钥失败')
     }
   }
 
@@ -168,7 +168,7 @@ export function PublicKeyManager({provider, publicKeys, onSave}: PublicKeyManage
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: PublicKeyConfig, index: number) => (
+      render: (_: any, _record: PublicKeyConfig, index: number) => (
         <Space>
           <Button
             type="link"
