@@ -70,8 +70,6 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
     private final DeveloperService developerService;
 
-    private final ContextHolder contextHolder;
-
     @Override
     public AuthResult authenticate(String grantType, String jwtToken) {
         if (!GrantType.JWT_BEARER.getType().equals(grantType)) {
@@ -89,11 +87,16 @@ public class OAuth2ServiceImpl implements OAuth2Service {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWT payload缺少字段provider");
         }
 
+        String portalId = (String) jwt.getPayload(JwtConstants.PAYLOAD_PORTAL);
+        if (StrUtil.isBlank(portalId)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWT payload缺少字段portal");
+        }
+
         // 根据provider确定OAuth2配置
-        PortalResult portal = portalService.getPortal(contextHolder.getPortal());
+        PortalResult portal = portalService.getPortal(portalId);
         List<OAuth2Config> oauth2Configs = Optional.ofNullable(portal.getPortalSettingConfig())
                 .map(PortalSettingConfig::getOauth2Configs)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.OAUTH2_CONFIG));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.OAUTH2_CONFIG, portalId));
 
         OAuth2Config oAuth2Config = oauth2Configs.stream()
                 // JWT Bearer模式
@@ -103,14 +106,14 @@ public class OAuth2ServiceImpl implements OAuth2Service {
                 // provider标识
                 .filter(config -> config.getProvider().equals(provider))
                 .findFirst()
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, StrUtil.format("{}:{}", Resources.OAUTH2_CONFIG, provider)));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.OAUTH2_CONFIG, provider));
 
         // 根据kid找到对应公钥
         JwtBearerConfig jwtConfig = oAuth2Config.getJwtBearerConfig();
         PublicKeyConfig publicKeyConfig = jwtConfig.getPublicKeys().stream()
                 .filter(key -> kid.equals(key.getKid()))
                 .findFirst()
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, StrUtil.format("{}:{}", Resources.PUBLIC_KEY, kid)));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PUBLIC_KEY, kid));
 
         // 验签
         if (!verifySignature(jwt, publicKeyConfig)) {

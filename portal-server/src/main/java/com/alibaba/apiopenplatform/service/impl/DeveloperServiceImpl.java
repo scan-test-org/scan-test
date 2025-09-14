@@ -124,7 +124,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     public AuthResult login(String username, String password) {
         String portalId = contextHolder.getPortal();
         Developer developer = developerRepository.findByPortalIdAndUsername(portalId, username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER, username));
 
         if (!DeveloperStatus.APPROVED.equals(developer.getStatus())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "账号审批中");
@@ -144,7 +144,7 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     public void existsDeveloper(String developerId) {
         developerRepository.findByDeveloperId(developerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER, developerId));
     }
 
     @Override
@@ -212,7 +212,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         Developer developer = Developer.builder()
                 .developerId(IdGenerator.genDeveloperId())
                 .portalId(contextHolder.getPortal())
-                .username(buildExternalName(param.getProvider(), param.getSubject()))
+                .username(buildExternalName(param.getProvider(), param.getDisplayName()))
                 .email(param.getEmail())
                 // 默认APPROVED
                 .status(DeveloperStatus.APPROVED)
@@ -367,7 +367,7 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     private Developer findDeveloper(String developerId) {
         return developerRepository.findByDeveloperId(developerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER, developerId));
     }
 
     private Specification<Developer> buildSpecification(QueryDeveloperParam param) {

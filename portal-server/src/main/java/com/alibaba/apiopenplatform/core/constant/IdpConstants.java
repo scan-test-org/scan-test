@@ -59,4 +59,19 @@ public class IdpConstants {
      * 邮箱
      */
     public static final String EMAIL = "email";
+
+    /**
+     * 授权端点
+     */
+    public static final String AUTHORIZATION_ENDPOINT = "authorization_endpoint";
+
+    /**
+     * 令牌端点
+     */
+    public static final String TOKEN_ENDPOINT = "token_endpoint";
+
+    /**
+     * 用户信息端点
+     */
+    public static final String USERINFO_ENDPOINT = "userinfo_endpoint";
 }

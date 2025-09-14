@@ -39,6 +39,7 @@ import com.alibaba.apiopenplatform.entity.ProductSubscription;
 import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.repository.SubscriptionRepository;
+import com.alibaba.apiopenplatform.service.OidcService;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DomainType;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
@@ -75,6 +76,8 @@ public class PortalServiceImpl implements PortalService {
     private final SubscriptionRepository subscriptionRepository;
 
     private final ContextHolder contextHolder;
+
+    private final OidcService oidcService;
 
     private final String domainFormat = "%s.api.portal.local";
 
@@ -116,7 +119,7 @@ public class PortalServiceImpl implements PortalService {
     @Override
     public void existsPortal(String portalId) {
         portalRepository.findByPortalId(portalId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL, portalId));
     }
 
     @Override
@@ -154,8 +157,13 @@ public class PortalServiceImpl implements PortalService {
                 });
 
         param.update(portal);
-        // 至少保留一种认证方式
+        // 验证OIDC配置
         PortalSettingConfig setting = portal.getPortalSettingConfig();
+        if (setting != null && CollUtil.isNotEmpty(setting.getOidcConfigs())) {
+            oidcService.validateOidcConfigs(setting.getOidcConfigs());
+        }
+        
+        // 至少保留一种认证方式
         if (BooleanUtil.isFalse(setting.getBuiltinAuthEnabled())) {
             boolean enabledOidc = Optional.ofNullable(setting.getOidcConfigs())
                     .filter(CollUtil::isNotEmpty)
@@ -247,6 +255,6 @@ public class PortalServiceImpl implements PortalService {
 
     private Portal findPortal(String portalId) {
         return portalRepository.findByPortalId(portalId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL, portalId));
     }
 }

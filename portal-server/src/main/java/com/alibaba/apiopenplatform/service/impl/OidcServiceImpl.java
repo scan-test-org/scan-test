@@ -1,17 +1,15 @@
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.codec.Base64;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSON;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
 import com.alibaba.apiopenplatform.core.constant.CommonConstants;
 import com.alibaba.apiopenplatform.core.constant.IdpConstants;
-import com.alibaba.apiopenplatform.core.constant.JwtConstants;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
@@ -32,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -42,10 +39,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -68,7 +62,7 @@ public class OidcServiceImpl implements OidcService {
 
         // state保存上下文信息
         String state = buildState(provider, apiPrefix);
-        String redirectUri = buildRedirectUri(apiPrefix, request);
+        String redirectUri = buildRedirectUri(request);
 
         // 重定向URL
         String authUrl = UriComponentsBuilder
@@ -132,12 +126,12 @@ public class OidcServiceImpl implements OidcService {
                 .orElse(Collections.emptyList());
     }
 
-    private String buildRedirectUri(String apiPrefix, HttpServletRequest request) {
+    private String buildRedirectUri(HttpServletRequest request) {
         String scheme = request.getScheme();
-        String serverName = "localhost";
-        String requestURI = request.getRequestURL().toString();
-        log.info("zhaoh-test-uri:{}", requestURI);
-        int serverPort = 5173;
+//        String serverName = "localhost";
+//        int serverPort = 5173;
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
 
         String baseUrl = scheme + "://" + serverName;
         if (serverPort != CommonConstants.HTTP_PORT && serverPort != CommonConstants.HTTPS_PORT) {
@@ -158,7 +152,7 @@ public class OidcServiceImpl implements OidcService {
                         .stream()
                         .filter(config -> provider.equals(config.getProvider()) && config.isEnabled())
                         .findFirst())
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.OIDC_CONFIG));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.OIDC_CONFIG, provider));
     }
 
     private String buildState(String provider, String apiPrefix) {
@@ -188,7 +182,7 @@ public class OidcServiceImpl implements OidcService {
 
     private IdpTokenResult requestToken(String code, IdpState state, OidcConfig oidcConfig, HttpServletRequest request) {
         AuthCodeConfig authCodeConfig = oidcConfig.getAuthCodeConfig();
-        String redirectUri = buildRedirectUri(state.getApiPrefix(), request);
+        String redirectUri = buildRedirectUri(request);
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(IdpConstants.GRANT_TYPE, GrantType.AUTHORIZATION_CODE.getType());
@@ -198,7 +192,6 @@ public class OidcServiceImpl implements OidcService {
         params.add(IdpConstants.CLIENT_SECRET, authCodeConfig.getClientSecret());
 
         log.info("Request tokens at: {}, params: {}", authCodeConfig.getTokenEndpoint(), params);
-//        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
         return executeRequest(authCodeConfig.getTokenEndpoint(), HttpMethod.POST, null, params, IdpTokenResult.class);
     }
 
@@ -297,6 +290,75 @@ public class OidcServiceImpl implements OidcService {
                 });
     }
 
+    @Override
+    public void validateOidcConfigs(List<OidcConfig> oidcConfigs) {
+        if (CollUtil.isEmpty(oidcConfigs)) {
+            return;
+        }
+
+        // provider唯一
+        Set<String> providers = oidcConfigs.stream()
+                .map(OidcConfig::getProvider)
+                .filter(StrUtil::isNotBlank)
+                .collect(Collectors.toSet());
+        if (providers.size() != oidcConfigs.size()) {
+            throw new BusinessException(ErrorCode.CONFLICT, "OIDC配置中存在空或重复的provider");
+        }
+
+        oidcConfigs.forEach(config -> {
+            AuthCodeConfig authConfig = Optional.ofNullable(config.getAuthCodeConfig())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PARAMETER,
+                            StrUtil.format("OIDC配置{}缺少授权码配置", config.getProvider())));
+            // 基础参数
+            if (StrUtil.isBlank(authConfig.getClientId()) ||
+                    StrUtil.isBlank(authConfig.getClientSecret()) ||
+                    StrUtil.isBlank(authConfig.getScopes())) {
+                throw new BusinessException(ErrorCode.INVALID_PARAMETER,
+                        StrUtil.format("OIDC配置{}缺少必要参数: Client ID, Client Secret 或 Scopes", config.getProvider()));
+            }
+
+            // 端点配置
+            if (StrUtil.isNotBlank(authConfig.getIssuer())) {
+                discoverAndSetEndpoints(config.getProvider(), authConfig);
+            } else {
+                if (StrUtil.isBlank(authConfig.getAuthorizationEndpoint()) ||
+                        StrUtil.isBlank(authConfig.getTokenEndpoint()) ||
+                        StrUtil.isBlank(authConfig.getUserInfoEndpoint())) {
+                    throw new BusinessException(ErrorCode.INVALID_PARAMETER,
+                            StrUtil.format("OIDC配置{}缺少必要端点配置", config.getProvider()));
+                }
+            }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void discoverAndSetEndpoints(String provider, AuthCodeConfig config) {
+        String discoveryUrl = config.getIssuer().replaceAll("/$", "") + "/.well-known/openid-configuration";
+
+        try {
+            Map<String, Object> discovery = executeRequest(discoveryUrl, HttpMethod.GET, null, null, Map.class);
+
+            // 验证并设置端点
+            String authEndpoint = getRequiredEndpoint(discovery, IdpConstants.AUTHORIZATION_ENDPOINT);
+            String tokenEndpoint = getRequiredEndpoint(discovery, IdpConstants.TOKEN_ENDPOINT);
+            String userInfoEndpoint = getRequiredEndpoint(discovery, IdpConstants.USERINFO_ENDPOINT);
+
+            config.setAuthorizationEndpoint(authEndpoint);
+            config.setTokenEndpoint(tokenEndpoint);
+            config.setUserInfoEndpoint(userInfoEndpoint);
+        } catch (Exception e) {
+            log.error("Failed to discover OIDC endpoints from discovery URL: {}", discoveryUrl, e);
+            throw new BusinessException(ErrorCode.INVALID_PARAMETER, StrUtil.format("OIDC配置{}的Issuer无效或无法访问", provider));
+        }
+    }
+
+    private String getRequiredEndpoint(Map<String, Object> discovery, String name) {
+        return Optional.ofNullable(discovery.get(name))
+                .map(Object::toString)
+                .filter(StrUtil::isNotBlank)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PARAMETER,
+                        "OIDC Discovery配置中缺少端点: " + name));
+    }
 
     private <T> T executeRequest(String url, HttpMethod method, HttpHeaders headers, Object body, Class<T> responseType) {
         HttpEntity<?> requestEntity = new HttpEntity<>(body, headers);

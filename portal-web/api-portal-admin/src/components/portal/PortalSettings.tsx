@@ -121,7 +121,7 @@ export function PortalSettings({portal, onRefresh}: PortalSettingsProps) {
         })
     }
 
-    // 简单地合并OIDC和OAuth2配置用于统一显示
+    // 合并OIDC和OAuth2配置用于统一显示
     const thirdPartyAuthConfigs = useMemo((): ThirdPartyAuthConfig[] => {
         const configs: ThirdPartyAuthConfig[] = []
         
@@ -151,7 +151,7 @@ export function PortalSettings({portal, onRefresh}: PortalSettingsProps) {
     // 第三方认证配置保存函数
     const handleSaveThirdPartyAuth = async (configs: ThirdPartyAuthConfig[]) => {
         try {
-            // 简单分离OIDC和OAuth2配置，去掉type字段
+            // 分离OIDC和OAuth2配置，去掉type字段
             const oidcConfigs = configs
                 .filter(config => config.type === AuthenticationType.OIDC)
                 .map(config => {

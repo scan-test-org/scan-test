@@ -444,7 +444,7 @@ public class NacosServiceImpl implements NacosService {
 
     private NacosInstance findNacosInstance(String nacosId) {
         return nacosInstanceRepository.findByNacosId(nacosId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.NACOS_INSTANCE));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.NACOS_INSTANCE, nacosId));
     }
 
     private McpMaintainerService buildDynamicMcpService(NacosInstance nacosInstance) {

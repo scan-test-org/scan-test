@@ -2,6 +2,7 @@ package com.alibaba.apiopenplatform.service;
 
 import com.alibaba.apiopenplatform.dto.result.AuthResult;
 import com.alibaba.apiopenplatform.dto.result.IdpResult;
+import com.alibaba.apiopenplatform.support.portal.OidcConfig;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,5 +37,12 @@ public interface OidcService {
      * @return
      */
     List<IdpResult> getAvailableProviders();
+
+    /**
+     * 验证OIDC配置
+     *
+     * @param oidcConfigs
+     */
+    void validateOidcConfigs(List<OidcConfig> oidcConfigs);
 
 }

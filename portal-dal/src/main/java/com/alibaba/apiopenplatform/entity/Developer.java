@@ -29,8 +29,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-import java.io.Serializable;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -68,7 +66,7 @@ public class Developer extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private DeveloperStatus status;
 
-    @Column(nullable = false, length = 16)
+    @Column(length = 16)
     @Enumerated(EnumType.STRING)
     private DeveloperAuthType authType;
 

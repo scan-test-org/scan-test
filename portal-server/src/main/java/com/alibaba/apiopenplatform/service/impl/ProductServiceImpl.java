@@ -227,7 +227,7 @@ public class ProductServiceImpl implements ProductService {
      */
     private Product findProduct(String productId) {
         return productRepository.findByProductId(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PRODUCT, productId));
     }
 
     @Override
@@ -318,7 +318,7 @@ public class ProductServiceImpl implements ProductService {
 
     private Product findPublishedProduct(String portalId, String productId) {
         ProductPublication publication = publicationRepository.findByPortalIdAndProductId(portalId, productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PRODUCT));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PRODUCT, productId));
 
         return findProduct(publication.getProductId());
     }

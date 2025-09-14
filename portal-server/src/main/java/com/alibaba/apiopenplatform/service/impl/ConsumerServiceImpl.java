@@ -191,7 +191,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Override
     public void updateCredential(String consumerId, UpdateCredentialParam param) {
         ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER_CREDENTIAL));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
 
         param.update(credential);
 
@@ -235,7 +235,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         }
 
         ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER_CREDENTIAL));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
 
         ProductSubscription subscription = param.convertTo();
         subscription.setConsumerId(consumerId);
@@ -333,7 +333,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         existsConsumer(consumerId);
 
         ProductSubscription subscription = subscriptionRepository.findByConsumerIdAndProductId(consumerId, productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.SUBSCRIPTION));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.SUBSCRIPTION, StrUtil.format("{}:{}", productId, consumerId)));
 
         // 检查订阅状态，只有PENDING状态的订阅才能被审批
         if (subscription.getStatus() != SubscriptionStatus.PENDING) {
@@ -344,7 +344,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         Consumer consumer = contextHolder.isDeveloper() ?
                 findDevConsumer(consumerId) : findConsumer(consumerId);
         ConsumerCredential credential = credentialRepository.findByConsumerId(consumerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER_CREDENTIAL));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER_CREDENTIAL, consumerId));
 
         // 获取产品引用信息
         ProductRefResult productRef = productService.getProductRef(productId);
@@ -371,19 +371,19 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     private Consumer findConsumer(String consumerId) {
         return consumerRepository.findByConsumerId(consumerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER, consumerId));
     }
 
     private Consumer findDevConsumer(String consumerId) {
         return consumerRepository.findByDeveloperIdAndConsumerId(contextHolder.getUser(), consumerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER, consumerId));
     }
 
     private void existsConsumer(String consumerId) {
         (contextHolder.isDeveloper() ?
                 consumerRepository.findByDeveloperIdAndConsumerId(contextHolder.getUser(), consumerId) :
                 consumerRepository.findByConsumerId(consumerId))
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.CONSUMER, consumerId));
     }
 
     private Specification<Consumer> buildConsumerSpec(QueryConsumerParam param) {

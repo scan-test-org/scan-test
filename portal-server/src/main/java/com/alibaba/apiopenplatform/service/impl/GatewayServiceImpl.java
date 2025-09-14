@@ -227,7 +227,7 @@ public class GatewayServiceImpl implements GatewayService, ApplicationContextAwa
 
     private Gateway findGateway(String gatewayId) {
         return gatewayRepository.findByGatewayId(gatewayId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.GATEWAY));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.GATEWAY, gatewayId));
     }
 
     private GatewayOperator getOperator(Gateway gateway) {

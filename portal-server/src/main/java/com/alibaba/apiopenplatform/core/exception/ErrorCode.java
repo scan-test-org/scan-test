@@ -48,7 +48,7 @@ public enum ErrorCode {
     /**
      * 资源不存在
      */
-    NOT_FOUND(HttpStatus.NOT_FOUND, "资源不存在：{}"),
+    NOT_FOUND(HttpStatus.NOT_FOUND, "资源不存在：{}:{}"),
 
     /**
      * 资源冲突

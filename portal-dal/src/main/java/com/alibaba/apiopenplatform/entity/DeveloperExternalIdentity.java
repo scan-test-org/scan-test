@@ -56,7 +56,6 @@ public class DeveloperExternalIdentity {
     @Column(length = 32)
     private DeveloperAuthType authType;
 
-    @Lob
-    @Column(nullable = false, columnDefinition = "text")
+    @Column(columnDefinition = "json")
     private String rawInfoJson;
 } 

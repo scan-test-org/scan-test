@@ -19,6 +19,7 @@
 
 package com.alibaba.apiopenplatform.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.core.utils.TokenUtil;
@@ -47,7 +48,7 @@ public class AdministratorServiceImpl implements AdministratorService {
     @Override
     public AuthResult login(String username, String password) {
         Administrator admin = administratorRepository.findByUsername(username)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.ADMINISTRATOR));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.ADMINISTRATOR, username));
 
         if (!PasswordHasher.verify(password, admin.getPasswordHash())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "用户名或密码错误");
@@ -98,6 +99,6 @@ public class AdministratorServiceImpl implements AdministratorService {
 
     private Administrator findAdministrator(String adminId) {
         return administratorRepository.findByAdminId(adminId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.ADMINISTRATOR));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.ADMINISTRATOR, adminId));
     }
 } 

@@ -19,7 +19,6 @@ export interface OidcConfig {
   enabled: boolean;
   grantType: 'AUTHORIZATION_CODE';
   authCodeConfig: AuthCodeConfig;
-  // 根级别的身份映射配置（匹配实际后端格式）
   identityMapping?: IdentityMapping;
 }
 

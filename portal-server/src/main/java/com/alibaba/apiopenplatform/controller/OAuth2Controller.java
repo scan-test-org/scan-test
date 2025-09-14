@@ -3,15 +3,15 @@ package com.alibaba.apiopenplatform.controller;
 import com.alibaba.apiopenplatform.dto.result.AuthResult;
 import com.alibaba.apiopenplatform.service.OAuth2Service;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author zh
  */
-@Controller
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/developers/oauth2")
 public class OAuth2Controller {

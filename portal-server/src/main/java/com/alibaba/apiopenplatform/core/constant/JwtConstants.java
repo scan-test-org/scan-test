@@ -76,6 +76,11 @@ public class JwtConstants {
      * 受众
      */
     public static final String PAYLOAD_AUD = "aud";
+
+    /**
+     * 门户ID
+     */
+    public static final String PAYLOAD_PORTAL = "portal";
     // endregion
 
 

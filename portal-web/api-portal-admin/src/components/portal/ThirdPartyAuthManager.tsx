@@ -63,7 +63,7 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
         name: oauth2Config.name,
         enabled: oauth2Config.enabled,
         type: oauth2Config.type,
-        grantType: oauth2Config.grantType,
+        grantType: oauth2Config.grantType || GrantType.JWT_BEARER, // 确保有默认值
         userIdField: oauth2Config.identityMapping?.userIdField,
         userNameField: oauth2Config.identityMapping?.userNameField,
         emailField: oauth2Config.identityMapping?.emailField,
@@ -101,6 +101,19 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
         const values = await form.validateFields(['type'])
         setSelectedType(values.type)
         setCurrentStep(1)
+        
+        // 为不同类型设置默认值
+        if (values.type === AuthenticationType.OAUTH2) {
+          form.setFieldsValue({
+            grantType: GrantType.JWT_BEARER,
+            enabled: true
+          })
+        } else if (values.type === AuthenticationType.OIDC) {
+          form.setFieldsValue({
+            enabled: true,
+            configMode: 'auto'
+          })
+        }
       } catch (error) {
         // 验证失败
       }
@@ -176,12 +189,13 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
         } as (OidcConfig & { type: AuthenticationType.OIDC })
       } else {
         // OAuth2配置：直接创建OAuth2Config格式
+        const grantType = values.grantType || GrantType.JWT_BEARER // 确保有默认值
         newConfig = {
           provider: values.provider,
           name: values.name,
           enabled: values.enabled ?? true,
-          grantType: values.grantType,
-          jwtBearerConfig: values.grantType === GrantType.JWT_BEARER ? {
+          grantType: grantType,
+          jwtBearerConfig: grantType === GrantType.JWT_BEARER ? {
             publicKeys: values.publicKeys || []
           } : undefined,
           identityMapping: {
@@ -567,7 +581,7 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
         rules={[{required: true}]}
       >
         <Select disabled>
-          <Select.Option value={GrantType.JWT_BEARER}>JWT Bearer</Select.Option>
+          <Select.Option value={GrantType.JWT_BEARER}>JWT断言</Select.Option>
         </Select>
       </Form.Item>
 
@@ -861,14 +875,12 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
                 <Select placeholder="请选择认证方式" size="large">
                   <Select.Option value={AuthenticationType.OIDC}>
                     <div className="py-2">
-                      <div className="font-medium">OIDC (OpenID Connect)</div>
-                      <div className="text-sm text-gray-500">适用于Google、微软、阿里云等标准身份提供商</div>
+                      <div className="font-medium">OIDC</div>
                     </div>
                   </Select.Option>
                   <Select.Option value={AuthenticationType.OAUTH2}>
                     <div className="py-2">
-                      <div className="font-medium">OAuth2 JWT Bearer</div>
-                      <div className="text-sm text-gray-500">适用于企业内部认证系统和自定义令牌验证</div>
+                      <div className="font-medium">OAuth2</div>
                     </div>
                   </Select.Option>
                 </Select>
