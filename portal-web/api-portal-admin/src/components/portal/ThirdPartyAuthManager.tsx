@@ -1,6 +1,6 @@
 import {useState} from 'react'
 import {Button, Form, Input, Select, Switch, Table, Modal, Space, message, Divider, Steps, Card, Tabs, Collapse, Radio} from 'antd'
-import {PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, MinusCircleOutlined, KeyOutlined, CheckCircleFilled, CloseCircleFilled} from '@ant-design/icons'
+import {PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, MinusCircleOutlined, KeyOutlined, CheckCircleFilled, MinusCircleFilled} from '@ant-design/icons'
 import {ThirdPartyAuthConfig, AuthenticationType, GrantType, AuthCodeConfig, OAuth2Config, OidcConfig, PublicKeyFormat} from '@/types'
 
 interface ThirdPartyAuthManagerProps {
@@ -269,10 +269,10 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
           {enabled ? (
             <CheckCircleFilled className="text-green-500 mr-2" style={{fontSize: '12px'}} />
           ) : (
-            <CloseCircleFilled className="text-red-500 mr-2" style={{fontSize: '12px'}} />
+            <MinusCircleFilled className="text-gray-500 mr-2" style={{fontSize: '12px'}} />
           )}
           <span className="text-gray-700">
-            {enabled ? '已启用' : '已禁用'}
+            {enabled ? '已启用' : '已停用'}
           </span>
         </div>
       )
@@ -346,10 +346,10 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
           {enabled ? (
             <CheckCircleFilled className="text-green-500 mr-2" style={{fontSize: '12px'}} />
           ) : (
-            <CloseCircleFilled className="text-red-500 mr-2" style={{fontSize: '12px'}} />
+            <MinusCircleFilled className="text-gray-500 mr-2" style={{fontSize: '12px'}} />
           )}
           <span className="text-gray-700">
-            {enabled ? '已启用' : '已禁用'}
+            {enabled ? '已启用' : '已停用'}
           </span>
         </div>
       )

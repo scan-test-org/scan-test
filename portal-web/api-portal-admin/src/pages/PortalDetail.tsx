@@ -34,7 +34,7 @@ const menuItems = [
     key: "published-apis",
     label: "Published API Products",
     icon: FileTextOutlined,
-    description: "已发布的API管理"
+    description: "已发布的API产品"
   },
   {
     key: "developers",
