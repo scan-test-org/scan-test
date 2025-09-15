@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const env = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '')
-const apiPrefix = env.VITE_API_BASE_URL
+const apiPrefix = env.VITE_API_BASE_URL || '/api/v1'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
