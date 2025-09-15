@@ -265,7 +265,7 @@ function McpDetail() {
       {/* 主要内容区域 - 左右布局 */}
       <Row gutter={24}>
         {/* 左侧内容 */}
-        <Col span={16}>
+        <Col span={15}>
           <Card className="mb-6">
             <Tabs
               defaultActiveKey="overview"
@@ -351,7 +351,7 @@ function McpDetail() {
         </Col>
 
         {/* 右侧连接指导 */}
-        <Col span={8}>
+        <Col span={9}>
           {mcpConfig && (
             <Card className="mb-6">
               <div className="mb-4">

@@ -521,7 +521,7 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
                     <path fillRule="evenodd" d="M10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                   </svg>
                   <span className="ml-2">高级配置</span>
-                  <span className="text-xs text-gray-400 ml-2">用户身份映射</span>
+                  <span className="text-xs text-gray-400 ml-2">身份映射</span>
                 </div>
               ),
               children: (
@@ -529,19 +529,19 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
                   <div className="grid grid-cols-3 gap-4">
                     <Form.Item
                       name="userIdField"
-                      label="用户ID字段"
+                      label="开发者ID"
                     >
                       <Input placeholder="默认: sub"/>
                     </Form.Item>
                     <Form.Item
                       name="userNameField"
-                      label="用户名字段"
+                      label="开发者名称"
                     >
                       <Input placeholder="默认: name"/>
                     </Form.Item>
                     <Form.Item
                       name="emailField"
-                      label="邮箱字段"
+                      label="邮箱"
                     >
                       <Input placeholder="默认: email"/>
                     </Form.Item>
@@ -717,7 +717,7 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
                     <path fillRule="evenodd" d="M10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                   </svg>
                   <span className="ml-2">高级配置</span>
-                  <span className="text-xs text-gray-400 ml-2">用户身份映射</span>
+                  <span className="text-xs text-gray-400 ml-2">身份映射</span>
                 </div>
               ),
               children: (
@@ -725,19 +725,19 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
                   <div className="grid grid-cols-3 gap-4">
                     <Form.Item
                       name="userIdField"
-                      label="用户ID字段"
+                      label="开发者ID"
                     >
                       <Input placeholder="默认: userId"/>
                     </Form.Item>
                     <Form.Item
                       name="userNameField"
-                      label="用户名字段"
+                      label="开发者名称"
                     >
                       <Input placeholder="默认: username"/>
                     </Form.Item>
                     <Form.Item
                       name="emailField"
-                      label="邮箱字段"
+                      label="邮箱"
                     >
                       <Input placeholder="默认: email"/>
                     </Form.Item>
@@ -875,12 +875,12 @@ export function ThirdPartyAuthManager({configs, onSave}: ThirdPartyAuthManagerPr
                 <Select placeholder="请选择认证方式" size="large">
                   <Select.Option value={AuthenticationType.OIDC}>
                     <div className="py-2">
-                      <div className="font-medium">OIDC</div>
+                      <div className="font-medium">OIDC（适用于支持OpenID Connect的身份提供商认证）</div>
                     </div>
                   </Select.Option>
                   <Select.Option value={AuthenticationType.OAUTH2}>
                     <div className="py-2">
-                      <div className="font-medium">OAuth2</div>
+                      <div className="font-medium">OAuth2（适用于服务间集成）</div>
                     </div>
                   </Select.Option>
                 </Select>
