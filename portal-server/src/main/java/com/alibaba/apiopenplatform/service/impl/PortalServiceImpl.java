@@ -39,7 +39,7 @@ import com.alibaba.apiopenplatform.entity.ProductSubscription;
 import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.repository.SubscriptionRepository;
-import com.alibaba.apiopenplatform.service.OidcService;
+import com.alibaba.apiopenplatform.service.IdpService;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DomainType;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
@@ -77,7 +77,7 @@ public class PortalServiceImpl implements PortalService {
 
     private final ContextHolder contextHolder;
 
-    private final OidcService oidcService;
+    private final IdpService idpService;
 
     private final String domainFormat = "%s.api.portal.local";
 
@@ -159,10 +159,14 @@ public class PortalServiceImpl implements PortalService {
         param.update(portal);
         // 验证OIDC配置
         PortalSettingConfig setting = portal.getPortalSettingConfig();
-        if (setting != null && CollUtil.isNotEmpty(setting.getOidcConfigs())) {
-            oidcService.validateOidcConfigs(setting.getOidcConfigs());
+        if (CollUtil.isNotEmpty(setting.getOidcConfigs())) {
+            idpService.validateOidcConfigs(setting.getOidcConfigs());
         }
-        
+
+        if (CollUtil.isNotEmpty(setting.getOauth2Configs())) {
+            idpService.validateOAuth2Configs(setting.getOauth2Configs());
+        }
+
         // 至少保留一种认证方式
         if (BooleanUtil.isFalse(setting.getBuiltinAuthEnabled())) {
             boolean enabledOidc = Optional.ofNullable(setting.getOidcConfigs())

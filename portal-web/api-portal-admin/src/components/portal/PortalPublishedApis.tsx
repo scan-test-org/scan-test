@@ -62,7 +62,7 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
         setModalLoading(false)
       })
     }
-  }, [isModalVisible, apiProducts])
+  }, [isModalVisible]) // 移除apiProducts依赖，避免重复请求
 
   const handlePageChange = (page: number, size?: number) => {
     setCurrentPage(page)

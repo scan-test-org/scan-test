@@ -60,7 +60,7 @@ public class Product extends BaseEntity {
     @Column(name = "enable_consumer_auth")
     private Boolean enableConsumerAuth;
 
-    @Column(name = "document", columnDefinition = "json")
+    @Column(name = "document", columnDefinition = "longtext")
     private String document;
 
     @Column(name = "icon", columnDefinition = "json")

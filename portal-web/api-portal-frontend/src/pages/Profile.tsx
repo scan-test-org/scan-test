@@ -5,6 +5,7 @@ import api, { getOidcProviders, type IdpResult } from '../lib/api'
 import aliyunIcon from '../assets/aliyun.png';
 import githubIcon from '../assets/github.png';
 import googleIcon from '../assets/google.png';
+import {message} from "antd";
 
 const providerIcons: Record<string, string> = {
   aliyun: aliyunIcon,

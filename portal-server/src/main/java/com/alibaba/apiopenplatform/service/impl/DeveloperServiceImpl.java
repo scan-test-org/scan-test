@@ -32,18 +32,17 @@ import com.alibaba.apiopenplatform.dto.params.developer.UpdateDeveloperParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PageResult;
-import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.entity.Developer;
+import com.alibaba.apiopenplatform.entity.Portal;
 import com.alibaba.apiopenplatform.repository.DeveloperRepository;
+import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.service.DeveloperService;
 import com.alibaba.apiopenplatform.core.utils.PasswordHasher;
 import com.alibaba.apiopenplatform.core.utils.IdGenerator;
 import com.alibaba.apiopenplatform.repository.DeveloperExternalIdentityRepository;
 import com.alibaba.apiopenplatform.entity.DeveloperExternalIdentity;
-import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DeveloperAuthType;
 import com.alibaba.apiopenplatform.support.enums.DeveloperStatus;
-import com.alibaba.apiopenplatform.support.portal.PortalSettingConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -72,7 +71,7 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     private final DeveloperExternalIdentityRepository externalRepository;
 
-    private final PortalService portalService;
+    private final PortalRepository portalRepository;
 
     private final ContextHolder contextHolder;
 
@@ -84,16 +83,13 @@ public class DeveloperServiceImpl implements DeveloperService {
 
         // 检查是否自动审批
         String portalId = contextHolder.getPortal();
-        PortalResult portal = portalService.getPortal(portalId);
+        Portal portal = findPortal(portalId);
         boolean autoApprove = portal.getPortalSettingConfig() != null
                 && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveDevelopers());
 
         if (autoApprove) {
             String token = generateToken(developer.getDeveloperId());
-            return AuthResult.builder()
-                    .accessToken(token)
-                    .expiresIn(TokenUtil.getTokenExpiresIn())
-                    .build();
+            return AuthResult.of(token, TokenUtil.getTokenExpiresIn());
         }
         return null;
     }
@@ -110,7 +106,7 @@ public class DeveloperServiceImpl implements DeveloperService {
         developer.setPortalId(portalId);
         developer.setPasswordHash(PasswordHasher.hash(param.getPassword()));
 
-        PortalResult portal = portalService.getPortal(portalId);
+        Portal portal = findPortal(portalId);
         boolean autoApprove = portal.getPortalSettingConfig() != null
                 && BooleanUtil.isTrue(portal.getPortalSettingConfig().getAutoApproveDevelopers());
         developer.setStatus(autoApprove ? DeveloperStatus.APPROVED : DeveloperStatus.PENDING);
@@ -145,66 +141,6 @@ public class DeveloperServiceImpl implements DeveloperService {
     public void existsDeveloper(String developerId) {
         developerRepository.findByDeveloperId(developerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER, developerId));
-    }
-
-    @Override
-    public Optional<AuthResult> handleExternalLogin(String providerName, String providerSubject, String email, String displayName, String rawInfoJson) {
-        Optional<DeveloperExternalIdentity> extOpt = externalRepository.findByProviderAndSubject(providerName, providerSubject);
-        Developer developer;
-
-        if (extOpt.isPresent()) {
-            developer = extOpt.get().getDeveloper();
-        } else {
-            developer = createExternalDeveloper(providerName, providerSubject, email, displayName, rawInfoJson);
-        }
-
-        String token = generateToken(developer.getDeveloperId());
-        return Optional.of(AuthResult.of(token, TokenUtil.getTokenExpiresIn()));
-    }
-
-    @Override
-    public void bindExternalIdentity(String userId, String providerName, String providerSubject, String displayName, String rawInfoJson, String portalId) {
-        validateOidcProvider(portalId, providerName);
-
-        Developer developer = findDeveloper(userId);
-
-        Optional<DeveloperExternalIdentity> extOpt = externalRepository.findByProviderAndSubject(providerName, providerSubject);
-        if (extOpt.isPresent()) {
-            String boundDevId = extOpt.get().getDeveloper().getDeveloperId();
-            if (!boundDevId.equals(userId)) {
-                throw new BusinessException(ErrorCode.INVALID_REQUEST, "该外部账号已被其他用户绑定");
-            }
-            return;
-        }
-
-        DeveloperExternalIdentity ext = DeveloperExternalIdentity.builder()
-                .provider(providerName)
-                .subject(providerSubject)
-                .displayName(displayName)
-                .rawInfoJson(rawInfoJson)
-                .developer(developer)
-                .build();
-        externalRepository.save(ext);
-    }
-
-    @Override
-    public void unbindExternalIdentity(String userId, String providerName, String providerSubject) {
-        String portalId = contextHolder.getPortal();
-        validateOidcProvider(portalId, providerName);
-
-        Developer developer = findDeveloper(userId);
-
-        List<DeveloperExternalIdentity> identities = externalRepository.findByDeveloper_DeveloperId(userId);
-        boolean hasBuiltin = developer.getPasswordHash() != null;
-        long otherCount = identities.stream()
-                .filter(id -> !(id.getProvider().equals(providerName) && id.getSubject().equals(providerSubject)))
-                .count();
-
-        if (!hasBuiltin && otherCount == 0) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "至少保留一种登录方式");
-        }
-
-        externalRepository.deleteByProviderAndSubjectAndDeveloper_DeveloperId(providerName, providerSubject, userId);
     }
 
     @Override
@@ -349,18 +285,6 @@ public class DeveloperServiceImpl implements DeveloperService {
         return username;
     }
 
-    private void validateOidcProvider(String portalId, String providerName) {
-        PortalResult portal = portalService.getPortal(portalId);
-        PortalSettingConfig portalSetting = portal.getPortalSettingConfig();
-
-        boolean valid = portalSetting.getOidcConfigs() != null &&
-                portalSetting.getOidcConfigs().stream()
-                        .anyMatch(config -> providerName.equals(config.getProvider()) && config.isEnabled());
-        if (!valid) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "OIDC认证配置缺失");
-        }
-    }
-
     private String generateDeveloperId() {
         return IdGenerator.genDeveloperId();
     }
@@ -368,6 +292,11 @@ public class DeveloperServiceImpl implements DeveloperService {
     private Developer findDeveloper(String developerId) {
         return developerRepository.findByDeveloperId(developerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.DEVELOPER, developerId));
+    }
+
+    private Portal findPortal(String portalId) {
+        return portalRepository.findByPortalId(portalId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL, portalId));
     }
 
     private Specification<Developer> buildSpecification(QueryDeveloperParam param) {

@@ -382,12 +382,12 @@ public class ProductServiceImpl implements ProductService {
     public String getProductDashboard(String productId) {
         // 获取产品关联的网关信息
         ProductRef productRef = productRefRepository.findFirstByProductId(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId));
-        
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PRODUCT, productId));
+
         if (productRef.getGatewayId() == null) {
-            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "网关", "该产品尚未关联网关服务");
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "该产品尚未关联网关服务");
         }
-        
+
         // 通过网关服务获取Dashboard URL
         return gatewayService.getDashboard(productRef.getGatewayId());
     }

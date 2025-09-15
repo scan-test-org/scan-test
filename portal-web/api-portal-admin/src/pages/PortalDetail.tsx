@@ -8,7 +8,6 @@ import {
   GlobalOutlined,
   FileTextOutlined,
   TeamOutlined,
-  UserOutlined,
   SettingOutlined
 } from '@ant-design/icons'
 import { PortalOverview } from '@/components/portal/PortalOverview'
@@ -17,7 +16,7 @@ import { PortalDevelopers } from '@/components/portal/PortalDevelopers'
 import { PortalConsumers } from '@/components/portal/PortalConsumers'
 import { PortalSettings } from '@/components/portal/PortalSettings'
 import { portalApi } from '@/lib/api'
-import { Portal, ApiResponse } from '@/types'
+import { Portal } from '@/types'
 
 const { Title, Paragraph } = Typography
 
@@ -145,7 +144,7 @@ export default function PortalDetail() {
     portalApi.deletePortal(searchParams.get('id') || '').then(() => {
       message.success('删除成功')
       navigate('/portals')
-    }).catch((error) => {
+    }).catch(() => {
       // message.error(error.response?.data?.message || '删除失败')
     })
   }

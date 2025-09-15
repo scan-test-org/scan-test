@@ -1,8 +1,8 @@
 package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.codec.Base64;
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -95,7 +95,7 @@ public class OidcServiceImpl implements OidcService {
         OidcConfig oidcConfig = findOidcConfig(provider);
 
         // 使用授权码获取Token
-        IdpTokenResult tokenResult = requestToken(code, idpState, oidcConfig, request);
+        IdpTokenResult tokenResult = requestToken(code, oidcConfig, request);
 
         // 获取用户信息，优先使用ID Token，降级到UserInfo端点
         Map<String, Object> userInfo = getUserInfo(tokenResult, oidcConfig);
@@ -120,7 +120,6 @@ public class OidcServiceImpl implements OidcService {
                         .map(config -> IdpResult.builder()
                                 .provider(config.getProvider())
                                 .displayName(config.getName())
-//                                .enabled(true)
                                 .build())
                         .collect(Collectors.toList()))
                 .orElse(Collections.emptyList());
@@ -180,7 +179,7 @@ public class OidcServiceImpl implements OidcService {
         return idpState;
     }
 
-    private IdpTokenResult requestToken(String code, IdpState state, OidcConfig oidcConfig, HttpServletRequest request) {
+    private IdpTokenResult requestToken(String code, OidcConfig oidcConfig, HttpServletRequest request) {
         AuthCodeConfig authCodeConfig = oidcConfig.getAuthCodeConfig();
         String redirectUri = buildRedirectUri(request);
 
@@ -290,76 +289,6 @@ public class OidcServiceImpl implements OidcService {
                 });
     }
 
-    @Override
-    public void validateOidcConfigs(List<OidcConfig> oidcConfigs) {
-        if (CollUtil.isEmpty(oidcConfigs)) {
-            return;
-        }
-
-        // provider唯一
-        Set<String> providers = oidcConfigs.stream()
-                .map(OidcConfig::getProvider)
-                .filter(StrUtil::isNotBlank)
-                .collect(Collectors.toSet());
-        if (providers.size() != oidcConfigs.size()) {
-            throw new BusinessException(ErrorCode.CONFLICT, "OIDC配置中存在空或重复的provider");
-        }
-
-        oidcConfigs.forEach(config -> {
-            AuthCodeConfig authConfig = Optional.ofNullable(config.getAuthCodeConfig())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PARAMETER,
-                            StrUtil.format("OIDC配置{}缺少授权码配置", config.getProvider())));
-            // 基础参数
-            if (StrUtil.isBlank(authConfig.getClientId()) ||
-                    StrUtil.isBlank(authConfig.getClientSecret()) ||
-                    StrUtil.isBlank(authConfig.getScopes())) {
-                throw new BusinessException(ErrorCode.INVALID_PARAMETER,
-                        StrUtil.format("OIDC配置{}缺少必要参数: Client ID, Client Secret 或 Scopes", config.getProvider()));
-            }
-
-            // 端点配置
-            if (StrUtil.isNotBlank(authConfig.getIssuer())) {
-                discoverAndSetEndpoints(config.getProvider(), authConfig);
-            } else {
-                if (StrUtil.isBlank(authConfig.getAuthorizationEndpoint()) ||
-                        StrUtil.isBlank(authConfig.getTokenEndpoint()) ||
-                        StrUtil.isBlank(authConfig.getUserInfoEndpoint())) {
-                    throw new BusinessException(ErrorCode.INVALID_PARAMETER,
-                            StrUtil.format("OIDC配置{}缺少必要端点配置", config.getProvider()));
-                }
-            }
-        });
-    }
-
-    @SuppressWarnings("unchecked")
-    private void discoverAndSetEndpoints(String provider, AuthCodeConfig config) {
-        String discoveryUrl = config.getIssuer().replaceAll("/$", "") + "/.well-known/openid-configuration";
-
-        try {
-            Map<String, Object> discovery = executeRequest(discoveryUrl, HttpMethod.GET, null, null, Map.class);
-
-            // 验证并设置端点
-            String authEndpoint = getRequiredEndpoint(discovery, IdpConstants.AUTHORIZATION_ENDPOINT);
-            String tokenEndpoint = getRequiredEndpoint(discovery, IdpConstants.TOKEN_ENDPOINT);
-            String userInfoEndpoint = getRequiredEndpoint(discovery, IdpConstants.USERINFO_ENDPOINT);
-
-            config.setAuthorizationEndpoint(authEndpoint);
-            config.setTokenEndpoint(tokenEndpoint);
-            config.setUserInfoEndpoint(userInfoEndpoint);
-        } catch (Exception e) {
-            log.error("Failed to discover OIDC endpoints from discovery URL: {}", discoveryUrl, e);
-            throw new BusinessException(ErrorCode.INVALID_PARAMETER, StrUtil.format("OIDC配置{}的Issuer无效或无法访问", provider));
-        }
-    }
-
-    private String getRequiredEndpoint(Map<String, Object> discovery, String name) {
-        return Optional.ofNullable(discovery.get(name))
-                .map(Object::toString)
-                .filter(StrUtil::isNotBlank)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_PARAMETER,
-                        "OIDC Discovery配置中缺少端点: " + name));
-    }
-
     private <T> T executeRequest(String url, HttpMethod method, HttpHeaders headers, Object body, Class<T> responseType) {
         HttpEntity<?> requestEntity = new HttpEntity<>(body, headers);
         log.info("Executing HTTP request to: {}", url);
@@ -369,6 +298,8 @@ public class OidcServiceImpl implements OidcService {
                 requestEntity,
                 String.class
         );
+
+        log.info("Received HTTP response from: {}, status: {}, body: {}", url, response.getStatusCode(), response.getBody());
 
         return JSONUtil.toBean(response.getBody(), responseType);
     }

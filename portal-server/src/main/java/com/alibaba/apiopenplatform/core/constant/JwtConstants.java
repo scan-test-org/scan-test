@@ -19,9 +19,6 @@
 
 package com.alibaba.apiopenplatform.core.constant;
 
-/**
- * @author zh
- */
 public class JwtConstants {
 
     // region JWT Header
@@ -128,4 +125,3 @@ public class JwtConstants {
 
     // endregion
 }
-

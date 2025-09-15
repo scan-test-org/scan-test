@@ -99,13 +99,13 @@ public class DeveloperController {
         developerService.setDeveloperStatus(developerId, param.getStatus());
     }
 
-    @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号")
-    @DeleteMapping("/{developerId}/identity")
-    @DeveloperAuth
-    public void unbindExternalIdentity(@PathVariable("developerId") String developerId,
-                                       @RequestBody UnbindExternalIdentityParam param) {
-        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject());
-    }
+//    @Operation(summary = "解绑第三方登录", description = "解绑当前登录用户的指定第三方账号")
+//    @DeleteMapping("/{developerId}/identity")
+//    @DeveloperAuth
+//    public void unbindExternalIdentity(@PathVariable("developerId") String developerId,
+//                                       @RequestBody UnbindExternalIdentityParam param) {
+//        developerService.unbindExternalIdentity(developerId, param.getProviderName(), param.getProviderSubject());
+//    }
 
     @Operation(summary = "注销账号", description = "注销当前登录用户账号")
     @DeleteMapping("/{developerId}")

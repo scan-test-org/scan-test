@@ -38,11 +38,4 @@ public interface OidcService {
      */
     List<IdpResult> getAvailableProviders();
 
-    /**
-     * 验证OIDC配置
-     *
-     * @param oidcConfigs
-     */
-    void validateOidcConfigs(List<OidcConfig> oidcConfigs);
-
 }

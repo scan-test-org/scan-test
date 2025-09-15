@@ -23,8 +23,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.EnumUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
 import cn.hutool.jwt.signers.JWTSigner;
@@ -33,13 +31,13 @@ import com.alibaba.apiopenplatform.core.constant.JwtConstants;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
 import com.alibaba.apiopenplatform.core.exception.ErrorCode;
-import com.alibaba.apiopenplatform.core.security.ContextHolder;
 import com.alibaba.apiopenplatform.core.utils.TokenUtil;
 import com.alibaba.apiopenplatform.dto.params.developer.CreateExternalDeveloperParam;
 import com.alibaba.apiopenplatform.dto.result.AuthResult;
 import com.alibaba.apiopenplatform.dto.result.DeveloperResult;
 import com.alibaba.apiopenplatform.dto.result.PortalResult;
 import com.alibaba.apiopenplatform.service.DeveloperService;
+import com.alibaba.apiopenplatform.service.IdpService;
 import com.alibaba.apiopenplatform.service.OAuth2Service;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DeveloperAuthType;
@@ -50,13 +48,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.math.BigInteger;
-import java.security.KeyFactory;
 import java.security.PublicKey;
-import java.security.spec.RSAPublicKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
-import java.util.Base64;
 
 /**
  * @author zh
@@ -69,6 +62,8 @@ public class OAuth2ServiceImpl implements OAuth2Service {
     private final PortalService portalService;
 
     private final DeveloperService developerService;
+
+    private final IdpService idpService;
 
     @Override
     public AuthResult authenticate(String grantType, String jwtToken) {
@@ -134,7 +129,7 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
     private boolean verifySignature(JWT jwt, PublicKeyConfig keyConfig) {
         // 加载公钥
-        PublicKey publicKey = loadPublicKey(keyConfig);
+        PublicKey publicKey = idpService.loadPublicKey(keyConfig.getFormat(), keyConfig.getValue());
 
         // 验证JWT
         JWTSigner signer = createJWTSigner(keyConfig.getAlgorithm(), publicKey);
@@ -211,87 +206,4 @@ public class OAuth2ServiceImpl implements OAuth2Service {
                 });
     }
 
-    /**
-     * 加载公钥
-     */
-    private PublicKey loadPublicKey(PublicKeyConfig config) {
-        switch (config.getFormat()) {
-            case PEM:
-                return loadPublicKeyFromPem(config.getValue());
-            case JWK:
-                return loadPublicKeyFromJwk(config.getValue());
-            default:
-                throw new BusinessException(ErrorCode.INVALID_PARAMETER, "公钥格式不支持");
-        }
-    }
-
-    private PublicKey loadPublicKeyFromPem(String pemContent) {
-        // 清理PEM格式标记和空白字符
-        String publicKeyPEM = pemContent
-                .replace("-----BEGIN PUBLIC KEY-----", "")
-                .replace("-----END PUBLIC KEY-----", "")
-                .replace("-----BEGIN RSA PUBLIC KEY-----", "")
-                .replace("-----END RSA PUBLIC KEY-----", "")
-                .replaceAll("\\s", "");
-
-        if (StrUtil.isBlank(publicKeyPEM)) {
-            throw new IllegalArgumentException("PEM内容为空");
-        }
-
-        try {
-            // Base64解码
-            byte[] decoded = Base64.getDecoder().decode(publicKeyPEM);
-
-            // 公钥对象
-            X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            return keyFactory.generatePublic(spec);
-        } catch (Exception e) {
-            log.error("PEM公钥解析失败", e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "PEM公钥解析失败: " + e.getMessage());
-        }
-    }
-
-    private PublicKey loadPublicKeyFromJwk(String jwkContent) {
-        JSONObject jwk = JSONUtil.parseObj(jwkContent);
-
-        // 验证必需字段
-        String kty = getRequiredField(jwk, "kty");
-        if (!"RSA".equals(kty)) {
-            throw new IllegalArgumentException("当前仅支持RSA类型的JWK");
-        }
-
-        return loadRSAPublicKeyFromJwk(jwk);
-    }
-
-    private PublicKey loadRSAPublicKeyFromJwk(JSONObject jwk) {
-        // 获取必需的RSA参数
-        String nStr = getRequiredField(jwk, "n");
-        String eStr = getRequiredField(jwk, "e");
-
-        try {
-            // Base64解码参数
-            byte[] nBytes = Base64.getUrlDecoder().decode(nStr);
-            byte[] eBytes = Base64.getUrlDecoder().decode(eStr);
-
-            // 构建RSA公钥
-            BigInteger modulus = new BigInteger(1, nBytes);
-            BigInteger exponent = new BigInteger(1, eBytes);
-
-            RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            return keyFactory.generatePublic(spec);
-        } catch (Exception e) {
-            log.error("JWK RSA参数解析失败", e);
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "JWK RSA参数解析失败: " + e.getMessage());
-        }
-    }
-
-    private String getRequiredField(JSONObject jwk, String fieldName) {
-        String value = jwk.getStr(fieldName);
-        if (StrUtil.isBlank(value)) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "JWK中缺少字段: " + fieldName);
-        }
-        return value;
-    }
 }

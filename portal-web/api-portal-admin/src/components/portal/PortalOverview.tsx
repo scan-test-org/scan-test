@@ -34,6 +34,8 @@ export function PortalOverview({portal}: PortalOverviewProps) {
     const [developerCount, setDeveloperCount] = useState(0)
 
     useEffect(() => {
+        if (!portal.portalId) return;
+        
         portalApi.getDeveloperList(portal.portalId, {
             page: 1,
             size: 10
@@ -48,7 +50,7 @@ export function PortalOverview({portal}: PortalOverviewProps) {
             setApiCount(res.data.totalElements || 0)
         })
 
-    }, [portal])
+    }, [portal.portalId]) // 只依赖portalId，而不是整个portal对象
 
     return (
         <div className="p-6 space-y-6">
