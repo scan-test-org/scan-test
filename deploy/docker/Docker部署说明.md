@@ -4,9 +4,9 @@
 
 AI 开放平台包含四个服务组件：
 - **mysql**: 数据库服务，为后端服务提供数据存储；
-- **api-portal-server**: 后端服务，运行在 8080 端口；
-- **api-portal-admin**: 管理后台界面，运行在 5174 端口，供管理员配置 Portal；
-- **api-portal-frontend**: 前台用户界面，运行在 5173 端口，供用户浏览和使用 API Product。
+- **himarket-server**: 后端服务，运行在 8080 端口；
+- **himarket-admin**: 管理后台界面，运行在 5174 端口，供管理员配置 Portal；
+- **himarket-frontend**: 前台用户界面，运行在 5173 端口，供用户浏览和使用 API Product。
 
 ## 🚀 快速部署（推荐）
 
@@ -33,7 +33,7 @@ services:
 
   api-portal-server:
     image: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-server:1.0.0
-    container_name: api-portal-server
+    container_name: himarket-server
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -46,26 +46,26 @@ services:
       - mysql
     restart: always
 
-  api-portal-admin:
-    image: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-admin:1.0.0
-    container_name: api-portal-admin
+  himarket-admin:
+    image: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/himarket-admin:1.0.0
+    container_name: himarket-admin
     environment:
-      - API_PORTAL_SERVER=http://api-portal-server:8080
+      - HIMARKET_SERVER=http://himarket-server:8080
     ports:
       - "5174:8000"
     depends_on:
-      - api-portal-server
+      - himarket-server
     restart: always
 
-  api-portal-frontend:
-    image: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-frontend:1.0.0
-    container_name: api-portal-frontend
+  himarket-frontend:
+    image: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/himarket-frontend:1.0.0
+    container_name: himarket-frontend
     environment:
-      - API_PORTAL_SERVER=http://api-portal-server:8080
+      - HIMARKET_SERVER=http://api-portal-server:8080
     ports:
       - "5173:8000"
     depends_on:
-      - api-portal-server
+      - himarket-server
     restart: always
 ```
 
@@ -109,7 +109,7 @@ services:
 
   api-portal-server:
     image: opensource-registry.cn-hangzhou.cr.aliyuncs.com/higress-group/api-portal-server:1.0.0
-    container_name: api-portal-server
+    container_name: himarket-server
     environment:
       - DB_HOST=your-mysql-host        # 替换为你的数据库地址
       - DB_PORT=3306                   # 替换为你的数据库端口
@@ -136,12 +136,12 @@ docker-compose up -d
 
 ```yaml
 # 将 frontend 改为 80 端口访问
-api-portal-frontend:
+himarket-frontend:
   ports:
     - "80:8000"    # 主机80端口 → 容器8000端口
 
 # 将 admin 改为其他端口
-api-portal-admin:
+himarket-admin:
   ports:
     - "8090:8000"  # 主机8090端口 → 容器8000端口
 ```
@@ -167,11 +167,11 @@ services:
   api-portal-server:
     image: api-portal-server:1.0.0    # 替换为本地镜像
 
-  api-portal-admin:
-    image: api-portal-admin:1.0.0     # 替换为本地镜像
+  himarket-admin:
+    image: himarket-admin:1.0.0     # 替换为本地镜像
 
-  api-portal-frontend:
-    image: api-portal-frontend:1.0.0  # 替换为本地镜像
+  himarket-frontend:
+    image: himarket-frontend:1.0.0  # 替换为本地镜像
 ```
 
 ### 启动服务
