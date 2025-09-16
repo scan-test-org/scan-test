@@ -385,7 +385,7 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
     }
 
     @Override
-    public String getDashboard(Gateway gateway) {
+    public String getDashboard(Gateway gateway,String type) {
         SLSClient ticketClient = new SLSClient(gateway.getApigConfig(),true);
         String ticket = null;
         try {
@@ -419,7 +419,16 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error fetching Project,Cause:" + e.getMessage());
         }
         String region = gateway.getApigConfig().getRegion();
-        String dashboardUrl = String.format("https://sls.console.aliyun.com/lognext/project/%s/dashboard/dashboard-1756276497392-966932?slsRegion=%s&sls_ticket=%s&isShare=true&hideTopbar=true&hideSidebar=true&ignoreTabLocalStorage=true", projectName,region, ticket);
+        String gatewayId = gateway.getGatewayId();
+        String dashboardId = "";
+        if (type.equals("Portal")) {
+            dashboardId = "dashboard-1758009692051-393998";
+        } else if (type.equals("MCP")) {
+            dashboardId = "dashboard-1757483808537-433375";
+        } else if (type.equals("API")) {
+            dashboardId = "dashboard-1756276497392-966932";
+        }
+        String dashboardUrl = String.format("https://sls.console.aliyun.com/lognext/project/%s/dashboard/%s?filters=cluster_id%%253A%%2520%s&slsRegion=%s&sls_ticket=%s&isShare=true&hideTopbar=true&hideSidebar=true&ignoreTabLocalStorage=true", projectName, dashboardId, gatewayId, region, ticket);        log.info("Dashboard URL: {}", dashboardUrl);
         return dashboardUrl;
     }
 
