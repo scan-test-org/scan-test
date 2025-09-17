@@ -180,32 +180,49 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         }))
         setApiList(mcpServers)
       } else if (gateway.gatewayType === 'APIG_AI') {
-        // APIG_AI类型：获取MCP Server列表
-        const res = await gatewayApi.getGatewayMcpServers(gatewayId, {
-          page: 1,
-          size: 500 // 获取所有MCP Server
-        })
-        const mcpServers = (res.data?.content || []).map((api: any) => ({
-          mcpServerName: api.mcpServerName,
-          fromGatewayType: 'APIG_AI' as const,
-          mcpRouteId: api.mcpRouteId,
-          apiId: api.apiId,
-          type: 'MCP Server'
-        }))
-        setApiList(mcpServers)
+        // APIG_AI：MODEL_API 使用模型接口，否则使用 MCP Server 接口
+        const res = apiProduct.type === 'MODEL_API'
+          ? await gatewayApi.getGatewayModelServers(gatewayId, { page: 1, size: 500 })
+          : await gatewayApi.getGatewayMcpServers(gatewayId, { page: 1, size: 500 })
+        const items = (res.data?.content || []).map((api: any) => (
+          apiProduct.type === 'MODEL_API'
+            ? {
+                // model-servers 返回 apiId / apiName
+                apiId: api.apiId,
+                apiName: api.apiName,
+                fromGatewayType: 'APIG_AI' as const,
+                type: 'Model API'
+              }
+            : {
+                mcpServerName: api.mcpServerName || api.name,
+                fromGatewayType: 'APIG_AI' as const,
+                mcpRouteId: api.mcpRouteId,
+                type: 'MCP Server'
+              }
+        ))
+        setApiList(items)
       } else if (gateway.gatewayType === 'ADP_AI_GATEWAY') {
-        // ADP_AI_GATEWAY类型：获取MCP Server列表
-        const res = await gatewayApi.getGatewayMcpServers(gatewayId, {
-          page: 1,
-          size: 500 // 获取所有MCP Server
-        })
-        const mcpServers = (res.data?.content || []).map((api: any) => ({
-          mcpServerName: api.mcpServerName || api.name,
-          fromGatewayType: 'ADP_AI_GATEWAY' as const,
-          mcpRouteId: api.mcpRouteId,
-          type: 'MCP Server'
-        }))
-        setApiList(mcpServers)
+        // ADP_AI_GATEWAY：MODEL_API 使用模型接口，否则使用 MCP Server 接口
+        const res = apiProduct.type === 'MODEL_API'
+          ? await gatewayApi.getGatewayModelServers(gatewayId, { page: 1, size: 500 })
+          : await gatewayApi.getGatewayMcpServers(gatewayId, { page: 1, size: 500 })
+        const items = (res.data?.content || []).map((api: any) => (
+          apiProduct.type === 'MODEL_API'
+            ? {
+                // model-servers 返回 apiId / apiName
+                apiId: api.apiId,
+                apiName: api.apiName,
+                fromGatewayType: 'ADP_AI_GATEWAY' as const,
+                type: 'Model API'
+              }
+            : {
+                mcpServerName: api.mcpServerName || api.name,
+                fromGatewayType: 'ADP_AI_GATEWAY' as const,
+                mcpRouteId: api.mcpRouteId,
+                type: 'MCP Server'
+              }
+        ))
+        setApiList(items)
       }
     } catch (error) {
     } finally {
@@ -416,10 +433,11 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         <div>
           <h1 className="text-2xl font-bold mb-2">关联服务</h1>
           <p className="text-gray-600">
-            {apiProduct.type === 'REST_API' 
-              ? '关联REST API服务到此产品' 
-              : '关联MCP Server服务到此产品'
-            }
+            {apiProduct.type === 'REST_API'
+              ? '关联REST API服务到此产品'
+              : apiProduct.type === 'MCP_SERVER'
+                ? '关联MCP Server服务到此产品'
+                : '关联Model API服务到此产品'}
           </p>
         </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
@@ -463,6 +481,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 placeholder="请选择网关实例" 
                 loading={gatewayLoading}
                 showSearch
+                optionFilterProp="label"
                 filterOption={(input, option) =>
                   (option?.value as unknown as string)?.toLowerCase().includes(input.toLowerCase())
                 }
@@ -497,9 +516,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 placeholder="请选择Nacos实例"
                 loading={nacosLoading}
                 showSearch
-                filterOption={(input, option) =>
-                  (option?.value as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-                }
+                optionFilterProp="label"
                 onChange={handleNacosChange}
                 optionLabelProp="label"
               >
@@ -532,7 +549,7 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 loading={apiLoading && nacosNamespaces.length === 0}
                 onChange={handleNamespaceChange}
                 showSearch
-                filterOption={(input, option) => (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())}
+                optionFilterProp="label"
                 optionLabelProp="label"
               >
                 {nacosNamespaces.map(ns => (
@@ -550,28 +567,26 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
           {(selectedGateway || (selectedNacos && selectedNamespace)) && (
             <Form.Item
               name="apiId"
-              label={apiProduct.type === 'REST_API' ? '选择REST API' : '选择MCP Server'}
-              rules={[{ required: true, message: apiProduct.type === 'REST_API' ? '请选择REST API' : '请选择MCP Server' }]}
+              label={apiProduct.type === 'REST_API' ? '选择REST API' : apiProduct.type === 'MCP_SERVER' ? '选择MCP Server' : '选择Model API'}
+              rules={[{ required: true, message: apiProduct.type === 'REST_API' ? '请选择REST API' : (apiProduct.type === 'MCP_SERVER' ? '请选择MCP Server' : '请选择Model API') }]}
             >
               <Select 
                 placeholder={apiProduct.type === 'REST_API' ? '请选择REST API' : '请选择MCP Server'} 
                 loading={apiLoading}
                 showSearch
-                filterOption={(input, option) =>
-                  (option?.value as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-                }
+                optionFilterProp="label"
                 optionLabelProp="label"
               >
                 {apiList.map((api: any) => (
                   <Select.Option 
-                    key={apiProduct.type === 'REST_API' ? api.apiId : (api.mcpRouteId || api.mcpServerName || api.name)} 
-                    value={apiProduct.type === 'REST_API' ? api.apiId : (api.mcpRouteId || api.mcpServerName || api.name)}
+                    key={apiProduct.type === 'REST_API' ? api.apiId : (api.apiId || api.mcpRouteId || api.mcpServerName || api.name)} 
+                    value={apiProduct.type === 'REST_API' ? api.apiId : (api.apiId || api.mcpRouteId || api.mcpServerName || api.name)}
                     label={api.apiName || api.mcpServerName || api.name}
                   >
                     <div>
                       <div className="font-medium">{api.apiName || api.mcpServerName || api.name}</div>
                       <div className="text-sm text-gray-500">
-                        {api.type} - {apiProduct.type === 'REST_API' ? api.apiId : (api.mcpRouteId || api.mcpServerName || api.name)}
+                        {api.type} - {apiProduct.type === 'REST_API' ? api.apiId : (api.apiId || api.mcpRouteId || api.mcpServerName || api.name)}
                       </div>
                     </div>
                   </Select.Option>

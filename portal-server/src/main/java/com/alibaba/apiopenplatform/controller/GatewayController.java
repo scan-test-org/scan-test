@@ -30,11 +30,13 @@ import com.alibaba.apiopenplatform.service.AdpAIGatewayService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
+@Slf4j
 @Tag(name = "网关资源管理")
 @RestController
 @RequestMapping("/gateways")
@@ -101,6 +103,15 @@ public class GatewayController {
                                                               @RequestParam(defaultValue = "1") int page,
                                                               @RequestParam(defaultValue = "500") int size) {
         return gatewayService.fetchMcpServers(gatewayId, page, size);
+    }
+
+    @Operation(summary = "获取Model Server列表")
+    @GetMapping("/{gatewayId}/model-servers")
+    public PageResult<APIResult> fetchModelServers(@PathVariable String gatewayId,
+                                                              @RequestParam(defaultValue = "1") int page,
+                                                              @RequestParam(defaultValue = "500") int size) {
+        log.warn("fetchModelServers begin.." + gatewayId + " size:" + size);
+        return gatewayService.fetchModelServers(gatewayId, page, size);
     }
 
     @Operation(summary = "获取仪表板URL")
