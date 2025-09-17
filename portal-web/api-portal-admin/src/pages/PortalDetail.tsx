@@ -8,13 +8,15 @@ import {
   GlobalOutlined,
   FileTextOutlined,
   TeamOutlined,
-  SettingOutlined
+  SettingOutlined,
+  DashboardOutlined
 } from '@ant-design/icons'
 import { PortalOverview } from '@/components/portal/PortalOverview'
 import { PortalPublishedApis } from '@/components/portal/PortalPublishedApis'
 import { PortalDevelopers } from '@/components/portal/PortalDevelopers'
 import { PortalConsumers } from '@/components/portal/PortalConsumers'
 import { PortalSettings } from '@/components/portal/PortalSettings'
+import { PortalDashboard } from '@/components/portal/PortalDashboard'
 import { portalApi } from '@/lib/api'
 import { Portal } from '@/types'
 
@@ -47,6 +49,12 @@ const menuItems = [
   //   icon: UserOutlined,
   //   description: "消费者管理"
   // },
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: DashboardOutlined,
+    description: "监控面板"
+  },
   {
     key: "settings",
     label: "Settings",
@@ -115,6 +123,8 @@ export default function PortalDetail() {
         return <PortalPublishedApis portal={portal} />
       case "developers":
         return <PortalDevelopers portal={portal} />
+      case "dashboard":
+        return <PortalDashboard portal={portal} />
       case "consumers":
         return <PortalConsumers portal={portal} />
       case "settings":
