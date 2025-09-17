@@ -110,4 +110,19 @@ public interface PortalService {
      * @return PageResult of SubscriptionResult
      */
     PageResult<SubscriptionResult> listSubscriptions(String portalId, QuerySubscriptionParam param, Pageable pageable);
+
+    /**
+     * 获取默认门户
+     *
+     * @return
+     */
+    String getDefaultPortal();
+
+    /**
+     * 获取门户的Dashboard监控面板URL
+     *
+     * @param portalId 门户ID
+     * @return Dashboard URL
+     */
+    String getDashboard(String portalId);
 }

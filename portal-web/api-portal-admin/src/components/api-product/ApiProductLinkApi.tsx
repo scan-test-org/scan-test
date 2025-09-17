@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import type { ApiProduct } from '@/types/api-product'
 import { apiProductApi, gatewayApi, nacosApi } from '@/lib/api'
 import { getServiceName } from '@/lib/utils'
+import { getGatewayTypeLabel } from '@/lib/constant'
 
 interface ApiProductLinkApiProps {
   apiProduct: ApiProduct
@@ -224,7 +225,6 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
         setApiList(items)
       }
     } catch (error) {
-      // console.error('获取API列表失败:', error)
     } finally {
       setApiLoading(false)
     }
@@ -298,6 +298,9 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
       }
       if (linkedService.higressRefConfig) {
         return 'MCP Server (HIGRESS)'
+      }
+      if (linkedService.adpAIGatewayRefConfig) {
+        return 'MCP Server (专有云AI网关)'
       }
       return '未知类型'
     }
@@ -479,19 +482,22 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
                 loading={gatewayLoading}
                 showSearch
                 optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.value as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                }
                 onChange={handleGatewayChange}
                 optionLabelProp="label"
               >
                 {gateways.map(gateway => (
-                  <Select.Option 
-                    key={gateway.gatewayId} 
+                  <Select.Option
+                    key={gateway.gatewayId}
                     value={gateway.gatewayId}
                     label={gateway.gatewayName}
                   >
                     <div>
                       <div className="font-medium">{gateway.gatewayName}</div>
                       <div className="text-sm text-gray-500">
-                        {gateway.gatewayId} - {gateway.gatewayType}
+                        {gateway.gatewayId} - {getGatewayTypeLabel(gateway.gatewayType as any)}
                       </div>
                     </div>
                   </Select.Option>
@@ -506,8 +512,8 @@ export function ApiProductLinkApi({ apiProduct, handleRefresh }: ApiProductLinkA
               label="Nacos实例"
               rules={[{ required: true, message: '请选择Nacos实例' }]}
             >
-              <Select 
-                placeholder="请选择Nacos实例" 
+              <Select
+                placeholder="请选择Nacos实例"
                 loading={nacosLoading}
                 showSearch
                 optionFilterProp="label"

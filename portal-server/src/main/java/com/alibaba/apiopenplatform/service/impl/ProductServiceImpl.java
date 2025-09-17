@@ -86,8 +86,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResult createProduct(CreateProductParam param) {
         productRepository.findByNameAndAdminId(param.getName(), contextHolder.getUser())
-                .ifPresent(APIProduct -> {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT, param.getName());
+                .ifPresent(product -> {
+                    throw new BusinessException(ErrorCode.CONFLICT, StrUtil.format("{}:{}已存在", Resources.PRODUCT, product.getName()));
                 });
 
         String productId = IdGenerator.genApiProductId();
@@ -95,12 +95,12 @@ public class ProductServiceImpl implements ProductService {
         Product product = param.convertTo();
         product.setProductId(productId);
         product.setAdminId(contextHolder.getUser());
-        
+
         // 设置默认的自动审批配置，如果未指定则默认为null（使用平台级别配置）
         if (param.getAutoApprove() != null) {
             product.setAutoApprove(param.getAutoApprove());
         }
-        
+
         productRepository.save(product);
 
         return getProduct(productId);
@@ -142,14 +142,14 @@ public class ProductServiceImpl implements ProductService {
         if (param.getType() != null && product.getType() != param.getType()) {
             productRefRepository.findFirstByProductId(productId)
                     .ifPresent(productRef -> {
-                        throw new BusinessException(ErrorCode.PRODUCT_API_EXISTS, product.getProductId());
+                        throw new BusinessException(ErrorCode.INVALID_REQUEST, "API产品已关联API");
                     });
         }
         param.update(product);
 
         // Consumer鉴权配置同步至网关
         Optional.ofNullable(param.getEnableConsumerAuth()).ifPresent(product::setEnableConsumerAuth);
-        
+
         // 更新自动审批配置
         Optional.ofNullable(param.getAutoApprove()).ifPresent(product::setAutoApprove);
 
@@ -169,7 +169,7 @@ public class ProductServiceImpl implements ProductService {
 
         // 未关联不允许发布
         if (getProductRef(productId) == null) {
-            throw new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId);
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "API产品未关联API");
         }
 
         ProductPublication productPublication = new ProductPublication();
@@ -227,7 +227,7 @@ public class ProductServiceImpl implements ProductService {
      */
     private Product findProduct(String productId) {
         return productRepository.findByProductId(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, productId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PRODUCT, productId));
     }
 
     @Override
@@ -237,7 +237,7 @@ public class ProductServiceImpl implements ProductService {
         // 是否已存在API引用
         productRefRepository.findByProductId(product.getProductId())
                 .ifPresent(productRef -> {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PRODUCT_REF, product.getProductId());
+                    throw new BusinessException(ErrorCode.CONFLICT, StrUtil.format("{}:{}已关联API", Resources.PRODUCT, productId));
                 });
         ProductRef productRef = param.convertTo();
         productRef.setProductId(productId);
@@ -256,15 +256,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProductRef(String productId) {
+        Product product = findProduct(productId);
+        product.setStatus(ProductStatus.PENDING);
+
         ProductRef productRef = productRefRepository.findFirstByProductId(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_API_NOT_FOUND, productId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "API产品未关联API"));
 
         // 已发布的产品不允许解绑
         if (publicationRepository.existsByProductId(productId)) {
-            throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "API产品已发布");
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "API产品已发布");
         }
 
         productRefRepository.delete(productRef);
+        productRepository.save(product);
     }
 
     private void syncConfig(Product product, ProductRef productRef) {
@@ -321,7 +325,7 @@ public class ProductServiceImpl implements ProductService {
 
     private Product findPublishedProduct(String portalId, String productId) {
         ProductPublication publication = publicationRepository.findByPortalIdAndProductId(portalId, productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PRODUCT, productId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PRODUCT, productId));
 
         return findProduct(publication.getProductId());
     }
@@ -379,5 +383,27 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = productRepository.findByProductIdIn(productIds);
         return products.stream()
                 .collect(Collectors.toMap(Product::getProductId, product -> new ProductResult().convertFrom(product)));
+    }
+
+    @Override
+    public String getProductDashboard(String productId) {
+        // 获取产品关联的网关信息
+        ProductRef productRef = productRefRepository.findFirstByProductId(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PRODUCT, productId));
+
+        if (productRef.getGatewayId() == null) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "该产品尚未关联网关服务");
+        }
+        // 基于产品类型选择Dashboard类型
+        Product product = findProduct(productId);
+        String dashboardType;
+        if (product.getType() == ProductType.MCP_SERVER) {
+            dashboardType = "MCP";
+        } else {
+            // REST_API、HTTP_API 统一走 API 面板
+            dashboardType = "API";
+        }
+        // 通过网关服务获取Dashboard URL
+        return gatewayService.getDashboard(productRef.getGatewayId(), dashboardType);
     }
 }

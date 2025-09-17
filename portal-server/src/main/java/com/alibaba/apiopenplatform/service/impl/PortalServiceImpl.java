@@ -21,6 +21,7 @@ package com.alibaba.apiopenplatform.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.apiopenplatform.core.constant.Resources;
 import com.alibaba.apiopenplatform.core.event.PortalDeletingEvent;
 import com.alibaba.apiopenplatform.core.exception.BusinessException;
@@ -38,6 +39,13 @@ import com.alibaba.apiopenplatform.entity.ProductSubscription;
 import com.alibaba.apiopenplatform.repository.PortalDomainRepository;
 import com.alibaba.apiopenplatform.repository.PortalRepository;
 import com.alibaba.apiopenplatform.repository.SubscriptionRepository;
+import com.alibaba.apiopenplatform.repository.ProductPublicationRepository;
+import com.alibaba.apiopenplatform.repository.ProductRefRepository;
+import com.alibaba.apiopenplatform.service.GatewayService;
+import com.alibaba.apiopenplatform.entity.ProductPublication;
+import com.alibaba.apiopenplatform.entity.ProductRef;
+import org.springframework.data.domain.PageRequest;
+import com.alibaba.apiopenplatform.service.IdpService;
 import com.alibaba.apiopenplatform.service.PortalService;
 import com.alibaba.apiopenplatform.support.enums.DomainType;
 import com.alibaba.apiopenplatform.support.portal.OidcConfig;
@@ -52,13 +60,17 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.criteria.Predicate;
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class PortalServiceImpl implements PortalService {
 
     private final PortalRepository portalRepository;
@@ -71,12 +83,20 @@ public class PortalServiceImpl implements PortalService {
 
     private final ContextHolder contextHolder;
 
+    private final IdpService idpService;
+
     private final String domainFormat = "%s.api.portal.local";
+
+    private final ProductPublicationRepository publicationRepository;
+
+    private final ProductRefRepository productRefRepository;
+
+    private final GatewayService gatewayService;
 
     public PortalResult createPortal(CreatePortalParam param) {
         portalRepository.findByName(param.getName())
                 .ifPresent(portal -> {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, portal.getName());
+                    throw new BusinessException(ErrorCode.CONFLICT, StrUtil.format("{}:{}已存在", Resources.PORTAL, portal.getName()));
                 });
 
         String portalId = IdGenerator.genPortalId();
@@ -92,8 +112,8 @@ public class PortalServiceImpl implements PortalService {
         PortalDomain portalDomain = new PortalDomain();
         portalDomain.setDomain(String.format(domainFormat, portalId));
         portalDomain.setPortalId(portalId);
-        portal.getPortalDomains().add(portalDomain);
 
+        portalDomainRepository.save(portalDomain);
         portalRepository.save(portal);
 
         return getPortal(portalId);
@@ -102,18 +122,37 @@ public class PortalServiceImpl implements PortalService {
     @Override
     public PortalResult getPortal(String portalId) {
         Portal portal = findPortal(portalId);
+        List<PortalDomain> domains = portalDomainRepository.findAllByPortalId(portalId);
+        portal.setPortalDomains(domains);
+
         return new PortalResult().convertFrom(portal);
     }
 
     @Override
     public void existsPortal(String portalId) {
         portalRepository.findByPortalId(portalId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL, portalId));
     }
 
     @Override
     public PageResult<PortalResult> listPortals(Pageable pageable) {
         Page<Portal> portals = portalRepository.findAll(pageable);
+
+        // 填充Domain
+        if (portals.hasContent()) {
+            List<String> portalIds = portals.getContent().stream()
+                    .map(Portal::getPortalId)
+                    .collect(Collectors.toList());
+
+            List<PortalDomain> allDomains = portalDomainRepository.findAllByPortalIdIn(portalIds);
+            Map<String, List<PortalDomain>> portalDomains = allDomains.stream()
+                    .collect(Collectors.groupingBy(PortalDomain::getPortalId));
+
+            portals.getContent().forEach(portal -> {
+                List<PortalDomain> domains = portalDomains.getOrDefault(portal.getPortalId(), new ArrayList<>());
+                portal.setPortalDomains(domains);
+            });
+        }
 
         return new PageResult<PortalResult>().convertFrom(portals, portal -> new PortalResult().convertFrom(portal));
     }
@@ -126,12 +165,21 @@ public class PortalServiceImpl implements PortalService {
                 .filter(name -> !name.equals(portal.getName()))
                 .flatMap(portalRepository::findByName)
                 .ifPresent(p -> {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL, p.getName());
+                    throw new BusinessException(ErrorCode.CONFLICT, StrUtil.format("{}:{}已存在", Resources.PORTAL, portal.getName()));
                 });
 
         param.update(portal);
-        // 至少保留一种认证方式
+        // 验证OIDC配置
         PortalSettingConfig setting = portal.getPortalSettingConfig();
+        if (CollUtil.isNotEmpty(setting.getOidcConfigs())) {
+            idpService.validateOidcConfigs(setting.getOidcConfigs());
+        }
+
+        if (CollUtil.isNotEmpty(setting.getOauth2Configs())) {
+            idpService.validateOAuth2Configs(setting.getOauth2Configs());
+        }
+
+        // 至少保留一种认证方式
         if (BooleanUtil.isFalse(setting.getBuiltinAuthEnabled())) {
             boolean enabledOidc = Optional.ofNullable(setting.getOidcConfigs())
                     .filter(CollUtil::isNotEmpty)
@@ -139,7 +187,7 @@ public class PortalServiceImpl implements PortalService {
                     .orElse(false);
 
             if (!enabledOidc) {
-                throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "至少配置一种认证方式");
+                throw new BusinessException(ErrorCode.INVALID_REQUEST, "至少配置一种认证方式");
             }
         }
         portalRepository.saveAndFlush(portal);
@@ -150,6 +198,9 @@ public class PortalServiceImpl implements PortalService {
     @Override
     public void deletePortal(String portalId) {
         Portal portal = findPortal(portalId);
+
+        // 清理Domain
+        portalDomainRepository.deleteAllByPortalId(portalId);
 
         // 异步清理门户资源
         eventPublisher.publishEvent(new PortalDeletingEvent(portalId));
@@ -165,17 +216,16 @@ public class PortalServiceImpl implements PortalService {
 
     @Override
     public PortalResult bindDomain(String portalId, BindDomainParam param) {
-        Portal portal = findPortal(portalId);
+        existsPortal(portalId);
         portalDomainRepository.findByPortalIdAndDomain(portalId, param.getDomain())
                 .ifPresent(portalDomain -> {
-                    throw new BusinessException(ErrorCode.RESOURCE_EXIST, Resources.PORTAL_DOMAIN, param.getDomain());
+                    throw new BusinessException(ErrorCode.CONFLICT, StrUtil.format("{}:{}已存在", Resources.PORTAL_DOMAIN, portalDomain.getDomain()));
                 });
 
         PortalDomain portalDomain = param.convertTo();
         portalDomain.setPortalId(portalId);
-        portal.getPortalDomains().add(portalDomain);
 
-        portalRepository.saveAndFlush(portal);
+        portalDomainRepository.save(portalDomain);
         return getPortal(portalId);
     }
 
@@ -185,7 +235,7 @@ public class PortalServiceImpl implements PortalService {
                 .ifPresent(portalDomain -> {
                     // 默认域名不允许解绑
                     if (portalDomain.getType() == DomainType.DEFAULT) {
-                        throw new BusinessException(ErrorCode.UNSUPPORTED_OPERATION, "默认域名不允许解绑");
+                        throw new BusinessException(ErrorCode.INVALID_REQUEST, "默认域名不允许解绑");
                     }
                     portalDomainRepository.delete(portalDomain);
                 });
@@ -195,7 +245,7 @@ public class PortalServiceImpl implements PortalService {
     @Override
     public PageResult<SubscriptionResult> listSubscriptions(String portalId, QuerySubscriptionParam param, Pageable pageable) {
         // Ensure portal exists
-        findPortal(portalId);
+        existsPortal(portalId);
 
         Specification<ProductSubscription> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -210,8 +260,39 @@ public class PortalServiceImpl implements PortalService {
         return new PageResult<SubscriptionResult>().convertFrom(page, s -> new SubscriptionResult().convertFrom(s));
     }
 
+    @Override
+    public String getDefaultPortal() {
+        Portal portal = portalRepository.findFirstByOrderByIdAsc().orElse(null);
+        if (portal == null) {
+            return null;
+        }
+        return portal.getPortalId();
+    }
+
+    @Override
+    public String getDashboard(String portalId) {
+        existsPortal(portalId);
+
+        // 找到该门户下任一已发布产品（取第一页第一条）
+        ProductPublication pub = publicationRepository.findByPortalId(portalId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL, portalId));
+
+        // 取产品的网关引用
+        ProductRef productRef = productRefRepository.findFirstByProductId(pub.getProductId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PRODUCT, pub.getProductId()));
+
+        if (productRef.getGatewayId() == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "网关", "该门户下的产品尚未关联网关服务");
+        }
+
+        // 复用网关的Dashboard能力
+        return gatewayService.getDashboard(productRef.getGatewayId(),"Portal");
+    }
+
     private Portal findPortal(String portalId) {
         return portalRepository.findByPortalId(portalId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, Resources.PORTAL, portalId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, Resources.PORTAL, portalId));
     }
 }

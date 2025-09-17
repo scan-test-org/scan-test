@@ -57,6 +57,10 @@ export const portalApi = {
   getPortals: (params?: { page?: number; size?: number }) => {
     return api.get(`/portals`, { params })
   },
+  // 获取Portal Dashboard URL
+  getPortalDashboard: (portalId: string, type: string = 'Portal') => {
+    return api.get(`/portals/${portalId}/dashboard`, { params: { type } })
+  },
   deletePortal: (portalId: string) => {
     return api.delete(`/portals/${portalId}`)
   },
@@ -175,6 +179,10 @@ export const apiProductApi = {
   // 取消发布API产品到门户
   cancelPublishToPortal: (productId: string, portalId: string) => {
     return api.delete(`/products/${productId}/publications/${portalId}`)
+  },
+  // 获取API产品的Dashboard监控面板URL
+  getProductDashboard: (productId: string) => {
+    return api.get(`/products/${productId}/dashboard`)
   }
 }
 
@@ -219,6 +227,10 @@ export const gatewayApi = {
     return api.get(`/gateways/${gatewayId}/model-servers`, {
       params: data
     })
+  },
+  // 获取网关的Dashboard URL
+  getDashboard: (gatewayId: string) => {
+    return api.get(`/gateways/${gatewayId}/dashboard`)
   }
 } 
 
