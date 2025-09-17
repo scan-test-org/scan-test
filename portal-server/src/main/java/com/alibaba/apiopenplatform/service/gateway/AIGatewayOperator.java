@@ -183,7 +183,7 @@ public class AIGatewayOperator extends APIGOperator {
         APIGClient client = getClient(gateway);
 
         try {
-            ListPluginAttachmentsResponse response = client.execute(c -> {
+            CompletableFuture<ListPluginAttachmentsResponse> f = client.execute(c -> {
                 ListPluginAttachmentsRequest request = ListPluginAttachmentsRequest.builder()
                         .gatewayId(gateway.getGatewayId())
                         .attachResourceId(routeId)
@@ -191,13 +191,11 @@ public class AIGatewayOperator extends APIGOperator {
                         .pageNumber(1)
                         .pageSize(100)
                         .build();
-                try {
-                    return c.listPluginAttachments(request).get();
-                } catch (InterruptedException | ExecutionException e) {
-                    throw new RuntimeException(e);
-                }
+
+                return c.listPluginAttachments(request);
             });
 
+            ListPluginAttachmentsResponse response = f.join();
             if (response.getStatusCode() != 200) {
                 throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
             }
