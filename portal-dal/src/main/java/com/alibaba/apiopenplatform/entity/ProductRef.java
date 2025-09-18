@@ -76,9 +76,6 @@ public class ProductRef extends BaseEntity {
     @Column(name = "mcp_config", columnDefinition = "json")
     private String mcpConfig;
 
-    @Column(name = "model_api_config", columnDefinition = "text")
-    private String modelApiConfig;
-
     @Column(name = "enabled")
     private Boolean enabled;
 }
