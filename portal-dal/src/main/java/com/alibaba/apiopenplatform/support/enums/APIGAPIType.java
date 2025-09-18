@@ -32,8 +32,6 @@ public enum APIGAPIType {
 
     MCP("MCP"),
 
-    LLM("LLM"),
-
     ;
 
     private final String type;
