@@ -13,7 +13,6 @@ interface UserInfo {
 // 全局缓存用户信息，避免重复请求
 let globalUserInfo: UserInfo | null = null;
 let globalLoading = false;
-let globalError = false;
 
 export function UserInfo() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(globalUserInfo);
@@ -23,7 +22,7 @@ export function UserInfo() {
 
   useEffect(() => {
     mounted.current = true;
-    
+
     // 如果已有缓存数据，直接使用
     if (globalUserInfo) {
       setUserInfo(globalUserInfo);
@@ -48,32 +47,31 @@ export function UserInfo() {
     // 开始加载用户信息
     globalLoading = true;
     setLoading(true);
-    
+
     api.get("/developers/profile")
-      .then((response) => {
-        const data = response.data;
-        if (data) {
-          const userData = {
-            displayName: data.username || data.email || "未命名用户",
-            email: data.email,
-            avatar: data.avatarUrl || undefined,
-          };
-          globalUserInfo = userData;
-          if (mounted.current) {
-            setUserInfo(userData);
+        .then((response) => {
+          const data = response.data;
+          if (data) {
+            const userData = {
+              displayName: data.username || data.email || "未命名用户",
+              email: data.email,
+              avatar: data.avatarUrl || undefined,
+            };
+            globalUserInfo = userData;
+            if (mounted.current) {
+              setUserInfo(userData);
+            }
           }
-        }
-      })
-      .catch((error) => {
-        console.error('获取用户信息失败:', error);
-        globalError = true;
-      })
-      .finally(() => {
-        globalLoading = false;
-        if (mounted.current) {
-          setLoading(false);
-        }
-      });
+        })
+        .catch((error) => {
+          console.error('获取用户信息失败:', error);
+        })
+        .finally(() => {
+          globalLoading = false;
+          if (mounted.current) {
+            setLoading(false);
+          }
+        });
 
     return () => {
       mounted.current = false;
@@ -84,7 +82,6 @@ export function UserInfo() {
     // 清除用户信息并跳转到登录页
     globalUserInfo = null;
     globalLoading = false;
-    globalError = false;
     setUserInfo(null);
     navigate('/login');
   };
