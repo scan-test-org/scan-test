@@ -2,6 +2,7 @@ import { Card, Button, Modal, Form, Select, message, Collapse, Tabs, Row, Col } 
 import { PlusOutlined, DeleteOutlined, ExclamationCircleOutlined, CopyOutlined } from '@ant-design/icons'
 import { useState, useEffect } from 'react'
 import type { ApiProduct, LinkedService, RestAPIItem, HigressMCPItem, NacosMCPItem, APIGAIMCPItem, ApiItem } from '@/types/api-product'
+import type { Gateway, NacosInstance } from '@/types/gateway'
 import { apiProductApi, gatewayApi, nacosApi } from '@/lib/api'
 import { getGatewayTypeLabel } from '@/lib/constant'
 import * as yaml from 'js-yaml'
@@ -12,29 +13,6 @@ interface ApiProductLinkApiProps {
   linkedService: LinkedService | null
   onLinkedServiceUpdate: (linkedService: LinkedService | null) => void
   handleRefresh: () => void
-}
-
-interface Gateway {
-  gatewayId: string
-  gatewayName: string
-  gatewayType: 'APIG_API' | 'HIGRESS' | 'APIG_AI' | 'ADP_AI_GATEWAY'
-  createAt: string
-  apigConfig?: {
-    region: string
-  }
-  higressConfig?: {
-    host: string
-    port: number
-  }
-}
-
-interface NacosInstance {
-  nacosId: string
-  nacosName: string
-  serverUrl: string
-  username: string
-  description: string
-  adminId: string
 }
 
 export function ApiProductLinkApi({ apiProduct, linkedService, onLinkedServiceUpdate, handleRefresh }: ApiProductLinkApiProps) {

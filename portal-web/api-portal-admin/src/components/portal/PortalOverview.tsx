@@ -135,14 +135,12 @@ export function PortalOverview({portal, onEdit}: PortalOverviewProps) {
                         </div>
                     </div>
 
-                    {portal.description && (
-                        <div className="grid grid-cols-6 gap-8 pt-2 pb-2">
-                            <span className="text-xs text-gray-600">描述:</span>
-                            <span className="col-span-5 text-xs text-gray-700 leading-relaxed">
-                                {portal.description}
-                            </span>
-                        </div>
-                    )}
+                    <div className="grid grid-cols-6 gap-8 items-start pt-2 pb-2">
+                        <span className="text-xs text-gray-600">描述:</span>
+                        <span className="col-span-5 text-xs text-gray-900 leading-relaxed">
+                            {portal.description || '-'}
+                        </span>
+                    </div>
                 </div>
             </Card>
 

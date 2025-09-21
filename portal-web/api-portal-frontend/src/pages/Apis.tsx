@@ -13,7 +13,7 @@ const { Search } = Input;
 
 
 
-interface ApiProduct {
+interface ApiProductListItem {
   key: string;
   name: string;
   description: string;
@@ -28,7 +28,7 @@ interface ApiProduct {
 
 function APIsPage() {
   const [loading, setLoading] = useState(false);
-  const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
+  const [apiProducts, setApiProducts] = useState<ApiProductListItem[]>([]);
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {

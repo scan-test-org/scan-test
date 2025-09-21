@@ -1,4 +1,32 @@
 
+// 与 Admin 端保持一致的 API 产品配置接口
+export interface ApiProductConfig {
+  spec: string;
+  meta: {
+    source: string;
+    type: string;
+  }
+}
+
+export interface ApiProductMcpConfig {
+  mcpServerName: string;
+  tools: string;
+  meta: {
+    source: string;
+    mcpServerName: string;
+    mcpServerConfig: any;
+    fromType: string;
+  }
+  mcpServerConfig: {
+    path: string;
+    domains: {
+      domain: string;
+      protocol: string;
+    }[];
+    rawConfig?: unknown;
+  }
+}
+
 export interface ApiProduct {
   productId: string;
   name: string;
@@ -6,9 +34,16 @@ export interface ApiProduct {
   type: 'REST_API' | 'MCP_SERVER';
   category: string;
   status: 'PENDING' | 'READY' | 'PUBLISHED' | string;
-  createdAt: string;
+  createAt: string;
+  createdAt?: string; // 兼容字段
   enableConsumerAuth?: boolean;
-  apiSpec: string;
+  autoApprove?: boolean;
+  apiConfig?: ApiProductConfig;
+  mcpConfig?: ApiProductMcpConfig;
+  document?: string;
+  icon?: ProductIcon | null;
+  // 向后兼容
+  apiSpec?: string;
 }
 
 export const ProductType = {
@@ -69,7 +104,7 @@ export interface McpServerProduct extends BaseProduct {
 // 联合类型
 export type Product = RestApiProduct | McpServerProduct;
 
-// 产品图标类型
+// 产品图标类型（与 Admin 端保持一致）
 export interface ProductIcon {
   type: 'URL' | 'BASE64';
   value: string;
