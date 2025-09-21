@@ -130,8 +130,6 @@ export function PortalSecurity({portal, onRefresh}: PortalSecurityProps) {
                         {/* 基本安全配置标题 */}
                         <h3 className="text-lg font-medium">基本安全配置</h3>
                         
-                        <Divider />
-                        
                         {/* 基本安全设置内容 */}
                         <div className="grid grid-cols-2 gap-6">
                             <Form.Item
