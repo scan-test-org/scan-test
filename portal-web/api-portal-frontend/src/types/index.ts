@@ -42,7 +42,7 @@ export interface BaseProduct {
   autoApprove?: boolean;
   type: ProductType;
   document: string | null;
-  icon: string | null;
+  icon: ProductIcon | null;
   category: ProductCategory;
   productType: ProductType;
   productName: string;
@@ -68,6 +68,12 @@ export interface McpServerProduct extends BaseProduct {
 
 // 联合类型
 export type Product = RestApiProduct | McpServerProduct;
+
+// 产品图标类型
+export interface ProductIcon {
+  type: 'URL' | 'BASE64';
+  value: string;
+}
 
 // API 响应结构
 export interface ApiResponse<T> {

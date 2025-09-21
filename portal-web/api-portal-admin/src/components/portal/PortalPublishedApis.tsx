@@ -139,14 +139,9 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
       ),
     },
     {
-      title: '名称/ID',
-      key: 'nameAndId',
-      render: (_: any, record: ApiProduct) => (
-        <div>
-          <div>{record.name}</div>
-          <div style={{ fontSize: '12px', color: '#666' }}>ID: {record.productId}</div>
-        </div>
-      ),
+      title: '名称',
+      dataIndex: 'name',
+      key: 'name',
     },
     {
       title: '描述',
