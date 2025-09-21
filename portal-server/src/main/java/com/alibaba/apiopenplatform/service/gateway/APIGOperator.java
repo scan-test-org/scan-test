@@ -40,6 +40,7 @@ import com.alibaba.apiopenplatform.service.gateway.client.SLSClient;
 import com.alibaba.apiopenplatform.support.enums.GatewayType;
 import com.alibaba.apiopenplatform.support.gateway.GatewayConfig;
 import com.alibaba.apiopenplatform.support.product.APIGRefConfig;
+import com.aliyun.sdk.gateway.pop.exception.PopClientException;
 import com.aliyun.sdk.service.apig20240327.models.*;
 import com.aliyun.sdk.service.apig20240327.models.CreateConsumerAuthorizationRulesRequest.AuthorizationRules;
 import com.aliyun.sdk.service.apig20240327.models.CreateConsumerAuthorizationRulesRequest.ResourceIdentifier;
@@ -354,6 +355,13 @@ public class APIGOperator extends GatewayOperator<APIGClient> {
                 throw new BusinessException(ErrorCode.GATEWAY_ERROR, response.getBody().getMessage());
             }
         } catch (Exception e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof PopClientException
+                    && "DatabaseError.RecordNotFound".equals(((PopClientException) cause).getErrCode())) {
+                log.warn("Consumer authorization rules[{}] not found, ignore", apigAuthConfig.getAuthorizationRuleIds());
+                return;
+            }
+
             log.error("Error deleting Consumer Authorization", e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Error deleting Consumer Authorization，Cause：" + e.getMessage());
         }
