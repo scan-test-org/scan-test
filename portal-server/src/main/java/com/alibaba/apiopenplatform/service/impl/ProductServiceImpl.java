@@ -387,8 +387,16 @@ public class ProductServiceImpl implements ProductService {
         if (productRef.getGatewayId() == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "该产品尚未关联网关服务");
         }
-
+        // 基于产品类型选择Dashboard类型
+        Product product = findProduct(productId);
+        String dashboardType;
+        if (product.getType() == ProductType.MCP_SERVER) {
+            dashboardType = "MCP";
+        } else {
+            // REST_API、HTTP_API 统一走 API 面板
+            dashboardType = "API";
+        }
         // 通过网关服务获取Dashboard URL
-        return gatewayService.getDashboard(productRef.getGatewayId());
+        return gatewayService.getDashboard(productRef.getGatewayId(), dashboardType);
     }
 }
