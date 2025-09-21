@@ -4,16 +4,18 @@ import { Button, Dropdown, MenuProps, Typography, Spin, Modal, message } from 'a
 import { 
   MoreOutlined,
   LeftOutlined,
-  GlobalOutlined,
-  FileTextOutlined,
+  EyeOutlined,
+  ApiOutlined,
   TeamOutlined,
-  SettingOutlined
+  SafetyOutlined,
+  CloudOutlined
 } from '@ant-design/icons'
 import { PortalOverview } from '@/components/portal/PortalOverview'
 import { PortalPublishedApis } from '@/components/portal/PortalPublishedApis'
 import { PortalDevelopers } from '@/components/portal/PortalDevelopers'
 import { PortalConsumers } from '@/components/portal/PortalConsumers'
-import { PortalSettings } from '@/components/portal/PortalSettings'
+import { PortalSecurity } from '@/components/portal/PortalSecurity'
+import { PortalDomain } from '@/components/portal/PortalDomain'
 import PortalFormModal from '@/components/portal/PortalFormModal'
 import { portalApi } from '@/lib/api'
 import { Portal } from '@/types'
@@ -26,13 +28,13 @@ const menuItems = [
   {
     key: "overview",
     label: "Overview",
-    icon: GlobalOutlined,
+    icon: EyeOutlined,
     description: "Portal概览"
   },
   {
     key: "published-apis",
-    label: "Published API Products",
-    icon: FileTextOutlined,
+    label: "Products",
+    icon: ApiOutlined,
     description: "已发布的API产品"
   },
   {
@@ -41,18 +43,24 @@ const menuItems = [
     icon: TeamOutlined,
     description: "开发者管理"
   },
+  {
+    key: "security",
+    label: "Security",
+    icon: SafetyOutlined,
+    description: "安全设置"
+  },
+  {
+    key: "domain",
+    label: "Domain",
+    icon: CloudOutlined,
+    description: "域名管理"
+  }
   // {
   //   key: "consumers",
   //   label: "Consumers",
   //   icon: UserOutlined,
   //   description: "消费者管理"
-  // },
-  {
-    key: "settings",
-    label: "Settings",
-    icon: SettingOutlined,
-    description: "门户设置"
-  }
+  // }
 ]
 
 export default function PortalDetail() {
@@ -129,10 +137,12 @@ export default function PortalDetail() {
         return <PortalPublishedApis portal={portal} />
       case "developers":
         return <PortalDevelopers portal={portal} />
+      case "security":
+        return <PortalSecurity portal={portal} onRefresh={fetchPortalData} />
+      case "domain":
+        return <PortalDomain portal={portal} onRefresh={fetchPortalData} />
       case "consumers":
         return <PortalConsumers portal={portal} />
-      case "settings":
-        return <PortalSettings portal={portal} onRefresh={fetchPortalData} />
       default:
         return <PortalOverview portal={portal} onEdit={handleEdit} />
     }

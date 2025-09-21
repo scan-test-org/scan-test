@@ -323,6 +323,13 @@ export default function ApiProductFormModal({
                     input.onchange = (e) => {
                       const file = (e.target as HTMLInputElement).files?.[0];
                       if (file) {
+                        // 验证文件大小，限制为16KB
+                        const maxSize = 16 * 1024; // 16KB
+                        if (file.size > maxSize) {
+                          message.error(`图片大小不能超过 16KB，当前图片大小为 ${Math.round(file.size / 1024)}KB`);
+                          return;
+                        }
+                        
                         const newFileList: UploadFile[] = [{
                           uid: Date.now().toString(),
                           name: file.name,

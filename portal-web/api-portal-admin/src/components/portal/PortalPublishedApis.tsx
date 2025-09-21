@@ -146,6 +146,7 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
+      width: 320,
       render: (_: any, record: ApiProduct) => (
         <div>
           <div className="text-sm font-medium text-gray-900 truncate">
@@ -161,12 +162,14 @@ export function PortalPublishedApis({ portal }: PortalApiProductsProps) {
       title: '类型',
       dataIndex: 'type',
       key: 'type',
+      width: 100,
       render: (type: string) => ProductTypeMap[type] || type,
     },
     {
       title: '描述',
       dataIndex: 'description',
       key: 'description',
+      width: 300,
     },
   ]
 
