@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { Button, Avatar, Dropdown, Skeleton } from "antd";
+import { useState, useEffect, useRef } from "react";
+import { Button, Avatar, Dropdown, Skeleton, message } from "antd";
 import { UserOutlined, LogoutOutlined, AppstoreOutlined } from "@ant-design/icons";
-import api from "../lib/api";
+import api, { developerLogout } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 interface UserInfo {
@@ -10,32 +10,94 @@ interface UserInfo {
   avatar?: string;
 }
 
+// 全局缓存用户信息，避免重复请求
+let globalUserInfo: UserInfo | null = null;
+let globalLoading = false;
+
 export function UserInfo() {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(globalUserInfo);
+  const [loading, setLoading] = useState(globalUserInfo ? false : true);
   const navigate = useNavigate();
+  const mounted = useRef(true);
 
   useEffect(() => {
-      api.get("/developers/profile")
+    mounted.current = true;
+
+    // 如果已有缓存数据，直接使用
+    if (globalUserInfo) {
+      setUserInfo(globalUserInfo);
+      setLoading(false);
+      return;
+    }
+
+    // 如果正在加载中，等待加载完成 - 优化轮询逻辑
+    if (globalLoading) {
+      const checkLoading = () => {
+        if (!globalLoading && mounted.current) {
+          setUserInfo(globalUserInfo);
+          setLoading(false);
+        } else if (globalLoading && mounted.current) {
+          // 使用requestAnimationFrame替代setTimeout提升性能
+          requestAnimationFrame(checkLoading);
+        }
+      };
+      checkLoading();
+      return;
+    }
+
+    // 开始加载用户信息
+    globalLoading = true;
+    setLoading(true);
+
+    api.get("/developers/profile")
         .then((response) => {
           const data = response.data;
           if (data) {
-            setUserInfo({
+            const userData = {
               displayName: data.username || data.email || "未命名用户",
               email: data.email,
               avatar: data.avatarUrl || undefined,
-            });
+            };
+            globalUserInfo = userData;
+            if (mounted.current) {
+              setUserInfo(userData);
+            }
           }
         })
+        .catch((error) => {
+          console.error('获取用户信息失败:', error);
+        })
         .finally(() => {
-          setLoading(false);
+          globalLoading = false;
+          if (mounted.current) {
+            setLoading(false);
+          }
         });
+
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
-  const handleLogout = () => {
-    // 清除用户信息并跳转到登录页
-    setUserInfo(null);
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      // 调用后端logout接口，使token失效
+      await developerLogout();
+    } catch (error) {
+      // 即使接口调用失败，也要清除本地token，避免用户被卡住
+      console.error('退出登录接口调用失败:', error);
+    } finally {
+      // 清除localStorage中的token
+      localStorage.removeItem('access_token');
+      // 清除全局用户信息
+      globalUserInfo = null;
+      globalLoading = false;
+      setUserInfo(null);
+      // 显示成功消息
+      message.success('退出登录成功', 1);
+      // 跳转到登录页
+      navigate('/login');
+    }
   };
 
   const menuItems = [
