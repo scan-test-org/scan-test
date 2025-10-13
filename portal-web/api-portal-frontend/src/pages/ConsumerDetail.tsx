@@ -35,9 +35,11 @@ function ConsumerDetailPage() {
     const fetchSubscriptions = async () => {
       setSubscriptionsLoading(true);
       try {
-        const response: ApiResponse<Subscription[]> = await api.get(`/consumers/${consumerId}/subscriptions`);
+        const response: ApiResponse<{content: Subscription[], totalElements: number}> = await api.get(`/consumers/${consumerId}/subscriptions`);
         if (response?.code === "SUCCESS" && response?.data) {
-          setSubscriptions(response.data);
+          // 从分页数据中提取实际的订阅数组
+          const subscriptionsData = response.data.content || [];
+          setSubscriptions(subscriptionsData);
         }
       } catch (error) {
         console.error('获取订阅列表失败:', error);
@@ -110,9 +112,11 @@ function ConsumerDetailPage() {
                   if (consumerId) {
                     setSubscriptionsLoading(true);
                     try {
-                      const response: ApiResponse<Subscription[]> = await api.get(`/consumers/${consumerId}/subscriptions`);
+                      const response: ApiResponse<{content: Subscription[], totalElements: number}> = await api.get(`/consumers/${consumerId}/subscriptions`);
                       if (response?.code === "SUCCESS" && response?.data) {
-                        setSubscriptions(response.data);
+                        // 从分页数据中提取实际的订阅数组
+                        const subscriptionsData = response.data.content || [];
+                        setSubscriptions(subscriptionsData);
                       }
                     } catch (error) {
                       console.error('获取订阅列表失败:', error);
