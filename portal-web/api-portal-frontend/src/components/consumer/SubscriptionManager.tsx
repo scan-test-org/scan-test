@@ -28,7 +28,6 @@ interface SubscriptionManagerProps {
 
 export function SubscriptionManager({ consumerId, subscriptions, onSubscriptionsChange, loading = false }: SubscriptionManagerProps) {
   const [productModalVisible, setProductModalVisible] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [productLoading, setProductLoading] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
@@ -53,7 +52,6 @@ export function SubscriptionManager({ consumerId, subscriptions, onSubscriptions
       const response: ApiResponse<{ content: Product[] }> = await api.get("/products?page=0&size=100");
       if (response?.code === "SUCCESS" && response?.data) {
         const allProducts = response.data.content || [];
-        setProducts(allProducts);
         // 初始化时过滤掉已订阅的产品
         const filtered = filterProducts(allProducts);
         setFilteredProducts(filtered);
