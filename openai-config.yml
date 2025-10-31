@@ -1,7 +1,7 @@
 # OpenAI Configuration for Testing
 openai:
   api:
-    key: "sk-4a79aae22608494a86e33921b7e1f4c5"
+    key: "sk-4a79aae22608494a86e33921b7e1f4c6"
     base-url: "https://api.openai.com/v1"
     model: "gpt-4"
     timeout: 30000
