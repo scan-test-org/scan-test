@@ -26,10 +26,10 @@ jobs:
           # PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
           path-to-signatures: 'signatures/version1/cla.json'
-          path-to-document: 'https://github.com/cla-assistant/github-action/blob/master/SAPCLA.md' # e.g. a CLA or a DCO document
+          path-to-document: 'https://github.com/scan-test-org/scan-test/blob/main/.github/workflows/Alibaba_Documentation_Open_Source_CLA.md' # e.g. a CLA or a DCO document
           # branch should not be protected
           branch: 'main'
-          allowlist: user1,bot*
+          allowlist: masquee,Doki12315,JaneLiuL,zhaikangqi331,DamosChen,lokidundun,InJunee,SharlyCheung,oneFiish,is-xuwei,rz-yang,Sunrisea,kaplax,lc0138,zhwaaaaaa,qshuai,EndlessSeeker,dexchong,3533482622,Libres-coder,Patrisam,SaladDay,lys1313013,ShlyxCoder,wetsion,nmgliangwei,LYH-RAIN,zhenghaoran947,jue-yin,learnerjohn,yofine,yangjuanjuan121,buptzxd,panxiaojun233,lixingjia77,co63oc,shuk777,OuterCyrex,Aias00,OxalisCu,KarlManong,zat366,MichealJl,Guo-Chenxu,kai2321,Xscaperrr,erasernoob,zhangjingcn,wxm155,lz19931106,hongzhouzi,HecarimV,JayLi52,NorthernBob,undertaker86001,daixijun,uuuyuqi,Tsukilc,Thomas-Eliot,kenneth-bro,luoxiner,hzhswyz,popsiclexu,NathanChan,Fengxq2014,wilkinszhang,daidaipianzi,jujiale,VinciWu557,xuruidong,josephwww,shubham1172,lhlxc,mirror58229,ishells,hanans426,mrhaoji,guluguluhhhh,lcfang,xingyunyang01,psxjoy,YJQ1101,iendi,DevOpserzhao,007gzs,LofiSu,robynron,xpy01xpy,hanxiantao,Ink-33,Tinie13,Hazel0928,imp2002,lingdie,yldian,Jing-ze,cr7258,robotism,java4candy,alexzzh,yuluo-yx,OnlyPiglet,liuqiufeng,Erica177,flystar32,sjcsjc123,iHx-rainbow,zhangjiahaol,MregXN,jiamiao442,yingjianjian,lexburner,yuchang01,totalo,vikizhao156,ronething,Fkbqf,2456868764,WeixinX,shouao,ruansheng8,rinfx,liangxiong3403,casun18,tomkerkhove,laojun,dspo,zyhui98,CraigMChen,Charlie17Li,jameszhangyukun,wojesen,Xunzhuo,Hinsteny,songpengyuan,Risker-C,spacewander,CH3CHO,xiangxiuhui,slievrly,abuexclusive,kwtboom,heimanba,katepangLiu,innerpeacez,SpecialYang,sjtuzbk,SAMZONG,johnlanni,bot*
 
          # the followings are the optional inputs - If the optional inputs are not given, then default values will be taken
           #remote-organization-name: enter the remote organization name where the signatures should be stored (Default is storing the signatures in the same repository)
